@@ -7,13 +7,13 @@ IN: crate
 USING: engine actors messages keys areas matthew townsfolk events talk look ;
 
 begin-structure crate-place
-  field: crate-slot   field: crate-x   field: crate-y   field: crate-z   field: crate-area   field: crate-floor
+  field: crate-slot   field: crate-home-x   field: crate-home-y   field: crate-home-z   field: crate-area   field: crate-floor
   field: crate-state   field: crate-stage   field: crate-heading
 end-structure
 enum: crate-states  placing standing-by held on-top ;
 : crate! ( c slot x y z area floor -- )   \ an area's crate, placed on its first step
     {: c s x y z ar fl :}  c crate-place erase
-    s c crate-slot !  x c crate-x !  y c crate-y !  z c crate-z !  ar c crate-area !  fl c crate-floor ! ;
+    s c crate-slot !  x c crate-home-x !  y c crate-home-y !  z c crate-home-z !  ar c crate-area !  fl c crate-floor ! ;
 : forget-crate ( c -- )  placing swap crate-state ! ;   \ (entering the area: placed again)
 : on-the-crate? ( c -- flag )  crate-state @ on-top = ;
 : holding? ( c -- flag )  crate-state @ held = ;
@@ -35,7 +35,7 @@ variable crate-circle-was   variable crate-square-was
 : done-with ( c -- )  standing-by over crate-state !  0 swap crate-stage !  on-his-feet perch!  true him send figure-on-foot ;
 
 : place-it ( c -- )   \ in its place, square on
-    {: c :}  c crate-slot @ c crate-x @ c crate-y @ c crate-z @ set-pos
+    {: c :}  c crate-slot @ c crate-home-x @ c crate-home-y @ c crate-home-z @ set-pos
     c crate-slot @ c crate-area @ c crate-floor @ set-floor  c crate-slot @ 0 0 0 set-rot  standing-by c crate-state ! ;
 : holding-it ( c -- )   \ src: crate_grab_update, the pushing state: ○ lets go
     {: c :}  take-pad

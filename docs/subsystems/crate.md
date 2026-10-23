@@ -18,4 +18,4 @@ pushing). Areas 10, 11, 16, 19 and 24 have one each; an area keeps its crate's p
 
 ## Status
 
-Built (area 10's). To come: the prompts, the sounds.
+Built (areas 10's and 11's). To come: the prompts, the sounds.
