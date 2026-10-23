@@ -456,12 +456,10 @@ def minigame_scripts(c, ovl=None):
     if not m:
         return set()
     out = set(int(x, 16) for x in re.findall(r'\w+ = &D_([0-9A-F]{8})', m.group(1)))
-    # (or one its update queues at a step: area 19's chase)
-    u = re.search(r'\nvoid area_minigame_update\([^)]*\) \{\n(.*?)\n\}\n', c, re.S)
-    if u:
-        out |= set(int(x, 16) for x in re.findall(r'minigame_script = &D_([0-9A-F]{8})', u.group(1)))
-    # (or one it runs on a private thread of its own each frame: event_thread_start(&D_T, &D_X))
-    out |= set(int(x, 16) for x in re.findall(r'event_thread_start\(&D_[0-9A-F]{8}, &D_([0-9A-F]{8})\)', m.group(1)))
+    # (or one queued at a step of its update, wherever the overlay does it: area 19's chase, the town's tail)
+    out |= set(int(x, 16) for x in re.findall(r'minigame_script = &D_([0-9A-F]{8})', c))
+    # (or one it runs on a private thread of its own: event_thread_start(&D_T, &D_X))
+    out |= set(int(x, 16) for x in re.findall(r'event_thread_start\(&D_[0-9A-F]{8}, &D_([0-9A-F]{8})\)', c))
     if ovl is not None:
         for t in re.findall(r'minigame_script = \*\([^;]*&D_([0-9A-F]{8})\)', m.group(1)):
             a = int(t, 16) - OVL_BASE

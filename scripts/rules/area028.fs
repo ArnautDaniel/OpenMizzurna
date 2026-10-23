@@ -5,7 +5,6 @@ IN: rules.area028
 USING: engine actors messages story-flags events look talk areas ;
 
 28 constant this-area
-$018 5 story-bit constant hideout-robbers-caught   \ (src: +0x18 bit 5; area 6 and the town read it)
 
 variable knocked   \ src: D_80102D2C: the door knocked at this visit
 : entered ( -- )  0 knocked ! ;

@@ -55,6 +55,7 @@ phase-1 port's files (`../port/src/game/`), which name the decomp's functions; t
 | Music | the background music, ambience, stage music | `sound.c`, `ambience.c` |
 | Fight ([page](subsystems/fight.md), built) | a fistfight: the pad or the AI each side, the hits, the game over | `fight.c` |
 | Shoot-out ([page](subsystems/shootout.md), built) | button targets on a foe: the rounds, the camera's path, the game over | `qte.c`, `shootout.c`, the overlays |
+| Tail ([page](subsystems/tail.md), built) | tailing the lookout to his door, unseen; the door's keypad | `ovl027.c` (`func_801025E0`) |
 | Minigames | the bar counters, chases | `fight.c`, `qte.c`, `shootout.c`, `counter.c`, `ovl0xx.c` |
 | Saves | saving and loading the story | `cmcard.c`, `cnrev.c` (story_save) |
 | Title | the logo, the title and its menu, the movies, the endings | `opening.c` |

@@ -1,7 +1,7 @@
 \ area027.fs - the town's rules (src: ovl027.c, the town's overlay; decomp/docs/areas/area27.md): the buildings'
 \ doors - whether Matthew may go in now (their hours, the story) and the script that takes him in.
 IN: rules.area027
-USING: engine actors messages clock story-flags townsfolk areas look matthew knock events events.ovl027 ;
+USING: engine actors messages clock story-flags townsfolk areas look talk matthew knock events events.ovl027 tail ;
 
 27 constant this-area
 
@@ -138,3 +138,17 @@ enum: knocks  no-knock  at-astin-farm  at-the-rolands  at-the-strasbourgs  at-me
 : look-check ( zone check -- action )  2drop 0 ;   \ (the town's look: its rows alone)
 : look-do ( action -- )  drop run-rows ;
 ' look-check ' look-do ' act-check ' act-do  this-area area-rules!
+
+\ ---- the lookout (106) by his door (src: ovl027_func_801040B0's minigame 1; lookout_act) - tail.fs ----
+$000 6 story-bit constant tail-armed   \ (src: +0x00 bit 6: the town's tail armed)
+106 constant the-lookout   $14 constant mel-still-around   \ (src: Mel's stop under 0x14)
+variable lookout-mode   \ src: D_8010CA2C: 1 the lookout by his door
+: entered ( -- )
+    tail-armed flag?  hideout-robbers-caught flag? 0= and dup lookout-mode !
+    if  s" tail" actor-named send tail-pace  then ;
+: talks-here ( slot -- handled? )
+    the-lookout <>  lookout-mode @ 0= or if  false exit  then
+    mel stop-of mel-still-around <  tail-started? 0= and if  s" tail" actor-named send tail-start
+    else  ['] entry-8010B470 start-event  then  true ;
+' talks-here this-area area-talk!
+this-area ' entered 0 area-hooks!

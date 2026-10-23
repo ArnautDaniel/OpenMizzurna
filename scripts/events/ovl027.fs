@@ -10,6 +10,54 @@ USING: events events.main ;
     end-script
     ;
 
+\ $80109CF8
+: entry-80109CF8
+    106 actor idle
+    106 actor 0 0 face
+    106 actor camera-at
+    106 actor matthew camera-face
+    12 frames wait
+    106 actor 72 5 talk
+    end-script
+    ;
+
+\ $80109D38
+: entry-80109D38
+    matthew 106 actor camera-face
+    12 frames wait
+    106 actor 72 5 talk
+    end-script
+    ;
+
+\ $80109D60
+: entry-80109D60
+    matthew 0 anim-once
+    matthew 3072 0 turn-to
+    matthew 577709 -17576 223419 set-pos
+    -294 -1800 -1298 577744 -17576 223668 2048 camera-set
+    575865 -17576 223668 64 camera-move
+    wait-camera-move
+    106 actor 73 5 talk
+    106 actor 104 -2 through-door
+    106 actor 0 0 0 set-pos
+    matthew 577414 -17600 223753 set-pos
+    matthew 576016 223696 walk-to  matthew wait-stop
+    matthew 2048 -80 turn-to
+    matthew wait-turned
+    74 2 say-mode-wait
+    end-script
+    ;
+
+\ $80109E28
+: entry-80109E28
+    106 actor idle
+    106 actor 20 22 anim-then-loop
+    106 actor wait-anim
+    106 actor 21 anim-once
+    106 actor wait-anim
+    end-script
+    ;
+
 \ $80109E54
 : entry-80109E54
     106 actor as-this-one
@@ -25,6 +73,29 @@ USING: events events.main ;
     20 frames wait
     70 2 say-mode-wait
     71 2 say-mode-wait
+    end-script
+    ;
+
+\ $80109EB4
+: entry-80109EB4
+    matthew 75 7 talk
+    104 door-animate
+    75 frames wait
+    11 screen-effect
+    wait-effect
+    28 1 576010 223249 2048 0 warp
+    ;
+
+\ $80109EF0
+: entry-80109EF0
+    matthew 76 3 talk
+    end-script
+    ;
+
+\ $80109EF8
+: entry-80109EF8
+    matthew 76 3 talk
+    matthew 77 2 talk
     end-script
     ;
 
@@ -48,6 +119,20 @@ USING: events events.main ;
     15 frames wait
     matthew 17 18 1 anim-then
     106 actor wait-stop
+    end-script
+    ;
+
+\ $8010A008
+: entry-8010A008
+    106 actor idle
+    106 actor camera-at
+    106 actor matthew camera-face
+    135 0 camera-turn
+    matthew 106 actor face-each-other
+    matthew 87 7 talk
+    106 actor 88 5 talk
+    matthew 89 2 talk
+    106 actor 90 7 talk
     end-script
     ;
 
@@ -89,6 +174,45 @@ USING: events events.main ;
     wait-camera-turn
     matthew 85 0 1 anim-then
     matthew 100 0 talk
+    end-script
+    ;
+
+\ $8010A064
+: entry-8010A064
+    106 actor as-this-one
+    106 actor idle
+    L-80109BB4
+    matthew 83 5 talk
+    this-one 84 7 talk
+    matthew 85 7 talk
+    this-one 86 5 talk
+    11 screen-effect
+    wait-effect
+    matthew 0 106 actor 3 fight
+    13 music
+    106 actor camera-at
+    106 actor matthew camera-face
+    135 0 camera-turn
+    L-80109B84
+    10 screen-effect
+    wait-effect
+    matthew 91 0 talk
+    this-one 92 0 talk
+    matthew 93 0 talk
+    this-one 94 0 talk
+    matthew 95 0 talk
+    this-one 96 0 talk
+    matthew 93 0 anim
+    106 actor 96 0 anim
+    matthew wait-anim
+    matthew 97 5 talk
+    this-one 98 7 talk
+    16 0 effect-level
+    15 screen-effect
+    18 frames wait
+    106 actor 0 0 0 set-pos
+    -952 -2850 -1020 454691 0 421292 1405 camera-set
+    L-80109ADC
     end-script
     ;
 

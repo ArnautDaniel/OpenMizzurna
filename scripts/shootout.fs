@@ -206,7 +206,6 @@ create was-down circle 1+ cells allot   variable pressed   \ (the buttons presse
     watch-pad  steps-due 0 ?do  shooting? 0= if  leave  then  shootout-frame  loop ;
 
 \ ---- drawing: the targets, the bullets, the bars (src: qte_draw_targets, shootout_ammo_draw, hp_bar_draw) ----
-$40C080FF constant triangle-ink   $E080C0FF constant square-ink   $6080E0FF constant cross-ink   $E05050FF constant circle-ink
 $FFF0A0FF constant burst-ink   $202020FF constant mark-ink   $C8A040FF constant bullet-ink
 8 constant target-half   16 constant bullet-pitch   -140 constant bullets-x   40 constant bullets-y
 6 constant bullet-w   24 constant bullet-h

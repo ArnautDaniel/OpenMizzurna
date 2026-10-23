@@ -50,6 +50,8 @@ message camera-place ( look-y dist eye-y x y z yaw -- )   \ a fixed shot (src: t
 message camera-follow ( -- )             \ behind Matthew again, the scene's way
 message camera-fixed ( -- )              \ stay where it is
 message fight-start ( a style b style -- ) \ a fistfight: each the pad's (style 0) or the AI's (2 - 8) (src: fight_start)
+message tail-pace ( -- )                   \ (to the tail) the lookout paces by his door (src: minigame 1)
+message tail-start ( -- )                  \ tailing him begins (src: minigame 2)
 message shootout-start ( plan -- )         \ a shoot-out by an area's plan (shootout.fs; src: shootout_begin)
 message camera-behind ( look-y dist eye-y -- ) \ low behind Matthew, turning as he turns (src: ovl019's duct crawl)
 message camera-reset ( -- )              \ behind Matthew now, where he stands (src: camera_reset)

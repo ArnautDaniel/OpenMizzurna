@@ -114,6 +114,12 @@ static const AreaTable kAreaTables[] = {
      "12), look height (16), distance (20), turn (24), frames (28), u8 how it moves to the next (32: 0 cut, 1 "
      "tween, 2 / 3 turning up / down; 0xFF the end) (src: qte.c)"},
     {"shootout-26", 26, 0x80106E84, 3 * SHOOTOUT_ROUND, "the forest's shoot-out: three rounds, as above (src: ovl026)"},
+    /* tailing the lookout (src: ovl027 func_801025E0) */
+    {"tail-waypoints", 27, 0x80109C18, 12 * 12,
+     "the lookout's way: 12 of s32 x, z; u8 what he does there (1 on, 4 look back, 5 look aside, 7 his door), the "
+     "next point, the next once he's seen Matthew, his sight's zone"},
+    {"tail-zones", 27, 0x80109CA8, 5 * 16, "his sight's zones: s32 x, z, x, z - two corners (src: func_800296F8)"},
+    {"keypad-code", 27, 0x80101ED0, 4, "the door's code: a button's bit each (0x10 triangle, 0x20 circle, 0x40 cross, 0x80 square)"},
 };
 #define NAREATABLES (int)(sizeof(kAreaTables) / sizeof(kAreaTables[0]))
 
