@@ -14,6 +14,8 @@ Start with `docs/design.md`, then `docs/actors.md` (the kernel), `docs/forth.md`
 
 ## Building and running
 
+Needs CMake, a C compiler, SDL3 and OpenGL 4.6; libavcodec (FFmpeg) for the movies, found by pkg-config.
+
 ```sh
 cmake -S . -B build -G Ninja && ninja -C build
 build/openmizzurna                                   # the game (` opens the Forth console)

@@ -14,6 +14,7 @@
 #include "../data/flacenc.h"
 #include "../data/modelconv.h"
 #include "../data/town.h"
+#include "../data/movieconv.h"
 #include "../data/xa.h"
 #include "../render/render.h"
 #include "platform.h"
@@ -209,13 +210,13 @@ static int boot_name(Disc *d, char *name, size_t n) {
 }
 
 /* the disc's other files, kept as they are until their kinds are converted: where each goes */
-static const char *kept_as(const char *name) {
+static int is_movie(const char *name) {
     const char *dot = strrchr(name, '.');
+    return dot != NULL && SDL_strcasecmp(dot, ".STR") == 0;
+}
 
-    if (dot != NULL && SDL_strcasecmp(dot, ".STR") == 0) {
-        return "movies/";
-    }
-    return "disc/";
+static const char *kept_as(const char *name) {
+    return is_movie(name) ? "movies/" : "disc/";
 }
 
 static int import_disc(Import *im) {
@@ -262,6 +263,9 @@ static int import_disc(Import *im) {
     }
     fprintf(im->manifest, "%s\ndisc %08X %s\nconvert cdbin folders 1\nconvert images png 1\nconvert text utf8 1\nconvert exe-tables files 1\nconvert banks text-wav 1\nconvert sequences midi 1\nconvert xa flac 1\nconvert models gltf 1\nconvert textures png 1\nconvert town gltf 1\n",
             LIBRARY_FORMAT, crc32_of(exe, exe_n), exe_name);
+    if (movieconv_available()) {
+        fprintf(im->manifest, "convert movies mpeg2-flac 1\n");
+    }
 
     /* the executable: kept until the tables the game reads from it are files of their own */
     snprintf(im->current, sizeof(im->current), "%s", exe_name);
@@ -364,6 +368,17 @@ static int import_disc(Import *im) {
         }
         if (SDL_strcasecmp(e->path, "TSG.XA") == 0) {
             ok = convert_xa(im, root, "TSG", data, disc_file_bytes(e));
+        } else if (is_movie(e->path) && movieconv_available()) {
+            char name[64], mwhy[256] = "";
+            ImportWrite w = {im, root};
+
+            const char *base = strrchr(e->path, '/') != NULL ? strrchr(e->path, '/') + 1 : e->path;
+
+            snprintf(name, sizeof(name), "%.*s", (int)(strrchr(base, '.') - base), base);
+            ok = movieconv_write(name, data, disc_file_bytes(e), import_write, &w, mwhy, sizeof(mwhy));
+            if (!ok) {
+                snprintf(im->why, sizeof(im->why), "%s", mwhy);
+            }
         } else {
             snprintf(rel, sizeof(rel), "%s%s", kept_as(e->path), e->path);
             ok = write_file(im, root, rel, data, disc_file_bytes(e));

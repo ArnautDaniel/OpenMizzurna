@@ -6,6 +6,7 @@
 #include "../src/data/disc.h"
 #include "../src/data/modelconv.h"
 #include "../src/data/town.h"
+#include "../src/data/movieconv.h"
 #include "../src/data/xa.h"
 #include "../src/third_party/dr_flac.h"
 
@@ -14,7 +15,7 @@
 #include <string.h>
 
 static const char *sLibrary;
-static int sImages, sTexts, sFiles, sBodies, sXa, sModels, sTextures, sTiles;
+static int sImages, sTexts, sFiles, sBodies, sXa, sModels, sTextures, sTiles, sMovies;
 
 static uint8_t *read_library(void *ctx, const char *path, size_t *n) {
     char full[1400];
@@ -152,7 +153,30 @@ int main(int argc, char **argv) {
         }
         free(xa);
     }
-    printf("%d entries checked, %d differ; %d files read: %d images, %d text files, %d sound bank bodies, %d XA tracks, %d models, %d model textures, %d town tiles\n",
-           checked, bad, sFiles, sImages, sTexts, sBodies, sXa, sModels, sTextures, sTiles);
+    /* the movies: the pictures close to the STR's, the sound the same */
+    for (i = 0; movieconv_available() && i < disc_count(d); i++) {
+        const DiscEntry *e = disc_entry(d, i);
+        const char *base = strrchr(e->path, '/') != NULL ? strrchr(e->path, '/') + 1 : e->path, *dot = strrchr(base, '.');
+        char name[64];
+        uint8_t *str;
+        double psnr = 0;
+
+        if (dot == NULL || strcmp(dot, ".STR") != 0) {
+            continue;
+        }
+        snprintf(name, sizeof(name), "%.*s", (int)(dot - base), base);
+        str = malloc(disc_file_bytes(e));
+        if (str == NULL || !disc_read(d, e, str) ||
+            !movieconv_check(name, str, disc_file_bytes(e), read_library, NULL, &psnr, why, sizeof(why))) {
+            printf("movie %s: %s\n", name, why);
+            bad++;
+        } else {
+            printf("movie %s: the worst picture %.1f dB\n", name, psnr);
+        }
+        sMovies++;
+        free(str);
+    }
+    printf("%d entries checked, %d differ; %d files read: %d images, %d text files, %d sound bank bodies, %d XA tracks, %d models, %d model textures, %d town tiles, %d movies\n",
+           checked, bad, sFiles, sImages, sTexts, sBodies, sXa, sModels, sTextures, sTiles, sMovies);
     return bad != 0;
 }

@@ -42,9 +42,20 @@ find_package(SDL3 REQUIRED CONFIG)
 # the checks')
 add_library(omdata STATIC src/data/disc.c src/data/cdbin.c src/data/container.c src/data/png.c src/data/tim.c
     src/data/text.c src/data/cdconv.c src/data/exetables.c src/data/vab.c src/data/seqmidi.c src/data/xa.c
-    src/data/flacenc.c src/data/tmd.c src/data/vramctx.c src/data/modelgltf.c src/data/modelconv.c src/data/town.c src/data/motion.c
+    src/data/flacenc.c src/data/tmd.c src/data/vramctx.c src/data/modelgltf.c src/data/modelconv.c src/data/town.c src/data/str.c src/data/movieconv.c src/data/motion.c
     src/third_party/stb.c src/third_party/dr_flac.c src/third_party/cgltf.c)
 target_include_directories(omdata PUBLIC src/third_party)
+# the movies' encoder (the import) and decoder: libavcodec, when there is one
+find_package(PkgConfig)
+if(PkgConfig_FOUND)
+    pkg_check_modules(AVCODEC IMPORTED_TARGET libavcodec libavutil)
+endif()
+if(AVCODEC_FOUND)
+    target_compile_definitions(omdata PUBLIC OM_HAVE_AVCODEC)
+    target_link_libraries(omdata PUBLIC PkgConfig::AVCODEC)
+else()
+    message(STATUS "no libavcodec: the import keeps the movies as STR")
+endif()
 target_compile_options(omdata PRIVATE $<$<CONFIG:Debug>:-O2>)   # (the import's conversions: slow unoptimized)
 target_link_libraries(omdata PUBLIC m)
 add_executable(openmizzurna

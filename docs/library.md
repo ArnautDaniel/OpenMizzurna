@@ -51,7 +51,7 @@ tracks), five `.STR` movies (260 MB), `FILELINK.BIN`.
 | sound banks | VAB (programs, tones, envelopes; ADPCM samples) | a WAV per sample (its loop in a `smpl` chunk) and the bank as text (programs, tones, envelopes) | replace a sound |
 | sequences | SEP / SEQ (the music and effect sequences) | Standard MIDI files, the loop points as markers | replace a tune |
 | music and voices | TSG.XA (XA ADPCM, 7 tracks) | FLAC, one per track | replace a track |
-| movies | STR (MDEC video, XA audio) | a modern video file (decoded once at import and encoded with a video library, e.g. libavcodec); the sound as FLAC | any player opens them; a mod's movie is any video |
+| movies | STR (MDEC video, XA audio) | MPEG-2 video (decoded at import, encoded with libavcodec) and the sound as FLAC | any player opens them; a mod's movie is any MPEG-1/2 video |
 | the executable's tables | addresses in SLPS_017.83 | a file each, by name; readable forms as subsystems want them | no addresses at run time; mods |
 | event scripts | bytecode in CD.BIN's event packs and the areas' overlays | converted **once**, at development time, into Forth (`scripts/story/`), not at import | edited by hand from then on |
 
@@ -113,7 +113,7 @@ library/
   xa/TSG/          TSG.XA's channels as FLAC
   town/            MAP.BIN's 768 tiles: index.txt, a folder per tile (CC-RR/: terrain, objects as glTF; the rest as it is)
   disc/            FILELINK.BIN as it is
-  movies/          the five .STR as they are
+  movies/          the five movies: NAME.m2v, NAME.flac, NAME.txt (the STR as it is when built without libavcodec)
 ```
 
 Checks (ctest, with the developers' disc - `OM_DEV_DISC`): `disc_check` (every file of the image the same as
@@ -170,4 +170,14 @@ visibility and cameras, object animations, lights, reverb; part 2: floors' obsta
 billboards and snow; parts 8, 10: not known yet) stays as it is in `cdbin/` until the subsystem that reads it is
 built and its fields are named - then it becomes text. The town's region and billboard parts the same.
 
-**Next**: the movies (a video library); the executable's tables as each subsystem names them.
+### Movies
+
+A movie (`src/data/str.c`: the five STR files, MDEC pictures and XA sound interleaved) becomes
+`movies/NAME.m2v` - MPEG-2 video at 15 frames a second, encoded at import by libavcodec's own encoder at a fine
+fixed quantiser - `NAME.flac` (the sound, exact) and `NAME.txt` (size, rate, frames, the delay before frame 0
+shows, the sound's file). The pictures are the one conversion that can't be exact (no common format holds the
+MDEC's); the check decodes both and holds every picture to 38 dB PSNR of the STR's own (the worst is 43 dB).
+173 MB for the STRs' 227. Any player opens them; the engine plays them with libavcodec (built in when found by
+pkg-config; without it the import keeps the STRs as they are).
+
+**Next**: the executable's tables as each subsystem names them; then the subsystems.
