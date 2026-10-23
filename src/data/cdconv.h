@@ -5,7 +5,8 @@
  *   a text block      N.txt (data/text.h)
  *   a sound bank's header   N.bank.txt (data/vab.h); its body (another entry) M.samples/ - WAVs
  *   sequences         N.sep/ - MIDI files (data/seqmidi.h)
- *   anything else     N.<kind> as it is: .spl (a model), .exe (a program), .bin (not known yet)
+ *   a model           models/<path>.gltf (data/modelconv.h; index.txt names it)
+ *   anything else     N.<kind> as it is: .exe (a program), .bin (not known yet)
  * An event pack (its script, then its text block) is kept as it is and its text also written as N.txt: the
  * scripts are converted to Forth once, at development time, and the engine reads only the text.
  *

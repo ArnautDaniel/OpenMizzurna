@@ -5,6 +5,7 @@
 #include "seqmidi.h"
 #include "vab.h"
 #include "text.h"
+#include "tmd.h"
 #include "tim.h"
 
 #include <stdio.h>
@@ -14,8 +15,8 @@
 #define INDEX_FORMAT "om-container 1"
 #define MODEL_MAGIC 0x88FA   /* a model (SPL: its parts, then a TMD) starts with this u16 */
 
-typedef enum { PART_EMPTY, PART_FOLDER, PART_IMAGE, PART_TEXT, PART_BANK, PART_SEQUENCES, PART_RAW } PartKind;
-static const char *kKindNames[] = {"empty", "folder", "image", "text", "bank", "sequences", "raw"};
+typedef enum { PART_EMPTY, PART_FOLDER, PART_IMAGE, PART_TEXT, PART_BANK, PART_SEQUENCES, PART_MODEL, PART_RAW } PartKind;
+static const char *kKindNames[] = {"empty", "folder", "image", "text", "bank", "sequences", "model", "raw"};
 
 static PartKind kind_of(const uint8_t *d, size_t n) {
     Tim t;
@@ -37,6 +38,9 @@ static PartKind kind_of(const uint8_t *d, size_t n) {
     }
     if (sep_sequences(d, n) > 0) {
         return PART_SEQUENCES;
+    }
+    if (model_is(d, n)) {
+        return PART_MODEL;
     }
     return PART_RAW;
 }
@@ -88,7 +92,7 @@ static int convert_part(const char *base, const char *what, const uint8_t *d, si
         return 1;
     case PART_FOLDER: {
         Container c;
-        char index[16384], sub[600], subfile[64];
+        char index[32768], sub[600], subfile[320];
         int i, k;
 
         container_parse(&c, d, n);
@@ -151,6 +155,19 @@ static int convert_part(const char *base, const char *what, const uint8_t *d, si
             free(mid);
         }
         return ok;
+    }
+    case PART_MODEL: {   /* (converted with the others: data/modelconv.c; its glTF named by its path) */
+        char id[300];
+        size_t i;
+
+        snprintf(id, sizeof(id), "%s", base + strlen("cdbin/"));
+        for (i = 0; id[i]; i++) {
+            if (id[i] == '/') {
+                id[i] = '.';
+            }
+        }
+        snprintf(file, nfile, "models/%s.gltf", id);
+        return 1;
     }
     case PART_RAW:
         snprintf(path, sizeof(path), "%s.%s", base, raw_extension(d, n));
@@ -289,7 +306,7 @@ static int pack_text(const uint8_t *block, size_t n) {
 }
 
 int cdconv_entry(const char *name, const uint8_t *d, size_t n, CdconvWriteFn write, void *ctx, char *why, size_t nwhy) {
-    char base[300], what[300], file[64];
+    char base[300], what[300], file[320];
     long at;
 
     snprintf(base, sizeof(base), "cdbin/%s", name);
@@ -415,6 +432,8 @@ static int check_part(const char *base, const uint8_t *d, size_t n, CdconvReadFn
         }
         return ok;
     }
+    case PART_MODEL:   /* (data/modelconv.c checks the models) */
+        return 1;
     case PART_SEQUENCES: {
         char err[256] = "";
 

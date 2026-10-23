@@ -15,7 +15,7 @@
 #define DISC_SECTOR_DATA 2048   /* a data (form 1) sector's file bytes */
 
 typedef struct DiscEntry {
-    char path[256];     /* "SLPS_017.83", "MOVIE/OPENING.STR" ... ('/' between folders, no ";1") */
+    char path[300];     /* "SLPS_017.83", "MOVIE/OPENING.STR" ... ('/' between folders, no ";1") */
     uint32_t lba;       /* its first sector */
     uint32_t size;      /* its size as the directory gives it (data bytes) */
     int raw;            /* read whole sectors (an XA / STR stream) */

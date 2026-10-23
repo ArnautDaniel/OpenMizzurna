@@ -12,6 +12,7 @@
 #include "../data/disc.h"
 #include "../data/exetables.h"
 #include "../data/flacenc.h"
+#include "../data/modelconv.h"
 #include "../data/xa.h"
 #include "../render/render.h"
 #include "platform.h"
@@ -258,7 +259,7 @@ static int import_disc(Import *im) {
         snprintf(im->why, sizeof(im->why), "can't write the library in %s", root);
         goto out;
     }
-    fprintf(im->manifest, "%s\ndisc %08X %s\nconvert cdbin folders 1\nconvert images png 1\nconvert text utf8 1\nconvert exe-tables files 1\nconvert banks text-wav 1\nconvert sequences midi 1\nconvert xa flac 1\n",
+    fprintf(im->manifest, "%s\ndisc %08X %s\nconvert cdbin folders 1\nconvert images png 1\nconvert text utf8 1\nconvert exe-tables files 1\nconvert banks text-wav 1\nconvert sequences midi 1\nconvert xa flac 1\nconvert models gltf 1\nconvert textures png 1\n",
             LIBRARY_FORMAT, crc32_of(exe, exe_n), exe_name);
 
     /* the executable: kept until the tables the game reads from it are files of their own */
@@ -310,6 +311,16 @@ static int import_disc(Import *im) {
                 if (cwhy[0]) {
                     snprintf(im->why, sizeof(im->why), "%s", cwhy);
                 }
+                failed = 1;
+            }
+        }
+        if (!failed) {   /* the models, and the textures they're drawn with */
+            ImportWrite w = {im, root};
+            char mwhy[512] = "";
+
+            snprintf(im->current, sizeof(im->current), "the models");
+            if (!modelconv_write((const uint8_t *const *)entries, sizes, table.n, exe, exe_n, import_write, &w, mwhy, sizeof(mwhy))) {
+                snprintf(im->why, sizeof(im->why), "%s", mwhy);
                 failed = 1;
             }
         }

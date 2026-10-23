@@ -119,7 +119,31 @@ Checks (ctest, with the developers' disc - `OM_DEV_DISC`): `disc_check` (every f
 phase 1's extraction), `cdbin_check` (every CD.BIN entry unpacked the same), `library_import` then
 `library_check` (every entry against its library form: the containers and images making the same bytes again,
 the text the same characters, the banks' headers and the sequences the same bytes, the samples and the XA tracks
-the same sound sample for sample, the rest the same bytes).
+the same sound sample for sample, every model's glTF holding its parts and polygons exactly, every texture the
+same texels as video memory, the rest the same bytes). The import takes ~30 s (optimized build).
 
-**Next**: models (with the area texture sheets cut into proper textures) and areas; MAP.BIN's town; the movies
+### Models and their textures
+
+A model (an SPL: a part hierarchy, then a TMD) becomes glTF 2.0: one node per part (its rest position, and its
+exact rest angles in `extras`), the polygons as triangles with positions, normals, vertex colours and UVs, a
+material per texture. Textures are cut at import from what the game's video memory held when the model was drawn
+- that is the only place the PlayStation's texture pages and palettes are known; the engine sees PNG textures:
+
+- **the areas' sets**: for each area, its context - the common images (033_3, in the game's upload order), the
+  area's sheet (NNN_3) and the character sheet it loads (063_4 / 064_x, the executable's table) - cut into a
+  256 x 256 texture per page and palette that any model drawn there uses (the area's props, and the characters
+  whose textures stay loaded: the same character can look different from area to area, as in the original).
+  Each texture's most common version is in `textures/common/`; an area whose version differs has its own in
+  `textures/area-NNN/` - the engine looks in the area's folder, then in common (1889 common, ~1800 overrides);
+- **a streamed character's own** (`models/<entry>.texture/`): its image as the game placed it in a character
+  slot, a texture per palette row its polygons use.
+
+A material names its texture in `extras` (`area`: the set of the area being played, by name; `own`: the
+model's); its glTF image is a default (the model's own area, or area 1) so viewers show it. 194 models (64 areas'
+props, 69 streamed characters, 61 more): `models/<CD.BIN path>.gltf` + `.bin`; a container's `index.txt` names
+the model a part became. `tools/gltf_view.py` renders one to a PNG (a look without the engine).
+
+Not yet: characters' motions (the game's keyed rotations and root motion: the engine's own format, plainly).
+
+**Next**: characters' motions; areas (their floors, walls, zones, cameras, objects, lights); MAP.BIN's town; the movies
 (a video library); the executable's tables as each subsystem names them.

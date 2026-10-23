@@ -4,6 +4,7 @@
 #include "../src/data/cdbin.h"
 #include "../src/data/cdconv.h"
 #include "../src/data/disc.h"
+#include "../src/data/modelconv.h"
 #include "../src/data/xa.h"
 #include "../src/third_party/dr_flac.h"
 
@@ -12,7 +13,7 @@
 #include <string.h>
 
 static const char *sLibrary;
-static int sImages, sTexts, sFiles, sBodies, sXa;
+static int sImages, sTexts, sFiles, sBodies, sXa, sModels, sTextures;
 
 static uint8_t *read_library(void *ctx, const char *path, size_t *n) {
     char full[1400];
@@ -91,6 +92,16 @@ int main(int argc, char **argv) {
             }
             checked++;
         }
+        {
+            int models = 0, textures = 0;
+            if (!modelconv_check((const uint8_t *const *)entries, sizes, t.n, exe, exe_n, read_library, NULL, &models,
+                                 &textures, why, sizeof(why))) {
+                printf("models: %s\n", why);
+                bad++;
+            }
+            sModels = models;
+            sTextures = textures;
+        }
         for (i = 0; i < t.n; i++) {
             free(entries[i]);
         }
@@ -132,7 +143,7 @@ int main(int argc, char **argv) {
         }
         free(xa);
     }
-    printf("%d entries checked, %d differ; %d files read: %d images, %d text files, %d sound bank bodies, %d XA tracks\n",
-           checked, bad, sFiles, sImages, sTexts, sBodies, sXa);
+    printf("%d entries checked, %d differ; %d files read: %d images, %d text files, %d sound bank bodies, %d XA tracks, %d models, %d model textures\n",
+           checked, bad, sFiles, sImages, sTexts, sBodies, sXa, sModels, sTextures);
     return bad != 0;
 }
