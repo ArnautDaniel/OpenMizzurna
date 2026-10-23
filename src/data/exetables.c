@@ -23,6 +23,8 @@ static const ExeTable kTables[] = {
     {"effect-fade-levels", 0x80094B44, 33, "a fade's level 0..32 as a grey (src: screen_effect_update)"},
     {"effect-iris-sines", 0x80094B68, 16 * 4, "the iris's 16 segments: s32 sines, 0x10000 = 1"},
     {"effect-tint-levels", 0x80094BA7, 5, "the tint's levels from -1 (its start) to 3"},
+    {"kind-models", 0x800959C8, 0xC0,
+     "a character kind (an actor slot's, by default): its model's CD.BIN entry, less 0x16E (src: npc_model_stream)"},
     {"music", 0x800814DC, MUSIC_TRACKS * MUSIC_ENTRY,
      "the background music: per track its sequence's CD.BIN entry, then 0 or 1, and its volume (src: music_play)"},
 };
