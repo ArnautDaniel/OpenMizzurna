@@ -40,15 +40,16 @@ endforeach()
 find_package(SDL3 REQUIRED CONFIG)
 # the game's data: the disc image, CD.BIN, the formats and their conversions (the engine's, the import's and
 # the checks')
-add_library(omdata STATIC src/data/disc.c src/data/cdbin.c)
+add_library(omdata STATIC src/data/disc.c src/data/cdbin.c src/data/container.c src/data/png.c src/data/tim.c
+    src/data/text.c src/data/cdconv.c src/third_party/stb.c)
+target_include_directories(omdata PUBLIC src/third_party)
 target_link_libraries(omdata PUBLIC m)
 add_executable(openmizzurna
     src/main.c
     src/platform/platform.c src/platform/gl.c
     src/render/render.c
     src/game/bind_engine.c src/game/console.c
-    src/platform/library.c src/core/files.c
-    src/third_party/stb.c)
+    src/platform/library.c src/core/files.c)
 target_link_libraries(openmizzurna PRIVATE omdata)
 target_include_directories(openmizzurna PRIVATE src/third_party)
 target_link_libraries(openmizzurna PRIVATE forth mactor SDL3::SDL3 m)
@@ -74,6 +75,15 @@ add_executable(disc_ls tools/disc_ls.c)
 target_link_libraries(disc_ls PRIVATE omdata)
 add_executable(cdbin_check tools/cdbin_check.c)
 target_link_libraries(cdbin_check PRIVATE omdata)
+add_executable(library_check tools/library_check.c)
+target_link_libraries(library_check PRIVATE omdata)
+if(EXISTS "${OM_DEV_DISC}")
+    # the import into a library of the test's own, then every entry checked against it
+    add_test(NAME library_import COMMAND ${CMAKE_COMMAND} -E env OM_HOME=${CMAKE_BINARY_DIR}/test-home
+             $<TARGET_FILE:openmizzurna> --import "${OM_DEV_DISC}")
+    add_test(NAME library_check COMMAND library_check "${OM_DEV_DISC}" "${CMAKE_BINARY_DIR}/test-home/library")
+    set_tests_properties(library_check PROPERTIES DEPENDS library_import)
+endif()
 if(EXISTS "${OM_DEV_DISC}" AND EXISTS "${OM_DEV_EXTRACT}/fs")
     add_test(NAME disc_check COMMAND disc_ls "${OM_DEV_DISC}" "${OM_DEV_EXTRACT}/fs")
     add_test(NAME cdbin_check COMMAND cdbin_check "${OM_DEV_DISC}" "${OM_DEV_EXTRACT}/cdbin")

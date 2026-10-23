@@ -1,13 +1,14 @@
 /* The game library (library.h, docs/library.md).
  *
  * The import reads the disc image (data/disc.c), checks it is the English Mizzurna Falls (its executable's
- * CRC), and writes library.new/: CD.BIN's entries unpacked (cdbin/NNN_K.bin, data/cdbin.c), the other files
- * as they are, and manifest.txt. When all is written it takes the place of library/. Formats are converted
+ * CRC), and writes library.new/: CD.BIN's entries unpacked and converted (cdbin/, data/cdconv.c: containers as
+ * folders, images as PNG, text as UTF-8), the other files as they are, and manifest.txt. When all is written it takes the place of library/. Formats are converted
  * kind by kind as the subsystems need them (the manifest's "convert" lines say which); until then a kind is
  * kept as the disc has it. */
 #include "library.h"
 
 #include "../data/cdbin.h"
+#include "../data/cdconv.h"
 #include "../data/disc.h"
 #include "../render/render.h"
 #include "platform.h"
@@ -131,6 +132,16 @@ static int write_file(Import *im, const char *root, const char *rel, const uint8
     return 1;
 }
 
+typedef struct ImportWrite {
+    Import *im;
+    const char *root;
+} ImportWrite;
+
+static int import_write(void *ctx, const char *path, const uint8_t *data, size_t n) {
+    ImportWrite *w = ctx;
+    return write_file(w->im, w->root, path, data, n);
+}
+
 /* the executable SYSTEM.CNF boots ("BOOT = cdrom:\SLPS017.83;1" -> "SLPS017.83") */
 static int boot_name(Disc *d, char *name, size_t n) {
     size_t len = 0;
@@ -210,7 +221,8 @@ static int import_disc(Import *im) {
         snprintf(im->why, sizeof(im->why), "can't write the library in %s", root);
         goto out;
     }
-    fprintf(im->manifest, "%s\ndisc %08X %s\nconvert cdbin unpacked 1\n", LIBRARY_FORMAT, crc32_of(exe, exe_n), exe_name);
+    fprintf(im->manifest, "%s\ndisc %08X %s\nconvert cdbin folders 1\nconvert images png 1\nconvert text utf8 1\n",
+            LIBRARY_FORMAT, crc32_of(exe, exe_n), exe_name);
 
     /* the executable: kept until the tables the game reads from it are files of their own */
     snprintf(im->current, sizeof(im->current), "%s", exe_name);
@@ -230,11 +242,19 @@ static int import_disc(Import *im) {
             }
             continue;
         }
-        snprintf(rel, sizeof(rel), "cdbin/%03d_%d.bin", i / CDBIN_KINDS, i % CDBIN_KINDS);
-        snprintf(im->current, sizeof(im->current), "CD.BIN %03d_%d", i / CDBIN_KINDS, i % CDBIN_KINDS);
-        if (!write_file(im, root, rel, entry, n)) {
-            free(entry);
-            goto out;
+        snprintf(rel, sizeof(rel), "%03d_%d", i / CDBIN_KINDS, i % CDBIN_KINDS);
+        snprintf(im->current, sizeof(im->current), "CD.BIN %s", rel);
+        {
+            ImportWrite w = {im, root};
+            char cwhy[512] = "";
+
+            if (!cdconv_entry(rel, entry, n, import_write, &w, cwhy, sizeof(cwhy))) {
+                if (cwhy[0]) {
+                    snprintf(im->why, sizeof(im->why), "%s", cwhy);
+                }
+                free(entry);
+                goto out;
+            }
         }
         free(entry);
     }

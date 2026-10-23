@@ -66,22 +66,44 @@ check (a ctest) that decodes both and compares.
 
 ## Status
 
-**Built** (step 1, the plain library): the picker and the import with its progress (`src/platform/library.c`), the
-disc image reader (`src/data/disc.c`: .cue / .bin, ISO 9660, XA streams as raw sectors), CD.BIN's table and
-unpacking (`src/data/cdbin.c`), the manifest and the check at start-up (every file listed there at its size),
-`--import`. The library today:
+**Built**: the picker and the import with its progress (`src/platform/library.c`), the disc image reader
+(`src/data/disc.c`: .cue / .bin, ISO 9660, XA streams as raw sectors), CD.BIN's table and unpacking
+(`src/data/cdbin.c`), the manifest and the check at start-up (every file listed there at its size), `--import`,
+and the first conversions (`src/data/cdconv.c`):
+
+- **CD.BIN's containers as folders** (`src/data/container.c`): an entry or part that is a container becomes a
+  folder, its parts numbered, `index.txt` naming each (`part <i> <kind> <file>`) and the zero bytes after the
+  last (`tail`). 201 containers.
+- **Images as PNG** (`src/data/tim.c`, `src/data/png.c`): every TIM (195) as `N.png` - an indexed PNG (4 / 8 bits)
+  keeping each pixel's palette index, shown in the first palette - or RGBA (16 / 24 bits); `N.clut.png` the
+  whole palette block (a colour a pixel); `N.tim.txt` the depth and where the game put both in video memory
+  (how models and sprites name a texture and palette). Colours: alpha 0 transparent, 128 a texel that blends
+  when drawn semi-transparent, 255 solid.
+  - A picture with one palette (the photos, the title's pieces) looks right as it is. An **area's texture
+    sheet** is many textures in one image, each drawn with its own palette row, so its preview in the first
+    palette looks scrambled; the PNGs hold everything, and proper textures (each cut out in its own palette)
+    come with the models' conversion, which knows which part of the sheet each polygon uses.
+- **Text as UTF-8** (`src/data/text.c`): every text block (87: the areas' and the event packs' in the 2021
+  translation's format, four leftover blocks of the original's) as `N.txt` - `#id` then the message's lines;
+  `\\ \{ \}` escape, `\#` a `#` starting a line, `{$XXXX}` a code by number; the pad's buttons as △ ○ ✕ □ and
+  the dash —. The English text uses nothing else. An event pack keeps its bytes as they are (its script becomes
+  Forth at development time) and its text is also written as `N.txt` beside it.
+- Everything else as it is, named by its kind: `.vab` (sound bank header), `.sep` (sequences), `.spl` (models),
+  `.exe` (OPENING.EXE), `.bin`.
 
 ```
 library/
-  manifest.txt     openmizzurna-library 1 / disc <crc> <program> / convert ... / file <size> <path> ...
+  manifest.txt     openmizzurna-library 1 / disc <crc> <program> / convert <kind> <format> <version> ... / file <size> <path> ...
   exe/SLPS_017.83  the executable (until the tables the game reads from it are files of their own)
-  cdbin/NNN_K.bin  CD.BIN's 565 entries, unpacked (group NNN, kind K)
+  cdbin/           CD.BIN's 565 entries: folders, PNG, text, the rest as it is (29 MB)
   disc/            MAP.BIN, TSG.XA, FILELINK.BIN as they are
   movies/          the five .STR as they are
 ```
 
 Checks (ctest, with the developers' disc - `OM_DEV_DISC`): `disc_check` (every file of the image the same as
-phase 1's extraction) and `cdbin_check` (every CD.BIN entry unpacked the same).
+phase 1's extraction), `cdbin_check` (every CD.BIN entry unpacked the same), `library_import` then
+`library_check` (every entry against its library form: the containers and images making the same bytes again,
+the text the same characters, the rest the same bytes).
 
-**Next**: the containers inside CD.BIN's entries, their TIM images to PNG; the text to UTF-8; the executable's
-tables by name.
+**Next**: the executable's tables by name; sound banks (VAB to WAV + text), sequences, XA music; models and
+areas; MAP.BIN's town; the movies.
