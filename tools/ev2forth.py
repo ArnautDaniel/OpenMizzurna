@@ -436,7 +436,12 @@ def route_addresses(exe, src_dir, root, exe_img):
                 break
             if EXE_BASE <= scr < EXE_BASE + len(exe_img):
                 out.add(scr)
-    return out
+    return out | set(ARRIVAL_SCRIPTS)
+
+
+# what a trip goes on with when the person's car arrives (src: the handlers' CMD_LINK_NOTIFY - Nozz at stops 2
+# and 6, Cohen at 1 3 5 13 and 6): converted with the routes
+ARRIVAL_SCRIPTS = [0x80081F94, 0x80081F74, 0x8008299C, 0x800829B4]
 
 
 def main():

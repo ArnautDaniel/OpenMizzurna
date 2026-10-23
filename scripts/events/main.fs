@@ -246,6 +246,24 @@ defer L-80099064
     end-script
     ;
 
+\ $80081F74
+: route-80081F74
+    nozz as-this-one
+    L-80097694
+    this-one 44416 415760 walk-to  this-one wait-stop
+    nozz arrive
+    end-script
+    ;
+
+\ $80081F94
+: route-80081F94
+    nozz as-this-one
+    L-80097694
+    L-800976F8
+    nozz arrive
+    end-script
+    ;
+
 : L-8009770C
     this-one 41744 415872 walk-to  this-one wait-stop
     this-one 52688 415856 walk-to  this-one wait-stop
@@ -673,6 +691,20 @@ defer L-80099064
     cohen 12 360 attach
     this-one wait-follow
     L-800827C0
+    cohen arrive
+    end-script
+    ;
+
+\ $8008299C
+: route-8008299C
+    cohen as-this-one
+    L-800827C0
+    cohen arrive
+    end-script
+    ;
+
+\ $800829B4
+: route-800829B4
     cohen arrive
     end-script
     ;
@@ -9606,6 +9638,8 @@ defer L-80099064
 ' route-80081ED4 $80081ED4 main-word!
 ' route-80081F0C $80081F0C main-word!
 ' route-80081F38 $80081F38 main-word!
+' route-80081F74 $80081F74 main-word!
+' route-80081F94 $80081F94 main-word!
 ' route-80081FB4 $80081FB4 main-word!
 ' route-80081FF4 $80081FF4 main-word!
 ' route-80082028 $80082028 main-word!
@@ -9624,6 +9658,8 @@ defer L-80099064
 ' route-800828E4 $800828E4 main-word!
 ' route-8008290C $8008290C main-word!
 ' route-80082964 $80082964 main-word!
+' route-8008299C $8008299C main-word!
+' route-800829B4 $800829B4 main-word!
 ' route-800829BC $800829BC main-word!
 ' route-800829D4 $800829D4 main-word!
 ' route-800829DC $800829DC main-word!

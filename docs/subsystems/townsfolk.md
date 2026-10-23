@@ -20,7 +20,8 @@ end-schedule
 `until` a day, hour and minute; `record` which of their placements (the rules ask: Nozz's 0 is his counter);
 `in-area` area and floor, `place` x z (world), `facing` (4096 a turn), `pose` the motion held; or placed
 `with-partner` (riding with someone), at the `diner-seat` / `club-seat` (src: func_80027944 types 1-3);
-`variant` another model; `route` the event they walk on leaving (an address until the routes are converted).
+`variant` another model; `route` the event they walk on leaving; `car-at` / `car-hidden` where their car waits
+meanwhile (`docs/subsystems/traffic.md`); `with-partner` takes their car's route and speed.
 The row words live apart, in `townsfolk.rows` (`scripts/townsfolk/rows.fs`): `until`, `stop`, `place` would
 hide the language's own elsewhere.
 
@@ -48,13 +49,14 @@ person placed there (src: actor_arrive).
 
 The events' figure ops work for a person (`events.fs`: `person?`, sent to the townsfolk as `person-*`
 messages): `set-pos`, `set-rot`, `set-floor`, `walk-to` (30 a frame, motion 1), `run-to` (80, motion 5),
-`idle`, `turn-to`, `anim`, `anim-then`, `anim-hold`, `wait-anim`, `wait-stop`, `arrive`, `goto-stop`, and the
+`idle`, `walk-forward` / `move-forward` (straight on along their heading until `idle`), `turn-to`, `anim`,
+`anim-then`, `anim-hold`, `wait-anim`, `wait-stop`, `arrive`, `goto-stop`, riding (`attach`, `wait-follow`, the
+car commands: `docs/subsystems/traffic.md`), and the
 doors: `through-door` / `through-door-back` put them out of a door (`docs/subsystems/doors.md`) in the
 stepping-out motion ($3F / $40) and the thread waits for it.
+Everyone's motions play, seen or not: a route waits on them wherever its person is.
 
 ## To come
 
-Talking to them: built in part (`docs/subsystems/talk.md`). Riding (`attach`, `wait-follow`, the actor
-commands 0x41 / 0x4B / 0x42: walking to a partner's car and getting in - until then a route that rides waits
-there, and the next row's minute puts them at their stop: Nozz on 12/25 stands in the street 12:13 to 13:42), seats and partners (the diner, Club Wolves, riding along), turning in place (`turn-by`,
-`wait-turned`), `walk-forward`, the streamed models' variants, a door opening as they pass (the doors).
+Talking to them: built in part (`docs/subsystems/talk.md`). Riding is built (`docs/subsystems/traffic.md`). Seats (the diner, Club Wolves),
+turning in place (`turn-by`, `wait-turned`), the streamed models' variants, a door opening as they pass (the doors).

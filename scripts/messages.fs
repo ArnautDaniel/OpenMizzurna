@@ -69,10 +69,21 @@ message person-place ( slot x z -- )      \ stand there (height and area kept: s
 message person-floor ( slot floor -- )    \ on that floor (its height)
 message person-walk ( slot x z speed motion -- )   \ walk there, speed units a frame, in that motion
 message person-idle ( slot -- )           \ stop walking, stand (src: cmd 0x0C)
+message person-forward ( slot speed motion -- )   \ straight ahead, speed a frame, in that motion (-1: as it is) until idle
 message person-anim ( slot id next loop -- )
 message person-hold ( slot -- )           \ at the motion's end they keep its move
 message person-arrive ( slot -- )         \ the route is done: the next stop (src: actor_arrive)
 message person-goto-stop ( slot stop -- ) \ put at that stop now (src: actor_goto_stop)
 message person-through-door ( slot door room flip -- )   \ out of that door into room (flip: the other way)
+message person-attach ( slot route speed -- )   \ get in their car: it drives that route, they ride (src: cmd 0x2C)
+message person-get-in ( slot -- )         \ climb into their car (src: cmd 0x42)
 message person-departs ( slot route -- )  \ broadcast: they left their stop (route: its address, 0 none)
 message person-stopped ( slot -- )        \ broadcast: they no longer walk a route (put at a stop)
+
+\ ---- traffic: the cars, slots 26-60 (docs/subsystems/traffic.md) ----
+message car-park ( car route -- )        \ (to the traffic) stand at the route's start, in its lane (src: carline_start)
+message car-hide ( car -- )              \ off the roads
+message car-drive ( car route speed -- ) \ drive the route from its start (speed: units a frame)
+message car-carry ( car route speed -- ) \ the same with someone riding: car-arrived at its end
+message car-stop ( car -- )              \ stop where it is, riders still in (src: carline_stop)
+message car-arrived ( car -- )           \ broadcast: a car with riders reached its route's end; they get out

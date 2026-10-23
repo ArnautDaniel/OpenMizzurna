@@ -24,13 +24,23 @@ PEOPLE = [(0x41 + n, n) for n in range(0x18)] + [(0x71 + n - 0x18, n) for n in r
 TYPES = {0: 'stand', 1: 'with-partner', 2: 'diner-seat', 3: 'club-seat'}
 
 
-def stop_line(i, d, hh, mm, scr, k, rec):
+CAR_HIDDEN = 0xFF
+EXE_START = 0x80010000
+
+
+def stop_line(i, d, hh, mm, scr, k, rec, car_line):
     x, z, hd, area, floor, anim, typ, model = rec
     parts = ['%2d stop' % i, '%d %d %d until' % (d, hh, mm), '%d record' % k]
     if typ == 0:
         parts.append('%d %d in-area  %d %d place  %d facing  %d pose' % (area, floor, x, z, hd & 0xFFF, anim))
+    elif typ == 1:
+        parts.append('%d %d with-partner' % (x, z))   # (riding: their car's route and speed)
     else:
         parts.append(TYPES.get(typ, '%d placed-as' % typ))
+    if typ != 1 and car_line == CAR_HIDDEN:
+        parts.append('car-hidden')
+    elif typ != 1 and car_line:
+        parts.append('%d car-at' % car_line)
     if model:
         parts.append('%d variant' % model)
     if scr:
@@ -49,7 +59,10 @@ def main():
         m = re.match(r'(\w+) = (0x[0-9A-Fa-f]+);', ln)
         if m:
             syms[int(m.group(2), 16)] = m.group(1)
-    info = SC.handlers(open(os.path.join(root, 'src', 'main', 'main.c')).read())
+    main_c = open(os.path.join(root, 'src', 'main', 'main.c')).read()
+    info = SC.handlers(main_c)
+    car_lines = {int(a, 16): int(b, 16) for a, b in   # a handler's placements -> its stops' car lines
+                 re.findall(r'\+ &D_([0-9A-F]{8}), \(s32\) &D_([0-9A-F]{8})\);', main_c)}
     lines = ['\\ schedules.fs - the townsfolk\'s days (docs/subsystems/townsfolk.md): converted once from the',
              '\\ executable\'s tables by tools/schedules2forth.py; edited by hand from here on. A person\'s rows: until when',
              '\\ (day hour minute) they stay at a stop, where it is - area floor, x z, heading (4096 a turn), the motion they',
@@ -69,7 +82,9 @@ def main():
             if d == 0:
                 break
             k = e[off(h['stop_index']) + i]
-            lines.append(stop_line(i, d, hh, mm, scr, k, struct.unpack_from('<iiHBBhBB', e, off(h['records']) + 16 * k)))
+            cl = car_lines.get(h['records'])
+            lines.append(stop_line(i, d, hh, mm, scr, k, struct.unpack_from('<iiHBBhBB', e, off(h['records']) + 16 * k),
+                                   e[off(cl) + i] if cl else 0))
         lines.append('end-schedule')
         lines.append('')
         count += 1
@@ -86,7 +101,10 @@ def main():
             if d == 0:
                 break
             k = e[off(idx) + i]
-            lines.append(stop_line(i, d, hh, mm, scr, k, struct.unpack_from('<iiHBBhBB', e, off(rec) + 16 * k)))
+            cl = u32(0x80089C58 + 4 * pn)   # (src: the shared handler's car lines, a person's; some point nowhere)
+            cl = cl if EXE_START <= cl and off(cl) + n <= len(e) else 0
+            lines.append(stop_line(i, d, hh, mm, scr, k, struct.unpack_from('<iiHBBhBB', e, off(rec) + 16 * k),
+                                   e[off(cl) + i] if cl else 0))
         lines.append('end-schedule')
         lines.append('')
         count += 1

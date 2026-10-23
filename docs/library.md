@@ -153,6 +153,11 @@ its place and turn). The game packs a character's frames ("hold this value n fra
 frame's values. 1193 motions. Which motion ids are an area's own: the executable's tables `area-motion-first` and
 `area-motion-count`. `tools/gltf_view.py` poses a model by a motion's frame.
 
+**Roads** (`src/data/roads.c`): the town's road graph the cars drive (`033_4/5/1.roads.txt`: 170 nodes, each
+where it is and the run of bends leaving it; `033_4/5/2.roads.txt`: 746 bends, each a step and its length).
+Known by where they are, like the motions. The cars' routes through it are the executable's
+(`scripts/events/car-routes.fs`: docs/subsystems/traffic.md).
+
 ### The town
 
 MAP.BIN (`src/data/town.c`) is the town's 32 x 24 tiles, which the game streams in around the camera; the

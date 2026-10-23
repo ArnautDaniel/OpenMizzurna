@@ -5,7 +5,7 @@
 \ Each op does its work through its subsystem's messages; an op whose subsystem isn't built yet is a stub
 \ that takes its arguments and notes it (`unbuilt`).
 IN: events
-USING: engine actors messages clock window matthew townsfolk effects camera ;
+USING: engine actors messages clock window matthew townsfolk traffic effects camera ;
 
 \ ---- the cast: actor slots (decomp/include/actor.h); the others by number (`160 actor`) ----
 0 constant matthew    1 constant morgan    2 constant nozz       3 constant cohen     5 constant samuel
@@ -116,7 +116,7 @@ variable unbuilt-ops   variable event-trace
 : note-unbuilt ( addr len -- )  1 unbuilt-ops +!  event-trace @ if  ." event: not yet " type cr  else  2drop  then ;
 : unbuilt ( args.. n addr len -- )  note-unbuilt  0 ?do  drop  loop ;
 : act-unbuilt ( actor args.. n -- )  s" actor command" unbuilt  0 result! ;   \ (the VM took any command's result)
-: act-command ( actor args.. n cmd -- )  drop 1+ act-unbuilt ;
+: act-unbuilt-command ( actor args.. n cmd -- )  drop 1+ act-unbuilt ;
 
 : native ( scope address -- )  2dup find-native ?dup if  nip nip execute  else  2drop s" native" note-unbuilt  then ;
 : native-result ( scope address -- )   \ (its answer is the result)
@@ -211,10 +211,8 @@ variable loaded-pack
 : anim-once ( a x1 -- )  2 act-unbuilt ;   \ cmd $05
 : anim-then-loop ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $06
 : turn-by ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $09
-: walk-forward ( a x1 -- )  2 act-unbuilt ;   \ cmd $0A
 : run ( a x1 -- )  2 act-unbuilt ;   \ cmd $0B
 : face-point ( a x1 x2 x3 -- )  4 act-unbuilt ;   \ cmd $0D
-: move-forward ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $10
 : anim-at ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $13
 : talk-pose ( a x1 -- )  2 act-unbuilt ;   \ cmd $14
 : restore-state ( a -- )  1 act-unbuilt ;   \ cmd $16
@@ -227,7 +225,6 @@ variable loaded-pack
 : lift ( a x1 x2 x3 -- )  4 act-unbuilt ;   \ cmd $24
 : ride ( a x1 -- )  2 act-unbuilt ;   \ cmd $26
 : unride ( a -- )  1 act-unbuilt ;   \ cmd $27
-: attach ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $2C
 : place-at-stop ( a -- )  1 act-unbuilt ;   \ cmd $2D
 : item-query ( a x1 -- )  2 act-unbuilt ;   \ cmd $2E
 : item-show ( a x1 -- )  2 act-unbuilt ;   \ cmd $2F
@@ -267,7 +264,6 @@ variable loaded-pack
 : door-anim ( n -- )  1 s" door-anim" unbuilt ;   \ op $127
 : warp ( n n n n n n -- )  6 s" warp" unbuilt ;   \ op $12A
 : cd-picture ( n -- )  1 s" cd-picture" unbuilt ;   \ op $12B
-: wait-follow ( a -- )  1 s" wait-follow" unbuilt  settle ;   \ op $138
 : door-animate ( w1 -- )  1 s" door-animate" unbuilt ;   \ op $139
 : door-animate-alt ( w1 -- )  1 s" door-animate-alt" unbuilt ;   \ op $13A
 : music ( n -- )  1 s" music" unbuilt ;   \ op $144
@@ -317,6 +313,10 @@ variable loaded-pack
 : walk-to ( a x z -- )  walk-pace walk-motion walk-with ;                    \ cmd $08
 : run-to ( a x z -- )  run-pace run-motion walk-with ;                       \ cmd $47
 : walk-to-ex ( a x z motion speed -- )  $FFFF and swap walk-with ;           \ cmd $0F
+: go-forward ( a speed motion -- )   \ straight on along their heading until idle
+    {: a v m :}  a person? if  a v m the-townsfolk send person-forward  else  a v m 3 act-unbuilt  then ;
+: walk-forward ( a speed -- )  walk-motion go-forward ;                     \ cmd $0A
+: move-forward ( a motion speed -- )  swap go-forward ;                     \ cmd $10
 : idle ( a -- )   \ cmd $0C
     dup person? if  the-townsfolk send person-idle  else  1 act-unbuilt  then ;
 : turn-to ( a heading speed -- )   \ cmd $11 (at once: the turning speed - to come)
@@ -330,6 +330,37 @@ variable loaded-pack
 : wait-stop ( a -- )   \ $10D: until they stop walking (src: the VM's wait_move)
     settle  dup person? 0= if  drop exit  then
     begin  yield  dup walking? 0= until  drop ;
+
+\ ---- riding (docs/subsystems/traffic.md) ----
+: xz-heading ( x y z heading -- x z heading )  {: x y z h :}  x z h ;
+: where-is ( a -- x z heading true | false )   \ anyone's place: Matthew, a person, a car
+    dup matthew = if  drop matthew-now xz-heading true exit  then
+    dup person? if  person-now xz-heading true exit  then
+    dup car? if  car-now xz-heading true exit  then
+    drop false ;
+: walk-beside ( a b seat -- )   \ to a seat's side of b (src: actor_side_point, then path_to)
+    {: a b k :}  b where-is 0= if  exit  then  k seat beside {: x z :}
+    a x z walk-pace walk-motion walk-with ;
+: attach ( a route speed -- )   \ cmd $2C: into their car, which drives the route (src: actor_attach)
+    {: a n v :}  a person? if  a n v the-townsfolk send person-attach  else  a n v 3 act-unbuilt  then ;
+: wait-follow ( a -- )   \ op $138: until their car has arrived (src: the VM's wait_follow)
+    settle  dup person? 0= if  drop exit  then
+    begin  yield  dup riding? 0= until  drop ;
+$41 constant to-car-door    $51 constant to-car-far-door   \ the actor commands for riding (src: CMESHAND.C)
+$5A constant to-door-of     $5B constant to-far-door-of
+$42 constant into-car       $4B constant at-car-door       \ ($4B: nothing for the townsfolk)
+: riding-command ( a args.. n cmd -- )
+    {: c :}  c to-car-door = c to-car-far-door = or if
+        drop  dup partner-of  c to-car-door = if  0  else  1  then  walk-beside  exit
+    then
+    c to-door-of = c to-far-door-of = or if
+        drop  c to-door-of = if  0  else  1  then  walk-beside  exit
+    then
+    c into-car = if  drop the-townsfolk send person-get-in  exit  then
+    c at-car-door = if  drop drop  exit  then
+    c act-unbuilt-command ;
+: act-command ( actor args.. n cmd -- )   \ a person's riding commands; the rest still to come
+    over 2 + pick person? if  riding-command  else  act-unbuilt-command  then ;
 
 \ ---- the camera and the scene ----
 : the-camera ( -- id )  s" camera" actor-named ;

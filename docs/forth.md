@@ -203,4 +203,6 @@ the code and checks the stack against the results; `testing name` labels what fo
   runs the file and exits with its status. `game-tick` runs a tick,
   `deliver` delivers what is queued; `key: X true key-hold` holds a key. Run them with
   `SDL_AUDIO_DRIVER=dummy` (and `--hidden` for other headless runs).
+- `tests/library/test_*.fs`: the game's on its data - run on the library `ctest` imports from the developers' disc
+  (`OM_DEV_DISC`; without it they are left out).
 - `ctest` runs both (later also the C checks of the library's conversions, `tests/*_check.c`).

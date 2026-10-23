@@ -26,6 +26,12 @@ static const ExeTable kTables[] = {
     {"actor-radii", 0x8008248C, 182 * 2, "an actor slot's radius (s16, world units; 0: not solid - src: actor_radius)"},
     {"kind-models", 0x800959C8, 0xC0,
      "a character kind (an actor slot's, by default): its model's CD.BIN entry, less 0x16E (src: npc_model_stream)"},
+    {"partners", 0x800825F8, 33 * 4,
+     "who goes with whom: pairs of s16 (a person's slot, their car's or bike's), ended by -1 (src: actor_partner)"},
+    {"car-seats", 0x80082474, 6 * 4,
+     "a car's seats: s16 side, forward from the car (world units; turned with it) - where a rider gets out"},
+    {"lane-steps", 0x800935C0, 32 * 4,
+     "a parking node's lanes: s16 x, z between one car's place and the next's (src: car_lane)"},
     {"music", 0x800814DC, MUSIC_TRACKS * MUSIC_ENTRY,
      "the background music: per track its sequence's CD.BIN entry, then 0 or 1, and its volume (src: music_play)"},
 };

@@ -3,6 +3,7 @@
 
 #include "container.h"
 #include "mfo.h"
+#include "roads.h"
 #include "motion.h"
 #include "seqmidi.h"
 #include "vab.h"
@@ -109,7 +110,19 @@ static int convert_part(const char *base, const char *what, const uint8_t *d, si
     const char *slash = strrchr(base, '/'), *leaf = slash != NULL ? slash + 1 : base;
     char path[600];
     Motion motion;
+    RoadsKind roads = kind_of(d, n) == PART_RAW ? roads_kind(base, n) : ROADS_NONE;
 
+    if (roads != ROADS_NONE) {
+        size_t len;
+        char *text = roads_text(roads, d, n, what, &len);
+        int ok;
+
+        snprintf(path, sizeof(path), "%s.roads.txt", base);
+        snprintf(file, nfile, "%s.roads.txt", leaf);
+        ok = write(ctx, path, (const uint8_t *)text, len);
+        free(text);
+        return ok;
+    }
     if (as_motion(base, d, n, &motion)) {
         size_t len;
         char *text = motion_text(&motion, what, &len);
@@ -150,7 +163,10 @@ static int convert_part(const char *base, const char *what, const uint8_t *d, si
                     motion_free(&mo);
                 }
                 k += snprintf(index + k, sizeof(index) - (size_t)k, "part %d %s %s\n", i,
-                              is_motion ? "motion" : kKindNames[kind_of(c.parts[i].data, c.parts[i].size)], subfile);
+                              is_motion ? "motion"
+                              : kind_of(c.parts[i].data, c.parts[i].size) == PART_RAW &&
+                                        roads_kind(sub, c.parts[i].size) != ROADS_NONE ? "roads"
+                              : kKindNames[kind_of(c.parts[i].data, c.parts[i].size)], subfile);
             }
         }
         snprintf(path, sizeof(path), "%s/index.txt", base);
@@ -419,7 +435,22 @@ static int check_part(const char *base, const uint8_t *d, size_t n, CdconvReadFn
     uint8_t *got;
     int ok;
     Motion motion, back;
+    RoadsKind roads = kind_of(d, n) == PART_RAW ? roads_kind(base, n) : ROADS_NONE;
 
+    if (roads != ROADS_NONE) {
+        uint8_t *text;
+
+        snprintf(path, sizeof(path), "%s.roads.txt", base);
+        text = read(ctx, path, &len);
+        got = text != NULL ? roads_from_text(roads, (const char *)text, len, &len) : NULL;
+        free(text);
+        ok = got != NULL && len == n && memcmp(got, d, n) == 0;
+        free(got);
+        if (!ok) {
+            snprintf(why, nwhy, "%s doesn't make the same roads again", path);
+        }
+        return ok;
+    }
     if (as_motion(base, d, n, &motion)) {
         char err[200] = "";
 

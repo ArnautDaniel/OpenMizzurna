@@ -18,7 +18,7 @@ How this project works:
   never writes another's state. Messages are declared in `scripts/messages.fs`.
 - **Docs move with the code**: a subsystem's page (`docs/subsystems/<name>.md`) records its messages, rules and
   status; written before the subsystem is built.
-- **Tests with every change**: `T{ ... -> ... }T` in `tests/<subsystem>/`; screenshots for anything drawn.
+- **Tests with every change**: `T{ ... -> ... }T` in `tests/<subsystem>/` (on the game's data: `tests/library/`); screenshots for anything drawn.
 - The data comes from the player's disc, imported once into `library/` in common formats (`docs/library.md`).
 
 Building and testing:

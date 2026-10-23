@@ -3,7 +3,7 @@
 \ clock puts them: at the first stop whose time hasn't come. Those in the area Matthew is in are drawn, in their
 \ stop's motion. Facts: stop-of, the stop's place; the townsfolk actor keeps them as the time moves.
 IN: townsfolk
-USING: engine actors messages clock areas figures doors ;
+USING: engine actors messages clock areas figures doors traffic ;
 
 182 constant #slots
 enum: placed  standing partnered at-diner at-club ;   \ how a stop puts them (src: func_80027944)
@@ -18,6 +18,7 @@ begin-structure stop-row
   field: stop-placed    \ placed: stand, or with someone, or on a seat
   field: stop-variant   \ another model (0: their own)
   field: stop-route     \ the route they walk on leaving (an event: to come)
+  field: stop-car       \ where their car waits meanwhile: a car route's start (0: where it is; -1: off the roads)
 end-structure
 
 begin-structure person
@@ -29,6 +30,9 @@ begin-structure person
   field: person-area   field: on-floor   field: px   field: py   field: pz   field: heading-now   \ where they are
   field: walking        \ walking to a point (src: ACTOR_F_NAV)
   field: goal-x   field: goal-z   field: stride   field: stride-motion
+  field: riding         \ the car they ride in (0: none)
+  field: forward        \ going straight ahead, units a frame (0: not; src: move_speed)
+  field: forward-motion \ in this motion (-1: whatever plays; src: move_anim)
   playing +field moving \ the motion they hold
 end-structure
 create people  #slots person * allot   people #slots person * erase
@@ -59,19 +63,49 @@ PRIVATE>
 : james-visiting? ( -- flag )  false ;   \ src: func_8002CBE8 (James by Matthew's bed: his position, to come)
 
 : person-now ( slot -- x y z heading )  person-of {: p :}  p px @  p py @  p pz @  p heading-now @ ;
-: here? ( slot -- flag )   \ in the area being played (seated and riding ones: to come)
+: here? ( slot -- flag )   \ in the area being played, not in a car (seated ones: to come)
     dup scheduled? 0= if  drop false exit  then
-    person-of {: p :}  p person-area @ area @ =  p person-area @ 0< 0= and ;
+    person-of {: p :}  p person-area @ area @ =  p person-area @ 0< 0= and  p riding @ 0= and ;
 : walking? ( slot -- flag )  person-of walking @ 0<> ;
+: riding? ( slot -- flag )  person-of riding @ 0<> ;
 : person-anim-done? ( slot -- flag )  person-of moving {: m :}  m done @  m anim @ 0< or ;
 
 <PRIVATE   \ (their workings: the messages are their face)
 \ ---- what moves them ----
 : show ( slot id next loop -- )  {: s id nx lp :}  id nx lp  s person-of moving play ;
+: to-traffic ( -- id )  s" traffic" actor-named ;
+
+\ riding in their car (docs/subsystems/traffic.md)
+$1645 constant getting-in      \ the motion of climbing in (the town's own)
+1024 constant get-in-turn      \ turned so from the car's way (src: func_80029AEC, 0x1400 of a turn)
+0 constant riders-seat         \ (src: actor_attach - every rider the first seat)
+: attach ( slot route speed -- )   \ src: actor_attach: they ride, the car drives the route
+    {: s n v :}  s partner-of {: c :}  c 0= if  exit  then
+    s person-of {: p :}  0 p walking !  c p riding !  the-town p person-area !
+    c n v to-traffic send car-carry ;
+: get-in ( slot -- )   \ src: cmd 0x42: facing across the car, climbing in
+    {: s :}  s partner-of {: c :}  c 0= if  exit  then
+    c car-now nip nip nip  get-in-turn +  4095 and  s person-of heading-now !
+    s getting-in -1 false show ;
+: get-out ( slot car -- )   \ src: car_unload_riders: beside their seat, facing the car's way
+    {: s c :}  s person-of {: p :}  c car-now {: x y z h :}
+    x z h riders-seat seat beside  p pz !  p px !  y p py !  h p heading-now !
+    0 p riding !  the-town p person-area ! ;
+: unload ( car -- )  #slots 0 do  i scheduled? if  i person-of riding @ over = if  i over get-out  then  then  loop  drop ;
+: ride-on ( slot row -- )   \ a stop with them riding: their car on its way (unless it is already)
+    {: s r :}  s partner-of {: c :}  c 0= if  exit  then  s person-of {: p :}
+    c car-carrying? if  c p riding !  the-town p person-area !  else  s r stop-x @ r stop-z @ attach  then ;
+: park-car ( slot row -- )   \ their car where the stop leaves it (src: actor_apply_placement's partner lines)
+    {: s r :}  s partner-of {: c :}  c 0= if  exit  then
+    r stop-car @ {: line :}
+    line 0= if  c to-traffic send car-stop  exit  then
+    line 0< if  c to-traffic send car-hide  else  c line to-traffic send car-park  then ;
 : place-at-stop ( slot -- )   \ src: actor_apply_placement (cmd 0x2D)
     {: s :}  s person-of {: p :}  s current-row {: r :}
-    0 p walking !  0 p travelling !
-    r stop-placed @ standing <> if  -1 p person-area !  exit  then   \ (seats and partners: to come)
+    0 p walking !  0 p travelling !  0 p riding !
+    r stop-placed @ partnered = if  s r ride-on  exit  then
+    s r park-car
+    r stop-placed @ standing <> if  -1 p person-area !  exit  then   \ (seats: to come)
     r stop-area @ p person-area !  r stop-floor @ p on-floor !
     r stop-x @ p px !  r stop-z @ p pz !  r stop-area @ r stop-floor @ floor-height p py !
     r stop-heading @ p heading-now !
@@ -131,11 +165,17 @@ variable controlled
     m  mv clip @  mv frame  s person-now  draw-figure ;
 : draw-townsfolk ( -- )  #slots 0 do  i here? if  i draw-person  then  loop ;
 ' draw-townsfolk on-draw
-: animate ( -- )   \ walking for everyone; motions for those in sight
+: step-forward ( slot -- )   \ src: actor_update's move_anim: straight on along their heading
+    {: s :}  s person-of {: p :}
+    p forward-motion @ 0< 0=  p moving anim @ p forward-motion @ <> and if  s p forward-motion @ -1 true show  then
+    p heading-now @ s>f 2e f* pi f* 4096e f/ {: F: a :}  p forward @ s>f game-frames f* {: F: v :}
+    p px @ s>f  a fsin v f* f+ f>s p px !   p pz @ s>f  a fcos v f* f+ f>s p pz ! ;
+: animate ( -- )   \ walking and motions for everyone (the routes wait on them, seen or not)
     #slots 0 do
         i scheduled? if
-            i walking? if  i walk-step  then
-            i here? if  i person-of moving advance drop  then
+            i walking? i riding? 0= and if  i walk-step  then   \ (riding: their walk waits for the car)
+            i person-of forward @ if  i step-forward  then
+            i person-of moving advance drop
         then
     loop ;
 
@@ -144,6 +184,7 @@ PRIVATE>
 state: townsfolk-state end-state
 behaviour townsfolk
   on spawned ( -- )  self subscribe tick  self subscribe time-set  self subscribe minute-passed
+    self subscribe car-arrived
     self subscribe player-control ;
   on tick ( -- )  animate ;
   on time-set ( t -- )  settle-all ;
@@ -156,12 +197,16 @@ behaviour townsfolk
   on person-walk ( slot x z speed motion -- )
     {: s x z v m :}  s person-of {: p :}  x p goal-x !  z p goal-z !  v p stride !  m p stride-motion !
     true p walking !  s m -1 true show ;
-  on person-idle ( slot -- )  dup person-of 0 swap walking !  0 -1 true show ;
+  on person-idle ( slot -- )  dup person-of {: p :}  0 p walking !  0 p forward !  0 -1 true show ;
+  on person-forward ( slot speed motion -- )  rot person-of {: v m p :}  v p forward !  m p forward-motion ! ;
   on person-anim ( slot id next loop -- )  show ;
   on person-hold ( slot -- )  person-of moving true swap hold-move ! ;
   on person-arrive ( slot -- )  arrive ;
   on person-goto-stop ( slot stop -- )  goto-stop ;
   on person-through-door ( slot door room flip -- )  through-door ;
+  on person-attach ( slot route speed -- )  attach ;
+  on person-get-in ( slot -- )  get-in ;
+  on car-arrived ( car -- )  unload ;
 end-behaviour
 
 : spawn-townsfolk ( -- id )  townsfolk townsfolk-state s" townsfolk" spawn ;

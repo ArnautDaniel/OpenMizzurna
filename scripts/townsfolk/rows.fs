@@ -13,7 +13,10 @@ USING: clock townsfolk ;
 : place ( x z -- )  row stop-z !  row stop-x ! ;
 : facing ( heading -- )  row stop-heading ! ;
 : pose ( motion -- )  row stop-pose ! ;
-: with-partner ( -- )  partnered row stop-placed ! ;
+: with-partner ( route speed -- )   \ riding: their car drives that route
+    row stop-z !  row stop-x !  partnered row stop-placed ! ;
+: car-at ( route -- )  row stop-car ! ;   \ their car waits at that car route's start
+: car-hidden ( -- )  -1 row stop-car ! ;
 : diner-seat ( -- )  at-diner row stop-placed ! ;
 : club-seat ( -- )  at-club row stop-placed ! ;
 : variant ( n -- )  row stop-variant ! ;

@@ -42,7 +42,7 @@ find_package(SDL3 REQUIRED CONFIG)
 # the checks')
 add_library(omdata STATIC src/data/disc.c src/data/cdbin.c src/data/container.c src/data/png.c src/data/tim.c
     src/data/text.c src/data/cdconv.c src/data/exetables.c src/data/vab.c src/data/seqmidi.c src/data/xa.c
-    src/data/flacenc.c src/data/tmd.c src/data/vramctx.c src/data/modelgltf.c src/data/modelconv.c src/data/town.c src/data/str.c src/data/mfo.c src/data/movieconv.c src/data/motion.c
+    src/data/flacenc.c src/data/tmd.c src/data/vramctx.c src/data/modelgltf.c src/data/modelconv.c src/data/town.c src/data/str.c src/data/mfo.c src/data/movieconv.c src/data/motion.c src/data/roads.c
     src/third_party/stb.c src/third_party/dr_flac.c src/third_party/cgltf.c)
 target_include_directories(omdata PUBLIC src/third_party)
 # the movies' encoder (the import) and decoder: libavcodec, when there is one
@@ -62,7 +62,7 @@ add_executable(openmizzurna
     src/main.c
     src/platform/platform.c src/platform/gl.c
     src/render/render.c src/render/scene3d.c
-    src/game/bind_engine.c src/game/text.c src/game/bind_scene.c src/game/console.c
+    src/game/bind_engine.c src/game/text.c src/game/bind_scene.c src/game/roads.c src/game/console.c
     src/platform/library.c src/core/files.c)
 target_link_libraries(openmizzurna PRIVATE omdata)
 target_include_directories(openmizzurna PRIVATE src/third_party)
@@ -75,7 +75,7 @@ foreach(t ${GAME_TESTS})
     get_filename_component(dir "${t}" DIRECTORY)
     get_filename_component(sub "${dir}" NAME)
     get_filename_component(name "${t}" NAME_WE)
-    if(NOT sub STREQUAL "vocabs")
+    if(NOT sub STREQUAL "vocabs" AND NOT sub STREQUAL "library")
         add_test(NAME ${sub}_${name} COMMAND openmizzurna --test "${t}")
         set_tests_properties(${sub}_${name} PROPERTIES ENVIRONMENT "SDL_AUDIO_DRIVER=dummy")
     endif()
@@ -97,6 +97,14 @@ if(EXISTS "${OM_DEV_DISC}")
              $<TARGET_FILE:openmizzurna> --import "${OM_DEV_DISC}")
     add_test(NAME library_check COMMAND library_check "${OM_DEV_DISC}" "${CMAKE_BINARY_DIR}/test-home/library")
     set_tests_properties(library_check PROPERTIES DEPENDS library_import)
+    # the tests that need the game's data: tests/library/test_*.fs, run on the test's own library
+    file(GLOB DATA_TESTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/library/test_*.fs")
+    foreach(t ${DATA_TESTS})
+        get_filename_component(name "${t}" NAME_WE)
+        add_test(NAME library_${name} COMMAND openmizzurna --test "${t}")
+        set_tests_properties(library_${name} PROPERTIES DEPENDS library_import
+                             ENVIRONMENT "SDL_AUDIO_DRIVER=dummy;OM_HOME=${CMAKE_BINARY_DIR}/test-home")
+    endforeach()
 endif()
 if(EXISTS "${OM_DEV_DISC}" AND EXISTS "${OM_DEV_EXTRACT}/fs")
     add_test(NAME disc_check COMMAND disc_ls "${OM_DEV_DISC}" "${OM_DEV_EXTRACT}/fs")

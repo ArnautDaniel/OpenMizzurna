@@ -36,6 +36,20 @@ testing going through it: a person comes out there, stepping out
 T{ nozz 15 3 false the-townsfolk send person-through-door  deliver  nozz person-now
    -> 345042 0 285254 2560 }T
 
+testing their cars in the rows: at his counter Nozz's car waits at car route 7's start; Morgan's stop 18 has him
+testing riding along route 23 at 360 (docs/subsystems/traffic.md)
+1 constant morgan
+T{ nozz person-of 0 row-of stop-car @ -> 7 }T
+: row-riding ( row -- placed route speed )  {: r :}  r stop-placed @  r stop-x @  r stop-z @ ;
+T{ morgan person-of 18 row-of row-riding -> partnered 23 360 }T
+
+testing going straight ahead (cmd $0A): along their heading at their speed, until idle
+: nozz-x-z ( -- x z )  nozz person-now drop nip ;
+T{ nozz 1000 2000 the-townsfolk send person-place  nozz 0 the-townsfolk send person-turn  deliver  nozz-x-z -> 1000 2000 }T
+T{ nozz 30 -1 the-townsfolk send person-forward  deliver  broadcast tick  deliver  nozz-x-z  2000 > -> 1000 true }T
+: stays? ( -- flag )  nozz-x-z  broadcast tick  deliver  nozz-x-z  rot = -rot = and ;
+T{ nozz the-townsfolk send person-idle  deliver  stays? -> true }T
+
 testing a line by stop: a table of pairs ended by -1 (src: func_800429C8)
 create lines  0 , 168 ,  2 , 169 ,  9 , 171 ,  -1 ,
 T{ lines 0 a-line-by-stop  lines 9 a-line-by-stop  lines 5 a-line-by-stop -> 168 171 -1 }T

@@ -261,7 +261,7 @@ static int import_disc(Import *im) {
         snprintf(im->why, sizeof(im->why), "can't write the library in %s", root);
         goto out;
     }
-    fprintf(im->manifest, "%s\ndisc %08X %s\nconvert cdbin folders 1\nconvert images png 1\nconvert text utf8 1\nconvert exe-tables files 1\nconvert banks text-wav 1\nconvert sequences midi 1\nconvert xa flac 1\nconvert models gltf 1\nconvert textures png 1\nconvert town gltf 1\n",
+    fprintf(im->manifest, "%s\ndisc %08X %s\nconvert cdbin folders 1\nconvert images png 1\nconvert text utf8 1\nconvert exe-tables files 1\nconvert banks text-wav 1\nconvert sequences midi 1\nconvert xa flac 1\nconvert models gltf 1\nconvert textures png 1\nconvert town gltf 1\nconvert roads text 1\n",
             LIBRARY_FORMAT, crc32_of(exe, exe_n), exe_name);
     if (movieconv_available()) {
         fprintf(im->manifest, "convert movies mpeg2-flac 1\n");
