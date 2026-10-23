@@ -27,6 +27,11 @@ variable building     \ the row being written (look/rows.fs)
 : table-list ( area table -- addr )  swap 4 * + cells first-rows + ;
 \ the town's: a tile's look and act checks (src: tile_checks; it has no zone tables)
 create tile-rows  town-columns town-rows * 2* cells allot   tile-rows town-columns town-rows * 2* cells erase
+create tile-sets  town-columns town-rows * allot   tile-sets town-columns town-rows * erase   \ (src: D_8010AB44)
+: tile-set! ( col row set -- )  -rot town-columns * + tile-sets + c! ;
+: rows-set ( col row -- set )   \ a tile's rows' set (0: none) - the town's act rules key on it (src: D_800A38E4)
+    2dup 0 town-rows within  swap 0 town-columns within and 0= if  2drop 0 exit  then
+    town-columns * + tile-sets + c@ ;
 : town-list ( col row table -- addr )
     {: c r t :}  r town-columns * c + 2*  t act-checks = if  1+  then  cells tile-rows + ;
 

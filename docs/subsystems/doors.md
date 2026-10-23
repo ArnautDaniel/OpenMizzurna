@@ -47,8 +47,20 @@ event is over. Leaving a building is its own script's warp to area 27.
 
 People go through doors on their routes (`through-door` in an event, for a person: `docs/subsystems/townsfolk.md`).
 
+## Knocking (`scripts/knock.fs`, the actor `knock`; src: SCKNOCK.C door_knock, door_answer, door_resident_leave)
+
+□ at a house's door in the town knocks (`rules/area027.fs`: the act check's answer and the tile's rows' set -
+`rows-set`, src D_800A38E4 - make the key: the Astin farm, the Rolands', the Strasbourgs', Mel's, the Lakeside Inn,
+James's). `knock ( door -- who | 0 )` follows the original's rules: who's at home (their records), the hours
+("Too early", "late in the evening"), the scenes some doors lead to instead (Isabella letting him in, James's
+invitation into his house - area 4's visit, its own script - Lorraine's), Winona waiting in the car, otherwise
+"no answer" with its reason. `answer ( who side door )`: they step out (the answering scene: he knocks and steps
+back, they come through the door the other way and greet him: the line by who it is) and wait in the doorway
+facing him (`door-hold`, $53; `person-at-door`); they go back in (their parting line, through the door, to their
+stop) after 255 frames, when he's 501 away, or when they're about to leave. One knock at a time.
+
 ## To come
 
 the town's doors swinging (its own animation slots), the next room's objects shown as he steps through, the town's doors' remaining rules (Winona
 riding along, the diner's robber, Mel's first visit to the diner), the door opening as one passes (its object
-animation, when Matthew's room is on one side), knocking (`door.c`: door_knock, door_answer), the door sounds.
+animation, when Matthew's room is on one side), the apartment building's doors (area 19's knocks), the door sounds.

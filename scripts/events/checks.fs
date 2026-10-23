@@ -290,6 +290,32 @@ USING: events events.all look look.rows ;   \ (look.rows last: its row words win
 28 act-checks row  1 zone  1024 facing  60 either-side  28 ovl $80102080 native-at  1 hint  end-row   \ 90 degrees
 
 \ ---- the town (area 27), a tile at a time: its look and act checks ----
+\ (each tile's rows' set number: the town's act rules key on it - src D_8010AB44)
+4 1 12 tile-set
+5 1 23 tile-set
+13 3 8 tile-set
+12 5 1 tile-set
+29 5 5 tile-set
+18 6 20 tile-set
+19 6 6 tile-set
+20 7 7 tile-set
+23 7 24 tile-set
+5 8 22 tile-set
+17 11 18 tile-set
+18 11 17 tile-set
+1 12 10 tile-set
+16 12 4 tile-set
+17 12 19 tile-set
+17 13 2 tile-set
+23 13 11 tile-set
+6 14 13 tile-set
+15 14 14 tile-set
+17 14 25 tile-set
+5 16 9 tile-set
+19 19 21 tile-set
+23 19 16 tile-set
+8 20 3 tile-set
+16 20 15 tile-set
 4 1 look-checks town-row  0 zone  0 facing  60 either-side  27 ovl $80106858 native-at  end-row   \ 0 degrees
 4 1 act-checks town-row  0 zone  0 facing  80 either-side  ask-area  end-row   \ 0 degrees
 4 1 act-checks town-row  1 zone  7192 facing  80 either-side  ask-area  end-row   \ 632 degrees

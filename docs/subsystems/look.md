@@ -53,6 +53,8 @@ rows' alone; arriving (meeting Lorraine on the 25th, Mel and Lorraine arguing), 
 from the 28th 19:00), the robbery on the 27th, who says what by their stops, the farm workers, Lorraine's twelve
 conversations in turn, then her line. Seen: the meeting on the 25th plays through, Mel walking off after it. Sitting at the counter and ordering:
 `docs/subsystems/counter.md`.
+Area 4 (James's house) has no rules: the visit is one script, reached by knocking at his door
+(`docs/subsystems/doors.md`).
 Area 3's (`scripts/rules/area003.fs`, the Roland residence; `tests/library/test_area003.fs`): heading home at
 20:55, the break-in scene on the 26th, the stairs only with Mrs. Roland along ("Let's go to Emma's room": she
 follows him), the vase and Emma's key, the drain and the ring, Emma's desk and the missing diary, the piano and

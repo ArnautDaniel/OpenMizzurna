@@ -171,7 +171,7 @@ create workers-lines
 
 \ ---- Lorraine's conversations here (0x801043A8): the first that applies, each once; else her line ----
 $5071B constant workers-spot-x   $4188B constant workers-spot-z
-: workers-here? ( -- flag )  farm-worker person-now 2drop {: x z :}  x workers-spot-x =  z workers-spot-z = and ;  \ src: func_8002D0D0
+: workers-here? ( -- flag )  farm-worker person-now drop nip {: x z :}  x workers-spot-x =  z workers-spot-z = and ;  \ src: func_8002D0D0
 : dennis-at-74? ( -- flag )  dennis $4A standing-at? ;   \ src: func_8002B1AC
 : once ( word -- )  1 swap story+! ;
 : talks ( xt -- true )  start-event  true ;

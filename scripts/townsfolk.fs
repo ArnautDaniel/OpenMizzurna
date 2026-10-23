@@ -33,7 +33,9 @@ begin-structure person
   field: forward        \ going straight ahead, units a frame (0: not; src: move_speed)
   field: forward-motion \ in this motion (-1: whatever plays; src: move_anim)
   field: seat-bar   field: seat-no   \ the stool they have (bar: at-diner or at-club; 0: none - src: talk_state 2, seat)
-  field: turning   field: turn-target   field: turn-speed   \ turning toward a heading, a speed a frame (src: turn_target)
+  field: turning   field: turn-target   field: turn-speed
+  field: at-door   field: door-wait   field: answered-door   field: answered-side   \ at a door they answered (src: ACTOR_F_DOOR,
+                                                                         \  door_wait, door, door_side)   \ turning toward a heading, a speed a frame (src: turn_target)
   playing +field moving \ the motion they hold
 end-structure
 create people  #slots person * allot   people #slots person * erase
@@ -107,6 +109,11 @@ $7202F constant club-approach-x   $46C77 constant club-approach-z
 variable companion   -1 companion !   \ who (-1: no one)
 variable companion-mode                \ 0 stopped where they are, 1 following him on foot, 2 in his car
 1 constant along-on-foot   2 constant along-in-the-car
+: minutes-to-go ( slot -- n )   \ till they leave their stop (src: the handlers' cmd 0x52; walking: 0)
+    dup stop-of 0< if  drop 0 exit  then  dup current-row stop-until @  swap drop  clock-time - ;
+: at-a-door? ( slot -- flag )  person-of at-door @ 0<> ;
+: door-of-theirs ( slot -- door side )  person-of dup answered-door @ swap answered-side @ ;
+: door-time-up? ( slot -- flag )  person-of door-wait @ 0<= ;
 : going-along? ( slot -- flag )  companion @ = ;          \ (src: ACTOR_F_RIDING)
 : following? ( -- flag )  companion @ 0< 0=  companion-mode @ 0<> and ;   \ (src: D_800A37B4 with D_800A37B0)
 : person-anim-done? ( slot -- flag )  person-of moving {: m :}  m done @  m anim @ 0< or ;
@@ -251,7 +258,15 @@ $40000 constant too-far-squared   $FFFF constant near-squared
         p px @ p pz @ floor @ blocked? if  ox p px !  oz p pz !  s standing-by shows  else  s stepping-back shows  then
     else  s standing-by shows  then  then
     area @ floor @ floor-height p py ! ;
+: door-waits ( -- )   \ those at a door count down, facing him (src: npc_clock_tick: a frame each)
+    matthew-there? 0= if  exit  then  matthew-now drop {: mx my mz :}
+    #slots 0 do  i person-of {: p :}
+        p at-door @ if
+            -1 p door-wait +!  mx p px @ -  mz p pz @ -  heading-to p heading-now !
+        then
+    loop ;
 : animate ( -- )   \ walking and motions for everyone (the routes wait on them, seen or not)
+    door-waits
     companion-mode @ along-on-foot =  companion @ 0< 0= and  matthew-there? and if  follow  then
     #slots 0 do
         i scheduled?  i extra? i person-of person-area @ 0< 0= and  or if
@@ -294,6 +309,10 @@ behaviour townsfolk
   on person-ride ( slot mode -- )  companion-mode !  companion ! ;   \ src: actor_ride (cmd 0x26)
   on person-unride ( slot -- )  going-along? if  -1 companion !  0 companion-mode !  then ;   \ src: actor_unride
   on companion-halt ( -- )  0 companion-mode ! ;   \ they stay where they are (src: D_800A37B4 = 0)
+  on person-at-door ( slot door side -- )   \ they answer it (src: door_answer: door, side; door_wait 0xFF)
+    rot person-of {: n sd p :}  n p answered-door !  sd p answered-side ! ;
+  on person-door-hold ( slot -- )  person-of {: p :}  true p at-door !  255 p door-wait ! ;   \ cmd $53
+  on person-door-free ( slot -- )  person-of 0 swap at-door ! ;   \ back in (src: ACTOR_F_DOOR cleared)
   on person-away ( slot -- )  person-of {: p :}  true p travelling !  0 p walking !  -1 p person-area ! ;
   on person-unlink ( slot -- )  person-of 0 swap riding ! ;
   on person-idle ( slot -- )  dup person-of {: p :}  0 p walking !  0 p forward !  0 -1 true show ;

@@ -76,6 +76,7 @@ def main():
     # the town: per tile (src: tile_checks: ovl027 D_8010AB44 a tile's record, D_8010AED4 its look and act lists)
     lines.append('\\ ---- the town (area 27), a tile at a time: its look and act checks ----')
     for (c, r), t in sorted(CK.area_tables(exe, src)[27]['tiles'].items(), key=lambda kv: (kv[0][1], kv[0][0])):
+        lines.append('%d %d %d tile-set' % (c, r, t['index']))
         for name, rows in (('look-checks', t['look']), ('act-checks', t['act'])):
             for row in rows:
                 parts = ['%d %d %s town-row' % (c, r, name), '%d zone' % row['zone'],

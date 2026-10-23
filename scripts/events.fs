@@ -234,7 +234,6 @@ variable loaded-pack
 : set-y ( a x1 -- )  2 act-unbuilt ;   \ cmd $22
 : set-z ( a x1 -- )  2 act-unbuilt ;   \ cmd $23
 : lift ( a x1 x2 x3 -- )  4 act-unbuilt ;   \ cmd $24
-: place-at-stop ( a -- )  1 act-unbuilt ;   \ cmd $2D
 : item-query ( a x1 -- )  2 act-unbuilt ;   \ cmd $2E
 : item-show ( a x1 -- )  2 act-unbuilt ;   \ cmd $2F
 : act ( a -- )  1 act-unbuilt ;   \ cmd $36
@@ -247,7 +246,6 @@ variable loaded-pack
 : reset ( a -- )  1 act-unbuilt ;   \ cmd $4D
 : kill-thread ( a -- )  1 act-unbuilt ;   \ cmd $4E
 : save-state ( a -- )  1 act-unbuilt ;   \ cmd $4F
-: door-hold ( a -- )  1 act-unbuilt ;   \ cmd $53
 : door-release ( a -- )  1 act-unbuilt ;   \ cmd $54
 : walk-path ( a x1 x2 x3 x4 x5 -- )  6 act-unbuilt ;   \ cmd $55
 : depart-alt ( a -- )  1 act-unbuilt ;   \ cmd $56
@@ -356,6 +354,10 @@ variable loaded-pack
     over person? if  the-townsfolk send person-ride  else  2 act-unbuilt  then ;
 : unride ( a -- )   \ cmd $27 (src: actor_unride)
     dup person? if  the-townsfolk send person-unride  else  1 act-unbuilt  then ;
+: place-at-stop ( a -- )   \ cmd $2D: at their stop again (src: actor_apply_placement)
+    dup scheduled? if  dup person-of at-stop @ the-townsfolk send person-goto-stop  else  1 act-unbuilt  then ;
+: door-hold ( a -- )   \ cmd $53: they wait at the door they answered
+    dup person? if  the-townsfolk send person-door-hold  else  1 act-unbuilt  then ;
 : walk-beside ( a b seat -- )   \ to a seat's side of b (src: actor_side_point, then path_to)
     {: a b k :}  b where-is 0= if  exit  then  k seat beside {: x z :}
     a x z walk-pace walk-motion walk-with ;

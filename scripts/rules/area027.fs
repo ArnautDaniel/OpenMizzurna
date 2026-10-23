@@ -1,7 +1,7 @@
 \ area027.fs - the town's rules (src: ovl027.c, the town's overlay; decomp/docs/areas/area27.md): the buildings'
 \ doors - whether Matthew may go in now (their hours, the story) and the script that takes him in.
 IN: rules.area027
-USING: engine actors messages clock story-flags townsfolk events events.ovl027 ;
+USING: engine actors messages clock story-flags townsfolk areas look matthew knock events events.ovl027 ;
 
 27 constant this-area
 
@@ -106,3 +106,35 @@ this-area ovl $8010679C ' riverside-park native:     this-area ovl $801067D0 ' s
 this-area ovl $801067F0 ' lakeside-inn native:       this-area ovl $80106824 ' junkyard native:
 this-area ovl $80106858 ' mels-room native:          this-area ovl $8010688C ' rubin-apartments native:
 this-area ovl $80106D24 ' wolfs-hideout native:      this-area ovl $80106C50 ' school-hall native:
+
+\ ---- □ at a house's door knocks (src: ovl027 func_80106A04 / func_80106B3C: the act check's answer and the
+\ tile's rows' set make the key) ----
+enum: knocks  no-knock  at-astin-farm  at-the-rolands  at-the-strasbourgs  at-mels  at-the-lakeside-inn  at-james ;
+-2 constant from-the-street
+: knock-key ( check -- key )   \ the answer, and the set of the tile he stands on (src: D_800A38E4 << 8)
+    matthew-now drop nip tile-of rows-set 8 lshift + ;
+: act-check ( zone check -- action )
+    nip knock-idle? 0= if  drop no-knock exit  then
+    knock-key case
+        $C01 of  at-astin-farm  endof
+        $300 of  at-the-rolands  endof
+        $A40 of  at-the-strasbourgs  endof
+        $C00 of  at-mels  endof
+        $1003 of  at-the-lakeside-inn  endof
+        $1500 of  at-james  endof
+        no-knock swap
+    endcase ;
+: answers ( who door -- )  {: who n :}  who if  who from-the-street n answer  then ;
+: act-do ( action -- )
+    case
+        at-astin-farm of  $70 knock if  answer-dennis  then  endof
+        at-the-rolands of  $1B knock $1B answers  endof
+        at-the-strasbourgs of  $56 knock if  cohen $56 answers  then  endof
+        at-mels of  $24 knock if  mel $24 answers  then  endof
+        at-the-lakeside-inn of  $2D knock drop  endof
+        at-james of  $1E knock if  james $1E answers  then  endof
+        drop run-rows 0
+    endcase ;
+: look-check ( zone check -- action )  2drop 0 ;   \ (the town's look: its rows alone)
+: look-do ( action -- )  drop run-rows ;
+' look-check ' look-do ' act-check ' act-do  this-area area-rules!
