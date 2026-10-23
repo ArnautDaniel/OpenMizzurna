@@ -25,6 +25,13 @@ origin stands on floor 1; src: func_80020738).
 Object visibility as the original: object i shows in the shell when i is below the shell's count, and in
 the objects' group by the same index (src: object_show).
 
+## Floors (`scripts/floors.fs`)
+
+Each floor has an obstacle list and a zone list (`NNN_4` part 2: parts 0 / 1 floor 1; other floors by area,
+src load_area). A region list: u16 header (count, in use, with ids, off), then boxes s16 x0 x1 z0 z1 (with
+ids: u16 the id and "inverted"); z0 < z1 an upright box, else one turned 45 degrees (src: zone_inside).
+`blocked? ( x z floor -- flag )`, `zone-at ( x z floor -- id | -1 )`.
+
 ## API (`scripts/messages.fs`)
 
 - `enter-area ( area scene -- )` - load and show it; broadcasts `area-entered ( area scene -- )`.

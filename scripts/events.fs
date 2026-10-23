@@ -45,7 +45,7 @@ variable control-given    \ an event gave Matthew back to the player (the rest n
 : free-thread ( -- i )  -1  #threads 0 do  i thread-task slot @ 0= if  drop i leave  then  loop ;
 : event-ended ( -- )
     0 thread thread-task slot !  -1 events-running +!
-    events-running @ 0= if  no-control release  false control-given !  then ;
+    events-running @ 0= if  no-control release  false control-given !  true broadcast player-control  then ;
 : run-event ( -- )   \ a task's body: its word, then it's over
     thread thread-xt slot @ execute  event-ended ;
 : start-event ( xt -- )   \ src: event_start (CEvCon_Start): a thread, Matthew no longer the player's
@@ -53,7 +53,7 @@ variable control-given    \ an event gave Matthew back to the player (the rest n
     i 0< abort" no free event thread"
     xt i thread-xt slot !  matthew i thread-own slot !  0 i thread-result slot !
     ['] run-event forth:spawn  i thread-task slot !   \ (a task: the actors' spawn is another)
-    1 events-running +!  no-control hold ;
+    1 events-running +!  no-control hold  false broadcast player-control ;
 : events-reset ( -- )  thread-task #threads cells erase  0 events-running !  false control-given ! ;
 
 \ control flow: `goto word` leaves this word for that one; `end-script` ends this word (the event, at the
@@ -108,8 +108,8 @@ variable loaded-pack
 : call-pack-script ( pack k -- )  swap load-pack  pack-script execute ;
 
 \ ---- control and time ----
-: give-control ( -- )  true control-given !  no-control release ;   \ src: player_control_on
-: take-control ( -- )  false control-given !  no-control hold ;
+: give-control ( -- )  true control-given !  no-control release  true broadcast player-control ;   \ src: player_control_on
+: take-control ( -- )  false control-given !  no-control hold  false broadcast player-control ;
 : time-skip ( minutes -- )   \ src: time_skip: the clock on a minute at a time (the townsfolk follow: to come)
     0 ?do  the-clock send advance-minute  loop ;
 

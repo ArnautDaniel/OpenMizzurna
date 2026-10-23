@@ -23,7 +23,26 @@ loops or ends; at its end the next one plays, or (a reading: the original's `ani
 holds; with `anim-hold` its last root move is kept as his new place, turned by his heading. The events' `anim`,
 `anim-then`, `anim-hold` and `wait-anim` play Matthew's (`figure-anim`, `figure-hold`; the fact `anim-done?`).
 
+## Walking (src: player_control_foot, player_update)
+
+While he is the player's (`player-control`: the events' control ops and their starts and ends), the pad
+moves him by the original's per-frame numbers, each step covering as many of its frames as it ran in that
+time (15 a second indoors, ~30 in the town: he was twice as quick in the town, as the clock - faithful):
+
+| | original (a frame) |
+|---|---|
+| walk (Up) | 60 units |
+| run (Up + ✕) | builds 4 a frame to 38; from 7, +3 speed a step past 6 (to 156) |
+| step back (Down, standing) | -40 |
+| turn (Left / Right) | builds: standing +16 to 100, walking +10 to 50, running +6 to 30 (4096 a turn) |
+| L1 / R1 | a quarter turn |
+| a blocked step | tried 48 at a time to 384 either side, his heading easing 50 that way; else undone |
+| standing 120 frames | the fidget (motions 20 then 22) |
+
+Motions: stand 0, walk 1, back 2, turning 3 / 4, run 5. The walls are his floor's obstacles
+(`floors.fs`: `blocked?`).
+
 ## To come
 
-Walking with the pad by the original's speeds and turning, the
+Looking and acting (○: the zones and the areas' rules), doors, the floors' zones and heights, the car with the pad by the original's speeds and turning, the
 floors' walls and zones, looking and acting.
