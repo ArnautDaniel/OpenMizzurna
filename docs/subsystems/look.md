@@ -57,6 +57,10 @@ rows' alone; arriving (meeting Lorraine on the 25th, Mel and Lorraine arguing), 
 from the 28th 19:00), the robbery on the 27th, who says what by their stops, the farm workers, Lorraine's twelve
 conversations in turn, then her line. Seen: the meeting on the 25th plays through, Mel walking off after it. Sitting at the counter and ordering:
 `docs/subsystems/counter.md`.
+Area 4 (James's house; `tests/library/test_area004.fs`) has no rules: its overlay's init is never called and its
+look and act are the table's (it has no rows); the visit is the knock code's scene (`knock.fs`). Areas 14, 15,
+20, 22 and 25 are unused placeholders (copies of area 1's data, no overlay); area 33 is the boot overlay, not a
+place.
 Area 26's (`scripts/rules/area026.fs`, Barrows Forest; `tests/library/test_area026.fs`): the deputy at the
 entrance (at his post he pushes Matthew back; aside by the date and the story), his lines (his refusal
 remembered the next visit); the morning hunt - his walk away on an even minute after a word with him, his
