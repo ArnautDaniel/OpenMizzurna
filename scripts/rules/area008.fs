@@ -1,8 +1,9 @@
 \ area008.fs - area 8's rules: the junkyard and its bus (src: ovl008.c; decomp/docs/areas/area08.md;
 \ port/src/game/ovl008.c): a figure on the bus at one point of the story, the seat to look at and then search,
-\ getting off the bus, the minigame that is a script alone. (Minigames 26 and 43: to come.)
+\ getting off the bus, the minigame that is a script alone, the dog chase (minigame 26: dog-chase.fs). (Minigame 43,
+\ the two-player viewer: to come.)
 IN: rules.area008
-USING: engine actors messages clock story-flags townsfolk events look talk areas ;
+USING: engine actors messages clock story-flags townsfolk events look talk areas dog-chase ;
 
 8 constant this-area
 153 constant on-the-bus   1 constant morgans-kind
@@ -47,6 +48,13 @@ enum: act-action  nothing-to-do  search-the-seat ;
     else  ['] events.ovl008:entry-80103150  then  start-event ;
 this-area ovl $80102140 ' off-the-bus native:
 ' events.ovl008:entry-801034A0 28 minigame-script!   \ (src: area_minigame_start's 28)
+: the-dog-chase ( -- )   \ minigame 26 (src: area_minigame_start / update): its scene, the chase until he's at
+    events.ovl008:entry-801032C8                         \ the yard's far side (the scene's wait), then its end
+    s" dog-chase" actor-named send dog-chase-start
+    events.ovl008:entry-80103428
+    s" dog-chase" actor-named send dog-chase-stop
+    events.ovl008:entry-8010344C ;
+' the-dog-chase 26 minigame-script!
 
 ' look-check ' look-do ' act-check ' act-do  this-area area-rules!
 this-area ' entered ' scene-hook area-hooks!

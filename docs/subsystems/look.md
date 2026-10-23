@@ -110,8 +110,8 @@ scripts).
 Area 9's (`scripts/rules/area009.fs`, the lake; `tests/library/test_area009.fs`): the hut's coffee counter
 (four stools, ordering from the counterman), the boat, a scene at the pier once, who says what.
 Area 8's (`scripts/rules/area008.fs`, the junkyard's bus; `tests/library/test_area008.fs`): the seat looked at
-twice then searched, getting off the bus, a figure there at its point in the story. Its two real minigames: to
-come.
+twice then searched, getting off the bus, a figure there at its point in the story; the dog chase (minigame 26,
+`dog-chase.md`). The two-player model viewer (minigame 43): to come.
 Area 7's (`scripts/rules/area007.fs`, the cemetery; `tests/library/test_area007.fs`): its two timed scenes (on
 arriving or as they come), a visitor at a grave, walking out of the grounds, who says what, Father Barton's talk
 here, the day's and the night's lights (`object-shown`, to the areas), the C its events call.

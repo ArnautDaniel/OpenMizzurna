@@ -103,7 +103,7 @@ and the first conversions (`src/data/cdconv.c`):
 - **The executable's tables** (`src/data/exetables.c`): each table a subsystem names, as `exe/<name>.bin`; the
   engine reads them by name (`exe-table`). The first: `music`. The areas' tables (an area's code file, CD.BIN's
   `<area>_0`, loaded at 0x80101ED0) go the same way: the shoot-outs' `shootout-5`, `shootout-26`;
-  the tail's `tail-waypoints`, `tail-zones`, `keypad-code`.
+  the tail's `tail-waypoints`, `tail-zones`, `keypad-code`; the dog chase's `dog-directions`.
 - **Fonts** (`src/data/mfo.c`): the game's two (MFO: the dialogue font 033_4/5/3, the list font 5/4) as
   `N.font.png` (the glyphs, an indexed PNG), `N.font.clut.png` (their palettes) and `N.font.txt` (cell, each
   glyph's width and height); the bytes come back from them.
