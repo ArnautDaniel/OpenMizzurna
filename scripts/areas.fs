@@ -27,9 +27,9 @@ create path 32 allot
 : shown? ( scene object -- flag )  swap objects * + shown-table table + c@ 0<> ;
 : scene-camera ( scene -- eye-y look-y dist )   \ src: scene_camera_profile
     6 * camera-table table +  dup sw@  over 2 + sw@  rot 4 + sw@ ;
-: floor-height ( area floor -- y )   \ src: func_80020738 (4 floors an area; the origin stands on floor 1)
-    2* swap 8 * +  s" area-height" exe-table   ( offset addr n )
-    2 pick 2 + over > 3 pick 0< or if  2drop drop 0  else  drop + sw@  then ;   \ (0 with no table: a test)
+4 constant floors/area
+: floor-height ( area floor -- y )   \ src: func_80020738 (the origin stands on floor 1; 0 with no table)
+    swap floors/area * +  >r s" area-height" r> exe-s16 ;
 : origin-height ( area -- y )  1 floor-height ;
 
 \ ---- the models, and which of their parts show ----

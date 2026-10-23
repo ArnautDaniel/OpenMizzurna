@@ -72,12 +72,20 @@ variable control-given    \ an event gave Matthew back to the player (the rest n
 12 ovl constant ovl012  13 ovl constant ovl013  16 ovl constant ovl016  19 ovl constant ovl019
 21 ovl constant ovl021  24 ovl constant ovl024  26 ovl constant ovl026  27 ovl constant ovl027
 28 ovl constant ovl028
-variable natives   \ a list: {link, scope, address, xt}
-: native: ( scope address xt -- )  here natives @ , natives !  rot , swap , , ;
+begin-structure native-entry   \ a list of the natives written so far
+  field: next-native
+  field: native-scope
+  field: native-address
+  field: native-xt
+end-structure
+variable natives
+: native: ( scope address xt -- )
+    here native-entry allot {: s a xt e :}  natives @ e next-native !  s e native-scope !  a e native-address !
+    xt e native-xt !  e natives ! ;
 : find-native ( scope address -- xt | 0 )
-    natives @  begin  dup while
-        >r  over r@ cell+ @ =  over r@ 2 cells + @ = and if  2drop r> 3 cells + @ exit  then  r> @
-    repeat  nip nip ;
+    {: s a :}  natives @  begin  dup while
+        dup native-scope @ s =  over native-address @ a = and if  native-xt @ exit  then  next-native @
+    repeat ;
 
 variable unbuilt-ops   variable event-trace
 : note-unbuilt ( addr len -- )  1 unbuilt-ops +!  event-trace @ if  ." event: not yet " type cr  else  2drop  then ;
@@ -91,11 +99,19 @@ variable unbuilt-ops   variable event-trace
 
 \ ---- the area overlays' words the main executable's scripts reach by address (in the area being played) ----
 variable event-area   \ the area whose scripts are in (the areas subsystem sets it)
-variable overlay-words   \ a list: {link, area, address, xt}
-: overlay-word! ( xt address area -- )  here overlay-words @ , overlay-words !  , , , ;
+begin-structure overlay-entry
+  field: next-overlay
+  field: overlay-area
+  field: overlay-address
+  field: overlay-xt
+end-structure
+variable overlay-words
+: overlay-word! ( xt address area -- )
+    here overlay-entry allot {: xt a ar e :}  overlay-words @ e next-overlay !  ar e overlay-area !
+    a e overlay-address !  xt e overlay-xt !  e overlay-words ! ;
 : overlay-word ( address -- xt )
-    overlay-words @  begin  dup while
-        dup cell+ @ event-area @ =  over 2 cells + @ 3 pick = and if  nip 3 cells + @ exit  then  @
+    {: a :}  overlay-words @  begin  dup while
+        dup overlay-area @ event-area @ =  over overlay-address @ a = and if  overlay-xt @ exit  then  next-overlay @
     repeat  true abort" no such word in this area's scripts" ;
 : goto-overlay ( address -- )  overlay-word jump ;
 : call-overlay ( address -- )  overlay-word execute ;
@@ -126,7 +142,8 @@ variable loaded-pack
     loaded-pack @ swap pack-ids - ;
 : the-window ( -- id )  s" window" actor-named ;
 3 constant phone-palette   \ (the other end of a telephone: src phone_say, 3)
-: show ( text speaker palette secs -- )  >r >r >r text-bank r> r> r> the-window send window-say ;
+: show ( text speaker palette secs -- )
+    {: text who pal secs :}  text text-bank who pal secs the-window send window-say ;
 : text-pending ( -- )  thread 0< 0= if  true thread thread-text slot !  then ;
 : settle ( -- )   \ an event's waits first let its message close (src: the VM's wait_msg, checked first)
     thread 0< if  exit  then

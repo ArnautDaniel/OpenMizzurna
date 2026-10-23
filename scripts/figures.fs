@@ -9,9 +9,7 @@ USING: engine actors messages areas ;
 15e fconstant indoor-motion-rate   \ frames a second
 30e fconstant town-motion-rate
 
-: area-first-motion ( area -- id )
-    2* s" area-motion-first" exe-table   ( offset addr n )
-    2 pick 2 + over > 3 pick 0< or if  2drop drop shared-motions  else  drop + sw@  then ;
+: area-first-motion ( area -- id )  >r s" area-motion-first" r> exe-s16 ;
 : motion-path ( id -- addr len )   \ "cdbin/033_4/1/<id>.motion.txt", or the area's "cdbin/NNN_4/1/<i>..."
     $clear  s" cdbin/" $+
     dup shared-motions < if

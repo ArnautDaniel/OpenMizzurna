@@ -19,9 +19,7 @@ variable color-a   variable color-b   variable solid   variable under   fvariabl
 variable iris   variable iris-target   variable r-in   variable r-out
 : effect-running? ( -- flag )  frames-left @ 0<> ;   \ (a fact: the events' wait-effect)
 
-: table-byte ( name len i -- b )   \ a byte of a table of the executable (0 past it, or with none)
-    >r exe-table  r@ > if  r> + c@  else  r> 2drop 0  then ;
-: row ( n i -- b )  swap 8 * +  s" screen-effects" rot table-byte ;
+: row ( n i -- b )  swap 8 * +  >r s" screen-effects" r> exe-u8 ;   \ byte i of effect n's row
 : s8 ( b -- n )  dup $80 and if  256 -  then ;
 : start ( n -- )   \ src: screen_effect
     dup under-window and 0<> under !  $FF and
@@ -63,13 +61,12 @@ variable iris   variable iris-target   variable r-in   variable r-out
     x0 y0 corner  x1 y1 corner  x2 y2 corner  x3 y3 corner  c0 c1 c2 c3 draw-quad ;
 : whole ( rgba -- )  >r screen-left screen-top screen-right screen-top screen-left screen-bottom screen-right
     screen-bottom r@ r@ r@ r> shape ;
-: fade-level ( -- c )  s" effect-fade-levels" level @ 0 max 32 min table-byte ;
-: tint-level ( -- c )  s" effect-tint-levels" level @ 1+ 0 max 4 min table-byte ;
+: fade-level ( -- c )  level @ 0 max 32 min  >r s" effect-fade-levels" r> exe-u8 ;
+: tint-level ( -- c )  level @ 1+ 0 max 4 min  >r s" effect-tint-levels" r> exe-u8 ;
 : edge ( -- )   \ a wipe's soft edge (a slanted band: colour a to b)
     level @ $160 - screen-top  level @ $100 - screen-top  level @ $100 - screen-bottom  level @ $A0 - screen-bottom
     color-a @ grey color-b @ grey color-a @ grey color-b @ grey shape ;
-: sine ( k -- s )   \ the iris's table: 0x10000 = 1
-    15 and 4 *  >r s" effect-iris-sines" exe-table  r@ 4 + >= if  r> + sl@  else  r> 2drop 0  then ;
+: sine ( k -- s )  15 and  >r s" effect-iris-sines" r> exe-s32 ;   \ the iris's table: 0x10000 = 1
 variable ix  variable iy  variable ox  variable oy  variable fx  variable fy     \ the last segment's corners
 variable nix variable niy variable nox variable noy variable nfx variable nfy    \ and this one's
 : scaled ( s r -- n )  * 16 arshift ;

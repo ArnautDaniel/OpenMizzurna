@@ -63,7 +63,7 @@ defer on-hit   ' noop is on-hit   action-of on-hit   \ (what it does now: a hook
 : array ( n "name" -- ) create cells allot does> ( i -- addr ) swap cells + ;
 ```
 
-A deferred word runs its word in its place (no frame of its own). `xt jump` leaves the running word for xt -
+`3s>f ( x y z -- ) ( F: -- x y z )` and `3f>s` move a point between the stacks. A deferred word runs its word in its place (no frame of its own). `xt jump` leaves the running word for xt -
 a tail call: a chain of them never grows the return stack (the event scripts' `goto`; not from a word with
 locals or a loop open). `flag abort" text"` is an error with that text when flag is true; `erase ( addr n -- )`
 zeroes. A vocabulary's own word can shadow a core one of the same name (the actors' `spawn`): `forth:spawn`
@@ -172,6 +172,7 @@ are built, each listed here.
 | `motion` / `motion-frames` / `motion-move` | `addr len -- motion` / `motion -- n` / `motion frame -- dx dy dz` | a character motion from the library and its frames |
 | `draw-figure` | `model motion frame x y z yaw --` | a figure posed in a motion's frame |
 | `n>str` / `$clear $+ $@` | `n -- addr len` / ... | a number's digits; a string built a piece at a time (prelude) |
+| `exe-u8` / `exe-s8` / `exe-s16` / `exe-s32` | `addr len i -- n` | element i of a table of the executable (0 past its end or with none) |
 | `library-file` | `addr len -- addr n` | a library file's bytes (read once, kept); `0 0` if none |
 | `exe-table` | `addr len -- addr n` | a table of the executable by name (`s" music" exe-table`); `0 0` if none |
 

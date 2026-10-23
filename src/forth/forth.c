@@ -797,6 +797,18 @@ FCMP(p_feq, a == b)
 PRIM(p_f0eq) { PUSH(FPOP() == 0.0 ? -1 : 0); }
 PRIM(p_f0lt) { PUSH(FPOP() < 0.0 ? -1 : 0); }
 PRIM(p_stof) { FPUSH((Float)POP()); }
+PRIM(p_3stof) {   /* ( x y z -- ) ( F: -- x y z ) a point to the float stack */
+    Cell z = POP(), y = POP(), x = POP();
+    forth_fpush(f, (Float)x);
+    forth_fpush(f, (Float)y);
+    forth_fpush(f, (Float)z);
+}
+PRIM(p_3ftos) {   /* ( F: x y z -- ) ( -- x y z ) and back, as whole numbers */
+    Float z = forth_fpop(f), y = forth_fpop(f), x = forth_fpop(f);
+    PUSH((Cell)x);
+    PUSH((Cell)y);
+    PUSH((Cell)z);
+}
 PRIM(p_ftos) { PUSH((Cell)FPOP()); }   /* truncates toward zero */
 PRIM(p_fdup) { Float a = FPOP(); FPUSH(a); FPUSH(a); }
 PRIM(p_fdrop) { (void)FPOP(); }
@@ -2222,7 +2234,7 @@ static void define_core(Forth *f) {
         {"fabs", p_fabs}, {"fsqrt", p_fsqrt}, {"fsin", p_fsin}, {"fcos", p_fcos}, {"ftan", p_ftan},
         {"fasin", p_fasin}, {"facos", p_facos}, {"fexp", p_fexp}, {"fln", p_fln},
         {"ffloor", p_ffloor}, {"fround", p_fround}, {"f<", p_flt}, {"f>", p_fgt}, {"f<=", p_fle},
-        {"f>=", p_fge}, {"f=", p_feq}, {"f0=", p_f0eq}, {"f0<", p_f0lt}, {"s>f", p_stof},
+        {"f>=", p_fge}, {"f=", p_feq}, {"f0=", p_f0eq}, {"f0<", p_f0lt}, {"s>f", p_stof}, {"3s>f", p_3stof}, {"3f>s", p_3ftos},
         {"f>s", p_ftos}, {"fdup", p_fdup}, {"fdrop", p_fdrop}, {"fswap", p_fswap}, {"fover", p_fover},
         {"frot", p_frot}, {"fdepth", p_fdepth}, {"f@", p_ffetch}, {"f!", p_fstore},
         {"sf@", p_sffetch}, {"sf!", p_sfstore},

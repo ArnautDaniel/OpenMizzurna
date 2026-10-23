@@ -28,10 +28,11 @@ $0100 constant inverted
 : region-file ( part -- addr n )   \ "cdbin/NNN_4/2/<part>.bin"
     $clear  s" cdbin/" $+  area @ dup 100 < if  s" 0" $+  then  dup 10 < if  s" 0" $+  then  n>str $+
     s" _4/2/" $+  n>str $+  s" .bin" $+  $@ library-file ;
+: in-use? ( list -- flag )  w@ dup switched-off and 0=  swap in-use and 0<> and ;
 : list-of ( floor zones? -- addr | 0 )   \ a floor's obstacle (or zone) list, if it has one in use
-    >r floor-part dup 0< if  r> 2drop 0 exit  then  r> if  1+  then
+    {: fl zones? :}  fl floor-part  dup 0< if  drop 0 exit  then  zones? if  1+  then
     region-file  2 < if  drop 0 exit  then
-    dup w@ dup switched-off and 0<> swap in-use and 0= or if  drop 0  then ;
+    dup in-use? 0= if  drop 0  then ;
 : entries ( list -- first count size )
     dup w@ >r 2 +  r@ count-bits and  r> with-ids and if  10  else  8  then ;
 

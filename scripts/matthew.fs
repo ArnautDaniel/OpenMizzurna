@@ -13,8 +13,7 @@ create moving playing allot   -1 moving anim !
 
 variable floor   1 floor !   \ (src: a loaded game resumes on area 1's floor 1)
 : place ( x y z -- )   \ a height of 0 is "on his floor" (the scripts' set_pos; then the floor holds him)
-    >r  dup 0= if  drop area @ floor @ floor-height  then  r>
-    >r >r s>f r> s>f r> s>f  area @ floor @ body-place ;
+    {: x y z :}  x  y ?dup 0= if  area @ floor @ floor-height  then  z  3s>f  area @ floor @ body-place ;
 
 \ at a held motion's end he stays where it moved him (src: func_8001CA5C: the last frame's root move, turned
 \ by his heading, added to his place as it is)
@@ -94,6 +93,8 @@ variable l-was   variable r-was
     frot fdup fsin speed f@ f* frames f*  fswap fcos speed f@ f* frames f*   ( F: x z dx dz )
     frot f+ f>s  f+ f>s  swap ;
 : open? ( x z -- flag )  floor @ blocked? 0= ;
+: step-to ( x z -- )   \ his new place across the floor, his height kept
+    {: x z :}  x  self body-pos 3f>s drop nip  z  3s>f  self body-area self body-floor body-place ;
 : walk ( -- )   \ src: player_update: a blocked step tries 0x30 at a time either side, easing his heading
     speed f@ f0= if  exit  then
     0  turning @ 0= speed f@ f0> and if
@@ -104,9 +105,7 @@ variable l-was   variable r-was
             slide-step +loop
         then
     then
-    probe 2dup open? if   ( x z )
-        >r s>f  self body-pos fdrop fswap fdrop  r> s>f   ( F: x y z )
-        self body-area self body-floor body-place
+    probe 2dup open? if  step-to
     else  2drop  0e speed f!  then ;
 : control ( -- )
     controlled @ 0= self body? 0= or if  exit  then
@@ -126,7 +125,7 @@ end-behaviour
 : matthew-actor ( -- id )  s" matthew" actor-named ;
 : matthew-there? ( -- flag )  matthew-actor dup 0< if  drop false  else  body?  then ;
 : matthew-now ( -- x y z yaw )   \ where he stands and his heading, in whole units (a fact: his body)
-    matthew-actor {: id :}  id body-pos  f>s f>s f>s swap rot  id body-yaw f>s ;
+    matthew-actor {: id :}  id body-pos 3f>s  id body-yaw f>s ;
 : anim-done? ( -- flag )  moving done @  moving anim @ 0< or ;   \ (a fact: the events' wait-anim)
 : draw-matthew ( -- )
     matthew-there? if

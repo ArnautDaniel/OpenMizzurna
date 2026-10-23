@@ -78,6 +78,31 @@ PRIM(p_key_hold) {   /* ( scancode flag -- ) held (or let go) from a script; pre
     gEngine.held[k] = on != 0;
 }
 
+/* an element of a table of the executable by name and index (0 past its end, or with no table) */
+static void p_exe_table(Forth *f, Word *w);
+static Cell exe_element(Forth *f, int bytes, int is_signed) {
+    Cell i = POP();
+    Cell n, addr;
+    const uint8_t *p;
+
+    p_exe_table(f, NULL);   /* ( addr len -- addr n ) */
+    n = POP();
+    addr = POP();
+    if (addr == 0 || i < 0 || (i + 1) * bytes > n) {
+        return 0;
+    }
+    p = (const uint8_t *)addr + i * bytes;
+    switch (bytes) {
+    case 1: return is_signed ? (int8_t)p[0] : p[0];
+    case 2: return is_signed ? (int16_t)(p[0] | p[1] << 8) : (uint16_t)(p[0] | p[1] << 8);
+    default: return (int32_t)(p[0] | p[1] << 8 | p[2] << 16 | (uint32_t)p[3] << 24);
+    }
+}
+PRIM(p_exe_u8) { PUSH(exe_element(f, 1, 0)); }    /* ( addr len i -- n ) element i of a table: a byte */
+PRIM(p_exe_s8) { PUSH(exe_element(f, 1, 1)); }    /* ( addr len i -- n ) signed */
+PRIM(p_exe_s16) { PUSH(exe_element(f, 2, 1)); }   /* ( addr len i -- n ) a signed 16-bit word */
+PRIM(p_exe_s32) { PUSH(exe_element(f, 4, 1)); }   /* ( addr len i -- n ) a signed 32-bit word */
+
 /* ---- the library's files ---- */
 #define MAX_FILES 256
 static struct {
@@ -228,7 +253,7 @@ void bind_engine(Forth *f) {
         {"ticks", p_ticks}, {"dt", p_dt}, {"seconds", p_seconds}, {"step-blend", p_step_blend}, {"pen-color", p_pen_color}, {"pen-scale", p_pen_scale}, {"draw-text", p_draw_text},
         {"draw-rect", p_draw_rect}, {"pen-blend", p_pen_blend}, {"draw-quad", p_draw_quad}, {"screen-size", p_screen_size}, {"char-size", p_char_size}, {"hud", p_hud},
         {"clear-color", p_clear_color}, {"screenshot", p_screenshot},
-        {"screenshot-pending?", p_screenshot_pending}, {"console!", p_console_store}, {"exe-table", p_exe_table}, {"library-file", p_library_file},
+        {"screenshot-pending?", p_screenshot_pending}, {"console!", p_console_store}, {"exe-table", p_exe_table}, {"library-file", p_library_file}, {"exe-u8", p_exe_u8}, {"exe-s8", p_exe_s8}, {"exe-s16", p_exe_s16}, {"exe-s32", p_exe_s32},
     };
     Vocab *was = f->m.current, *v = forth_vocab(f, "engine");
     size_t i;
