@@ -34,6 +34,14 @@ the object and the motion) names them: `play-area-anim ( entry )` (src: func_800
 the doors' `door-anim`) plays one once - at 15 frames a second - and its object stays on the last frame; one held
 plays again. Engine: `pose-object` (for the next `draw-model-shown`), `motion-turn`.
 
+## The billboards
+
+Some areas (7, 8, 9, 10, 13, 26: the outdoor ones) have billboards - trees, posts - each scene its set (the
+library's `cdbin/NNN_4/5.billboards.txt`: `set <scene> count <n> at <halfword>`, then the entries), from the area's
+origin; their sprites `sprites/NNN.txt`, `sprites/NNN/<i>.png` (cut at the import from the area's sheet). Drawn as
+the town's (billboards.fs: a stand of them, turned to the camera's heading, in the first light's colour; src:
+func_8003B2DC).
+
 ## Floors (`scripts/floors.fs`)
 
 Each floor has an obstacle list and a zone list (`NNN_4` part 2: parts 0 / 1 floor 1; other floors by area,

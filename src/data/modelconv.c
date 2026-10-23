@@ -376,17 +376,18 @@ static const SkyPiece kSky[] = {
 #define FULL_BRIGHT 0x8000
 #define PAGE_BLEND_SHIFT 5
 
-static void town_sprites(Job *j, const VramContext *v, const uint8_t *const *entries, const size_t *sizes, int n) {
-    int own = TOWN_AREA * CDBIN_KINDS + 4, path[1] = {SPRITES_PART}, i, y, count;
+static void area_sprites(Job *j, const VramContext *v, const uint8_t *const *entries, const size_t *sizes, int n,
+                         int area, const char *list, const char *folder) {
+    int own = area * CDBIN_KINDS + 4, path[1] = {SPRITES_PART}, i, y, count;
     size_t size = 0, k = 0, cap;
     const uint8_t *d = own < n && entries[own] ? part_of(entries[own], sizes[own], path, 1, &size) : NULL;
-    uint8_t *image = malloc((size_t)PAGE_TEXELS * PAGE_TEXELS * 4);
+    uint8_t *image;
     char *text, file[64];
 
-    if (d == NULL) {
-        free(image);
+    if (d == NULL || size < SPRITE_SIZE) {
         return;
     }
+    image = malloc((size_t)PAGE_TEXELS * PAGE_TEXELS * 4);
     count = (int)(size / SPRITE_SIZE);
     cap = (size_t)(count + 4) * 96;
     text = malloc(cap);
@@ -396,16 +397,19 @@ static void town_sprites(Job *j, const VramContext *v, const uint8_t *const *ent
         int w = le16s(e), h = le16s(e + 2), u = le16s(e + 4), vv = le16s(e + 6);
         uint16_t page = (uint16_t)(e[8] | e[9] << 8), palette = (uint16_t)(e[10] | e[11] << 8);
 
+        if (w <= 0 || h <= 0 || u + w > PAGE_TEXELS || w > PAGE_TEXELS || h > PAGE_TEXELS) {
+            w = h = 1, u = vv = 0;   /* (an entry that isn't a picture: a point, so its rows keep their numbers) */
+        }
         k += (size_t)snprintf(text + k, cap - k, "sprite %d size %d %d full-bright %d blend %d\n", i, w, h,
                               (page & FULL_BRIGHT) != 0, (page >> PAGE_BLEND_SHIFT & 3) + 1);
         vram_page_rgba(v, (uint16_t)(page & ~FULL_BRIGHT), palette, j->page);
         for (y = 0; y < h; y++) {
             memcpy(image + (size_t)y * w * 4, j->page + ((size_t)((vv + y) & 0xFF) * PAGE_TEXELS + (size_t)u) * 4, (size_t)w * 4);
         }
-        snprintf(file, sizeof(file), "town/sprites/%d.png", i);
+        snprintf(file, sizeof(file), "%s/%d.png", folder, i);
         image_file(j, file, image, w, h);
     }
-    image_file_text(j, "town/sprites.txt", text, k);
+    image_file_text(j, list, text, k);
     free(text);
     free(image);
 }
@@ -635,6 +639,12 @@ static int run(Job *j, const uint8_t *const *entries, const size_t *sizes, int n
                 texture_file(j, path);
             }
         }
+        if (a != TOWN_AREA) {   /* an area's billboards' sprites (those with billboards: part 5) */
+            char list[64], folder[64];
+            snprintf(list, sizeof(list), "sprites/%03d.txt", a);
+            snprintf(folder, sizeof(folder), "sprites/%03d", a);
+            area_sprites(j, v, entries, sizes, n, a, list, folder);
+        }
         if (a == TOWN_AREA) {   /* the lamps' textures lit */
             lamps_set(v, 1);
             for (i = 0; i < sets->n && !j->failed; i++) {
@@ -649,7 +659,7 @@ static int run(Job *j, const uint8_t *const *entries, const size_t *sizes, int n
             }
             lamps_set(v, 0);
             sky_images(j, v);   /* (the sky's: the common images, as in the town) */
-            town_sprites(j, v, entries, sizes, n);
+            area_sprites(j, v, entries, sizes, n, TOWN_AREA, "town/sprites.txt", "town/sprites");
         }
         for (i = 0; i < ms.n && !j->failed; i++) {
             const Found *f = &ms.list[i];

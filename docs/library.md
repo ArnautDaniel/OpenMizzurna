@@ -153,6 +153,10 @@ its place and turn). The game packs a character's frames ("hold this value n fra
 frame's values. 1193 motions. Which motion ids are an area's own: the executable's tables `area-motion-first` and
 `area-motion-count`. `tools/gltf_view.py` poses a model by a motion's frame.
 
+**Billboards** (`src/data/billboards.c`): an area's part 5 (`NNN_4/5.billboards.txt`: its 16 scenes' sets and the
+entries - place, bottom, top, half width, sprite), checked byte-exact; every area's sprites (part 7) as
+`sprites/NNN.txt` and `sprites/NNN/<i>.png`, cut at the import from the area's sheet (the town's: `town/sprites`).
+
 **Roads** (`src/data/roads.c`): the town's road graph the cars drive (`033_4/5/1.roads.txt`: 170 nodes, each
 where it is and the run of bends leaving it; `033_4/5/2.roads.txt`: 746 bends, each a step and its length).
 Known by where they are, like the motions. The cars' routes through it are the executable's

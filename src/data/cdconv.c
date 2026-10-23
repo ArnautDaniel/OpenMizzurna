@@ -4,6 +4,7 @@
 #include "container.h"
 #include "mfo.h"
 #include "roads.h"
+#include "billboards.h"
 #include "motion.h"
 #include "seqmidi.h"
 #include "vab.h"
@@ -112,6 +113,17 @@ static int convert_part(const char *base, const char *what, const uint8_t *d, si
     Motion motion;
     RoadsKind roads = kind_of(d, n) == PART_RAW ? roads_kind(base, n) : ROADS_NONE;
 
+    if (kind_of(d, n) == PART_RAW && billboards_part(base, d, n)) {
+        size_t len;
+        char *text = billboards_text(d, n, what, &len);
+        int ok;
+
+        snprintf(path, sizeof(path), "%s.billboards.txt", base);
+        snprintf(file, nfile, "%s.billboards.txt", leaf);
+        ok = write(ctx, path, (const uint8_t *)text, len);
+        free(text);
+        return ok;
+    }
     if (roads != ROADS_NONE) {
         size_t len;
         char *text = roads_text(roads, d, n, what, &len);
@@ -164,6 +176,8 @@ static int convert_part(const char *base, const char *what, const uint8_t *d, si
                 }
                 k += snprintf(index + k, sizeof(index) - (size_t)k, "part %d %s %s\n", i,
                               is_motion ? "motion"
+                              : kind_of(c.parts[i].data, c.parts[i].size) == PART_RAW &&
+                                        billboards_part(sub, c.parts[i].data, c.parts[i].size) ? "billboards"
                               : kind_of(c.parts[i].data, c.parts[i].size) == PART_RAW &&
                                         roads_kind(sub, c.parts[i].size) != ROADS_NONE ? "roads"
                               : kKindNames[kind_of(c.parts[i].data, c.parts[i].size)], subfile);
@@ -437,6 +451,20 @@ static int check_part(const char *base, const uint8_t *d, size_t n, CdconvReadFn
     Motion motion, back;
     RoadsKind roads = kind_of(d, n) == PART_RAW ? roads_kind(base, n) : ROADS_NONE;
 
+    if (kind_of(d, n) == PART_RAW && billboards_part(base, d, n)) {
+        uint8_t *text;
+
+        snprintf(path, sizeof(path), "%s.billboards.txt", base);
+        text = read(ctx, path, &len);
+        got = text != NULL ? billboards_from_text((const char *)text, len, &len) : NULL;
+        free(text);
+        ok = got != NULL && len == n && memcmp(got, d, n) == 0;
+        free(got);
+        if (!ok) {
+            snprintf(why, nwhy, "%s doesn't make the same billboards again", path);
+        }
+        return ok;
+    }
     if (roads != ROADS_NONE) {
         uint8_t *text;
 

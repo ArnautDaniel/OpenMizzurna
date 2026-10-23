@@ -1,10 +1,10 @@
 \ the town on the game's data: its tiles streamed around the camera, its street lamps
-USING: tester engine actors messages clock keys areas floors daylight matthew town town.private events ;
+USING: tester engine actors messages clock keys areas floors daylight matthew billboards town town.private events ;
 
 : the-areas ( -- id )  s" areas" actor-named ;
 : at-time ( day hour minute -- )  date>time s" clock" actor-named send set-time  deliver ;
 : step ( -- )  broadcast tick  deliver ;
-: steps ( n -- )  0 ?do  step  loop ;
+: steps ( n -- )  0 ?do  1 tick-tasks  actors-frame  loop ;   \ (a tick of the game's)
 : all-lamps ( -- n )  0  #lamps 0 do  i lamp-lit? -  loop ;
 : settled ( -- )  10 0 do  deliver  loop  events-stop  deliver ;   \ (the new game the library starts: its opening stopped)
 settled
@@ -30,7 +30,6 @@ T{ 344771 285059 1 zone-hit -> 0 0 }T
 testing Matthew walking in the town: along the street, on the ground; into the shop's wall, not
 : matthew-at ( x z heading -- )
     0 swap 0 s" matthew" actor-named send figure-turn  0 swap s" matthew" actor-named send figure-place  deliver ;
-: steps ( n -- )  0 ?do  1 tick-tasks  actors-frame  loop ;   \ (a tick of the game's)
 : walked ( ticks -- x y z )   \ up held so long
     pad-up true key-hold  steps  pad-up false key-hold  1 steps  matthew-now drop ;
 : along-the-street? ( x y z -- west? south? on-ground? )
