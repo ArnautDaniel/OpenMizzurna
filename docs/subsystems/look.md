@@ -57,6 +57,10 @@ rows' alone; arriving (meeting Lorraine on the 25th, Mel and Lorraine arguing), 
 from the 28th 19:00), the robbery on the 27th, who says what by their stops, the farm workers, Lorraine's twelve
 conversations in turn, then her line. Seen: the meeting on the 25th plays through, Mel walking off after it. Sitting at the counter and ordering:
 `docs/subsystems/counter.md`.
+Area 13's (`scripts/rules/area013.fs`, the park; `tests/library/test_area013.fs`): the old man there by the hour,
+talking to him (a character pack's scripts), his lessons (the one reached: a minigame that's a script), who says
+what, a night scene once, the way down with or without a companion, the lights by floor and time of day. (The
+lesson's fuel: with the car, to come.)
 Area 11's (`scripts/rules/area011.fs`, the inn's room; `tests/library/test_area011.fs`): a scene the first time
 in, the crate, a thing to take once found.
 Area 10's (`scripts/rules/area010.fs`, the north-shore cabin; `tests/library/test_area010.fs`): the crate

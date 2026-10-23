@@ -11,7 +11,6 @@ USING: engine actors messages clock story-flags townsfolk events look talk areas
 : today ( -- day )  clock-time time>day ;
 : minute-of-day ( -- m )  clock-time minutes/day mod ;
 : at-minute? ( hour minute -- flag )  swap 60 * +  minute-of-day = ;   \ src: event_time_is (any day)
-: standing-at? ( slot stop -- flag )  over stop-of 0< if  2drop false exit  then  swap person-of at-stop @ = ;
 
 \ ---- the story's words this area keeps (src: the story block; not named yet) ----
 $024 constant first-show-day   $025 constant fan-fight-day   $026 constant show-cancelled-day   \ (bytes)

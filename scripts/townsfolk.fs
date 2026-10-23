@@ -66,6 +66,8 @@ PRIVATE>
 0 constant behind-the-counter   \ (Nozz's record 0: his shop's counter)
 : nozz-behind-counter? ( -- flag )   \ src: func_80026C50
     nozz stop-of 0< if  false exit  then  nozz current-row stop-record @ behind-the-counter = ;
+: standing-at? ( slot stop -- flag )   \ at that stop of theirs, not walking (src: the handlers' stop checks)
+    over stop-of 0< if  2drop false exit  then  swap person-of at-stop @ = ;
 : at-record? ( slot record -- flag )   \ standing at a stop of that record (src: at_place; the handlers' checks)
     {: s r :}  s stop-of 0< if  false exit  then  s current-row stop-record @ r = ;
 : james-visiting? ( -- flag )  false ;   \ src: func_8002CBE8 (James by Matthew's bed: his position, to come)

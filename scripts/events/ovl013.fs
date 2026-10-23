@@ -4,6 +4,9 @@
 IN: events.ovl013
 USING: events events.main ;
 
+\ (looped back to: declared first)
+defer L-8010387C
+
 \ $801028FC
 : entry-801028FC
     171 actor as-this-one
@@ -390,6 +393,156 @@ USING: events events.main ;
     matthew wait-anim
     matthew 13 2 set-floor
     1 set-scene
+    end-script
+    ;
+
+: L-80103830
+    this-one 81 5 talk
+    end-script
+    ;
+
+: L-80103838
+    -480 -1106 -460 270694 -1920 90639 3296 camera-set
+    this-one 83 3 talk
+    82 0 choice
+    0 result= if  goto L-8010387C  then
+    this-one 81 5 talk
+    end-script
+    ;
+
+:noname
+    11 screen-effect
+    wait-effect
+    171 actor 8 matthew 0 fight
+    13 music
+    -608 -2802 -652 271176 -1920 90263 4128 camera-set
+    this-one 0 0 anim
+    this-one 270806 -1920 90557 set-pos
+    matthew 0 0 anim
+    matthew 271430 -1920 90557 set-pos
+    this-one matthew face-each-other
+    10 screen-effect
+    wait-effect
+    main-exe $80037928 native-result
+    0 result= if  goto L-80103838  then
+    ovl013 $8010274C native
+    this-one 84 7 talk
+    end-script
+    ; is L-8010387C
+
+\ $80103938
+: entry-80103938
+    171 actor as-this-one
+    this-one 0 1 anim
+    this-one 270806 -1920 90557 set-pos
+    matthew 271430 -1920 90557 set-pos
+    this-one 13 3 set-floor
+    -608 -2802 -652 271176 -1920 90263 4128 camera-set
+    this-one matthew face-each-other
+    10 screen-effect
+    wait-effect
+    this-one 52 5 talk
+    matthew 53 1 talk
+    80 0 choice
+    1 result= if  goto L-80103830  then
+    this-one 54 7 talk
+    matthew 55 1 talk
+    this-one 56 5 talk
+    matthew 57 7 talk
+    this-one 58 0 talk
+    this-one 117 116 anim-at  this-one wait-anim
+    this-one 59 0 talk
+    this-one 105 116 anim-at  this-one wait-anim
+    this-one 60 0 talk
+    this-one 157 116 anim-at  this-one wait-anim
+    this-one 61 0 talk
+    this-one 147 116 anim-at  this-one wait-anim
+    this-one 62 0 talk
+    this-one 107 116 anim-at  this-one wait-anim
+    this-one 63 0 talk
+    this-one 158 116 anim-at  this-one wait-anim
+    this-one 64 0 talk
+    goto L-8010387C
+    ;
+
+\ $80103A64
+: entry-80103A64
+    171 actor as-this-one
+    this-one 0 1 anim
+    this-one 270806 -1920 90557 set-pos
+    matthew 271430 -1920 90557 set-pos
+    this-one 13 3 set-floor
+    -608 -2802 -652 271176 -1920 90263 4128 camera-set
+    this-one matthew face-each-other
+    10 screen-effect
+    wait-effect
+    this-one 65 0 talk
+    80 0 choice
+    1 result= if  goto L-80103830  then
+    this-one 66 0 talk
+    this-one 106 116 anim-at  this-one wait-anim
+    this-one 67 0 talk
+    this-one 139 116 anim-at  this-one wait-anim
+    this-one 68 0 talk
+    this-one 144 116 anim-at  this-one wait-anim
+    this-one 69 0 talk
+    this-one 146 116 anim-at  this-one wait-anim
+    this-one 70 0 talk
+    goto L-8010387C
+    ;
+
+\ $80103B54
+: entry-80103B54
+    171 actor as-this-one
+    this-one 0 1 anim
+    this-one 270806 -1920 90557 set-pos
+    matthew 271430 -1920 90557 set-pos
+    this-one 13 3 set-floor
+    -608 -2802 -652 271176 -1920 90263 4128 camera-set
+    this-one matthew face-each-other
+    10 screen-effect
+    wait-effect
+    this-one 71 4 talk
+    80 0 choice
+    1 result= if  goto L-80103830  then
+    this-one 72 5 talk
+    matthew 73 3 talk
+    this-one 74 7 talk
+    this-one 75 7 talk
+    this-one 117 0 anim
+    this-one wait-anim
+    this-one 105 0 anim
+    4 frames wait
+    this-one 107 0 anim
+    8 frames wait
+    this-one 106 0 anim
+    this-one wait-anim
+    this-one 76 7 talk
+    goto L-8010387C
+    ;
+
+: L-80103C4C
+    11 screen-effect
+    wait-effect
+    8 0 -1 -1 -1 -2146421132 warp
+    ;
+
+\ $80103C74
+: entry-80103C74
+    171 actor as-this-one
+    this-one 0 1 anim
+    this-one 270806 -1920 90557 set-pos
+    matthew 271430 -1920 90557 set-pos
+    this-one 13 3 set-floor
+    -608 -2802 -652 271176 -1920 90263 4128 camera-set
+    this-one matthew face-each-other
+    10 screen-effect
+    wait-effect
+    this-one 77 7 talk
+    78 0 choice
+    0 result= if  goto L-80103C4C  then
+    79 0 choice
+    0 result= if  goto L-8010387C  then
     end-script
     ;
 

@@ -449,10 +449,22 @@ def route_addresses(exe, src_dir, root, exe_img):
 PROP_SCRIPTS = set()
 
 
-def minigame_scripts(c):
-    """the scripts an overlay's area_minigame_start queues (src: minigame_script = &D_X, or by a local)"""
+def minigame_scripts(c, ovl=None):
+    """the scripts an overlay's area_minigame_start queues (src: minigame_script = &D_X, or by a local; or a table
+    of them indexed, minigame_script = *(... + &D_T): its words that point into the overlay)"""
     m = re.search(r'\nvoid area_minigame_start\(void\) \{\n(.*?)\n\}\n', c, re.S)
-    return set(int(x, 16) for x in re.findall(r'\w+ = &D_([0-9A-F]{8})', m.group(1))) if m else set()
+    if not m:
+        return set()
+    out = set(int(x, 16) for x in re.findall(r'\w+ = &D_([0-9A-F]{8})', m.group(1)))
+    if ovl is not None:
+        for t in re.findall(r'minigame_script = \*\([^;]*&D_([0-9A-F]{8})\)', m.group(1)):
+            a = int(t, 16) - OVL_BASE
+            for k in range(16):
+                w = struct.unpack_from('<I', ovl, a + 4 * k)[0] if a + 4 * k + 4 <= len(ovl) else 0
+                if not OVL_BASE <= w < OVL_BASE + len(ovl):
+                    break
+                out.add(w)
+    return out
 
 
 def find_prop_scripts(scope, c):
@@ -510,7 +522,9 @@ def main():
         area = d[3:]
         c = open(os.path.join(root, 'src', d, d + '.c')).read()
         find_prop_scripts(d, c)
-        addrs = minigame_scripts(c) | set(EV.started_scripts(c)) | {x for ar, x in check_targets if ar == int(area) and x >= OVL_BASE} | \
+        ovl_path = os.path.join(src_dir, '%s_0.bin' % area)
+        ovl_img = open(ovl_path, 'rb').read() if os.path.exists(ovl_path) else None
+        addrs = minigame_scripts(c, ovl_img) | set(EV.started_scripts(c)) | {x for ar, x in check_targets if ar == int(area) and x >= OVL_BASE} | \
             {x for x, h in homes.items() if h == area}
         if not addrs:
             continue

@@ -13,7 +13,6 @@ USING: engine actors messages clock story-flags townsfolk events look talk areas
 : today ( -- day )  clock-time time>day ;
 : hour ( -- hour )  clock-time time>hour ;
 : mel-here? ( -- flag )  mel at-the-diner at-record? ;   \ src: func_8002E244
-: standing-at? ( slot stop -- flag )  over stop-of 0< if  2drop false exit  then  swap person-of at-stop @ = ;
 
 \ ---- the story's words Lorraine's talks count in (src: the story block +0xC0 .. +0xEC; not named yet) ----
 $0C0 constant asked-about-emma   $0C4 constant protest-told   $0C8 constant workers-told   $0CC 0 story-bit constant mel-a-jerk

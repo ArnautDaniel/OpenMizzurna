@@ -16,7 +16,6 @@ variable upstairs-done   variable closing-done   variable computer-seen
     0 board-looks !  0 board-seen !  0 cabinet-looks !  0 poster-seen !  0 upstairs-done !  0 closing-done ! ;
 
 \ ---- people where their schedules have them (src: at_place, at_xz) ----
-: standing-at? ( slot stop -- flag )  over stop-of 0< if  2drop false exit  then  swap person-of at-stop @ = ;
 : at-place? ( slot x z -- flag )  {: s x z :}  s person-now drop nip {: px pz :}  px x =  pz z = and ;
 10 constant mel-in-the-cells          \ (Mel's record 10)
 : mel-in-a-cell? ( -- flag )  mel mel-in-the-cells at-record? ;                        \ src: func_8002E1A8

@@ -13,7 +13,6 @@ USING: engine actors messages clock story-flags items townsfolk floors events lo
 : today ( -- day )  clock-time time>day ;
 : hour ( -- h )  clock-time time>hour ;
 : here-area ( -- area )  area @ ;   \ (the real one: 2, 29 or 30)
-: standing-at? ( slot stop -- flag )  over stop-of 0< if  2drop false exit  then  swap person-of at-stop @ = ;
 : standing-there? ( slot x z -- flag )  {: s x z :}  s person-now drop nip {: px pz :}  px x =  pz z = and ;
 : matthew-xz ( -- x z )  matthew-now {: x y z h :}  x z ;
 : give ( item -- )  s" items" actor-named send give-item ;

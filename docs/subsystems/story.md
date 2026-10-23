@@ -100,6 +100,9 @@ argument), in the destination area's overlay.
 The minigames that are a script alone (src: area_minigame_start setting minigame_script) are registered by
 number (`minigame-script!`); the `minigame` op starts that script, the others are to come.
 
+The minigame scripts include those an area picks from a table (src: `minigame_script = *(... + &D_T)`: the old
+man's lessons): the converter reads the table's words that point into the overlay.
+
 A few scripts' own actor is given by the C that starts them (src: `M2C_FIELD(&D_X, s32 *, 4) = ...->id`: the
 counters' orders - the food, the drink): the converter finds them and writes `the-prop @ as-this-one`; the rules
 set `the-prop` before starting them.
