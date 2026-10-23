@@ -192,11 +192,25 @@ static void comma_float(Forth *f, Float x) {
     }
 }
 
+static Word *in_vocab(Vocab *v, const char *name, size_t len);
+
 static Word *new_word(Forth *f, const char *name, size_t len, Code code) {
     Word *w;
 
     if (len > WORD_NAME_MAX) {
         forth_error(f, "name too long: %.*s", (int)len, name);
+    }
+    if (!f->m.listener && len > 0) {   /* a file's word hiding one of a vocabulary it uses: likely a mistake - say
+                                          * so (not the messages': `send` finds those by message) */
+        int k;
+        for (k = f->m.norder - 1; k >= 0; k--) {
+            Vocab *v = f->m.order[k];
+            if (v != f->core && v != f->m.current && strcmp(v->name, "messages") != 0 && in_vocab(v, name, len) != NULL) {
+                forth_printf(f, "warning: %.*s hides %s:%.*s (%s)\n", (int)len, name, v->name, (int)len, name,
+                             f->m.current->name);
+                break;
+            }
+        }
     }
     align_here(f);
     w = allot(f, sizeof(Word));

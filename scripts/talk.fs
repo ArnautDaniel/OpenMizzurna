@@ -19,14 +19,14 @@ USING: engine actors messages clock areas floors figures matthew townsfolk event
 \ the shot: a camera set about the speaker, indoors or out (src: D_800963E0, D_8009615C)
 -470 constant indoor-look-y  -908 constant indoor-dist  -1370 constant indoor-eye-y  1856 constant indoor-yaw
 -474 constant outdoor-look-y  -2210 constant outdoor-dist  -1106 constant outdoor-eye-y  260 constant outdoor-yaw
-variable line   variable speaker   variable gesture
+variable line   variable speaker   variable line-gesture
 : talk-shot ( -- )
     area @ the-town = if  outdoor-look-y outdoor-dist outdoor-eye-y 0 0 0 outdoor-yaw
     else  indoor-look-y indoor-dist indoor-eye-y 0 0 0 indoor-yaw  then  camera-set ;
 : one-liner-event ( -- )   \ (an event: the template's ops)
     speaker @ as-this-one  talk-shot  matthew 0 1 anim  this-one camera-at
-    this-one matthew 0 face  this-one line @ gesture @ talk ;
-: one-liner ( msg slot gesture -- )  gesture !  speaker !  line !  ['] one-liner-event start-event ;
+    this-one matthew 0 face  this-one line @ line-gesture @ talk ;
+: one-liner ( msg slot line-gesture -- )  line-gesture !  speaker !  line !  ['] one-liner-event start-event ;
 65535 constant no-gesture
 10512 constant hmm-what    \ "Hmm? What?" (src: 0x2910: the common text's 512)
 
@@ -39,7 +39,7 @@ create area-talks  33 cells allot   area-talks 33 cells erase                 \ 
 : area-talk! ( xt area -- )  cells area-talks + ! ;          \ xt ( slot -- handled? )
 : a-line-by-stop ( table key -- msg | -1 )   \ a table of (key, message) pairs ended by -1 (src: func_800429C8)
     {: t k :}  t  begin  dup @ -1 <> while  dup @ k = if  cell+ @ exit  then  2 cells +  repeat  drop -1 ;
-: talk-to ( slot -- )   \ src: actor_talk_start
+: talk-with ( slot -- )   \ src: actor_talk_start
     {: s :}
     s cells conversations + @ ?dup if  execute if  exit  then  then
     area @ cells area-talks + @ ?dup if  s swap execute if  exit  then  then

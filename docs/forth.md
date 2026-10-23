@@ -46,6 +46,9 @@ USING: engine keys vectors views state ;
 - `<PRIVATE ... PRIVATE>` puts helpers in `name.private`: visible in the file, not to its users
   (`name.private:word` still reaches one, for debugging).
 - Vocabularies loading each other (a cycle of USING:s) is an error.
+- A file defining a word that hides one of a vocabulary it uses gets a warning (`x hides vocab:x`) as it loads
+  (the core's and the messages' aside): rename it, or keep a vocabulary's workings `<PRIVATE ... PRIVATE>` so
+  only its face is seen.
 - The prompt (console, `--eval`, the `forth` tool) sees every loaded vocabulary; `USING:` there
   narrows nothing, it loads. `vocabs` lists them, `vocab-words name` lists one, `words` lists
   what the current source sees.

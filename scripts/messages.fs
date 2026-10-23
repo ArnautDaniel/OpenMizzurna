@@ -29,7 +29,6 @@ message window-say ( bank id speaker palette secs -- )   \ show a message; secs 
 message window-ask ( bank id kind -- )   \ a question with its answers (kind: src msg_choice)
 message window-shut ( -- )               \ close it now
 message window-closed ( answer -- )      \ broadcast: the window closed (the answer chosen; -1 none)
--1 constant nobody                        \ no speaker
 
 \ ---- areas (docs/subsystems/areas.md) ----
 message enter-area ( area scene -- )     \ (to the areas) play that area from that scene

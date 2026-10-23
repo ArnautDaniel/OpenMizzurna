@@ -8,18 +8,19 @@ look_update / act_update / look_execute / act_execute; the area overlays' rules)
 zones. A row names a zone, and for checks a heading range, and its target: an event script, a C function (a
 native), or nothing - then the area's own rules decide (from the story's flags, the clock, items).
 
-## Rows (`scripts/events/checks.fs`, converted once from the tables by `tools/checks2forth.py`)
+## Rows (`scripts/events/checks.fs`, converted once from the tables by `tools/checks2forth.py`; written in
+`look.rows`' words)
 
 ```forth
 1 look-checks row  7 zone  2048 facing  80 either-side  script events.ovl001:entry-80104FA0  end-row   \ 180 degrees
-1 look-zones row  10 zone  ask-area  -1 prompt  end-row
+1 look-zones row  10 zone  ask-area  -1 hint  end-row
 ```
 
 - **zone rows** match the floor's zone Matthew is in by its index, and him facing its centre (within 0x300 of
   a turn: src player_face_zone);
 - **check rows** match the zone's id and his heading within ± the row's degrees (and the talk state flags,
   bits 13 / 14: in a conversation, or not);
-- `n prompt` - the row's extra: the text of the hint shown (to come).
+- `n hint` - the row's extra: the text of the hint shown (to come).
 
 ## The rules
 

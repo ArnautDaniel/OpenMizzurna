@@ -68,7 +68,7 @@ def main():
                         parts.append('$%04X states' % (r['flags'] & STATES))
                 parts.append(target(a, r))
                 if r['extra']:
-                    parts.append('%d prompt' % r['extra'])
+                    parts.append('%d hint' % r['extra'])
                 comment = '   \\ %d degrees' % (r['facing'] * 360 // 4096) if r['facing'] is not None else ''
                 lines.append('  '.join(parts) + '  end-row' + comment)
                 n += 1

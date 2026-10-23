@@ -37,6 +37,7 @@ state: clock-state
   cell field town?
 end-state
 
+<PRIVATE   \ (its workings: the messages are its face)
 : hold-bit ( reason -- mask )  1 swap lshift ;
 : running? ( -- flag )  holds @ 0= ;
 : pace ( F: -- p )  town? @ if  town-pace  else  indoor-pace  then ;
@@ -46,6 +47,8 @@ end-state
     second f@  pace dt f* f+
     begin  fdup seconds/minute a-hair f- f>= while  seconds/minute f-  minute-on  repeat
     0e fmax second f! ;
+
+PRIVATE>
 
 behaviour clock
   on spawned ( -- )  self subscribe tick  new-game-time dup now !  time-now !  story-stopped hold-bit holds ! ;

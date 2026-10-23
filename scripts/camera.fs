@@ -30,7 +30,7 @@ create history #history 4 * cells allot   variable newest
     area @ the-town = if  town-eye-y town-look-y town-dist  town-projection
     else  scene @ scene-camera  indoor-projection  then
     projection !  dist !  look-y !  eye-y ! ;
-: reset ( -- )   \ src: camera_reset: behind Matthew now, the history filled with where he is
+: camera-reset ( -- )   \ src: camera_reset: behind Matthew now, the history filled with where he is
     profile  matthew-there? 0= if  exit  then
     #history 0 do  matthew-now remember  loop
     matthew-now yaw !  target! ;
@@ -81,26 +81,26 @@ variable pulling   variable dist-goal   variable dist-step
     due f@  tween-frames dt f* f+  begin  fdup 1e f>= while  tween-frame  1e f-  repeat  due f! ;
 
 state: camera-state end-state
-behaviour the-camera
+behaviour follow-camera
   on spawned ( -- )  self subscribe tick  self subscribe area-entered  self subscribe scene-shown
     self subscribe player-control
     indoor-projection projection !  true following ! ;
   on tick ( -- )   \ (src: field_update: no following while a window is up - ui_busy)
-    following @ window-up? 0= and if  reset-due @ if  reset  false reset-due !  then  follow  then  tweens ;
+    following @ window-up? 0= and if  reset-due @ if  camera-reset  false reset-due !  then  follow  then  tweens ;
   on camera-move-to ( x y z speed -- )  move-speed !  goal 2 cells + !  goal cell+ !  goal !  true moving ! ;
   on camera-turn-to ( yaw step -- )  turn-step !  full-turn 1- and turn-goal !  true turning ! ;
   on camera-height-to ( eye-y step -- )  height-step !  height-goal !  true lifting ! ;
   on camera-dist-to ( dist step -- )  dist-step !  dist-goal !  true pulling ! ;
   on camera-face ( yaw -- )  yaw ! ;
   on camera-pivot ( x y z -- )  target! ;
-  on area-entered ( area scene -- )  2drop  reset ;
-  on scene-shown ( scene -- )  drop  reset ;   \ src: set_scene_state's camera_reset
+  on area-entered ( area scene -- )  2drop  camera-reset ;
+  on scene-shown ( scene -- )  drop  camera-reset ;   \ src: set_scene_state's camera_reset
   on camera-place ( look-y dist eye-y x y z yaw -- )   \ (src: camera_set writes the camera; following is control's)
     yaw !  target!  eye-y !  dist !  look-y ! ;
   on player-control ( flag -- )   \ src: player_control_on / off: camera_follow_set (behind him again - once
     dup following @ 0= and if  true reset-due !  then  following ! ;   \ no window is up)
-  on camera-follow ( -- )  following @ 0= if  reset  then  true following ! ;   \ src: camera_follow_set
+  on camera-follow ( -- )  following @ 0= if  camera-reset  then  true following ! ;   \ src: camera_follow_set
   on camera-fixed ( -- )  false following ! ;
 end-behaviour
 
-: spawn-camera ( -- id )  the-camera camera-state s" camera" spawn ;
+: spawn-camera ( -- id )  follow-camera camera-state s" camera" spawn ;

@@ -12,7 +12,8 @@ How this project works:
 - **Readable**: name every magic number, in C and in Forth (constants, `enum:`, name tables). Readable Forth,
   not transliterated C: named words and structures, locals over stack juggling; clumsy maths becomes a C word.
   A word that juggles the return stack (`>r >r ... r> r> r>`) or reaches deep (`2 pick`, `3 pick`) is a sign: the
-  data wants a structure (`begin-structure`), or the work wants a C word.
+  data wants a structure (`begin-structure`), or the work wants a C word. A vocabulary's workings go
+  `<PRIVATE ... PRIVATE>`; the scripts load with no `hides` warnings.
 - **Actors**: each subsystem is an actor (or a family) with a small vocabulary of messages as its API; an actor
   never writes another's state. Messages are declared in `scripts/messages.fs`.
 - **Docs move with the code**: a subsystem's page (`docs/subsystems/<name>.md`) records its messages, rules and

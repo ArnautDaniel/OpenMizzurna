@@ -24,7 +24,7 @@ end-structure
 
 create first-rows  #content-areas 4 * cells allot   first-rows #content-areas 4 * cells erase
 variable building     \ the row being written (look/rows.fs)
-: list-of ( area table -- addr )  swap 4 * + cells first-rows + ;
+: table-list ( area table -- addr )  swap 4 * + cells first-rows + ;
 
 \ the area whose tables an area uses (src: func_8003F6A8: 29 and 30 are 2's, 31 and 32 19's)
 : content ( area -- area' )
@@ -41,7 +41,7 @@ variable building     \ the row being written (look/rows.fs)
 
 \ ---- what a table answers: a row to run, or (asking the area) the zone ----
 variable zone-answer   variable zone-match   variable check-answer   variable check-match
-: rows ( table -- first )  area @ content swap list-of @ ;
+: rows ( table -- first )  area @ content swap table-list @ ;
 : zone-table ( table -- )   \ src: func_8003F1A8
     -1 zone-answer !  0 zone-match !
     at-zone drop {: t idx :}  idx 0< if  exit  then
@@ -73,31 +73,31 @@ variable zone-answer   variable zone-match   variable check-answer   variable ch
 
 \ ---- the areas' rules ----
 begin-structure rules
-  field: look-check   field: look-do   field: act-check   field: act-do
+  field: look-check-xt   field: look-do-xt   field: act-check-xt   field: act-do-xt
   field: on-enter     field: on-scene     \ the area's hooks: entered ( -- ), a scene ( scene -- )
 end-structure
 create area-rules  #content-areas rules * allot   area-rules #content-areas rules * erase
 : rules-of ( area -- addr )
     dup 0 #content-areas within 0= abort" rules-of: no such area"  rules * area-rules + ;
-: area-rules! ( look-check look-do act-check act-do area -- )
-    rules-of {: lc ld ac ad r :}  lc r look-check !  ld r look-do !  ac r act-check !  ad r act-do ! ;
+: area-rules! ( look-check-xt look-do-xt act-check-xt act-do-xt area -- )
+    rules-of {: lc ld ac ad r :}  lc r look-check-xt !  ld r look-do-xt !  ac r act-check-xt !  ad r act-do-xt ! ;
 : area-hooks! ( area enter scene -- )  rot rules-of {: e sc r :}  e r on-enter !  sc r on-scene ! ;
 : hook ( xt|0 -- )  ?dup if  execute  then ;
 
 \ ---- pressing ○ and □ ----
 81 constant look-motion   \ src: func_8003FA8C (0x51)
-: look ( -- )   \ src: look_execute: a person before him (case 1: talking), else the place (case 0)
-    in-front dup 0< 0= if  talk-to exit  then  drop
+: press-circle ( -- )   \ src: look_execute: a person before him (case 1: talking), else the place (case 0)
+    in-front dup 0< 0= if  talk-with exit  then  drop
     look-zones zone-table  look-checks check-table
     area @ content rules-of {: r :}
-    r look-check @ if
+    r look-check-xt @ if
         look-motion -1 false matthew-actor send figure-anim
-        zone-answer @ check-answer @ r look-check @ execute  r look-do @ execute
+        zone-answer @ check-answer @ r look-check-xt @ execute  r look-do-xt @ execute
     else  run-rows  then ;
-: act ( -- )   \ src: act_execute's case 0
+: press-square ( -- )   \ src: act_execute's case 0
     act-zones zone-table  act-checks check-table
     area @ content rules-of {: r :}
-    r act-check @ if  zone-answer @ check-answer @ r act-check @ execute  r act-do @ execute
+    r act-check-xt @ if  zone-answer @ check-answer @ r act-check-xt @ execute  r act-do-xt @ execute
     else  run-rows  then ;
 
 variable controlled   variable circle-was   variable square-was
@@ -105,8 +105,8 @@ variable controlled   variable circle-was   variable square-was
 : watch ( -- )
     pad-circle circle-was pressed  pad-square square-was pressed  {: o s :}
     controlled @ 0= events-running @ or  area @ 0< or if  exit  then
-    o if  look exit  then
-    s if  act  then ;
+    o if  press-circle exit  then
+    s if  press-square  then ;
 
 state: look-state end-state
 behaviour looking

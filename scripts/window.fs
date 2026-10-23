@@ -50,21 +50,21 @@ variable wanted
 : shown ( -- n )  typed f@ f>s text-len @ min ;
 
 \ the pad, a press at a time (its own edges: a held button is one press)
-: edge ( key var -- flag )  >r key-down? dup r@ @ 0= and swap r> ! ;
-: confirm? ( -- flag )  pad-circle confirm-was edge ;
+: press-edge ( key var -- flag )  >r key-down? dup r@ @ 0= and swap r> ! ;
+: confirm? ( -- flag )  pad-circle confirm-was press-edge ;
 
-: the-clock ( -- id )  s" clock" actor-named ;
+: clock-id ( -- id )  s" clock" actor-named ;
 : open ( bank id speaker palette -- )
     palette ! speaker !  text-of  2047 min dup text-len !  text swap move
     count-lines lines !  0 top !  0e typed f!  0e scrolled f!  -1 window-answer !
     box-x left !  true window-up !  typing stage !  pad-circle key-down? confirm-was ! ;
 : shut ( -- )
     stage @ closed <> if
-        closed stage !  false window-up !  text-shown the-clock send release-clock
+        closed stage !  false window-up !  text-shown clock-id send release-clock
         window-answer @ broadcast window-closed
     then ;
 
-\ ---- a step of it ----
+\ ---- a window-step of it ----
 : page-end ( -- offset )   \ where the box is full (the start of the line after it), or the text's end
     top @ box-lines + dup lines @ < if  line-start 1-  else  drop text-len @  then ;
 : type-on ( -- )
@@ -79,10 +79,10 @@ variable wanted
 : count-down ( -- )   \ a timed message closes itself
     time-left f@ f0> if  time-left f@ dt f- fdup time-left f!  f0> 0= if  shut  then  then ;
 : choose ( -- )
-    pad-up up-was edge if  cursor @ 1- 0 max cursor !  then
-    pad-down down-was edge if  cursor @ 1+ choices @ 1- min cursor !  then
+    pad-up up-was press-edge if  cursor @ 1- 0 max cursor !  then
+    pad-down down-was press-edge if  cursor @ 1+ choices @ 1- min cursor !  then
     confirm? if  cursor @ window-answer !  shut  then ;
-: step ( -- )
+: window-step ( -- )
     stage @ case
         typing of  type-on  confirm? drop  endof
         page-full of  confirm? if  scrolling stage !  then  endof
@@ -125,15 +125,15 @@ variable wanted
 state: window-state end-state
 behaviour message-window
   on spawned ( -- )  self subscribe tick ;
-  on tick ( -- )  step ;
+  on tick ( -- )  window-step ;
   on window-say ( bank id speaker palette secs -- )
     >r open  r> s>f time-left f!  0 choices !
-    time-left f@ f0> 0= if  text-shown the-clock send hold-clock  then ;
+    time-left f@ f0> 0= if  text-shown clock-id send hold-clock  then ;
   on window-ask ( bank id kind -- )   \ src: msg_choice: kind 1 / 2 that many answers more, below no question;
                                       \ else a question and two answers below it
     >r nobody 0 open  0e time-left f!  choice-x left !  0 cursor !
     r@ 1 = r@ 2 = or if  r@ 1+ choices !  0 first-choice !  else  2 choices !  1 first-choice !  then  r> drop
-    text-shown the-clock send hold-clock ;
+    text-shown clock-id send hold-clock ;
   on window-shut ( -- )  shut ;
 end-behaviour
 

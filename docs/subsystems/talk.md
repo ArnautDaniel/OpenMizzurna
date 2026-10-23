@@ -11,7 +11,7 @@ The first person standing in the area (slot order) with a radius (`actor-radii`)
 both radii and 122 more - and in front of Matthew (within 568 of a turn either side of his heading). Found
 before anything else ○ might mean (src: look_execute's case 1).
 
-## What they say (`talk-to`), in layers as the original
+## What they say (`talk-with`), in layers as the original
 
 1. **Their story conversation** (`conversation! ( xt slot -- )`: xt ( -- handled? )): the talks that move the
    story, by time and flags (src: the handlers' EM_EVTALK, char_talk.c). None written yet.

@@ -1,5 +1,6 @@
 \ the townsfolk's schedules: where the clock puts them (docs/subsystems/townsfolk.md)
 USING: tester engine actors messages clock townsfolk talk events.schedules ;
+2 constant nozz   \ (the slot)
 
 testing the converted schedules: Nozz (slot 2) has rows, his first at his counter in area 1
 T{ nozz scheduled?  nozz person-of #stops @ 0>  nozz person-of 0 row-of stop-area @ -> true true 1 }T

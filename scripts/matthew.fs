@@ -5,13 +5,15 @@ IN: matthew
 USING: engine actors messages keys areas floors figures window ;
 
 
+variable floor   1 floor !   \ his floor (src: a loaded game resumes on area 1's floor 1)
+
+<PRIVATE   \ (his workings: the words below behaviour are his face to the others)
 : figure-path ( -- addr len )  s" models/073_1.gltf" ;
 variable figure
 
 state: matthew-state end-state
 create moving playing allot   -1 moving anim !
 
-variable floor   1 floor !   \ (src: a loaded game resumes on area 1's floor 1)
 : place ( x y z -- )   \ a height of 0 is "on his floor" (the scripts' set_pos; then the floor holds him)
     {: x y z :}  x  y ?dup 0= if  area @ floor @ floor-height  then  z  3s>f  area @ floor @ body-place ;
 
@@ -111,7 +113,9 @@ variable l-was   variable r-was
     controlled @ 0= self body? 0= or  window-up? or if  exit  then   \ (src: field_update: not while ui_busy)
     steer pace stand walk ;
 
-behaviour matthew
+PRIVATE>
+
+behaviour the-player
   on spawned ( -- )  figure-path model figure !  self subscribe tick  self subscribe player-control ;
   on figure-place ( x y z -- )  place ;
   on tick ( -- )  control  moving advance if  moving hold-move @ if  keep-move  then  then ;
@@ -133,4 +137,4 @@ end-behaviour
     then ;
 ' draw-matthew on-draw
 
-: spawn-matthew ( -- id )  matthew matthew-state s" matthew" spawn  dup subscribe area-entered ;
+: spawn-matthew ( -- id )  the-player matthew-state s" matthew" spawn  dup subscribe area-entered ;

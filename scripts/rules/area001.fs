@@ -41,7 +41,7 @@ enum: look-action  nothing-here  2 photo  5 shelves goods nozz-at-counter radio 
         photo of  ['] events.ovl001:entry-801051A8 start-event  endof
         shelves of  shelves-seen ['] events.ovl001:entry-801055F4 ['] events.ovl001:entry-80105604 once-then  endof
         goods of  goods-seen ['] events.ovl001:entry-80105614 ['] events.ovl001:entry-80105624 once-then  endof
-        nozz-at-counter of  nozz talk-to  endof   \ (src: actor_talk_start)
+        nozz-at-counter of  nozz talk-with  endof   \ (src: actor_talk_start)
         radio of  ['] events.ovl001:entry-801053A0 start-event  endof
         fishing-tools of  tools-seen ['] events.ovl001:entry-80105644 ['] events.ovl001:entry-80105654 once-then  endof
         bulletin-board of  ['] events.ovl001:entry-80105634 start-event  endof

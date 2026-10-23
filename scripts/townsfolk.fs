@@ -46,7 +46,10 @@ variable writing   variable writing-row   \ (the rows being written: townsfolk/r
     s" _" $+  5 mod n>str $+  s" .gltf" $+  $@ ;
 
 \ the facts the areas' rules ask
-2 constant nozz   6 constant james   0 constant behind-the-counter   \ (Nozz's record 0: his shop's counter)
+<PRIVATE   \ (the cast's names are the events': events.fs)
+2 constant nozz   6 constant james
+PRIVATE>
+0 constant behind-the-counter   \ (Nozz's record 0: his shop's counter)
 : nozz-behind-counter? ( -- flag )   \ src: func_80026C50
     nozz scheduled? 0= if  false exit  then  nozz current-row stop-record @ behind-the-counter = ;
 : james-visiting? ( -- flag )  false ;   \ src: func_8002CBE8 (James standing by Matthew's bed: the routes)
