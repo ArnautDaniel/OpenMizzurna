@@ -47,8 +47,13 @@ cabinet, the poster, the cells' confrontations, the computer's knock; arriving (
 wolf); each frame - behind the front desk he is put back where he stood (`matthew-was`) and told off, the
 stand-in at the desk while Hudson is away, the scene upstairs on the 28th, closing at 22:00; who says what by
 their stops; the desk officer's scenes in turn; the C its events call (the cell visit, Isabella held).
+Area 21's (`scripts/rules/area021.fs`, Haines Diner; `tests/library/test_area021.fs`): its look and act are the
+rows' alone; arriving (meeting Lorraine on the 25th, Mel and Lorraine arguing), today's special, closing (20:00,
+from the 28th 19:00), the robbery on the 27th, who says what by their stops, the farm workers, Lorraine's twelve
+conversations in turn, then her line. Seen: the meeting on the 25th plays through, Mel walking off after it.
 **To come**: talking to the townsfolk (○ on a figure), the hints (prompts), the town's per-tile rows, the
-other areas' rules; in area 0 the computer's case files and minigames 29, 30 and 36.
+other areas' rules; in area 21 sitting at the counter and ordering (the order menu), the townsfolk on its
+stools, Matthew walking in scenes; in area 0 the computer's case files and minigames 29, 30 and 36.
 
 ## The town
 

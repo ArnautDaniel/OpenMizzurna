@@ -30,8 +30,9 @@ hide the language's own elsewhere.
 The clock places them: a person stands at the first stop whose time hasn't come (`stop-for`); a jump in time
 (`time-set`) puts each at the stop for it. Those standing in the area being played are drawn (their kind's
 model - `kind-models`, a slot is its kind - in their own textures) in the stop's motion. Facts: `stop-of` (-1
-while walking a route), `person-now`, `here?`, `walking?`, `person-anim-done?`, `nozz-behind-counter?` (src:
-func_80026C50).
+while walking a route), `person-now`, `here?`, `walking?`, `person-anim-done?`, `at-record?` (standing at a stop of
+that record: the handlers' "at the diner", "in the cells" checks), `nozz-behind-counter?` (src: func_80026C50).
+`person-unlink` takes a person out of their car where they are (src: partner = 0: the diner's scene on the 25th).
 
 The minute's rules, kept only while Matthew is the player's (src: npc_clock_tick; in a scene time stands for
 them):
@@ -41,8 +42,8 @@ them):
 
 ## Routes (`scripts/routes.fs`)
 
-A stop's route is event bytecode the person walks themself (`main.fs`: `route-XXXXXXXX`, 422 converted with the
-events, registered by address: `main-word`). The routes actor answers `person-departs` by starting the route on
+A stop's route is event bytecode the person walks themself (`main.fs`: `route-XXXXXXXX`, 429 converted with the
+events - the schedules' and those the executable's helpers start: Mel after the diner, James, Lidds - registered by address: `main-word`). The routes actor answers `person-departs` by starting the route on
 a thread of its own (threads 8-71: unlike an event's 0-7 it doesn't take the player's control), its own actor
 `this-one`; `person-stopped` (put at a stop) ends it. A route ends in `arrive` (cmd 0x1E): the next stop, the
 person placed there (src: actor_arrive).

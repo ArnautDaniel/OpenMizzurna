@@ -80,6 +80,7 @@ message person-depart ( slot -- )         \ leave their stop now, walking its ro
 message person-through-door ( slot door room flip -- )   \ out of that door into room (flip: the other way)
 message person-attach ( slot route speed -- )   \ get in their car: it drives that route, they ride (src: cmd 0x2C)
 message person-get-in ( slot -- )         \ climb into their car (src: cmd 0x42)
+message person-unlink ( slot -- )         \ no longer with their car: out of it where they are (src: partner = 0)
 message person-departs ( slot route -- )  \ broadcast: they left their stop (route: its address, 0 none)
 message person-stopped ( slot -- )        \ broadcast: they no longer walk a route (put at a stop)
 

@@ -8,8 +8,6 @@ USING: engine actors messages clock story-flags townsfolk events events.ovl027 ;
 : today ( -- day )  clock-time time>day ;
 
 \ ---- a person where their schedule has them (src: at_place: standing at a stop of that record) ----
-: at-record? ( slot record -- flag )
-    {: s r :}  s stop-of 0< if  false exit  then  s current-row stop-record @ r = ;
 5 constant mel-at-his-room       \ (Mel's record 5)
 0 constant cohen-at-home         \ (Cohen's record 0)
 

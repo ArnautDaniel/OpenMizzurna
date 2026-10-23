@@ -21,6 +21,7 @@ usage: ev2forth.py <extract/cdbin> <SLPS_017.83> <decomp root> <out dir> [--text
 """
 import collections
 import os
+import re
 import struct
 import sys
 
@@ -514,6 +515,10 @@ def main():
     routes = route_addresses(exe, src_dir, root, exe_img)   # the townsfolk's routes (schedules.fs): by address
     for x in routes:
         main_src.entries.setdefault(x, 'route-%08X' % x)
+    # and the routes the executable's helpers start on a person's thread (the overlays call them: Mel after
+    # the diner, James, Lidds)
+    for x in re.findall(r'event_thread_start\(\(EventThread \*\) g_actors\[\w+\]\.script, &D_([0-9A-F]{8})\)', main_c):
+        main_src.entries.setdefault(int(x, 16), 'route-%s' % x)
     walk(main_src, op_len, act_len, extra=sorted(x for x in extern if x < OVL_BASE))
     for x in extern:
         if x < OVL_BASE and x not in main_src.entries:

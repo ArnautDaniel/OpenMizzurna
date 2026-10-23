@@ -55,6 +55,8 @@ PRIVATE>
 0 constant behind-the-counter   \ (Nozz's record 0: his shop's counter)
 : nozz-behind-counter? ( -- flag )   \ src: func_80026C50
     nozz stop-of 0< if  false exit  then  nozz current-row stop-record @ behind-the-counter = ;
+: at-record? ( slot record -- flag )   \ standing at a stop of that record (src: at_place; the handlers' checks)
+    {: s r :}  s stop-of 0< if  false exit  then  s current-row stop-record @ r = ;
 : james-visiting? ( -- flag )  false ;   \ src: func_8002CBE8 (James by Matthew's bed: his position, to come)
 
 : person-now ( slot -- x y z heading )  person-of {: p :}  p px @  p py @  p pz @  p heading-now @ ;
@@ -196,6 +198,7 @@ behaviour townsfolk
   on person-walk ( slot x z speed motion -- )
     {: s x z v m :}  s person-of {: p :}  x p goal-x !  z p goal-z !  v p stride !  m p stride-motion !
     true p walking !  s m -1 true show ;
+  on person-unlink ( slot -- )  person-of 0 swap riding ! ;
   on person-idle ( slot -- )  dup person-of {: p :}  0 p walking !  0 p forward !  0 -1 true show ;
   on person-forward ( slot speed motion -- )  rot person-of {: v m p :}  v p forward !  m p forward-motion ! ;
   on person-anim ( slot id next loop -- )  show ;

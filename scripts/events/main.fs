@@ -2861,6 +2861,15 @@ defer L-80099064
     end-script
     ;
 
+\ $800858AC
+: route-800858AC
+    james as-this-one
+    this-one 102176 352144 walk-to  this-one wait-stop
+    this-one 19 0 through-door
+    this-one 0 0 0 set-pos
+    end-script
+    ;
+
 : L-80097D10
     sub-80096D74
     this-one 383728 150336 walk-to  this-one wait-stop
@@ -3200,6 +3209,15 @@ defer L-80099064
     end-script
     ;
 
+\ $80086EBC
+: route-80086EBC
+    lidds as-this-one
+    this-one wait-stop
+    this-one 383072 148656 walk-to  this-one wait-stop
+    this-one 59 0 through-door
+    goto L-80097CAC
+    ;
+
 \ $800870B4
 : route-800870B4
     mel as-this-one
@@ -3209,6 +3227,22 @@ defer L-80099064
     L-80096D88
     this-one 24 400 attach
     mel arrive
+    end-script
+    ;
+
+\ $800870F0
+: route-800870F0
+    mel as-this-one
+    this-one 331312 268992 walk-to  this-one wait-stop
+    this-one 20 22 1 anim-then
+    450 frames wait
+    this-one 97 98 1 anim-then
+    50 frames wait
+    this-one 99 0 anim
+    this-one wait-anim
+    20 frames wait
+    L-80096D88
+    mel 29 400 attach
     end-script
     ;
 
