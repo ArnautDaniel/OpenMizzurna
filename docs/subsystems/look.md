@@ -57,6 +57,13 @@ rows' alone; arriving (meeting Lorraine on the 25th, Mel and Lorraine arguing), 
 from the 28th 19:00), the robbery on the 27th, who says what by their stops, the farm workers, Lorraine's twelve
 conversations in turn, then her line. Seen: the meeting on the 25th plays through, Mel walking off after it. Sitting at the counter and ordering:
 `docs/subsystems/counter.md`.
+Area 24's (`scripts/rules/area024.fs`, the church; `tests/library/test_area024.fs`): the crate (its place by the
+floor he's on), the caretaker, the scenes on arriving (the first that fits), a room's scene once, being shown
+out before the 25th's meeting and at closing time, the meeting seen from above by its time, the doors by the
+story (shut while he's locked in), a letter (○ looks, □ reads once its time's come), the stairs up from the
+basement, who says what, a talk hook (a key), the rope (minigame 17: each new press of left or right a pull,
+80 to be free). (To come: minigame 38's flare, the bell, the nave's two sets of things by a flag not yet
+understood.)
 Area 23's (`scripts/rules/area023.fs`, Cohen's house; `tests/library/test_area023.fs`): the locked door upstairs
 (looked at, something found to force it, three tries), the room behind it (a scene, once), the envelope (□,
 once), the front door by the story, who says what. (To come: its sounds, a texture's animation in scene 0.)
