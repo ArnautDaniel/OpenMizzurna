@@ -1,8 +1,23 @@
-"""gltf_view.py <file.gltf> <out.png> [yaw] [pitch]: a quick software render of one of the library's models (developers: a look without the engine; needs numpy). Ours only: non-indexed triangles, node TRS.
+"""gltf_view.py <file.gltf> <out.png> [yaw] [pitch] [motion.txt frame]: a quick software render of one of the
+library's models, optionally posed by a frame of a character motion (developers: a look without the engine;
+needs numpy). Ours only: non-indexed triangles, node TRS."""
 import json, struct, sys, os, math, zlib
 import numpy as np
 path, out = sys.argv[1], sys.argv[2]
 yaw = math.radians(float(sys.argv[3]) if len(sys.argv) > 3 else 30); pitch = math.radians(float(sys.argv[4]) if len(sys.argv) > 4 else 25)
+# optional: a character motion (.motion.txt) and a frame - each part's turn as that frame's (it replaces the rest turn)
+pose = None
+if len(sys.argv) > 6:
+    want = int(sys.argv[6])
+    for line in open(sys.argv[5]):
+        w = line.split()
+        if w and w[0] == 'frame' and int(w[1]) == want:
+            t = list(map(int, w[w.index('turns') + 1:])); pose = [t[i:i+3] for i in range(0, len(t), 3)]
+def game_quat(rx, ry, rz):
+    a = [v * 2 * math.pi / 4096 for v in (rx, ry, rz)]
+    cx, sx, cy, sy, cz, sz = math.cos(a[0]), math.sin(a[0]), math.cos(a[1]), math.sin(a[1]), math.cos(a[2]), math.sin(a[2])
+    r = np.array([[cy*cz + sy*sx*sz, -cy*sz + sy*sx*cz, sy*cx], [cx*sz, cx*cz, -sx], [-sy*cz + cy*sx*sz, sy*sz + cy*sx*cz, cy*cx]])
+    f = np.array([1, -1, -1]); return r * f[:, None] * f[None, :]
 g = json.load(open(path)); base = os.path.dirname(path)
 bin_ = open(os.path.join(base, g['buffers'][0]['uri']), 'rb').read()
 def acc(i):
@@ -37,6 +52,8 @@ texcache = {}
 def walk(ni, M):
     nd = g['nodes'][ni]; L = np.eye(4)
     L[:3, :3] = quat_m(nd.get('rotation', [0, 0, 0, 1])); L[:3, 3] = nd.get('translation', [0, 0, 0])
+    if pose is not None and ni < len(pose):
+        L[:3, :3] = game_quat(*pose[ni])
     W = M @ L
     if 'mesh' in nd:
         for pr in g['meshes'][nd['mesh']]['primitives']:

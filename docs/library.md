@@ -143,7 +143,11 @@ model's); its glTF image is a default (the model's own area, or area 1) so viewe
 props, 69 streamed characters, 61 more): `models/<CD.BIN path>.gltf` + `.bin`; a container's `index.txt` names
 the model a part became. `tools/gltf_view.py` renders one to a PNG (a look without the engine).
 
-Not yet: characters' motions (the game's keyed rotations and root motion: the engine's own format, plainly).
+**Motions** (`src/data/motion.c`): every animation as text, a line a frame - a character's (the 193 shared in
+`033_4/1/`, each area's own in `NNN_4/1/`: each part's turn and the root's move), a prop's (the 30 in `033_4/0/`:
+its place and turn). The game packs a character's frames ("hold this value n frames"); the text has every
+frame's values. 1193 motions. Which motion ids are an area's own: the executable's tables `area-motion-first` and
+`area-motion-count`. `tools/gltf_view.py` poses a model by a motion's frame.
 
-**Next**: characters' motions; areas (their floors, walls, zones, cameras, objects, lights); MAP.BIN's town; the movies
+**Next**: areas (their floors, walls, zones, cameras, objects, lights); MAP.BIN's town; the movies
 (a video library); the executable's tables as each subsystem names them.

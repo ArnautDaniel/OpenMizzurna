@@ -2,6 +2,7 @@
 #include "cdconv.h"
 
 #include "container.h"
+#include "motion.h"
 #include "seqmidi.h"
 #include "vab.h"
 #include "text.h"
@@ -80,11 +81,43 @@ static int write_text(const char *path, const uint8_t *block, size_t n, const ch
     return ok;
 }
 
+/* motions have no mark of their own: they are known by where they are (motion.h) - 033_4's part 0 (props'), any
+ * area's NNN_4 part 1 (characters'). 1 a prop's place, 2 a character's, 0 neither */
+static int motion_place(const char *base) {
+    int group, part, i;
+    char rest[8];
+
+    if (sscanf(base, "cdbin/%d_4/%d/%d%1s", &group, &part, &i, rest) != 3) {
+        return 0;
+    }
+    return group == 33 && part == 0 ? 1 : part == 1 ? 2 : 0;
+}
+
+/* the part as a motion, if it is one where motions are */
+static int as_motion(const char *base, const uint8_t *d, size_t n, Motion *m) {
+    int place = motion_place(base);
+    return place != 0 && kind_of(d, n) == PART_RAW && motion_decode(m, d, n, place == 1);
+}
+
 /* part `base` (a path without extension); its file name as index.txt names it in *file */
 static int convert_part(const char *base, const char *what, const uint8_t *d, size_t n, CdconvWriteFn write, void *ctx,
                         char *file, size_t nfile, char *why, size_t nwhy) {
     const char *slash = strrchr(base, '/'), *leaf = slash != NULL ? slash + 1 : base;
     char path[600];
+    Motion motion;
+
+    if (as_motion(base, d, n, &motion)) {
+        size_t len;
+        char *text = motion_text(&motion, what, &len);
+        int ok;
+
+        snprintf(path, sizeof(path), "%s.motion.txt", base);
+        snprintf(file, nfile, "%s.motion.txt", leaf);
+        ok = write(ctx, path, (const uint8_t *)text, len);
+        free(text);
+        motion_free(&motion);
+        return ok;
+    }
 
     switch (kind_of(d, n)) {
     case PART_EMPTY:
@@ -105,8 +138,16 @@ static int convert_part(const char *base, const char *what, const uint8_t *d, si
             if (!convert_part(sub, sub_what, c.parts[i].data, c.parts[i].size, write, ctx, subfile, sizeof(subfile), why, nwhy)) {
                 return 0;
             }
-            k += snprintf(index + k, sizeof(index) - (size_t)k, "part %d %s %s\n", i,
-                          kKindNames[kind_of(c.parts[i].data, c.parts[i].size)], subfile);
+            {
+                Motion mo;
+                int is_motion = as_motion(sub, c.parts[i].data, c.parts[i].size, &mo);
+
+                if (is_motion) {
+                    motion_free(&mo);
+                }
+                k += snprintf(index + k, sizeof(index) - (size_t)k, "part %d %s %s\n", i,
+                              is_motion ? "motion" : kKindNames[kind_of(c.parts[i].data, c.parts[i].size)], subfile);
+            }
         }
         snprintf(path, sizeof(path), "%s/index.txt", base);
         snprintf(file, nfile, "%s/", leaf);
@@ -366,6 +407,24 @@ static int check_part(const char *base, const uint8_t *d, size_t n, CdconvReadFn
     size_t len = 0;
     uint8_t *got;
     int ok;
+    Motion motion, back;
+
+    if (as_motion(base, d, n, &motion)) {
+        char err[200] = "";
+
+        snprintf(path, sizeof(path), "%s.motion.txt", base);
+        got = read(ctx, path, &len);
+        ok = got != NULL && motion_from_text(&back, (const char *)got, len, err, sizeof(err)) && motion_same(&motion, &back);
+        if (got != NULL && err[0] == 0) {
+            motion_free(&back);
+        }
+        free(got);
+        motion_free(&motion);
+        if (!ok) {
+            snprintf(why, nwhy, "%s isn't the motion %s", path, err);
+        }
+        return ok;
+    }
 
     switch (kind_of(d, n)) {
     case PART_EMPTY:
