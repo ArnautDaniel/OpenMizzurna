@@ -69,7 +69,7 @@ variable order-step   variable order-pick
 create diner-counter  bar-counter allot
 at-diner diner-counter bar !   false diner-counter along-x? !
 $5029E diner-counter cross-lo !   $5037A diner-counter cross-hi !   3072 diner-counter facing !
-true diner-counter last-front-only? !   $FF0 negate diner-counter counter-y !
+true diner-counter last-front-only? !   false diner-counter flip? !   1 diner-counter right-step !   $FF0 negate diner-counter counter-y !
 $502A2 diner-counter stand-cross !   $502D0 diner-counter seat-cross !
 : two ( a b addr -- )  tuck cell+ !  ! ;
 $11CA $119B diner-counter sit-motions two   $11A0 $119D diner-counter lean-in-motions two
@@ -214,7 +214,8 @@ $11CE constant carrying-motion   40 constant lorraine-pace
 : his-stool-z ( -- z )  at-diner  matthew seat-of nip  seat-spot drop nip nip ;
 : to-the-seat ( -- )   \ 0x8010383C: Lorraine to his stool with the order
     rolein $500DC his-stool-z lorraine-pace carrying-motion  s" townsfolk" actor-named send person-walk ;
-: on-the-counter ( -- )  0 s" the order on the counter" unbuilt ;   \ 0x8010389C (the props: to come)
+$50208 constant serving-x   $1184 negate constant counter-top
+: on-the-counter ( -- )  the-prop @ serving-x counter-top his-stool-z set-pos ;   \ 0x8010389C: the order before him
 this-area ovl $8010497C ' mel-goes native:
 this-area ovl $8010383C ' to-the-seat native:   this-area ovl $8010389C ' on-the-counter native:
 

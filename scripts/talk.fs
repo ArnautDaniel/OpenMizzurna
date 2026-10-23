@@ -33,17 +33,24 @@ variable line   variable speaker   variable line-gesture
 10512 constant hmm-what    \ "Hmm? What?" (src: 0x2910: the common text's 512)
 
 \ ---- the layers of a conversation ----
-create conversations  #slots cells allot   conversations #slots cells erase   \ a person's story talks
+create conversations  #slots cells allot   conversations #slots cells erase   \ a person's story talks: lists,
+begin-structure talk-link  field: next-talk  field: talk-xt  end-structure       \ tried in the order given
 create default-lines  #slots cells allot   default-lines #slots cells erase   \ their own lines
 create area-talks  33 cells allot   area-talks 33 cells erase                 \ an area's lines for them
-: conversation! ( xt slot -- )  cells conversations + ! ;   \ xt ( -- handled? )
+: conversation! ( xt slot -- )   \ xt ( -- handled? ): one more of their talks, after those they have
+    cells conversations +  begin  dup @ while  @ next-talk  repeat
+    here talk-link allot {: xt at link :}  0 link next-talk !  xt link talk-xt !  link at ! ;
+: their-talks ( slot -- handled? )   \ the first of their talks that has something to say
+    cells conversations + @  begin  dup while
+        dup talk-xt @ execute if  drop true exit  then  next-talk @
+    repeat  drop false ;
 : default-line! ( xt slot -- )  cells default-lines + ! ;   \ xt ( slot -- )
 : area-talk! ( xt area -- )  cells area-talks + ! ;          \ xt ( slot -- handled? )
 : a-line-by-stop ( table key -- msg | -1 )   \ a table of (key, message) pairs ended by -1 (src: func_800429C8)
     {: t k :}  t  begin  dup @ -1 <> while  dup @ k = if  cell+ @ exit  then  2 cells +  repeat  drop -1 ;
 : talk-with ( slot -- )   \ src: actor_talk_start
     {: s :}
-    s cells conversations + @ ?dup if  execute if  exit  then  then
+    s their-talks if  exit  then
     area @ cells area-talks + @ ?dup if  s swap execute if  exit  then  then
     s cells default-lines + @ ?dup if  s swap execute exit  then
     hmm-what s 7 one-liner ;

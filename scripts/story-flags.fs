@@ -18,6 +18,9 @@ create story-block  story-bytes allot
 : story@ ( offset -- n )  story-block + sl@ ;
 : story! ( n offset -- )  story-block + l! ;
 : story+! ( n offset -- )  tuck story@ + swap story! ;
+\ a byte (the days kept as one: Club Wolves' +0x24 .. +0x26)
+: story-c@ ( offset -- n )  story-block + c@ ;
+: story-c! ( n offset -- )  story-block + c! ;
 
 \ ---- the names ('?': a likely reading, not settled) ----
 $004 constant got-barbaras-cigarettes                       \ (a counter) ovl001 act action 13: "..." -> +=1, item 0x14

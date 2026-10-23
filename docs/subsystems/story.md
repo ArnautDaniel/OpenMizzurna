@@ -89,6 +89,10 @@ after it wait (src: wait_msg, checked before every op); the other says wait only
 `wait-text`. The area's text and the overlay words an event reaches by address are those of the area being
 played (its content area: `script-area`).
 
+`launch-event ( xt -- i )` starts one and gives its thread (a show the area later cuts short: `kill-event`;
+src: event_thread_kill). While an event that gave the player control back runs, the areas' frame hooks and ○ / □
+run (src: player_has_control).
+
 A few scripts' own actor is given by the C that starts them (src: `M2C_FIELD(&D_X, s32 *, 4) = ...->id`: the
 counters' orders - the food, the drink): the converter finds them and writes `the-prop @ as-this-one`; the rules
 set `the-prop` before starting them.

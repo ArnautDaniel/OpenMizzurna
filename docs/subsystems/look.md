@@ -53,6 +53,11 @@ rows' alone; arriving (meeting Lorraine on the 25th, Mel and Lorraine arguing), 
 from the 28th 19:00), the robbery on the 27th, who says what by their stops, the farm workers, Lorraine's twelve
 conversations in turn, then her line. Seen: the meeting on the 25th plays through, Mel walking off after it. Sitting at the counter and ordering:
 `docs/subsystems/counter.md`.
+Area 12's (`scripts/rules/area012.fs`, Club Wolves; `tests/library/test_area012.fs`): who's there by the hour
+(the bouncer 21:58 - 23:25, the fan 21:28 - 23:55, Loretta after her call), the nightly timetable (the bouncer on
+and off, the fan in and out), Isabella's show at 22:30 (or her cancelling it) and its end at 23:00, James's first
+meeting, Mel's confrontation, closing at 01:58; the bar's stools and ordering from Wolf; who says what; the
+conversations of Wolf, James, Mel, the bouncer, the fan and Loretta here. To come: the two fights, the prompt.
 Area 18's (`scripts/rules/area018.fs`, Ringwald's Gas Station; `tests/library/test_area018.fs`): ○ at the counter
 talks to Robert while he's behind it, his and Steve's lines by their stops, 22:00 - 22:59 the attendant sends
 Matthew out to the town (not from 23:00: Robert's "open 24 hours").

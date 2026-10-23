@@ -13,6 +13,8 @@ begin-structure bar-counter
   field: cross-lo   field: cross-hi   \ standing across the counter where one may sit: lo < it <= hi
   field: facing            \ the heading seated
   field: last-front-only?  \ the last stool can be sat on from the low side only
+  field: flip?             \ the approach side's test mirrored (src: CounterDef.flip)
+  field: right-step        \ leaning right looks at the stool this many on (left: the other way)
   field: counter-y         \ the height seated
   field: stand-cross   field: seat-cross   \ across: standing to sit, and seated
   2 cells +field sit-motions        \ sitting down, coming from the low side, the high
@@ -21,7 +23,7 @@ begin-structure bar-counter
   2 cells +field lean-out-motions
   2 cells +field stand-motions      \ getting up after leaning right, left
   field: beckon-motion
-  field: last-right   field: last-left   \ the stools with no neighbour that way
+  field: last-right   field: last-left   \ the stools with no neighbour leaning that way
   field: no-lean-right     \ a stool that cannot lean right (-1 none)
   field: camera-yaw   field: camera-yaw-alt   field: camera-alt-seats   \ (a bit a stool)
   field: camera-eye-y   field: camera-look-y   field: camera-dist   field: camera-cross
@@ -35,6 +37,7 @@ enum: counter-mode  sitting-down 1 settling  2 on-stool  20 leaning  40 getting-
 0 constant no-lean   1 constant lean-right   2 constant lean-left
 variable the-counter   variable at-state   variable mode   variable step   variable seat   variable lean
 variable doing   variable talking-with   variable barman-at   variable walking-over
+variable sat-in   \ (the area he sat in: elsewhere since, a warp took him off his stool)
 -1 constant nobody-there
 : forget-counter ( -- )  off-stool at-state !  0 mode !  0 step !  -1 seat !  no-lean lean !
     nobody-there talking-with !  -1 barman-at !  0 walking-over ! ;
@@ -87,7 +90,7 @@ $400 constant quarter   $C00 constant three-quarters   4095 constant heading-mas
             c last-front-only? @  i c bar @ #stools 1- = and  al st >= and 0=
             al st stool-reach + <  al st stool-reach - >= and  and if
                 h 0= if  i unloop exit  then
-                st al < if  h three-quarters >= if  i  else  -1  then  unloop exit  then
+                c flip? @ if  al st <  else  st al <  then if  h three-quarters >= if  i  else  -1  then  unloop exit  then
                 h quarter <= if  i  else  -1  then  unloop exit
             then
         then
@@ -97,7 +100,8 @@ $400 constant quarter   $C00 constant three-quarters   4095 constant heading-mas
     matthew-xz {: x z :}  x c counter-y @ z matthew-id send figure-place  true ;
 : sit-down ( -- )   \ src: counter_sit
     matthew c bar @ seat @ the-folk send seat-take
-    seat @ stool-along {: st :}  matthew-xz along st < if  st sit-step -  0  else  st sit-step +  1  then {: at k :}
+    seat @ stool-along {: st :}  matthew-xz along {: al :}
+    c flip? @ if  al st <=  else  al st <  then if  st sit-step -  0  else  st sit-step +  1  then {: at k :}
     c sit-motions k nth doing !
     false on-foot  counter-camera
     at c counter-y @ c stand-cross @ put
@@ -110,8 +114,8 @@ $400 constant quarter   $C00 constant three-quarters   4095 constant heading-mas
     c barman @ walking? if  false exit  then
     0 walking-over !  seat @ barman-at !  c barman @ c barman-heading @ the-folk send person-turn  true ;
 : neighbour ( -- slot | -1 )   \ who sits on the next stool the way he leans
-    lean @ lean-right = if  seat @ c last-right @ = if  -1 exit  then  seat @ 1+
-    else  seat @ c last-left @ = if  -1 exit  then  seat @ 1-  then {: n :}
+    lean @ lean-right = if  seat @ c last-right @ = if  -1 exit  then  seat @ c right-step @ +
+    else  seat @ c last-left @ = if  -1 exit  then  seat @ c right-step @ -  then {: n :}
     n 0<  n c bar @ #stools >= or if  -1 exit  then
     c bar @ n sitter  dup matthew = if  drop -1  then ;
 
@@ -166,9 +170,10 @@ PRIVATE>
 \ ---- an area's frame hook steps it (src: counter_update), with the bar's settings ----
 : counter-step ( def -- )
     the-counter !
+    at-state @ on-a-stool =  sat-in @ area @ <> and if  forget-counter  then   \ (elsewhere since: a warp)
     at-state @ off-stool = if
         find-stool seat !  square-pressed?  seat @ 0< 0= and if
-            take-pad  on-a-stool at-state !  sitting-down mode !  0 step !  pad-circle key-down? stool-circle-was !
+            take-pad  on-a-stool at-state !  area @ sat-in !  sitting-down mode !  0 step !  pad-circle key-down? stool-circle-was !
         then  exit
     then
     take-pad  at-it ;
@@ -176,6 +181,6 @@ PRIVATE>
     {: d n :}  d the-counter !  n seat !
     matthew c bar @ n the-folk send seat-take
     false on-foot  n stool-along c counter-y @ c seat-cross @ put  sit-still  counter-camera
-    on-a-stool at-state !  on-stool mode !  0 step !  no-lean lean ! ;
+    on-a-stool at-state !  area @ sat-in !  on-stool mode !  0 step !  no-lean lean ! ;
 : counter-off ( -- )   \ off his stool at once (src: func_8010371C: the robbery)
     at-state @ on-a-stool = if  matthew the-folk send seat-leave  true on-foot  then  forget-counter ;

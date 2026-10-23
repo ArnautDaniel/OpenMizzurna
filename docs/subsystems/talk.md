@@ -20,6 +20,9 @@ before anything else ○ might mean (src: look_execute's case 1).
 3. **Their own line** (`default-line! ( xt slot -- )`; src: the handlers' EM_TALK: a line by their stop when
    between stops). Until written: "Hmm? What?" (the common text's 512: src 0x2910).
 
+A person's story talks are a list (`conversation!` adds one after those they have; the first with something to
+say wins): their own, then an area's (Club Wolves' for Wolf, James, Mel ...: each checks the area itself).
+
 A line is a **one-liner** (src: func_8003FBFC and the executable's templates): the speaker's event - the
 camera's talk shot about them (indoors -470 -908 -1370, heading 1856; the town's -474 -2210 -1106, 260),
 Matthew standing, the speaker facing him, the line with its gesture. While its window is up the camera holds

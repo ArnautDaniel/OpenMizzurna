@@ -26,6 +26,11 @@ another?"), the menu (`docs/subsystems/list-menu.md`: the six and today's specia
 it (the food or the drink: their props to come), ○ talks to her, □ eats or drinks, she clears it away. No money
 or time passes (the overlay's own).
 
+Club Wolves' (`rules/area012.fs`): the stools along x, the approach mirrored (`flip?`), leaning right looks at
+the stool below (`right-step` -1); Wolf asks ("What? You wanna order?", once he's had a drink "You here to drink
+again?"), the menu (chips, coffee, milk, beer), each item's first line and its "again" line, no beer for a kid,
+cancelling ends it ("If you ain't drinkin', buzz off."). A warp takes him off his stool (the area he sat in).
+
 ## Status
 
-The diner's built; Club Wolves' next. To come: the button prompts (hints), the props on the counter, the sounds.
+The diner's and Club Wolves' built. To come: the button prompts (hints), the props on the counter, the sounds.

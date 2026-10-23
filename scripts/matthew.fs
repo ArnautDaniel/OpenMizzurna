@@ -159,7 +159,9 @@ behaviour the-player
     {: t v :}  v 0= if  t s>f body-turn  0 turning-to !  exit  then
     t full-circle 1- and turn-target !  v turn-speed !  true turning-to ! ;
   on figure-turn ( rx ry rz -- )  drop nip s>f body-turn ;   \ (his heading: the turn about the vertical)
-  on area-entered ( area scene -- )  drop  self body? if  body-area!  else  drop  then ;
+  on area-entered ( area scene -- )   \ (off any stool: the stools are the area's)
+    drop  self body? if  body-area!  else  drop  then
+    on-foot @ 0= if  true on-foot !  0 s" townsfolk" actor-named send seat-leave  then ;   \ (0: his slot)
 end-behaviour
 
 : matthew-actor ( -- id )  s" matthew" actor-named ;

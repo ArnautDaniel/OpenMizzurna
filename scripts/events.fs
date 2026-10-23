@@ -48,20 +48,25 @@ variable the-prop   \ the actor the C gives a script it starts (src: the script'
 : release ( reason -- )  the-clock send release-clock ;
 
 : free-thread ( first last -- i )  -1 -rot swap ?do  i thread-task slot @ 0= if  drop i leave  then  loop ;
-: event-ended ( -- )
-    0 thread thread-task slot !  -1 events-running +!
+: event-over ( i -- )   \ its thread is free; the last over, Matthew is the player's again
+    0 swap thread-task slot !  -1 events-running +!
     events-running @ 0= if  no-control release  false control-given !  true broadcast player-control  then ;
+: event-ended ( -- )  thread event-over ;
 : thread-ended ( -- )  thread #event-threads < if  event-ended  else  0 thread thread-task slot !  then ;
 : run-event ( -- )   \ a task's body: its word, then it's over
     thread thread-xt slot @ execute  thread-ended ;
 : begin-thread ( xt actor i -- )
     {: xt a i :}  xt i thread-xt slot !  a i thread-own slot !  0 i thread-result slot !  0 i thread-text slot !
     ['] run-event forth:spawn  i thread-task slot ! ;   \ (a task: the actors' spawn is another)
-: start-event ( xt -- )   \ src: event_start (CEvCon_Start): a thread, Matthew no longer the player's
+: launch-event ( xt -- i )   \ src: event_start (CEvCon_Start): a thread, Matthew no longer the player's
     0 #event-threads free-thread {: xt i :}
     i 0< abort" no free event thread"
     xt matthew i begin-thread
-    1 events-running +!  no-control hold  false broadcast player-control ;
+    1 events-running +!  no-control hold  false broadcast player-control  i ;
+: start-event ( xt -- )  launch-event drop ;
+: event-alive? ( i -- flag )  dup 0< if  drop false exit  then  thread-task slot @ 0<> ;
+: kill-event ( i -- )   \ src: event_thread_kill (a show cut short)
+    dup event-alive? 0= if  drop exit  then  dup thread-task slot @ forth:kill  event-over ;
 : route-thread ( actor -- i | -1 )   \ the route an actor walks now
     {: a :}  -1  #threads #event-threads do
         i thread-task slot @ 0<>  i thread-own slot @ a = and if  drop i leave  then
