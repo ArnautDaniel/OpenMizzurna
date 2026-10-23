@@ -25,6 +25,7 @@ behaviour story
     story-stopped hold
     event-running hold                      \ (src: event_lock)
     matthews-house event-area !
+    matthews-house 0 s" areas" actor-named send enter-area   \ src: player_state_init, session_start_in(1, 0)
     ['] events.ovl001:new-game-opening start-event ;
 end-behaviour
 

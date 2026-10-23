@@ -78,6 +78,40 @@ PRIM(p_key_hold) {   /* ( scancode flag -- ) held (or let go) from a script; pre
     gEngine.held[k] = on != 0;
 }
 
+/* ---- the library's files ---- */
+#define MAX_FILES 256
+static struct {
+    char path[160];
+    uint8_t *data;
+    size_t size;
+} sFiles[MAX_FILES];
+static int sNFiles;
+
+PRIM(p_library_file) {   /* ( addr len -- addr n ) a library file's bytes (kept: read once); 0 0 if none */
+    char path[160];
+    int i;
+
+    cstring(f, path, sizeof(path));
+    for (i = 0; i < sNFiles; i++) {
+        if (strcmp(sFiles[i].path, path) == 0) {
+            PUSH(sFiles[i].data);
+            PUSH(sFiles[i].size);
+            return;
+        }
+    }
+    if (sNFiles == MAX_FILES) {
+        forth_error(f, "library-file: too many files");
+    }
+    snprintf(sFiles[sNFiles].path, sizeof(sFiles[sNFiles].path), "%s", path);
+    sFiles[sNFiles].data = files_read(path, &sFiles[sNFiles].size);
+    if (sFiles[sNFiles].data == NULL) {
+        sFiles[sNFiles].size = 0;
+    }
+    PUSH(sFiles[sNFiles].data);
+    PUSH(sFiles[sNFiles].size);
+    sNFiles++;
+}
+
 /* ---- hooks: words run every tick / every frame's 2D ---- */
 static void hook_add(Forth *f, Word **list, int *n, Word *xt) {
     if (*n == MAX_HOOKS) {
@@ -180,7 +214,7 @@ void bind_engine(Forth *f) {
         {"ticks", p_ticks}, {"dt", p_dt}, {"seconds", p_seconds}, {"step-blend", p_step_blend}, {"pen-color", p_pen_color}, {"pen-scale", p_pen_scale}, {"draw-text", p_draw_text},
         {"draw-rect", p_draw_rect}, {"screen-size", p_screen_size}, {"char-size", p_char_size}, {"hud", p_hud},
         {"clear-color", p_clear_color}, {"screenshot", p_screenshot},
-        {"screenshot-pending?", p_screenshot_pending}, {"console!", p_console_store}, {"exe-table", p_exe_table},
+        {"screenshot-pending?", p_screenshot_pending}, {"console!", p_console_store}, {"exe-table", p_exe_table}, {"library-file", p_library_file},
     };
     Vocab *was = f->m.current, *v = forth_vocab(f, "engine");
     size_t i;

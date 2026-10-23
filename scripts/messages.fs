@@ -30,3 +30,19 @@ message window-ask ( bank id kind -- )   \ a question with its answers (kind: sr
 message window-shut ( -- )               \ close it now
 message window-closed ( answer -- )      \ broadcast: the window closed (the answer chosen; -1 none)
 -1 constant nobody                        \ no speaker
+
+\ ---- areas (docs/subsystems/areas.md) ----
+message enter-area ( area scene -- )     \ (to the areas) play that area from that scene
+message show-scene ( scene -- )          \ (to the areas) another of the area's scenes (its objects and camera)
+message area-entered ( area scene -- )   \ broadcast: the area is in
+message scene-shown ( scene -- )         \ broadcast: the scene changed
+27 constant the-town                     \ the streamed outdoors (MAP.BIN)
+
+\ ---- figures: the people's bodies, by actor slot (docs/subsystems/matthew.md) ----
+message figure-place ( x y z -- )        \ stand there (world units)
+message figure-turn ( rx ry rz -- )      \ turned so (4096 a turn)
+
+\ ---- the camera (docs/subsystems/camera.md) ----
+message camera-place ( look-y dist eye-y x y z yaw -- )   \ a fixed shot (src: the events' camera_set)
+message camera-follow ( -- )             \ behind Matthew again, the scene's way
+message camera-fixed ( -- )              \ stay where it is

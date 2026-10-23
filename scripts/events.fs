@@ -162,8 +162,6 @@ variable loaded-pack
 : memory-card ( mode -- )  1 s" memory-card" unbuilt  0 result! ;
 
 \ ---- actor commands ( actor args -- ): until the townsfolk and Matthew take them ----
-: set-pos ( a x1 x2 x3 -- )  4 act-unbuilt ;   \ cmd $01
-: set-rot ( a x1 x2 x3 -- )  4 act-unbuilt ;   \ cmd $02
 : anim ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $03
 : anim-then ( a x1 x2 x3 -- )  4 act-unbuilt ;   \ cmd $04
 : anim-once ( a x1 -- )  2 act-unbuilt ;   \ cmd $05
@@ -223,12 +221,8 @@ variable loaded-pack
 : place-alt ( a -- )  1 act-unbuilt ;   \ cmd $5E
 
 \ ---- the other ops: until their subsystems are built ----
-: camera-set ( n n n n n n n -- )  7 s" camera-set" unbuilt ;   \ op $102
 : wait-anim ( a -- )  1 s" wait-anim" unbuilt  settle ;   \ op $103
-: camera-follow ( -- )  0 s" camera-follow" unbuilt ;   \ op $10B
-: camera-fixed ( -- )  0 s" camera-fixed" unbuilt ;   \ op $10C
 : wait-stop ( a -- )  1 s" wait-stop" unbuilt  settle ;   \ op $10D
-: set-scene ( n -- )  1 s" set-scene" unbuilt ;   \ op $110
 : wait-turned ( a -- )  1 s" wait-turned" unbuilt  settle ;   \ op $112
 : camera-at ( a -- )  1 s" camera-at" unbuilt ;   \ op $113
 : sound ( n -- )  1 s" sound" unbuilt ;   \ op $114
@@ -286,3 +280,17 @@ variable loaded-pack
 \ ---- text with a picture (after its stub) ----
 : say-reset ( text -- )  picture-hide  matthew 0 0 show  text-pending ;              \ $105
 : phone-say ( text -- )  0 picture-show  nobody phone-palette 0 show  text-pending ;   \ $106
+
+\ ---- figures: the actor that is a slot's body (Matthew's so far; the townsfolk's as they are built) ----
+: figure-of ( slot -- id )  matthew = if  s" matthew" actor-named  else  -1  then ;
+: set-pos ( a x y z -- )   \ cmd $01 (src: actor_set_pos)
+    {: a x y z :}  a figure-of dup 0< if  drop  a x y z 4 act-unbuilt  else  >r x y z r> send figure-place  then ;
+: set-rot ( a rx ry rz -- )   \ cmd $02
+    {: a rx ry rz :}  a figure-of dup 0< if  drop  a rx ry rz 4 act-unbuilt  else  >r rx ry rz r> send figure-turn  then ;
+
+\ ---- the camera and the scene ----
+: the-camera ( -- id )  s" camera" actor-named ;
+: camera-set ( look-y dist eye-y x y z yaw -- )  the-camera send camera-place ;   \ $102
+: camera-follow ( -- )  the-camera send camera-follow ;                           \ $10B
+: camera-fixed ( -- )  the-camera send camera-fixed ;                             \ $10C
+: set-scene ( scene -- )  s" areas" actor-named send show-scene ;                  \ $110 (src: set_scene_state)

@@ -15,6 +15,8 @@ static const ExeTable kTables[] = {
     {"area-motion-first", 0x80080670, AREA_TABLE,
      "an area's own character motions: the first motion id they answer to (ids from 0xC1 name an area's; src: func_80020464)"},
     {"area-motion-count", 0x800806B4, AREA_TABLE, "an area's own character motions: how many"},
+    {"area-height", 0x80080824, 34 * 8,
+     "an area's records of 4 s16: [1] the height of its origin (the metadata has x and z; src: area_meta_origin3)"},
     {"music", 0x800814DC, MUSIC_TRACKS * MUSIC_ENTRY,
      "the background music: per track its sequence's CD.BIN entry, then 0 or 1, and its volume (src: music_play)"},
 };

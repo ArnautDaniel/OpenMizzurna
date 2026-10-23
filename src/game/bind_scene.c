@@ -44,7 +44,15 @@ PRIM(p_draw_model) {   /* ( model x y z yaw -- ) this frame, at a world place, t
     float pos[3] = {(float)x, (float)y, (float)z};
 
     if (m >= 1 && m <= sNModels) {
-        scene3d_draw(sModels[m - 1].m, pos, (float)yaw);
+        scene3d_draw(sModels[m - 1].m, pos, (float)yaw, NULL, 0);
+    }
+}
+PRIM(p_draw_model_shown) {   /* ( model x y z yaw addr n -- ) only the parts whose byte (of n) isn't 0 */
+    Cell n = POP(), addr = POP(), yaw = POP(), z = POP(), y = POP(), x = POP(), m = POP();
+    float pos[3] = {(float)x, (float)y, (float)z};
+
+    if (m >= 1 && m <= sNModels) {
+        scene3d_draw(sModels[m - 1].m, pos, (float)yaw, (const unsigned char *)addr, (int)n);
     }
 }
 PRIM(p_camera) {   /* ( x y z yaw dist eye-y look-y h -- ) the game's camera (scene3d.h) */
@@ -58,6 +66,7 @@ PRIM(p_texture_area) { scene3d_texture_area((int)POP()); }   /* ( area -- ) */
 void bind_scene(Forth *f) {
     forth_prim(f, "model", p_model);
     forth_prim(f, "draw-model", p_draw_model);
+    forth_prim(f, "draw-model-shown", p_draw_model_shown);
     forth_prim(f, "camera", p_camera);
     forth_prim(f, "texture-area", p_texture_area);
 }

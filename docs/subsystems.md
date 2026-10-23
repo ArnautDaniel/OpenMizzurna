@@ -24,9 +24,10 @@ phase-1 port's files (`../port/src/game/`), which name the decomp's functions; t
 |---|---|---|
 | Clock ([page](subsystems/clock.md), built) | the date and time (12/25 to 12/31), whether time runs, minutes passing | `clock.c`, `field.c` |
 | Story ([page](subsystems/story.md), the events built) | story flags, the event scripts (bytecode converted to Forth once), event packs, chapters | `cevent.c`, `cnrev.c`, `boot.c` |
-| Areas | the area being played, its scene, going from area to area | `area.c`, `field.c`, `session.c` |
-| Matthew | walking and running, collision, looking and acting, his state | `player.c`, `player_misc.c`, `cecheck.c` |
+| Areas ([page](subsystems/areas.md), drawn) | the area being played, its scene, going from area to area | `area.c`, `field.c`, `session.c` |
+| Matthew ([page](subsystems/matthew.md), placed) | walking and running, collision, looking and acting, his state | `player.c`, `player_misc.c`, `cecheck.c` |
 | Townsfolk | each person's daily schedule, where they are, what they do; talking to them | `timetable.c`, `handlers_chars.c`, `char_talk.c`, `walker.c`, `sreg.c` |
+| Camera ([page](subsystems/camera.md), built) | following Matthew, the events' shots | `camera.c` |
 | Doors | locks, knocking, who answers | `door.c` (SCKNOCK.C) |
 | Car | driving, fuel, the roads; the boat | `ovl027.c` (`car_update`, `boat_update`), `hud.c` (fuel) |
 | Traffic | the other cars on the roads | `carline.c` |

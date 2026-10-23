@@ -46,9 +46,12 @@ struct Model3D {
     int nnodes;
 };
 
+#define MAX_SHOWN 256
 typedef struct Draw {
     Model3D *m;
     float world[16];
+    unsigned char shown[MAX_SHOWN];   /* a byte a node (0: hidden) */
+    int nshown;                       /* (nodes past it are shown) */
 } Draw;
 
 typedef struct Tex {
@@ -404,7 +407,7 @@ void scene3d_camera(const float target[3], float yaw, float dist, float eye_y, f
     S.have_camera = 1;
 }
 
-void scene3d_draw(Model3D *m, const float pos[3], float yaw) {
+void scene3d_draw(Model3D *m, const float pos[3], float yaw, const unsigned char *shown, int nshown) {
     Draw *d;
     float p[3], a = -yaw * 2.0f * (float)M_PI / TURN;   /* (the game's turn about its y, which points down) */
 
@@ -413,6 +416,10 @@ void scene3d_draw(Model3D *m, const float pos[3], float yaw) {
     }
     d = &S.draws[S.ndraws++];
     d->m = m;
+    d->nshown = shown != NULL ? (nshown < MAX_SHOWN ? nshown : MAX_SHOWN) : 0;
+    if (d->nshown > 0) {
+        memcpy(d->shown, shown, (size_t)d->nshown);
+    }
     world_point(pos, p);
     mat_identity(d->world);
     d->world[0] = cosf(a), d->world[2] = -sinf(a);
@@ -484,7 +491,8 @@ void scene3d_flush(int w, int h) {
                 int has_tex = 0;
                 GpuTexture t = mt != NULL ? material_texture(mt, &has_tex) : (GpuTexture){0, 0, 0};
 
-                if (pass == 1 && (mt == NULL || mt->blend == BLEND_NONE)) {
+                if ((pass == 1 && (mt == NULL || mt->blend == BLEND_NONE)) ||
+                    (p->node < S.draws[i].nshown && !S.draws[i].shown[p->node])) {
                     continue;
                 }
                 mat_mul(model, S.draws[i].world, m->node_world[p->node]);

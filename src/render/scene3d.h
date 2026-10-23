@@ -28,8 +28,9 @@ void scene3d_texture_area(int area);
 /* the camera, in world units (see above) */
 void scene3d_camera(const float target[3], float yaw, float dist, float eye_y, float look_y, float projection_h);
 
-/* draw a model this frame at a world position, turned by yaw about the vertical */
-void scene3d_draw(Model3D *m, const float pos[3], float yaw);
+/* draw a model this frame at a world position, turned by yaw about the vertical; shown: a byte a part (its
+ * node: 0 hidden), NULL all of them */
+void scene3d_draw(Model3D *m, const float pos[3], float yaw, const unsigned char *shown, int nshown);
 
 /* draw what was asked this frame (render_end calls it, before the 2D) */
 void scene3d_flush(int w, int h);
