@@ -97,7 +97,7 @@ USING: events ;
     -500 -2816 -452 132823 48 317239 2088 camera-set
     map-sync
     131509 48 317239 10 camera-move
-    ' L-80102EB0 start-event
+    ['] L-80102EB0 start-event
     100 frames wait
     this-one 58 51 0 anim-then
     this-one wait-anim
@@ -123,7 +123,7 @@ USING: events ;
     30 frames wait
     winona 16 0 1 anim-then
     winona 132133 316157 120 face-point
-    ' L-80102F14 start-event
+    ['] L-80102F14 start-event
     10 frames wait
     111 actor idle
     winona 35 0 talk

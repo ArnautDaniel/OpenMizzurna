@@ -93,6 +93,29 @@ USING: events events.main ;
     27 -1 329845 269364 1024 0 warp
     ;
 
+\ $80104E0C
+: arrive-80104E0C
+    rolein as-this-one
+    138 actor 0 0 0 set-pos
+    139 actor 0 0 0 set-pos
+    -836 -2738 -968 327772 -3780 268247 -210 camera-set
+    rolein 327699 0 268320 set-pos
+    rolein 0 0 face
+    matthew 22 0 face
+    40 frames wait
+    8 screen-effect
+    this-one 6 7 talk
+    matthew 7 7 talk
+    this-one 8 0 talk
+    matthew 9 6 talk
+    this-one 10 7 talk
+    give-control
+    rolein 327913 269469 walk-to
+    this-one wait-stop
+    rolein 1024 230 turn-to
+    end-script
+    ;
+
 \ $80105024
 : entry-80105024
     camera-follow
@@ -262,7 +285,7 @@ USING: events events.main ;
     this-one 19 0 anim
     this-one wait-anim
     this-one 58 5 talk
-    ' L-801057E0 start-event
+    ['] L-801057E0 start-event
     10 frames wait
     matthew 329009 269279 walk-to
     matthew wait-stop
@@ -275,7 +298,7 @@ USING: events events.main ;
     matthew 61 1 talk
     rolein 62 2 talk
     10 frames wait
-    ' events.main:sub-8009954C start-event
+    ['] events.main:sub-8009954C start-event
     end-script
     ;
 
@@ -510,7 +533,7 @@ USING: events events.main ;
     this-one 147 actor ignore-b
     139 actor 4543 4519 1 anim-then
     116 sound
-    ' L-80106070 start-event
+    ['] L-80106070 start-event
     200 20 camera-turn
     rolein 138 0 face
     matthew 0 1 anim
@@ -836,3 +859,6 @@ USING: events events.main ;
     0 set-scene
     end-script
     ;
+
+\ the words the main executable's scripts go to here, by address
+' arrive-80104E0C $80104E0C 21 overlay-word!

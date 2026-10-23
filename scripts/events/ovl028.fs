@@ -196,7 +196,7 @@ USING: events ;
     matthew 575529 0 221563 set-pos
     106 actor 574819 0 221563 set-pos
     matthew 0 106 actor 3 fight
-    ' L-8010211C start-event
+    ['] L-8010211C start-event
     ovl028 $80102064 native
     end-script
     ;

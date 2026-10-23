@@ -105,9 +105,9 @@ USING: events ;
     map-sync
     2 screen-effect
     wait-effect
-    ' script-0 start-event
+    ['] script-0 start-event
     30 frames wait
-    ' script-1 start-event
+    ['] script-1 start-event
     120 frames wait
     this-one 5742 89 0 anim-then
     this-one wait-anim
@@ -146,7 +146,7 @@ USING: events ;
     this-one 89 0 anim
     this-one wait-anim
     this-one 15018 7 talk
-    ' script-2 start-event
+    ['] script-2 start-event
     30 frames wait
     this-one 567126 211485 walk-to
     this-one wait-stop

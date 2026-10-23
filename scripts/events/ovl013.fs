@@ -126,7 +126,7 @@ USING: events events.main ;
     matthew 46 7 talk
     winona 47 7 talk
     20 frames wait
-    ' L-80102AAC start-event
+    ['] L-80102AAC start-event
     end-script
     ;
 
@@ -140,7 +140,7 @@ USING: events events.main ;
     winona 36 7 talk
     winona 37 3 talk
     matthew 38 0 talk
-    ' L-80102AAC start-event
+    ['] L-80102AAC start-event
     end-script
     ;
 
@@ -392,3 +392,6 @@ USING: events events.main ;
     1 set-scene
     end-script
     ;
+
+\ the words the main executable's scripts go to here, by address
+' entry-801032F0 $801032F0 13 overlay-word!

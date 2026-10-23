@@ -7,6 +7,8 @@ USING: events look ;
     begin  dup @ while  @  repeat ;
 : row ( area table -- )   \ a new row at the end of that area's table; the words below fill it
     here check-row allot {: a t r :}  r check-row erase  r building !  r  a t table-list last-of ! ;
+: town-row ( col row table -- )   \ a new row at the end of a town tile's table
+    here check-row allot {: c r t new :}  new check-row erase  new building !  new  c r t town-list last-of ! ;
 : zone ( n -- )  building @ row-zone ! ;
 : facing ( turn -- )  building @ row-facing ! ;   \ (4096 a turn)
 : either-side ( degrees -- )  building @ row-within ! ;   \ (how far the heading may be off)

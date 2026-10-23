@@ -64,7 +64,7 @@ variable pulling   variable dist-goal   variable dist-step
     x  dir fsin v s>f f* f>s +   z  dir fcos v s>f f* f>s +   {: nx nz :}
     dy abs v >= if  y  dy s>f dx s>f fatan2 fsin v s>f f* f>s +  else  y  then   \ (src: the pitch against x alone)
     nx swap nz target! ;
-: turn-step ( -- )   \ toward the heading (past it: on it)
+: turn-toward ( -- )   \ toward the heading (past it: on it)
     turn-step @ 0= if  turn-goal @ yaw !  false turning !  exit  then
     turn-goal @ yaw @ - full-turn mod  dup half-turn > if  full-turn -  then   ( the shorter way )
     dup abs turn-step @ abs <= if  drop turn-goal @ yaw !  false turning !
@@ -73,7 +73,7 @@ variable pulling   variable dist-goal   variable dist-step
     {: v g st :}  v g < if  v st + dup g >=  else  v st - dup g <=  then  if  drop g true  else  false  then ;
 : tween-frame ( -- )
     moving @ if  move-step  then
-    turning @ if  turn-step  then
+    turning @ if  turn-toward  then
     lifting @ if  eye-y @ height-goal @ height-step @ tween if  false lifting !  then  eye-y !  then
     pulling @ if  dist @ dist-goal @ dist-step @ tween if  false pulling !  then  dist !  then ;
 : tweens ( -- )
@@ -101,6 +101,7 @@ behaviour follow-camera
     dup following @ 0= and if  true reset-due !  then  following ! ;   \ no window is up)
   on camera-follow ( -- )  following @ 0= if  camera-reset  then  true following ! ;   \ src: camera_follow_set
   on camera-fixed ( -- )  false following ! ;
+  on camera-reset ( -- )  camera-reset ;
 end-behaviour
 
 : spawn-camera ( -- id )  follow-camera camera-state s" camera" spawn ;

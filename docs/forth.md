@@ -125,6 +125,8 @@ Comments: `( ... )` and `\ to the end of the line`.
 
 Each of these has cost someone time:
 
+- **A word defined twice in one vocabulary** is warned of (`x is defined again in v`): the later one wins from
+  there on, so a variable and a word of one name break whatever uses the first after the second.
 - **Your own words shadow everything**, the core too: a file that defines `move` has lost the core
   `move` (copying bytes) for the rest of its words - and gets no warning. Name words after what
   they mean here. `see word` shows what a name compiles to.

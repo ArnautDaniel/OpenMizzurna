@@ -225,7 +225,7 @@ def flow(src, a, main_src, how):
     if r is None:
         return {'goto': '$%08X goto-overlay', 'call': '$%08X call-overlay',
                 'start': '$%08X overlay-word start-event'}[how] % a
-    return {'goto': 'goto %s', 'call': '%s', 'start': "' %s start-event"}[how] % r
+    return {'goto': 'goto %s', 'call': '%s', 'start': "['] %s start-event"}[how] % r
 
 
 def blocks(src):
@@ -335,7 +335,7 @@ def emit_insn(src, i, main_src, names_used, text_comment):
 def pack_ref(src, k, word):
     if src.pack_ids is not None and 0 <= k < len(src.pack_ids) and src.pack_ids[k]:
         return 'goto %s' % block_name(src, src.pack_ids[k]) if word == 'goto-pack-script' else \
-            "' %s start-event" % block_name(src, src.pack_ids[k])
+            "['] %s start-event" % block_name(src, src.pack_ids[k])
     return '%d %s' % (k, word)
 
 
@@ -518,6 +518,35 @@ def main():
     for x in extern:
         if x < OVL_BASE and x not in main_src.entries:
             main_src.entries[x] = 'sub-%08X' % x
+    # the scripts a warp starts on arriving (op 0x12A's last word): in the destination area's overlay
+    arrivals = {}
+    for s, _, _ in sources + [(main_src, None, None)]:
+        for i in s.insns.values():
+            if i.is_op and i.op == 0x12A and i.args[5]:
+                arrivals.setdefault(i.args[0], set()).add(i.args[5] & 0xFFFFFFFF)
+    by_scope = {s.scope: s for s, _, _ in sources}
+    for area, targets in sorted(arrivals.items()):
+        scope = 'ovl%03d' % area
+        if scope not in by_scope:
+            p = os.path.join(src_dir, '%03d_0.bin' % area)
+            if not os.path.exists(p):
+                continue
+            tx = (lambda m, area=area: texts.get('%03d_4' % area, m) if m < 10000 else
+                  texts.get('033_4', m - 10000) if m < 15000 else None) if texts else (lambda m: None)
+            src = Source(scope, EV.Mem([(OVL_BASE, open(p, 'rb').read()), (EXE_BASE, exe_img)]), {})
+            sources.append((src, comment_for(tx), 'area %03d overlay (CD.BIN %03d_0): its scripts' % (area, area)))
+            by_scope[scope] = src
+        src = by_scope[scope]
+        for x in targets:
+            src.entries.setdefault(x, 'arrive-%08X' % x)
+        bad = walk(src, op_len, act_len)
+        if bad:
+            print('%s: undecodable at %s' % (scope, ' '.join('%08X' % x for x in bad)))
+        new = {x for x in src.extern if x < OVL_BASE and x not in main_src.entries}
+        if new:
+            walk(main_src, op_len, act_len, extra=sorted(new))
+            for x in new:
+                main_src.entries.setdefault(x, 'sub-%08X' % x)
     into_overlay = set(main_src.extern) | {x for x in main_src.entries if x >= OVL_BASE}
     sources.append((main_src, comment_for(tx), 'the main executable\'s scripts (started from its C, called by others)'))
     n_words = 0
@@ -531,7 +560,7 @@ def main():
                   'IN: events.%s' % s.scope, 'USING: %s ;' % uses]
         lines = emit(s, main_src, header, tc)
         if s.scope.startswith('ovl'):   # its words main's scripts go to by address (in this area)
-            reg = sorted(x for x in into_overlay if x in s.starts and x in s.insns)
+            reg = sorted(x for x in into_overlay | arrivals.get(int(s.scope[3:]), set()) if x in s.starts and x in s.insns)
             if reg:
                 lines += ['', '\\ the words the main executable\'s scripts go to here, by address'] + [
                     "' %s $%08X %d overlay-word!" % (block_name(s, x), x, int(s.scope[3:])) for x in reg]

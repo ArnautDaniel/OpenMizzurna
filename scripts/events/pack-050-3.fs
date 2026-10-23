@@ -82,8 +82,8 @@ USING: events ;
     10 actor wait-anim
     108 actor 87 0 anim
     108 actor wait-anim
-    ' script-0 start-event
-    ' script-1 start-event
+    ['] script-0 start-event
+    ['] script-1 start-event
     280 frames wait
     this-one 15000 0 talk
     this-one 15001 3 talk

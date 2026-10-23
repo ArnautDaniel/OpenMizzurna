@@ -211,6 +211,9 @@ static Word *new_word(Forth *f, const char *name, size_t len, Code code) {
                 break;
             }
         }
+        if (f->m.current != f->core && in_vocab(f->m.current, name, len) != NULL) {   /* (its own: the later wins on) */
+            forth_printf(f, "warning: %.*s is defined again in %s\n", (int)len, name, f->m.current->name);
+        }
     }
     align_here(f);
     w = allot(f, sizeof(Word));

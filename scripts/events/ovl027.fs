@@ -219,6 +219,15 @@ USING: events events.main ;
     end-script
     ;
 
+\ $8010B644
+: arrive-8010B644
+    camera-follow
+    2 screen-effect
+    wait-effect
+    ovl027 $80106DA4 native
+    end-script
+    ;
+
 \ $8010B660
 : entry-8010B660
     337 matthew say-by-wait
@@ -229,6 +238,21 @@ USING: events events.main ;
 \ $8010B678
 : entry-8010B678
     0 0 250063 135476 2048 -2146408856 warp
+    ;
+
+\ $8010B694
+: arrive-8010B694
+    map-sync
+    103 actor 402 set-y
+    2 screen-effect
+    main-exe $8001A290 native
+    end-script
+    ;
+
+\ $8010B6D4
+: arrive-8010B6D4
+    245 0 call-pack-script
+    2 0 104609 357908 3400 -2146414048 warp
     ;
 
 \ $8010B770
@@ -270,6 +294,20 @@ USING: events events.main ;
 \ $8010B89C
 : entry-8010B89C
     247 4 call-pack-script
+    end-script
+    ;
+
+\ $8010B8AC
+: arrive-8010B8AC
+    261 2 call-pack-script
+    21 0 329445 269064 1024 -2146411968 warp
+    ;
+
+\ $8010B8D8
+: arrive-8010B8D8
+    269 3 call-pack-script
+    ovl027 $8010656C native
+    2 map-reveal
     end-script
     ;
 
@@ -330,6 +368,12 @@ USING: events events.main ;
     end-script
     ;
 
+\ $8010BB78
+: arrive-8010BB78
+    248 4 call-pack-script
+    end-script
+    ;
+
 \ $8010BB88
 : entry-8010BB88
     248 5 call-pack-script
@@ -352,6 +396,12 @@ USING: events events.main ;
     end-script
     ;
 
+\ $8010BBDC
+: arrive-8010BBDC
+    253 2 call-pack-script
+    end-script
+    ;
+
 \ $8010BBEC
 : entry-8010BBEC
     248 6 call-pack-script
@@ -364,6 +414,12 @@ USING: events events.main ;
     ovl027 $80106950 native
     wait-minigame
     ovl027 $801060BC native
+    end-script
+    ;
+
+\ $8010BC30
+: arrive-8010BC30
+    246 0 call-pack-script
     end-script
     ;
 
@@ -570,3 +626,13 @@ USING: events events.main ;
     events.main:sub-80096CF0
     24 1 592169 130486 1024 0 warp
     ;
+
+\ the words the main executable's scripts go to here, by address
+' arrive-8010B644 $8010B644 27 overlay-word!
+' arrive-8010B694 $8010B694 27 overlay-word!
+' arrive-8010B6D4 $8010B6D4 27 overlay-word!
+' arrive-8010B8AC $8010B8AC 27 overlay-word!
+' arrive-8010B8D8 $8010B8D8 27 overlay-word!
+' arrive-8010BB78 $8010BB78 27 overlay-word!
+' arrive-8010BBDC $8010BBDC 27 overlay-word!
+' arrive-8010BC30 $8010BC30 27 overlay-word!

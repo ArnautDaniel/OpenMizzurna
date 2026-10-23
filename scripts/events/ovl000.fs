@@ -490,7 +490,7 @@ USING: events events.main ;
     dennis 97 5 talk
     mel 98 1 talk
     dennis 99 7 talk
-    ' L-80106264 start-event
+    ['] L-80106264 start-event
     mel 14 15 1 anim-then
     mel 100 0 talk
     mel 0 1 anim
@@ -501,7 +501,7 @@ USING: events events.main ;
     dennis 0 1 anim
     dennis 103 5 talk
     10 frames wait
-    ' L-80106294 start-event
+    ['] L-80106294 start-event
     mel 314 0 1 anim-then
     mel 104 0 talk
     mel 249663 135296 walk-to
@@ -529,6 +529,120 @@ USING: events events.main ;
     this-one wait-stop
     this-one 1 0 through-door
     153 actor 0 0 0 set-pos
+    end-script
+    ;
+
+\ $80106668
+: arrive-80106668
+    -1 music
+    153 actor as-this-one
+    this-one 1 actor-model
+    102 actor 15 actor-model
+    matthew 250303 0 135056 set-pos
+    matthew 0 1 set-floor
+    matthew 0 1 anim
+    matthew 0 1120 0 set-rot
+    102 actor 249583 0 135896 set-pos
+    153 actor 0 1 set-floor
+    102 actor 0 1 set-floor
+    -128 -2576 -758 250303 -492 134880 2631 camera-set
+    8 screen-effect
+    wait-effect
+    10 frames wait
+    matthew 87 0 anim
+    matthew wait-anim
+    10 frames wait
+    matthew 17 0 anim
+    matthew wait-anim
+    matthew -560 -200 turn-to
+    -578 -1976 -1202 250159 -360 134958 3495 camera-set
+    102 actor 0 -2 through-door
+    102 actor 0 -200 face
+    this-one 249590 0 133702 set-pos
+    this-one 0 1 anim
+    102 actor 109 0 15 talk-to
+    matthew 110 6 talk
+    102 actor 111 7 15 talk-to
+    matthew 112 4 talk
+    102 actor 83 84 anim-at  102 actor wait-anim
+    10 frames wait
+    matthew 17 0 anim
+    matthew wait-anim
+    -254 -3488 -974 249403 -360 134526 2823 camera-set
+    matthew 255 -200 face
+    102 actor 85 0 anim
+    102 actor 153 200 face
+    this-one 3 1 through-door
+    matthew 113 5 talk
+    this-one 114 4 talk
+    10 frames wait
+    this-one 17 18 anim-at  this-one wait-anim
+    this-one 115 0 talk
+    10 frames wait
+    3 screen-effect
+    wait-effect
+    13 music
+    20 frames wait
+    102 actor 247909 0 134926 set-pos
+    102 actor 0 1024 0 set-rot
+    102 actor 169 1 anim
+    this-one 248140 0 134562 set-pos
+    this-one 0 0 0 set-rot
+    this-one 0 1 anim
+    matthew 248323 0 135086 set-pos
+    matthew 0 2144 0 set-rot
+    matthew 0 1 anim
+    -758 -2540 -770 248989 -228 134912 2964 camera-set
+    2 screen-effect
+    wait-effect
+    10 frames wait
+    102 actor 117 0 talk
+    -842 -1532 -2948 248419 -276 135122 2364 camera-set
+    this-one 87 0 anim
+    this-one wait-anim
+    this-one 116 7 talk
+    matthew 118 7 talk
+    this-one 119 7 talk
+    matthew 120 6 talk
+    this-one 121 5 talk
+    this-one 122 7 talk
+    this-one 123 7 talk
+    this-one 17 18 anim-at  this-one wait-anim
+    this-one 124 0 talk
+    102 actor 125 0 15 talk-to
+    this-one 19 0 anim
+    this-one wait-anim
+    this-one 126 3 talk
+    matthew 127 1 talk
+    this-one 128 2 talk
+    matthew 129 7 talk
+    this-one 85 0 anim
+    this-one 130 0 talk
+    matthew 131 7 talk
+    this-one 132 0 talk
+    matthew 133 7 talk
+    this-one 134 4 talk
+    matthew 135 5 talk
+    this-one 136 3 talk
+    this-one 137 7 talk
+    matthew 83 84 1 anim-then
+    10 frames wait
+    102 actor 170 167 1 anim-then
+    20 frames wait
+    matthew 85 0 anim-at  matthew wait-anim
+    matthew 138 7 talk
+    this-one 139 3 talk
+    matthew 140 7 talk
+    this-one 141 4 talk
+    102 actor 166 0 anim-at  102 actor wait-anim
+    -776 -1928 412 248287 -396 134366 2120 camera-set
+    153 actor 248752 134736 walk-to  153 actor wait-stop
+    153 actor 10 0 through-door
+    153 actor 0 0 0 set-pos
+    102 actor 248752 134736 walk-to  102 actor wait-stop
+    102 actor 10 0 through-door
+    102 actor 0 0 0 set-pos
+    ovl000 $801037B8 native
     end-script
     ;
 
@@ -682,7 +796,7 @@ USING: events events.main ;
     10 frames wait
     102 actor 146 0 talk
     102 actor 16 0 anim-at  102 actor wait-anim
-    ' L-80107248 start-event
+    ['] L-80107248 start-event
     -1296 -24 camera-angle
     matthew 249943 134936 walk-to
     this-one 3 1 through-door
@@ -1247,3 +1361,4 @@ USING: events events.main ;
 
 \ the words the main executable's scripts go to here, by address
 ' entry-80106048 $80106048 0 overlay-word!
+' arrive-80106668 $80106668 0 overlay-word!

@@ -483,7 +483,7 @@ USING: events events.main ;
     90 2 say-mode-wait
     91 2 say-mode-wait
     matthew 58 51 1 anim-then
-    ' L-80104D2C start-event
+    ['] L-80104D2C start-event
     0 cd-picture
     3 frames wait
     -626 -1790 -644 595185 -25768 128210 -3366 camera-set

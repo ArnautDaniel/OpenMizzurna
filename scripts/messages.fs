@@ -45,6 +45,7 @@ message figure-turn ( rx ry rz -- )      \ turned so (4096 a turn)
 message camera-place ( look-y dist eye-y x y z yaw -- )   \ a fixed shot (src: the events' camera_set)
 message camera-follow ( -- )             \ behind Matthew again, the scene's way
 message camera-fixed ( -- )              \ stay where it is
+message camera-reset ( -- )              \ behind Matthew now, where he stands (src: camera_reset)
 message figure-anim ( id next loop -- )  \ play motion id (looping or not); then `next` (-1: hold its last frame)
 message figure-hold ( -- )               \ at the motion's end, the figure keeps where it moved (src: anim_hold)
 message player-control ( flag -- )       \ broadcast: Matthew is the player's to move, or not (src: player_control_on / off)

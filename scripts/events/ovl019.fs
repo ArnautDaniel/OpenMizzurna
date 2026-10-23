@@ -435,13 +435,13 @@ USING: events events.main ;
 
 : L-80104A38
     isabella 99 0 talk
-    ' events.main:sub-80099518 start-event
+    ['] events.main:sub-80099518 start-event
     end-script
     ;
 
 : L-80104A54
     isabella 103 0 talk
-    ' events.main:sub-80099518 start-event
+    ['] events.main:sub-80099518 start-event
     end-script
     ;
 
@@ -919,6 +919,26 @@ USING: events events.main ;
     27 -1 -1 -1 3072 0 warp
     ;
 
+\ $80105CAC
+: arrive-80105CAC
+    matthew 311774 0 303234 set-pos
+    matthew 0 0 0 set-rot
+    matthew -960 set-y
+    -32 -4682 -266 311048 -1200 303667 -654 camera-set
+    10 screen-effect
+    matthew 10 0 anim
+    matthew anim-hold
+    matthew wait-anim
+    matthew 11 0 anim
+    matthew anim-hold
+    matthew wait-anim
+    matthew 13 0 anim
+    matthew anim-hold
+    matthew wait-anim
+    matthew 19 2 set-floor
+    end-script
+    ;
+
 \ $80105D70
 : entry-80105D70
     -398 -2726 -752 310982 -24 303501 2780 camera-set
@@ -1081,3 +1101,4 @@ USING: events events.main ;
 ' L-80104820 $80104820 19 overlay-word!
 ' L-80104A38 $80104A38 19 overlay-word!
 ' L-80104A54 $80104A54 19 overlay-word!
+' arrive-80105CAC $80105CAC 19 overlay-word!

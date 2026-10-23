@@ -84,8 +84,8 @@ USING: events ;
     wait-text
     102 0 sequence-play
     -752 1878 -366 40683 -860 430262 4064 camera-set
-    ' script-1 start-event
-    ' script-0 start-event
+    ['] script-1 start-event
+    ['] script-0 start-event
     15 frames wait
     9 actor 40717 -800 431420 set-pos
     -284 -60 -258 40614 -704 430574 4136 camera-set
@@ -93,7 +93,7 @@ USING: events ;
     9 actor 5507 anim-once
     256 10 rumble
     255 10 rumble
-    ' script-2 start-event
+    ['] script-2 start-event
     40 frames wait
     -218 2052 -876 40233 -1244 430394 6440 camera-set
     40 frames wait
@@ -108,7 +108,7 @@ USING: events ;
     cohen 114 1 anim
     -218 2052 -876 40233 -1244 430394 6440 camera-set
     9 actor 5508 0 anim
-    ' script-3 start-event
+    ['] script-3 start-event
     9 actor wait-anim
     9 actor 0 3206 0 set-rot
     9 actor 5516 1 anim

@@ -45,7 +45,7 @@ USING: events ;
     9 actor 0 2048 0 set-rot
     9 actor 2 set-y
     9 actor 5516 1 anim
-    ' script-1 start-event
+    ['] script-1 start-event
     50 frames wait
     35097 2 407575 110 camera-move
     26 25 camera-turn

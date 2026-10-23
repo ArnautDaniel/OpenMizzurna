@@ -522,7 +522,7 @@ USING: events events.main ;
     matthew 5538 1 anim
     3 screen-effect
     wait-effect
-    ' L-8010641C start-event
+    ['] L-8010641C start-event
     end-script
     ;
 
@@ -550,7 +550,7 @@ USING: events events.main ;
     matthew 5538 1 anim
     3 screen-effect
     wait-effect
-    ' L-8010641C start-event
+    ['] L-8010641C start-event
     end-script
     ;
 

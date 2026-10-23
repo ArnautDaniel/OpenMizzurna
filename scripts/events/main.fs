@@ -9252,7 +9252,7 @@ defer L-80099064
 
 \ $80096CF0
 : sub-80096CF0
-    ' L-80096CBC start-event
+    ['] L-80096CBC start-event
     65 frames wait
     end-script
     ;

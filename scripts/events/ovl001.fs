@@ -206,7 +206,7 @@ defer L-80103BB0
     text-close
     1 result= if  goto L-80103BB0  then
     221 3 say-mode
-    ' L-80103978 start-event
+    ['] L-80103978 start-event
     goto L-801039F4
     ;
 
@@ -231,7 +231,7 @@ defer L-80103BB0
     text-close
     1 result= if  goto L-80103BB0  then
     219 3 say-mode
-    ' L-80103978 start-event
+    ['] L-80103978 start-event
     goto L-801039F4
     ;
 
@@ -246,7 +246,7 @@ defer L-80103BB0
     text-close
     1 result= if  goto L-80103BB0  then
     220 3 say-mode
-    ' L-80103978 start-event
+    ['] L-80103978 start-event
     goto L-801039F4
     ;
 
@@ -1002,7 +1002,7 @@ defer L-80103BB0
     -344 -1862 -428 349421 -4044 288121 544 camera-set
     matthew 349421 0 288121 set-pos
     matthew 0 1028 0 set-rot
-    ' L-801057E0 start-event
+    ['] L-801057E0 start-event
     ovl001 $801032C8 native
     matthew 500 502 anim-at  matthew wait-anim
     10 frames wait
@@ -1010,7 +1010,7 @@ defer L-80103BB0
     21 5 say-mode-wait
     10 frames wait
     ovl001 $801032E8 native
-    ' L-801057F4 start-event
+    ['] L-801057F4 start-event
     matthew 501 0 anim
     matthew wait-anim
     ovl001 $80103308 native
@@ -1029,7 +1029,7 @@ defer L-80103BB0
     picture-hide
     10 frames wait
     ovl001 $801032E8 native
-    ' L-801057F4 start-event
+    ['] L-801057F4 start-event
     matthew 501 0 anim
     matthew wait-anim
     ovl001 $80103308 native
@@ -1041,7 +1041,7 @@ defer L-80103BB0
     19 5 say-mode-wait
     10 frames wait
     ovl001 $801032E8 native
-    ' L-801057F4 start-event
+    ['] L-801057F4 start-event
     matthew 501 0 anim
     matthew wait-anim
     ovl001 $80103308 native
@@ -1053,7 +1053,7 @@ defer L-80103BB0
     -344 -1862 -428 349421 -4044 288121 544 camera-set
     matthew 349421 0 288121 set-pos
     matthew 0 1028 0 set-rot
-    ' L-801057E0 start-event
+    ['] L-801057E0 start-event
     ovl001 $801032C8 native
     matthew 500 502 anim-at  matthew wait-anim
     10 frames wait

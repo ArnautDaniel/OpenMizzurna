@@ -541,6 +541,55 @@ USING: events events.main ;
     27 -1 -1 -1 -1 -2146386896 warp
     ;
 
+\ $80105D80
+: arrive-80105D80
+    30 frames wait
+    91 actor 579420 0 399600 set-pos
+    91 actor 0 set-y
+    91 actor 745 1 anim
+    262 -938 -1832 579420 0 399600 -952 camera-set
+    map-sync
+    8 screen-effect
+    wait-effect
+    10033 say
+    wait-text
+    10034 say
+    wait-text
+    10035 say
+    wait-text
+    10036 say
+    wait-text
+    10037 say
+    wait-text
+    10038 say
+    wait-text
+    9 screen-effect
+    wait-effect
+    10 frames wait
+    91 actor 0 0 0 set-pos
+    8 screen-effect
+    wait-effect
+    10039 say
+    wait-text
+    10040 say
+    wait-text
+    10041 say
+    wait-text
+    10042 say
+    wait-text
+    2 screen-effect
+    wait-effect
+    4 screen-effect
+    wait-effect
+    10 frames wait
+    4 screen-effect
+    wait-effect
+    9 screen-effect
+    wait-effect
+    ovl002 $801045CC native
+    end-script
+    ;
+
 \ $80105ED8
 : entry-80105ED8
     107 actor as-this-one
@@ -908,6 +957,47 @@ USING: events events.main ;
     end-script
     ;
 
+\ $80106AD4
+: arrive-80106AD4
+    matthew 98672 0 353183 set-pos
+    matthew 0 0 0 set-rot
+    matthew -320 set-y
+    -512 -2738 -716 98962 0 354217 2338 camera-set
+    10 screen-effect
+    matthew 6 0 anim
+    matthew anim-hold
+    matthew wait-anim
+    matthew 7 0 anim
+    matthew anim-hold
+    matthew wait-anim
+    matthew 8 0 anim
+    matthew anim-hold
+    matthew wait-anim
+    matthew 2 1 set-floor
+    ovl002 $80104524 native
+    end-script
+    ;
+
+\ $80106C58
+: arrive-80106C58
+    matthew 99505 0 353110 set-pos
+    matthew 0 0 0 set-rot
+    matthew 240 set-y
+    -254 -1478 -2012 99514 0 353682 1704 camera-set
+    10 screen-effect
+    matthew 10 0 anim
+    matthew anim-hold
+    matthew wait-anim
+    matthew 11 0 anim
+    matthew anim-hold
+    matthew wait-anim
+    matthew 13 0 anim
+    matthew anim-hold
+    matthew wait-anim
+    matthew 2 1 set-floor
+    end-script
+    ;
+
 \ $80106D1C
 : entry-80106D1C
     -566 -2594 -1436 98707 1200 353815 6126 camera-set
@@ -940,6 +1030,21 @@ USING: events events.main ;
     matthew 7 0 anim
     9 frames wait
     30 1 -1 -1 0 -2146406956 warp
+    ;
+
+\ $801070D0
+: arrive-801070D0
+    matthew 100471 0 353994 set-pos
+    matthew 0 set-y
+    matthew 0 0 0 set-rot
+    -554 -2924 -164 100710 84 354270 1404 camera-set
+    2 screen-effect
+    wait-effect
+    1 1 elevator-doors
+    20 frames wait
+    matthew 100471 354614 walk-to
+    matthew wait-stop
+    end-script
     ;
 
 : L-801072A8
@@ -1098,3 +1203,9 @@ USING: events events.main ;
     258 1 call-pack-script
     end-script
     ;
+
+\ the words the main executable's scripts go to here, by address
+' arrive-80105D80 $80105D80 2 overlay-word!
+' arrive-80106AD4 $80106AD4 2 overlay-word!
+' arrive-80106C58 $80106C58 2 overlay-word!
+' arrive-801070D0 $801070D0 2 overlay-word!

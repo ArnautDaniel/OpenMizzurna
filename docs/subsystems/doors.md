@@ -23,11 +23,26 @@ way: the other side's `way`): the area (the town for room -2), a step from the s
 and 300 to the right, facing the spot's way; out of way 0: turned round, 200 back and 360 to the left - and the
 heading. The motion of stepping out is $3F (way 1) or $40 (way 0).
 
+## The town's doors (`scripts/rules/area027.fs`)
+
+○ at a building's door in the town (the tile's look checks: `checks.fs`, `town-row`) runs the town's C for it
+(src: the evfns, `enter`): whether he may go in now (src: ovl027_func_80103A70 - the opening hours by the clock,
+some doors by the story's flags or where a person's schedule has them), then the building's script: the camera,
+its caption, the door, a fade, and a **warp**. Shut: the "closed" script with the door's message (closed, the diner
+not open yet or closing, the hospital's). Nozz's store: shut from midnight to 6:59 and from 17:25 (18:20 from the
+29th) to 22:59 - Matthew lives above it.
+
+**Warp** (op $12A, `events.fs`: `warp ( area scene x z heading script )`; src: func_80019F3C, func_80019D90):
+the area changes (scene -1: the town's), Matthew is put at x z facing heading (-1: as he is), the camera behind
+him, then the arrival script (the destination area's, by address: converted with the events) or a fade in; the
+event is over. Leaving a building is its own script's warp to area 27.
+
 ## Now
 
 People go through doors on their routes (`through-door` in an event, for a person: `docs/subsystems/townsfolk.md`).
 
 ## To come
 
-Matthew through doors (into another area or room: the area loads), the door opening as one passes (its object
+Matthew through the doors between an area's rooms (through-door for him), the town's doors' remaining rules (Winona
+riding along, the diner's robber, Mel's first visit to the diner), the door opening as one passes (its object
 animation, when Matthew's room is on one side), knocking (`door.c`: door_knock, door_answer), the door sounds.

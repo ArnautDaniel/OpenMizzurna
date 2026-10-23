@@ -204,6 +204,52 @@ USING: events events.main ;
     goto entry-80103B2C
     ;
 
+: L-80103C6C
+    -422 -1946 -2198 385840 -239 148365 2090 camera-set
+    matthew 385825 0 148940 set-pos
+    matthew 2168 0 turn-to
+    winona 385696 0 148365 set-pos
+    winona 1730 0 turn-to
+    8 screen-effect
+    wait-effect
+    winona 57 0 talk
+    matthew 58 6 talk
+    winona 59 7 talk
+    11 screen-effect
+    wait-effect
+    0 set-scene
+    -548 -2990 -440 382209 -240 148726 1197 camera-set
+    matthew 382447 -240 148610 set-pos
+    winona 381981 -240 148163 set-pos
+    matthew winona face-each-other
+    10 screen-effect
+    wait-effect
+    winona as-this-one
+    this-one 69 7 talk
+    matthew 70 7 talk
+    this-one 71 7 talk
+    matthew 72 7 talk
+    this-one 73 7 talk
+    winona unride
+    winona 382149 146660 walk-to
+    winona wait-stop
+    winona 0 0 0 set-pos
+    main-exe $80047B7C native
+    end-script
+    ;
+
+\ $80103DE0
+: arrive-80103DE0
+    ovl016 $8010316C native
+    ovl016 $8010317C native-result
+    0 result= if  goto L-80103C6C  then
+    2 screen-effect
+    16 minigame
+    wait-minigame
+    main-exe $80047B7C native
+    end-script
+    ;
+
 \ $80103E1C
 : entry-80103E1C
     52 say-wait-close
@@ -535,3 +581,6 @@ USING: events events.main ;
     8 5 say-mode-wait
     end-script
     ;
+
+\ the words the main executable's scripts go to here, by address
+' arrive-80103DE0 $80103DE0 16 overlay-word!

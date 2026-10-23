@@ -76,8 +76,8 @@ USING: events ;
     -594 -2670 -1024 334071 -4094 269400 1792 camera-set
     339237 -4094 276594 220 camera-move
     568 -40 camera-angle
-    ' script-0 start-event
-    ' script-1 start-event
+    ['] script-0 start-event
+    ['] script-1 start-event
     30 frames wait
     129 actor 332715 -4082 274014 set-pos
     129 actor 0 800 0 set-rot

@@ -96,7 +96,8 @@ variable main-words
 5 ovl constant ovl005   6 ovl constant ovl006   7 ovl constant ovl007   9 ovl constant ovl009
 12 ovl constant ovl012  13 ovl constant ovl013  16 ovl constant ovl016  19 ovl constant ovl019
 21 ovl constant ovl021  24 ovl constant ovl024  26 ovl constant ovl026  27 ovl constant ovl027
-28 ovl constant ovl028
+28 ovl constant ovl028  4 ovl constant ovl004   29 ovl constant ovl029  30 ovl constant ovl030
+31 ovl constant ovl031
 begin-structure native-entry   \ a list of the natives written so far
   field: next-native
   field: native-scope
@@ -138,6 +139,10 @@ variable overlay-words
     {: a :}  overlay-words @  begin  dup while
         dup overlay-area @ event-area @ =  over overlay-address @ a = and if  overlay-xt @ exit  then  next-overlay @
     repeat  true abort" no such word in this area's scripts" ;
+: arrival-script ( area address -- xt | 0 )   \ a script of that area's by address (none: 0)
+    {: ar a :}  overlay-words @  begin  dup while
+        dup overlay-area @ ar =  over overlay-address @ a = and if  overlay-xt @ exit  then  next-overlay @
+    repeat ;
 : goto-overlay ( address -- )  overlay-word jump ;
 : call-overlay ( address -- )  overlay-word execute ;
 
@@ -262,7 +267,6 @@ variable loaded-pack
 : picture-hide ( -- )  0 s" picture-hide" unbuilt ;   \ op $124
 : door-reveal-room ( n -- )  1 s" door-reveal-room" unbuilt ;   \ op $126
 : door-anim ( n -- )  1 s" door-anim" unbuilt ;   \ op $127
-: warp ( n n n n n n -- )  6 s" warp" unbuilt ;   \ op $12A
 : cd-picture ( n -- )  1 s" cd-picture" unbuilt ;   \ op $12B
 : door-animate ( w1 -- )  1 s" door-animate" unbuilt ;   \ op $139
 : door-animate-alt ( w1 -- )  1 s" door-animate-alt" unbuilt ;   \ op $13A
@@ -399,6 +403,19 @@ $42 constant into-car       $4B constant at-car-door       \ ($4B: nothing for t
 : effect-level ( from to -- )  the-effects send effect-level ;           \ $161
 : wait-effect ( -- )   \ $121: until it has run its frames, and two more (src: the VM's wait_effect)
     settle  begin  yield  effect-running? 0= until  2 frames wait ;
+
+\ ---- into another area (src: func_80019F3C, func_80019D90, func_80018B44) ----
+-1 constant as-he-is     \ (a place or heading of -1: Matthew's own)
+2 constant fade-in       \ the screen effect a warp without a script ends in
+: end-thread ( -- )  thread-ended  me forth:kill ;   \ (the event over: its task stops here)
+: warp ( area scene x z heading script -- )   \ op $12A: the area changes, Matthew placed; then the script, or a fade in
+    {: ar sc x z h scr :}
+    ar  sc 0 max  s" areas" actor-named send enter-area  yield  ar event-area !
+    x as-he-is <> if  x 0 z s" matthew" actor-named send figure-place  then
+    h as-he-is <> if  0 h 0 s" matthew" actor-named send figure-turn  then
+    yield  s" camera" actor-named send camera-reset
+    scr if  ar scr $FFFFFFFF and arrival-script ?dup if  start-event  then  else  fade-in screen-effect  then
+    end-thread ;
 
 \ ---- the camera's moves (src: camera_move_to, camera_turn_to ...: docs/subsystems/camera.md) ----
 : camera-move ( x y z speed -- )  the-camera send camera-move-to ;                   \ $119

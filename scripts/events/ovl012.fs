@@ -181,7 +181,7 @@ defer entry-80106954
     matthew 116 1 anim
     20 frames wait
     mel 115 0 anim
-    ' L-80105498 start-event
+    ['] L-80105498 start-event
     mel wait-anim
     mel 116 1 anim
     3 screen-effect
@@ -189,7 +189,7 @@ defer entry-80106954
     matthew 467598 0 290240 set-pos
     mel 468598 0 290240 set-pos
     mel 2 matthew 0 fight
-    ' L-8010535C start-event
+    ['] L-8010535C start-event
     end-script
     ;
 
@@ -202,7 +202,7 @@ defer entry-80106954
 
 : L-801055E8
     -68 -2636 -1106 468270 -96 289641 1813 camera-set
-    ' L-801055CC start-event
+    ['] L-801055CC start-event
     mel 106 0 anim
     7 frames wait
     116 sound
@@ -222,7 +222,7 @@ defer entry-80106954
     matthew 467598 0 290240 set-pos
     mel 468598 0 290240 set-pos
     mel 2 matthew 0 fight
-    ' L-8010535C start-event
+    ['] L-8010535C start-event
     end-script
     ;
 
@@ -801,7 +801,7 @@ defer entry-80106954
     this-one 465860 289188 walk-to
     10 frames wait
     465056 156 289452 20 camera-move
-    ' L-80106C0C start-event
+    ['] L-80106C0C start-event
     this-one wait-stop
     10 frames wait
     this-one 13 0 anim
@@ -843,9 +843,9 @@ defer entry-80106954
     112 actor wait-stop
     112 actor 89 0 face
     matthew 0 1 anim
-    ' L-80106E28 start-event
-    ' L-80106F88 start-event
-    ' L-80106EC4 start-event
+    ['] L-80106E28 start-event
+    ['] L-80106F88 start-event
+    ['] L-80106EC4 start-event
     end-script
     ;
 
@@ -919,7 +919,7 @@ defer entry-80106954
     this-one 465860 289188 walk-to
     10 frames wait
     465056 156 289452 20 camera-move
-    ' L-80106C0C start-event
+    ['] L-80106C0C start-event
     this-one wait-stop
     10 frames wait
     this-one 13 0 anim
@@ -975,7 +975,7 @@ defer entry-80106954
     this-one 1024 -200 turn-to
     this-one wait-turned
     10 frames wait
-    ' L-801069F0 start-event
+    ['] L-801069F0 start-event
     end-script
     ;
 
@@ -1131,7 +1131,7 @@ defer entry-80106954
     this-one 16 0 anim-at  this-one wait-anim
     this-one 181 3 talk
     10 frames wait
-    ' L-801069F0 start-event
+    ['] L-801069F0 start-event
     end-script
     ;
 

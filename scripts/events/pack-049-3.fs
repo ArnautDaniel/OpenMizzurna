@@ -152,7 +152,7 @@ USING: events ;
     137 actor 15030 5 talk
     this-one 15031 3 talk
     137 actor 106 0 anim
-    ' script-1 start-event
+    ['] script-1 start-event
     7 frames wait
     -1 music
     149 sound

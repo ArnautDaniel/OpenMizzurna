@@ -17,7 +17,8 @@ create moving playing allot   -1 moving anim !
 : floor-at ( x z -- y )   \ his floor's height there: in the town the ground (src: func_8001C264), else the floor's
     area @ the-town = if  ground-at if  exit  then  0 exit  then  2drop  area @ floor @ floor-height ;
 : place ( x y z -- )   \ a height of 0 is "on his floor" (the scripts' set_pos; then the floor holds him)
-    {: x y z :}  x  y ?dup 0= if  x z floor-at  then  z  3s>f  area @ floor @ body-place ;
+    {: x y z :}  x  y ?dup 0= if  x z floor-at  then  z  3s>f  area @ floor @ body-place
+    false moving hold-move ! ;   \ (put somewhere, a held motion's move no longer carries him)
 
 \ at a held motion's end he stays where it moved him (src: func_8001CA5C: the last frame's root move, turned
 \ by his heading, added to his place as it is)

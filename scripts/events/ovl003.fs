@@ -35,6 +35,133 @@ USING: events events.main ;
     27 -1 175679 423034 2142 0 warp
     ;
 
+: L-80103DC4
+    matthew 176228 0 423750 set-pos
+    matthew 0 1 anim
+    17 actor 178427 0 423072 set-pos
+    17 actor 0 3072 0 set-rot
+    17 actor 161 1 anim
+    winona 178654 0 423348 set-pos
+    winona 0 -1790 0 set-rot
+    winona 0 1 anim
+    steve 176708 0 424040 set-pos
+    steve 0 0 0 set-rot
+    -494 -2252 -1562 176264 -4264 423852 1152 camera-set
+    steve 178118 424040 walk-to
+    matthew 177808 423720 walk-to
+    10 frames wait
+    178208 -4264 423852 30 camera-move
+    15 frames wait
+    winona 90 80 turn-by
+    winona 4 0 anim
+    99 winona say-by
+    wait-text
+    steve wait-stop
+    steve 17 120 face
+    matthew wait-stop
+    matthew 17 18 anim-at  matthew wait-anim
+    10 frames wait
+    -488 -848 -446 178208 -4264 423852 -288 camera-set
+    0 1 say-mode-wait
+    1 1 say-mode-wait
+    2 1 say-mode-wait
+    10 frames wait
+    96 steve say-by
+    wait-text
+    matthew 19 14 0 anim-then
+    matthew wait-anim
+    matthew 15 1 anim
+    97 matthew say-by
+    wait-text
+    steve 903 904 1 anim-then
+    20 frames wait
+    98 steve say-by
+    wait-text
+    wait-camera-move
+    -638 -1724 -1304 179246 -3556 422514 -2681 camera-set
+    20 frames wait
+    100 matthew say-by
+    matthew 178658 0 423990 set-pos
+    matthew 16 0 anim
+    matthew 17 0 face
+    wait-text
+    101 17 actor say-by
+    wait-text
+    3 1 say-mode-wait
+    4 1 say-mode-wait
+    102 matthew say-by
+    wait-text
+    103 matthew say-by
+    wait-text
+    20 frames wait
+    steve 0 0 face
+    steve 0 0 anim
+    104 17 actor say-by
+    wait-text
+    105 17 actor say-by
+    wait-text
+    -578 -1562 -1160 177854 -4288 423396 -3281 camera-set
+    106 steve say-by
+    steve 86 0 anim
+    wait-text
+    107 matthew say-by
+    wait-text
+    108 matthew say-by
+    matthew 12 120 face
+    matthew 90 0 anim
+    wait-text
+    109 steve say-by
+    steve 87 0 anim
+    wait-text
+    110 matthew say-by
+    matthew 89 0 anim
+    wait-text
+    -1 music
+    111 17 actor say-by
+    17 actor 164 0 anim
+    17 actor wait-anim
+    17 actor 168 169 1 anim-then
+    winona 17 -120 face
+    matthew 17 18 1 anim-then
+    wait-text
+    112 steve say-by
+    steve 14 15 1 anim-then
+    wait-text
+    113 steve say-by
+    steve 88 0 anim
+    17 actor 170 175 0 anim-then
+    17 actor wait-anim
+    17 actor 161 1 anim
+    matthew 19 0 anim
+    wait-text
+    114 steve say-by
+    steve 89 0 anim
+    wait-text
+    115 matthew say-by
+    matthew 89 0 anim
+    wait-text
+    end-script
+    ;
+
+\ $80102DEC
+: arrive-80102DEC
+    -386 -3146 -410 175754 -4324 423891 1328 camera-set
+    steve as-this-one
+    this-one 176210 0 424023 set-pos
+    this-one 0 2647 0 set-rot
+    2 screen-effect
+    matthew 175505 0 423544 set-pos
+    matthew 0 1492 0 set-rot
+    10 frames wait
+    matthew -90 -200 turn-by
+    matthew 15 walk-forward
+    5 frames wait
+    this-one -30 -200 turn-by
+    7 frames wait
+    matthew idle
+    goto L-80103DC4
+    ;
+
 \ $80102EC0
 : entry-80102EC0
     -476 -1778 -1370 178664 -5554 423573 -727 camera-set
@@ -195,7 +322,7 @@ USING: events events.main ;
     -476 -830 -464 177014 -4180 423969 2911 camera-set
     89 steve 2 say-timed-by
     102 actor 27 0 through-door
-    ' L-80102FC8 start-event
+    ['] L-80102FC8 start-event
     102 actor 0 0 0 set-pos
     steve 17 18 anim-at  steve wait-anim
     3295 10 camera-angle
@@ -280,6 +407,67 @@ USING: events events.main ;
     wait-effect
     17 actor unride
     goto L-8010316C
+    ;
+
+\ $80103A68
+: arrive-80103A68
+    steve as-this-one
+    matthew 177008 0 424047 set-pos
+    matthew 0 1715 0 set-rot
+    matthew 0 1 anim
+    this-one 176986 0 423467 set-pos
+    this-one 0 1180 0 set-rot
+    this-one 0 1 anim
+    17 actor 177166 0 423407 set-pos
+    17 actor 0 0 0 set-rot
+    17 actor 908 1 anim
+    -572 -3020 -1268 177132 -4048 423587 2775 camera-set
+    map-sync
+    10 screen-effect
+    wait-effect
+    20 frames wait
+    matthew 90 0 anim
+    this-one 36 anim-once
+    this-one wait-anim
+    20 frames wait
+    17 actor 909 0 anim
+    17 actor wait-anim
+    this-one 37 anim-once
+    17 actor 17 18 1 anim-then
+    this-one wait-anim
+    matthew 47 5 talk
+    17 actor 19 0 anim
+    17 actor wait-anim
+    17 actor 48 4 talk
+    this-one 17 18 1 anim-then
+    matthew 49 5 talk
+    17 actor 50 3 talk
+    17 actor 51 2 talk
+    17 actor 85 0 anim
+    this-one 19 86 0 anim-then
+    17 actor wait-anim
+    17 actor 52 3 talk
+    matthew 53 1 talk
+    17 actor 907 908 1 anim-then
+    17 actor 54 0 talk
+    this-one 17 18 1 anim-then
+    this-one 55 0 talk
+    matthew 83 84 1 anim-then
+    30 frames wait
+    17 actor 909 0 1 anim-then
+    this-one 19 0 anim
+    this-one wait-anim
+    this-one 36 anim-once
+    10 frames wait
+    matthew 85 0 1 anim-then
+    matthew 56 5 talk
+    this-one 37 0 1 anim-then
+    17 actor 57 4 talk
+    17 actor 1 ride
+    matthew 0 3072 0 set-rot
+    26 actor 182904 0 416008 set-pos
+    26 actor 0 -1024 0 set-rot
+    end-script
     ;
 
 \ $801042F8
@@ -398,7 +586,7 @@ USING: events events.main ;
     this-one 139 0 talk
     10 frames wait
     xa-stop
-    ' events.main:sub-800995C0 start-event
+    ['] events.main:sub-800995C0 start-event
     end-script
     ;
 
@@ -494,7 +682,7 @@ USING: events events.main ;
     events.main:sub-80096CF0
     1 set-scene
     17 actor unride
-    ' L-80104B30 start-event
+    ['] L-80104B30 start-event
     matthew 30 walk-forward
     10 frames wait
     matthew idle
@@ -520,7 +708,7 @@ USING: events events.main ;
     events.main:sub-80096CF0
     3 set-scene
     17 actor unride
-    ' L-80104BEC start-event
+    ['] L-80104BEC start-event
     matthew 30 walk-forward
     10 frames wait
     matthew idle
@@ -577,7 +765,7 @@ USING: events events.main ;
     -398 -2054 -32 174978 -4240 424494 5136 camera-set
     matthew 10 0 anim
     matthew anim-hold
-    ' L-80104CEC start-event
+    ['] L-80104CEC start-event
     matthew wait-anim
     matthew 11 0 anim
     matthew anim-hold
@@ -664,7 +852,7 @@ USING: events events.main ;
     -434 -2126 -8 177888 -5588 424702 -702 camera-set
     matthew 6 0 anim
     matthew anim-hold
-    ' L-80105058 start-event
+    ['] L-80105058 start-event
     matthew wait-anim
     matthew 7 0 anim
     matthew anim-hold
@@ -894,3 +1082,7 @@ USING: events events.main ;
     9 5 say-mode-wait
     end-script
     ;
+
+\ the words the main executable's scripts go to here, by address
+' arrive-80102DEC $80102DEC 3 overlay-word!
+' arrive-80103A68 $80103A68 3 overlay-word!

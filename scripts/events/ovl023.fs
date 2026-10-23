@@ -21,6 +21,43 @@ USING: events events.main ;
     29 0 101236 356311 2476 -2146416288 warp
     ;
 
+\ $801025A8
+: arrive-801025A8
+    cohen 37436 -1200 275318 set-pos
+    cohen -2260 0 turn-to
+    cohen 23 2 set-floor
+    cohen 109 1 anim
+    2 screen-effect
+    matthew 38751 0 277050 set-pos
+    matthew -5126 0 turn-to
+    -638 -758 -644 38648 0 276991 -1082 camera-set
+    matthew 81 1 anim
+    40 frames wait
+    matthew 30 6 talk
+    matthew 17 18 1 anim-then
+    -2090 -40 camera-angle
+    wait-camera-turn
+    10 frames wait
+    -266 40 camera-angle
+    matthew 19 0 anim
+    matthew wait-anim
+    matthew 14 15 1 anim-then
+    wait-camera-turn
+    31 5 say-mode-wait
+    -1538 -20 camera-angle
+    wait-camera-turn
+    8 frames wait
+    111 sound
+    16 frames wait
+    107 sound
+    -1298 100 camera-angle
+    -248 100 camera-height-to
+    wait-camera-height
+    -512 -362 -338 38751 0 277194 -5342 camera-set
+    32 say-wait-close
+    end-script
+    ;
+
 \ $8010271C
 : entry-8010271C
     -512 -2378 -1022 37158 -1200 275135 -1716 camera-set
@@ -90,6 +127,57 @@ USING: events events.main ;
 : entry-80102980
     4 say-wait-close
     end-script
+    ;
+
+\ $8010298C
+: arrive-8010298C
+    cohen as-this-one
+    matthew 36889 0 277706 set-pos
+    matthew 0 1024 0 set-rot
+    matthew 74 1 anim
+    this-one 37654 0 276891 set-pos
+    this-one 0 1 anim
+    this-one 0 0 face
+    -350 -3350 -1310 37513 24 277424 1616 camera-set
+    2 screen-effect
+    wait-effect
+    10 frames wait
+    this-one 13 7 talk
+    matthew 14 0 talk
+    this-one 87 0 anim
+    this-one wait-anim
+    this-one 37654 277481 walk-to
+    this-one wait-stop
+    matthew 75 72 1 anim-then
+    this-one 0 3072 0 set-rot
+    this-one 70 72 1 anim-then
+    20 frames wait
+    this-one 15 0 talk
+    this-one 16 8 talk
+    this-one 17 0 talk
+    this-one 73 74 1 anim-then
+    this-one 18 0 talk
+    matthew 19 8 talk
+    this-one 75 72 1 anim-then
+    this-one 20 0 talk
+    this-one 21 8 talk
+    matthew 22 8 talk
+    this-one 23 0 talk
+    10 frames wait
+    matthew 24 8 talk
+    this-one 73 74 1 anim-then
+    this-one 25 0 talk
+    matthew 26 8 talk
+    this-one 75 72 1 anim-then
+    this-one 27 0 talk
+    this-one 28 8 talk
+    10 frames wait
+    29 5 say-mode-wait
+    10 frames wait
+    11 screen-effect
+    wait-effect
+    5 frames wait
+    27 -1 39657 277167 3072 -2146387956 warp
     ;
 
 \ $80102C48
@@ -224,3 +312,7 @@ USING: events events.main ;
     matthew 23 1 set-floor
     end-script
     ;
+
+\ the words the main executable's scripts go to here, by address
+' arrive-801025A8 $801025A8 23 overlay-word!
+' arrive-8010298C $8010298C 23 overlay-word!

@@ -288,3 +288,35 @@ USING: events events.all look look.rows ;   \ (look.rows last: its row words win
 28 look-checks row  1 zone  1024 facing  60 either-side  script events.ovl028:entry-80102BFC  3 hint  end-row   \ 90 degrees
 28 look-checks row  2 zone  2048 facing  60 either-side  script events.ovl028:entry-80102600  3 hint  end-row   \ 180 degrees
 28 act-checks row  1 zone  1024 facing  60 either-side  28 ovl $80102080 native-at  1 hint  end-row   \ 90 degrees
+
+\ ---- the town (area 27), a tile at a time: its look and act checks ----
+4 1 look-checks town-row  0 zone  0 facing  60 either-side  27 ovl $80106858 native-at  end-row   \ 0 degrees
+4 1 act-checks town-row  0 zone  0 facing  80 either-side  ask-area  end-row   \ 0 degrees
+4 1 act-checks town-row  1 zone  7192 facing  80 either-side  ask-area  end-row   \ 632 degrees
+5 1 look-checks town-row  0 zone  1024 facing  60 either-side  27 ovl $80106D24 native-at  end-row   \ 90 degrees
+13 3 look-checks town-row  0 zone  2560 facing  60 either-side  27 ovl $8010679C native-at  16 hint  end-row   \ 225 degrees
+12 5 look-checks town-row  0 zone  2048 facing  60 either-side  27 ovl $801065C8 native-at  end-row   \ 180 degrees
+29 5 look-checks town-row  0 zone  1024 facing  60 either-side  27 ovl $80106630 native-at  end-row   \ 90 degrees
+29 5 look-checks town-row  1 zone  1024 facing  60 either-side  27 ovl $80106664 native-at  end-row   \ 90 degrees
+18 6 look-checks town-row  0 zone  0 facing  60 either-side  27 ovl $80106C50 native-at  end-row   \ 0 degrees
+19 6 look-checks town-row  0 zone  1024 facing  80 either-side  27 ovl $801066CC native-at  end-row   \ 90 degrees
+20 7 look-checks town-row  0 zone  1024 facing  80 either-side  27 ovl $80106698 native-at  end-row   \ 90 degrees
+23 7 look-checks town-row  0 zone  1024 facing  60 either-side  script events.ovl027:entry-8010C66C  3 hint  end-row   \ 90 degrees
+5 8 look-checks town-row  0 zone  2560 facing  60 either-side  27 ovl $80106824 native-at  end-row   \ 225 degrees
+1 12 look-checks town-row  64 zone  3072 facing  60 either-side  27 ovl $801067D0 native-at  end-row   \ 270 degrees
+1 12 act-checks town-row  64 zone  56385 facing  90 either-side  ask-area  end-row   \ 4955 degrees
+16 12 look-checks town-row  0 zone  3072 facing  60 either-side  27 ovl $801065FC native-at  end-row   \ 270 degrees
+16 12 look-checks town-row  1 zone  3072 facing  60 either-side  script events.ovl027:entry-8010C0DC  3 hint  end-row   \ 270 degrees
+16 12 look-checks town-row  2 zone  1024 facing  60 either-side  script events.ovl027:entry-8010C114  3 hint  end-row   \ 90 degrees
+17 12 look-checks town-row  0 zone  3072 facing  80 either-side  main-exe $80047BD8 native-at  3 hint  end-row   \ 270 degrees
+17 13 look-checks town-row  0 zone  512 facing  60 either-side  27 ovl $80106700 native-at  end-row   \ 45 degrees
+23 13 look-checks town-row  0 zone  2048 facing  80 either-side  27 ovl $80106768 native-at  end-row   \ 180 degrees
+15 14 look-checks town-row  0 zone  1024 facing  60 either-side  27 ovl $8010688C native-at  end-row   \ 90 degrees
+17 14 look-checks town-row  0 zone  1024 facing  60 either-side  script events.ovl027:entry-8010C284  3 hint  end-row   \ 90 degrees
+5 16 look-checks town-row  0 zone  0 facing  60 either-side  27 ovl $80106734 native-at  end-row   \ 0 degrees
+19 19 act-checks town-row  0 zone  2048 facing  60 either-side  ask-area  end-row   \ 180 degrees
+23 19 look-checks town-row  3 zone  2048 facing  60 either-side  27 ovl $801067F0 native-at  end-row   \ 180 degrees
+23 19 act-checks town-row  2 zone  2048 facing  80 either-side  27 ovl $80106D84 native-at  1 hint  end-row   \ 180 degrees
+8 20 look-checks town-row  0 zone  0 facing  60 either-side  27 ovl $80106594 native-at  end-row   \ 0 degrees
+8 20 act-checks town-row  0 zone  0 facing  90 either-side  ask-area  end-row   \ 0 degrees
+16 20 look-checks town-row  0 zone  3584 facing  60 either-side  script events.ovl027:entry-8010C18C  end-row   \ 315 degrees

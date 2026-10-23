@@ -73,6 +73,21 @@ def main():
                 lines.append('  '.join(parts) + '  end-row' + comment)
                 n += 1
         lines.append('')
+    # the town: per tile (src: tile_checks: ovl027 D_8010AB44 a tile's record, D_8010AED4 its look and act lists)
+    lines.append('\\ ---- the town (area 27), a tile at a time: its look and act checks ----')
+    for (c, r), t in sorted(CK.area_tables(exe, src)[27]['tiles'].items(), key=lambda kv: (kv[0][1], kv[0][0])):
+        for name, rows in (('look-checks', t['look']), ('act-checks', t['act'])):
+            for row in rows:
+                parts = ['%d %d %s town-row' % (c, r, name), '%d zone' % row['zone'],
+                         '%d facing  %d either-side' % (row['facing'], row['tol'])]
+                if row['flags'] & STATES:
+                    parts.append('$%04X states' % (row['flags'] & STATES))
+                parts.append(target(27, row))
+                if row['extra']:
+                    parts.append('%d hint' % row['extra'])
+                lines.append('  '.join(parts) + '  end-row   \\ %d degrees' % (row['facing'] * 360 // 4096))
+                n += 1
+    lines.append('')
     open(out, 'w', encoding='utf-8').write('\n'.join(lines))
     print('%d rows -> %s' % (n, out))
 

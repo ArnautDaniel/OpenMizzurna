@@ -43,3 +43,9 @@ letter, Barbara's cigarettes - its hooks: Morgan's morning visit, Dr. James's; t
 by the bed - "I can't sleep now..."; the events' lines that wait now wait at once (src: they slept a frame).
 **To come**: talking to the townsfolk (○ on a figure), the hints (prompts), the town's per-tile rows, the
 other areas' rules.
+
+## The town
+
+The town's look and act checks are a tile's (src: tile_checks: ovl027 D_8010AB44, D_8010AED4): `checks.fs`'s
+`col row look-checks town-row ...` rows, matched against the tile Matthew stands on and its zones (floors.fs); it
+has no zone tables. Its rows mostly run the town's C: the buildings' doors (docs/subsystems/doors.md).

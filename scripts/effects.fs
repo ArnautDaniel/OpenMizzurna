@@ -12,7 +12,7 @@ $100 constant under-window      \ (effect + 256: drawn under the message window 
 $40 constant subtract-blend   $20 constant add-blend
 13 constant soft-iris   $60 constant soft-iris-solid
 15e fconstant effect-frames     \ its frames a second (the events ran at 15)
-16 constant iris-open   4 constant iris-ring   16 constant iris-pixels
+16 constant iris-open   4 constant iris-ring-level   16 constant iris-pixels
 
 variable kind   variable level   variable level-step   variable frames-left   variable blend-word
 variable color-a   variable color-b   variable solid   variable under   fvariable due
@@ -30,7 +30,7 @@ variable iris   variable iris-target   variable r-in   variable r-out
 
 : radii ( -- )   \ the iris's ring, by its level (or flickering: level 1)
     level @ 1 = if  8 random 116 + r-out !  8 random 52 + r-in !  exit  then
-    iris @ dup iris-ring >= if  iris-ring - iris-pixels *  else  drop 0  then r-in !
+    iris @ dup iris-ring-level >= if  iris-ring-level - iris-pixels *  else  drop 0  then r-in !
     iris @ iris-pixels * r-out ! ;
 : frame ( -- )   \ one of the effect's frames
     frames-left @ if  frames-left @ 3 >= if  level-step @ level +!  then  -1 frames-left +!  then

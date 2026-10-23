@@ -25,6 +25,10 @@ end-structure
 create first-rows  #content-areas 4 * cells allot   first-rows #content-areas 4 * cells erase
 variable building     \ the row being written (look/rows.fs)
 : table-list ( area table -- addr )  swap 4 * + cells first-rows + ;
+\ the town's: a tile's look and act checks (src: tile_checks; it has no zone tables)
+create tile-rows  town-columns town-rows * 2* cells allot   tile-rows town-columns town-rows * 2* cells erase
+: town-list ( col row table -- addr )
+    {: c r t :}  r town-columns * c + 2*  t act-checks = if  1+  then  cells tile-rows + ;
 
 \ the area whose tables an area uses (src: func_8003F6A8: 29 and 30 are 2's, 31 and 32 19's)
 : content ( area -- area' )
@@ -41,7 +45,10 @@ variable building     \ the row being written (look/rows.fs)
 
 \ ---- what a table answers: a row to run, or (asking the area) the zone ----
 variable zone-answer   variable zone-match   variable check-answer   variable check-match
-: rows ( table -- first )  area @ content swap table-list @ ;
+: rows ( table -- first )   \ the table's rows here: the area's, or in the town the tile's he stands on
+    {: t :}  area @ the-town <> if  area @ content t table-list @ exit  then
+    t look-checks =  t act-checks = or 0= if  0 exit  then
+    matthew-now drop nip tile-of  t town-list @ ;
 : zone-table ( table -- )   \ src: func_8003F1A8
     -1 zone-answer !  0 zone-match !
     at-zone drop {: t idx :}  idx 0< if  exit  then
