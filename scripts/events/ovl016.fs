@@ -369,7 +369,7 @@ USING: events events.main ;
     this-one wait-turned
     this-one 382461 148402 walk-to
     30 frames wait
-    ovl016 $8002D5F4 native
+    main-exe $8002D5F4 native
     end-script
     ;
 

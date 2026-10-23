@@ -36,7 +36,7 @@ defer L-80103BB0
     10 frames wait
     text-hold
     224 0 choice
-    ovl001 $8004E594 native
+    main-exe $8004E594 native
     end-script
     ;
 
@@ -45,7 +45,7 @@ defer L-80103BB0
     10 frames wait
     text-hold
     238 0 choice
-    ovl001 $8004E5B8 native
+    main-exe $8004E5B8 native
     end-script
     ;
 
@@ -54,7 +54,7 @@ defer L-80103BB0
     10 frames wait
     text-hold
     239 0 choice
-    ovl001 $8004E5B8 native
+    main-exe $8004E5B8 native
     end-script
     ;
 
@@ -63,7 +63,7 @@ defer L-80103BB0
     10 frames wait
     text-hold
     225 0 choice
-    ovl001 $8004E5F4 native
+    main-exe $8004E5F4 native
     10 frames wait
     end-script
     ;

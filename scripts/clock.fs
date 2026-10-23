@@ -25,6 +25,10 @@ minutes/hour hours/day * constant minutes/day
 12e fconstant indoor-pace    \ a minute every 5 s
 24e fconstant town-pace      \ a minute every 2.5 s
 
+\ ---- the time, as a fact (the clock keeps it; anyone reads it) ----
+variable time-now
+: clock-time ( -- t )  time-now @ ;
+
 \ ---- the actor ----
 state: clock-state
   cell field now            \ the time
@@ -36,15 +40,15 @@ end-state
 : hold-bit ( reason -- mask )  1 swap lshift ;
 : running? ( -- flag )  holds @ 0= ;
 : pace ( F: -- p )  town? @ if  town-pace  else  indoor-pace  then ;
-: jump-to ( t -- )  dup now !  0e second f!  broadcast time-set ;
-: minute-on ( -- )  1 now +!  now @ broadcast minute-passed ;
+: jump-to ( t -- )  dup time-now !  dup now !  0e second f!  broadcast time-set ;
+: minute-on ( -- )  1 now +!  now @ dup time-now !  broadcast minute-passed ;
 : run ( -- )   \ a step's worth of game seconds; each whole minute told
     second f@  pace dt f* f+
     begin  fdup seconds/minute a-hair f- f>= while  seconds/minute f-  minute-on  repeat
     0e fmax second f! ;
 
 behaviour clock
-  on spawned ( -- )  self subscribe tick  new-game-time now !  story-stopped hold-bit holds ! ;
+  on spawned ( -- )  self subscribe tick  new-game-time dup now !  time-now !  story-stopped hold-bit holds ! ;
   on tick ( -- )  running? if  run  then ;
   on set-time ( t -- )  jump-to ;
   on advance-minute ( -- )  now @ 1+ jump-to ;

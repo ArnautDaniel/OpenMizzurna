@@ -45,13 +45,25 @@ $0100 constant inverted
     else
         x z0 x0 - + z >=  z x z1 x1 - + >= and  z z1 x1 + x - >= and  z0 x0 + x - z >= and
     then ;
-: region-at ( x z list -- id | -1 )   \ the first region holding the point: its id (lists without: 255)
-    {: x z l :}  l 0= if  no-region exit  then
+: region-hit ( x z list -- index id | -1 -1 )   \ the first region holding the point: its index and id
+    {: x z l :}  l 0= if  no-region no-region exit  then   \ (lists without ids: 255)
     l entries {: e n size :}
     n 0 ?do
         x z e i size * + inside?
         size 10 = if  e i size * + 8 + w@ inverted and if  0=  then  then
-        if  size 10 = if  e i size * + 8 + c@  else  255  then  unloop exit  then
-    loop  no-region ;
+        if  i  size 10 = if  e i size * + 8 + c@  else  255  then  unloop exit  then
+    loop  no-region no-region ;
+: region-at ( x z list -- id | -1 )  region-hit nip ;
 : blocked? ( x z floor -- flag )  false list-of region-at no-region <> ;   \ src: point_blocked (indoors)
 : zone-at ( x z floor -- id | -1 )  true list-of region-at ;              \ src: player_zone (indoors)
+: zone-hit ( x z floor -- index id | -1 -1 )  true list-of region-hit ;
+: zone-centre ( index floor -- x z )   \ src: region_zone_centre, with the area's origin
+    true list-of  dup 0= if  2drop 0 0 exit  then
+    entries nip  rot * +  {: e :}
+    e sw@ e 2 + sw@ + 2/  area-origin 2drop +   e 4 + sw@ e 6 + sw@ + 2/  area-origin nip nip + ;
+
+\ ---- headings (4096 a turn) ----
+4096 constant full-turn
+: heading-within? ( heading angle range -- flag )   \ src: func_800290C0 (the range either side)
+    {: h a r :}  a r - full-turn 1- and  a r + full-turn 1- and  {: lo hi :}  h full-turn 1- and {: hh :}
+    lo hi < if  hh lo >=  hh hi <= and  else  hh hi <=  hh lo >= or  then ;

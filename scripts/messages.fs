@@ -59,3 +59,8 @@ message camera-height-to ( eye-y step -- )
 message camera-dist-to ( dist step -- )
 message camera-face ( yaw -- )               \ heading set now
 message camera-pivot ( x y z -- )            \ pivot set now (src: camera_at)
+
+\ ---- items (docs/subsystems/items.md) ----
+message give-item ( item -- )            \ Matthew has it now (src: item_add)
+message take-item ( item -- )            \ and no longer (src: item_remove)
+message items-reset ( -- )               \ a new game's: the phone, the waist bag, the watch (src: items_init)

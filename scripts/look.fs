@@ -1,0 +1,134 @@
+\ look.fs - looking and acting (docs/subsystems/look.md; src: cecheck.c, cevcon.c look_update / act_update /
+\ look_execute / act_execute): what ○ and □ would do where Matthew stands, and doing it. The tables' rows
+\ (scripts/events/checks.fs) and each area's rules (scripts/rules/) say what.
+IN: look
+USING: engine actors messages keys areas floors figures matthew events ;
+
+\ ---- the rows ----
+enum: table  look-zones look-checks act-checks act-zones ;
+enum: target-kind  ask-the-area run-script run-native ;
+$2000 constant in-conversation   $4000 constant greeting   \ a check row's talk states (src: func_8003EF88)
+33 constant #content-areas
+
+begin-structure check-row
+  field: next-row
+  field: row-zone       \ a zone row: the zone's index on its floor; a check row: its id
+  field: row-facing     \ a check row: the heading it wants (4096 a turn)
+  field: row-within     \ and how far either side (degrees)
+  field: row-states     \ a check row: the talk states it's for
+  field: row-kind       \ target-kind
+  field: row-target     \ the event's word, or the native's address
+  field: row-scope      \ the native's scope
+  field: row-prompt     \ the hint's text (the table's extra)
+end-structure
+
+create first-rows  #content-areas 4 * cells allot   first-rows #content-areas 4 * cells erase
+variable building     \ the row being written
+: list-of ( area table -- addr )  swap 4 * + cells first-rows + ;
+: last-of ( addr -- addr' )   \ the link to append at
+    begin  dup @ while  @  repeat ;
+: row ( area table -- )   \ a new row at the end of that area's table; the words below fill it
+    here check-row allot {: a t r :}  r check-row erase  r building !  r  a t list-of last-of ! ;
+: zone ( n -- )  building @ row-zone ! ;
+: facing ( turn -- )  building @ row-facing ! ;   \ (4096 a turn)
+: either-side ( degrees -- )  building @ row-within ! ;   \ (how far the heading may be off)
+: states ( bits -- )  building @ row-states ! ;
+: ask-area ( -- )  ask-the-area building @ row-kind ! ;
+: script ( "word" -- )  ' building @ row-target !  run-script building @ row-kind ! ;
+: native-at ( scope address -- )  building @ row-target !  building @ row-scope !  run-native building @ row-kind ! ;
+: prompt ( n -- )  building @ row-prompt ! ;
+: end-row ( -- ) ;
+
+\ the area whose tables an area uses (src: func_8003F6A8: 29 and 30 are 2's, 31 and 32 19's)
+: content ( area -- area' )
+    case  29 of  2  endof  30 of  2  endof  31 of  19  endof  32 of  19  endof  dup  endcase ;
+
+\ ---- where he stands ----
+768 constant face-zone-range   \ src: player_face_zone (0x300)
+: at-zone ( -- index id )  matthew-now drop nip floor @ zone-hit ;
+: turned ( F: angle -- turn )  4096e f* 2e pi f* f/ ;
+: faces? ( x z -- flag )   \ his heading within range of the way to (x, z)
+    matthew-now {: tx tz mx my mz h :}  tx mx - s>f tz mz - s>f fatan2 turned f>s  h swap face-zone-range
+    heading-within? ;
+: faces-zone? ( index -- flag )  floor @ zone-centre faces? ;
+
+\ ---- what a table answers: a row to run, or (asking the area) the zone ----
+variable zone-answer   variable zone-row   variable check-answer   variable check-row
+: rows ( table -- first )  area @ content swap list-of @ ;
+: zone-table ( table -- )   \ src: func_8003F1A8
+    -1 zone-answer !  0 zone-row !
+    at-zone drop {: t idx :}  idx 0< if  exit  then
+    t rows  begin  dup while
+        dup row-zone @ idx =  idx faces-zone? and if
+            dup row-kind @ ask-the-area = if  drop idx zone-answer !  else  zone-row !  then  exit
+        then  next-row @
+    repeat  drop
+    idx faces-zone? if  idx zone-answer !  then ;   \ (src: func_8003FFB0: a zone faced, no row)
+: faced? ( row heading -- flag )   \ the heading within the row's range
+    {: r h :}  h  r row-facing @  r row-within @ 4096 * 360 /  heading-within? ;
+: check-table ( table -- )   \ src: func_8003EF88 (no talk states yet: the rows for none)
+    -1 check-answer !  0 check-row !
+    at-zone nip {: t id :}  id 0< if  exit  then
+    matthew-now nip nip nip {: h :}
+    t rows  begin  dup while
+        dup row-zone @ id =  over row-states @ 0= and  over h faced? and if
+            dup row-kind @ ask-the-area = if  drop id check-answer !  else  check-row !  then  exit
+        then  next-row @
+    repeat  drop ;
+: run-row ( row -- )
+    ?dup 0= if  exit  then
+    dup row-kind @ case
+        run-script of  row-target @ start-event  endof
+        run-native of  dup row-scope @ swap row-target @ native  endof
+        nip
+    endcase ;
+: run-rows ( -- )  check-row @ ?dup if  run-row  else  zone-row @ run-row  then ;   \ src: func_800401B0
+
+\ ---- the areas' rules ----
+begin-structure rules
+  field: look-check   field: look-do   field: act-check   field: act-do
+  field: on-enter     field: on-scene     \ the area's hooks: entered ( -- ), a scene ( scene -- )
+end-structure
+create area-rules  #content-areas rules * allot   area-rules #content-areas rules * erase
+: rules-of ( area -- addr )
+    dup 0 #content-areas within 0= abort" rules-of: no such area"  rules * area-rules + ;
+: area-rules! ( look-check look-do act-check act-do area -- )
+    rules-of {: lc ld ac ad r :}  lc r look-check !  ld r look-do !  ac r act-check !  ad r act-do ! ;
+: area-hooks! ( area enter scene -- )  rot rules-of {: e sc r :}  e r on-enter !  sc r on-scene ! ;
+: hook ( xt|0 -- )  ?dup if  execute  then ;
+
+\ ---- pressing ○ and □ ----
+81 constant look-motion   \ src: func_8003FA8C (0x51)
+: look ( -- )   \ src: look_execute's case 0 (the figures: to come)
+    look-zones zone-table  look-checks check-table
+    area @ content rules-of {: r :}
+    r look-check @ if
+        look-motion -1 false matthew-actor send figure-anim
+        zone-answer @ check-answer @ r look-check @ execute  r look-do @ execute
+    else  run-rows  then ;
+: act ( -- )   \ src: act_execute's case 0
+    act-zones zone-table  act-checks check-table
+    area @ content rules-of {: r :}
+    r act-check @ if  zone-answer @ check-answer @ r act-check @ execute  r act-do @ execute
+    else  run-rows  then ;
+
+variable controlled   variable circle-was   variable square-was
+: pressed ( key var -- flag )  >r key-down? dup r@ @ 0= and swap r> ! ;   \ (a held button: once)
+: watch ( -- )
+    pad-circle circle-was pressed  pad-square square-was pressed  {: o s :}
+    controlled @ 0= events-running @ or  area @ 0< or if  exit  then
+    o if  look exit  then
+    s if  act  then ;
+
+state: look-state end-state
+behaviour looking
+  on spawned ( -- )  self subscribe tick  self subscribe player-control
+    self subscribe area-entered  self subscribe scene-shown ;
+  on area-entered ( area scene -- )   \ src: the overlay's entering, then its scene hook
+    swap content rules-of {: sc r :}  r on-enter @ hook  r on-scene @ ?dup if  sc swap execute  then ;
+  on scene-shown ( scene -- )  area @ content rules-of on-scene @ ?dup if  execute  else  drop  then ;
+  on tick ( -- )  watch ;
+  on player-control ( flag -- )  controlled ! ;
+end-behaviour
+
+: spawn-look ( -- id )  looking look-state s" look" spawn ;

@@ -311,7 +311,7 @@ USING: events events.main ;
 \ $80105284
 : entry-80105284
     268 0 call-pack-script
-    ovl002 $8002CC24 native
+    main-exe $8002CC24 native
     20 frames wait
     end-script
     ;

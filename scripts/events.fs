@@ -145,7 +145,8 @@ variable loaded-pack
 : show ( text speaker palette secs -- )
     {: text who pal secs :}  text text-bank who pal secs the-window send window-say ;
 : text-pending ( -- )  thread 0< 0= if  true thread thread-text slot !  then ;
-: settle ( -- )   \ an event's waits first let its message close (src: the VM's wait_msg, checked first)
+: settle ( -- )   \ an event's waits first let its message close (src: the VM's wait_msg, checked first; the
+                  \ ops that wait for their line - "...-wait", say-n, phone-say - settle at once: they slept a frame)
     thread 0< if  exit  then
     thread thread-text slot @ if   \ (a step first: the window takes the message as the actors run)
         begin  yield  window-up? 0= until
@@ -156,11 +157,11 @@ variable loaded-pack
 
 : say ( text -- )  nobody 0 0 show ;                                  \ src $108
 : say-by ( text a -- )  0 0 show ;                                    \ $109
-: say-by-wait ( text a -- )  say-by text-pending ;                    \ $125
+: say-by-wait ( text a -- )  say-by text-pending settle ;                    \ $125
 : say-mode ( text palette -- )  nobody swap 0 show ;                  \ $153
-: say-mode-wait ( text palette -- )  say-mode text-pending ;          \ $137
-: say-n ( text palette a -- )  swap 0 show text-pending ;             \ $13C
-: say-wait-close ( text -- )  say text-pending ;                      \ $158
+: say-mode-wait ( text palette -- )  say-mode text-pending settle ;          \ $137
+: say-n ( text palette a -- )  swap 0 show text-pending settle ;             \ $13C
+: say-wait-close ( text -- )  say text-pending settle ;                      \ $158
 : say-timed-by ( text a secs -- )  0 swap show ;                     \ $13D: it closes itself
 : say-timed-by-wait ( text a secs -- )  dup >r say-timed-by r> secs wait ;   \ $13F
 : caption-for-nowait ( text secs -- )  nobody 0 rot show ;           \ $177
@@ -279,8 +280,8 @@ variable loaded-pack
 : cd-pictures ( n n -- )  2 s" cd-pictures" unbuilt ;   \ op $179
 
 \ ---- text with a picture (after its stub) ----
-: say-reset ( text -- )  picture-hide  matthew 0 0 show  text-pending ;              \ $105
-: phone-say ( text -- )  0 picture-show  nobody phone-palette 0 show  text-pending ;   \ $106
+: say-reset ( text -- )  picture-hide  matthew 0 0 show  text-pending settle ;              \ $105
+: phone-say ( text -- )  0 picture-show  nobody phone-palette 0 show  text-pending settle ;   \ $106
 
 \ ---- figures: the actor that is a slot's body (Matthew's so far; the townsfolk's as they are built) ----
 : figure-of ( slot -- id )  matthew = if  s" matthew" actor-named  else  -1  then ;

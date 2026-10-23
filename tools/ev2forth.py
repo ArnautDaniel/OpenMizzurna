@@ -286,7 +286,8 @@ def emit_insn(src, i, main_src, names_used, text_comment):
     if op == 0x171:
         return ['end-script']
     if op in (0x122, 0x151):
-        return ['%s $%08X native%s' % ('main-exe' if src.scope == 'main' else src.scope, args[0], '-result' if op == 0x151 else '')]
+        scope = 'main-exe' if src.scope == 'main' or args[0] < OVL_BASE else src.scope   # (main's C, from anywhere)
+        return ['%s $%08X native%s' % (scope, args[0], '-result' if op == 0x151 else '')]
     if op == 0x168:
         return [pack_ref(src, args[0], 'goto-pack-script')]
     if op == 0x143:

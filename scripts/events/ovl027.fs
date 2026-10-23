@@ -134,7 +134,7 @@ USING: events events.main ;
 : L-8010A94C
     11 screen-effect
     wait-effect
-    ovl027 $8001A2C8 native
+    main-exe $8001A2C8 native
     103 actor 0 0 0 set-pos
     end-script
     ;
@@ -215,7 +215,7 @@ USING: events events.main ;
     this-one 57 7 talk
     this-one 58 7 talk
     this-one 59 7 talk
-    ovl027 $80047B7C native
+    main-exe $80047B7C native
     end-script
     ;
 
@@ -374,7 +374,7 @@ USING: events events.main ;
     ;
 
 : L-8010BC60
-    ovl027 $8002E988 native
+    main-exe $8002E988 native
     end-script
     ;
 

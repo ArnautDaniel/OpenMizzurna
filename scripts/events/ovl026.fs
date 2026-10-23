@@ -390,13 +390,13 @@ USING: events events.main ;
 \ $801064DC
 : entry-801064DC
     252 2 call-pack-script
-    ovl026 $80047BFC native
+    main-exe $80047BFC native
     end-script
     ;
 
 : L-801064F4
     265 0 call-pack-script
-    ovl026 $80047C2C native
+    main-exe $80047C2C native
     end-script
     ;
 
