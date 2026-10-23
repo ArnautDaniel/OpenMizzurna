@@ -33,7 +33,12 @@ void render_image_uv(GpuTexture t, float x, float y, float w, float h, float u0,
                      uint32_t rgba);
 /* how the 2D drawn from now on meets the picture (until render_end): RENDER_BLEND_ALPHA as usual, or the
  * PlayStation's add and subtract (the screen's effects: fades to white and to black) */
-enum { RENDER_BLEND_ALPHA, RENDER_BLEND_ADD, RENDER_BLEND_SUBTRACT };
+enum { RENDER_BLEND_ALPHA, RENDER_BLEND_ADD, RENDER_BLEND_SUBTRACT, RENDER_BLEND_PS_ADD, RENDER_BLEND_PS_HALF };
+/* (the PlayStation's semi-transparent images: a texel marked to blend - alpha 128 - is added to the picture
+ * (PS_ADD) or averaged with it (PS_HALF); one marked solid - 255 - covers it; 0 isn't drawn) */
+
+/* the 2D drawn from now on goes behind the 3D (the sky) or over it, as usual (until render_end) */
+void render_behind(int behind);
 void render_blend(int mode);
 /* a four-cornered shape, a colour a corner (corners as the PlayStation's G4: 0 1 / 2 3) */
 void render_quad4(const float xy[8], const uint32_t rgba[4]);

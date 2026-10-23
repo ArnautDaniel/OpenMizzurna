@@ -26,6 +26,7 @@ typedef struct Vertex2D {
 typedef struct Batch {
     uint32_t texture;
     int blend;          /* RENDER_BLEND_* */
+    int behind;         /* drawn before the 3D */
     int first, count;   /* vertices */
 } Batch;
 
@@ -38,6 +39,8 @@ static struct {
     Batch batches[4096];
     int nbatches;
     int blend;   /* for the quads to come */
+    int behind;
+    int loc_ps;
     int w, h;
     uint8_t *last_frame;   /* for render_screenshot: read back at render_end when asked */
     int want_shot;
@@ -62,9 +65,14 @@ static const char *kFragment2D =
     "in vec2 v_uv;\n"
     "in vec4 v_color;\n"
     "layout(binding = 0) uniform sampler2D image;\n"
+    "uniform int ps;\n"   /* 0 as usual; 1 the PlayStation's add, 2 its half (blending: one, one minus alpha) */
     "out vec4 color;\n"
     "void main() {\n"
-    "    color = texture(image, v_uv) * v_color;\n"
+    "    vec4 t = texture(image, v_uv);\n"
+    "    if (ps == 0) { color = t * v_color; return; }\n"
+    "    if (t.a < 0.25) discard;\n"
+    "    vec3 c = min(t.rgb * v_color.rgb, vec3(1.0));\n"
+    "    color = t.a > 0.75 ? vec4(c, 1.0) : ps == 1 ? vec4(c, 0.0) : vec4(c * 0.5, 0.5);\n"
     "}\n";
 
 static uint32_t compile(GLenum kind, const char *src) {
@@ -152,6 +160,7 @@ int render_init(void) {
 
     R.program = link(kVertex2D, kFragment2D);
     R.loc_screen = 0;   /* (its layout location) */
+    R.loc_ps = glGetUniformLocation(R.program, "ps");
     R.verts = malloc(sizeof(Vertex2D) * 6 * MAX_QUADS);
     glCreateBuffers(1, &R.vbo);
     glNamedBufferData(R.vbo, sizeof(Vertex2D) * 6 * MAX_QUADS, NULL, GL_STREAM_DRAW);
@@ -187,6 +196,7 @@ void render_begin(int window_w, int window_h, float r, float g, float b) {
     R.nverts = 0;
     R.nbatches = 0;
     R.blend = RENDER_BLEND_ALPHA;
+    R.behind = 0;
     glViewport(0, 0, window_w, window_h);
     glClearNamedFramebufferfv(0, GL_COLOR, 0, clear);
     glClearNamedFramebufferfi(0, GL_DEPTH_STENCIL, 0, 1.0f, 0);
@@ -197,11 +207,12 @@ static uint32_t swap_rgba(uint32_t rgba) {   /* 0xRRGGBBAA to the bytes R G B A 
 }
 
 static int new_batch(uint32_t texture) {   /* (the last batch, or a new one when the texture or blend differs) */
-    if (R.nbatches == 0 || R.batches[R.nbatches - 1].texture != texture || R.batches[R.nbatches - 1].blend != R.blend) {
+    if (R.nbatches == 0 || R.batches[R.nbatches - 1].texture != texture || R.batches[R.nbatches - 1].blend != R.blend ||
+        R.batches[R.nbatches - 1].behind != R.behind) {
         if (R.nbatches == (int)(sizeof(R.batches) / sizeof(R.batches[0]))) {
             return 0;
         }
-        R.batches[R.nbatches++] = (Batch){texture, R.blend, R.nverts, 0};
+        R.batches[R.nbatches++] = (Batch){texture, R.blend, R.behind, R.nverts, 0};
     }
     return 1;
 }
@@ -242,6 +253,7 @@ void render_image_uv(GpuTexture t, float x, float y, float w, float h, float u0,
 }
 
 void render_blend(int mode) { R.blend = mode; }
+void render_behind(int behind) { R.behind = behind != 0; }
 
 void render_quad4(const float xy[8], const uint32_t rgba[4]) {
     Vertex2D *v, c[4];
@@ -284,18 +296,20 @@ void render_text(float x, float y, float scale, uint32_t rgba, const char *s, in
 float render_text_width(float scale, int chars) { return (float)chars * GLYPH_W * scale; }
 float render_line_height(float scale) { return GLYPH_H * scale + scale; }
 
-void render_end(void) {
+static void draw_batches(int behind) {
     int i;
 
-    scene3d_flush(R.w, R.h);   /* (the 3D first: the 2D goes over it) */
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDisable(GL_DEPTH_TEST);
     glUseProgram(R.program);
     glProgramUniform2f(R.program, R.loc_screen, (float)R.w, (float)R.h);
-    glNamedBufferSubData(R.vbo, 0, (GLsizeiptr)(sizeof(Vertex2D) * (size_t)R.nverts), R.verts);
     glBindVertexArray(R.vao);
     for (i = 0; i < R.nbatches; i++) {
+        if (R.batches[i].behind != behind) {
+            continue;
+        }
+        glProgramUniform1i(R.program, R.loc_ps, R.batches[i].blend == RENDER_BLEND_PS_ADD ? 1 :
+                                                R.batches[i].blend == RENDER_BLEND_PS_HALF ? 2 : 0);
         switch (R.batches[i].blend) {   /* (the PlayStation's: the screen plus or minus the colour) */
         case RENDER_BLEND_ADD:
             glBlendEquation(GL_FUNC_ADD);
@@ -304,6 +318,11 @@ void render_end(void) {
         case RENDER_BLEND_SUBTRACT:
             glBlendEquation(GL_FUNC_REVERSE_SUBTRACT);
             glBlendFunc(GL_ONE, GL_ONE);
+            break;
+        case RENDER_BLEND_PS_ADD:
+        case RENDER_BLEND_PS_HALF:
+            glBlendEquation(GL_FUNC_ADD);
+            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
             break;
         default:
             glBlendEquation(GL_FUNC_ADD);
@@ -314,6 +333,13 @@ void render_end(void) {
         glDrawArrays(GL_TRIANGLES, R.batches[i].first, R.batches[i].count);
     }
     glBlendEquation(GL_FUNC_ADD);
+}
+
+void render_end(void) {
+    glNamedBufferSubData(R.vbo, 0, (GLsizeiptr)(sizeof(Vertex2D) * (size_t)R.nverts), R.verts);
+    draw_batches(1);           /* (behind: the sky) */
+    scene3d_flush(R.w, R.h);   /* (the 3D, then the 2D over it) */
+    draw_batches(0);
     if (R.want_shot) {   /* (read back now: after the swap the back buffer is undefined) */
         free(R.last_frame);
         R.last_frame = malloc((size_t)R.w * R.h * 4);

@@ -155,6 +155,7 @@ are built, each listed here.
 | `step-blend` | `F: -- 0..1` | how far the display is between the last step and the next (drawing only) |
 | `on-draw`, `off-draw` | `xt --` | run a word every frame to draw 2D |
 | `pen-color`, `pen-scale` | `rgba --`, `n --` | colour (0xRRGGBBAA) and text size for the drawing words |
+| `pen-blend` | `mode --` | 0 as usual, 1 add, 2 subtract; 3 / 4 the PlayStation's semi-transparency (add / half) |
 | `draw-text`, `draw-rect` | `addr len x y --`, `x y w h --` | in window pixels from the top left |
 | `screen-size`, `char-size` | `-- w h` | |
 | `hud` | `addr len --` | a line of text at the bottom of the screen (`0 0 hud` clears) |
@@ -177,6 +178,8 @@ are built, each listed here.
 | `road-node` / `road-point` | `i -- x y z points first` / `i -- dx dy dz length` | the town's road graph (docs/subsystems/traffic.md) |
 | `light-way` / `light-color` | `i x y z --` / `i r g b --` | light i's way (game axes) and colour (256 full): docs/subsystems/daylight.md |
 | `ambient-light` / `fog-color` / `fog!` | `r g b --` / `r g b --` / `flag --` | the ambient (4096 full), the fog's colour (128: as it is), fog on |
+| `image` / `image-size` / `draw-image` | `addr len -- image` / `image -- w h` / `image x y w h --` | a library picture drawn in 2D, tinted by the pen (a negative size flips) |
+| `behind` | `flag --` | the 2D from now on behind the 3D (the sky) or over it |
 | `random` | `n -- 0..n-1` | chance |
 | `motion` / `motion-frames` / `motion-move` | `addr len -- motion` / `motion -- n` / `motion frame -- dx dy dz` | a character motion from the library and its frames |
 | `draw-figure` | `model motion frame x y z yaw --` | a figure posed in a motion's frame |

@@ -174,6 +174,8 @@ and off (src: func_800243F0: the last row of video memory, lamp i's palette at 1
 they are by day, unlit, and again lit (`textures/lamps/`); a material that is a lamp's light says which
 (`"lamp": i` in its extras).
 
+The sky's pictures (`sky/`: clouds, the horizon strip, sun, flares, moon) are cut from the common images the same way (docs/subsystems/sky.md).
+
 The check: every tile five parts and nothing more, the region and billboard parts the same bytes, the models'
 glTF exact as for any model. (MAP.BIN's sector padding, and a tile's padding between parts, hold leftovers of
 the disc's making that the game never reads; they aren't kept.) 768 tiles, 1536 models.

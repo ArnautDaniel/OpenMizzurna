@@ -6,6 +6,7 @@
 #include "../core/files.h"
 #include "../kernel/mactor.h"
 #include "../render/render.h"
+#include "../data/png.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -181,7 +182,7 @@ PRIM(p_draw_rect) {   /* ( x y w h -- ) */
     Cell h = POP(), wd = POP(), y = POP(), x = POP();
     render_rect((float)x, (float)y, (float)wd, (float)h, gEngine.pen);
 }
-PRIM(p_pen_blend) { render_blend((int)POP()); }   /* ( mode -- ) 0 as usual, 1 add, 2 subtract */
+PRIM(p_pen_blend) { render_blend((int)POP()); }   /* ( mode -- ) 0 as usual, 1 add, 2 subtract; 3 / 4 the PlayStation's add / half */
 PRIM(p_draw_quad) {   /* ( x0 y0 x1 y1 x2 y2 x3 y3 c0 c1 c2 c3 -- ) corners 0 1 / 2 3, a colour each */
     uint32_t c[4];
     float xy[8];
@@ -241,6 +242,55 @@ PRIM(p_exe_table) {   /* ( addr len -- addr n ) a table of the executable by nam
     PUSH(n);
 }
 
+/* ---- images: the library's pictures drawn in 2D (the sky) ---- */
+#define MAX_IMAGES 128
+static struct {
+    char path[160];
+    GpuTexture t;
+} sImages[MAX_IMAGES];
+static int sNImages;
+
+PRIM(p_image) {   /* ( addr len -- image ) a picture from the library (a PNG); 0 if it isn't there */
+    Cell len = POP();
+    const char *s = (const char *)POP();
+    char path[160];
+    size_t n;
+    uint8_t *file, *rgba;
+    int i, iw = 0, ih = 0;
+
+    snprintf(path, sizeof(path), "%.*s", (int)len, s);
+    for (i = 0; i < sNImages; i++) {
+        if (strcmp(sImages[i].path, path) == 0) {
+            PUSH(sImages[i].t.id != 0 ? i + 1 : 0);
+            return;
+        }
+    }
+    if (sNImages == MAX_IMAGES) {
+        forth_error(f, "image: too many images");
+    }
+    file = files_read(path, &n);
+    rgba = file != NULL ? png_read_rgba(file, n, &iw, &ih) : NULL;
+    free(file);
+    snprintf(sImages[sNImages].path, sizeof(sImages[sNImages].path), "%s", path);
+    sImages[sNImages].t = rgba != NULL ? render_texture_rgba(rgba, iw, ih) : (GpuTexture){0, 0, 0};
+    free(rgba);
+    sNImages++;
+    PUSH(sImages[sNImages - 1].t.id != 0 ? sNImages : 0);
+}
+PRIM(p_image_size) {   /* ( image -- w h ) */
+    Cell i = POP();
+    PUSH(i >= 1 && i <= sNImages ? sImages[i - 1].t.w : 0);
+    PUSH(i >= 1 && i <= sNImages ? sImages[i - 1].t.h : 0);
+}
+PRIM(p_draw_image) {   /* ( image x y w h -- ) in window pixels, tinted by the pen's colour (a negative size flips) */
+    Cell h = POP(), wd = POP(), y = POP(), x = POP(), i = POP();
+
+    if (i >= 1 && i <= sNImages && sImages[i - 1].t.id != 0) {
+        render_image(sImages[i - 1].t, (float)x, (float)y, (float)wd, (float)h, gEngine.pen);
+    }
+}
+PRIM(p_behind) { render_behind(POP() != 0); }   /* ( flag -- ) the 2D from now on behind the 3D (the sky) or over it */
+
 /* ---- chance ---- */
 PRIM(p_random) {   /* ( n -- 0..n-1 ) (a xorshift; seeded once from the clock) */
     static uint32_t state;
@@ -266,7 +316,7 @@ void bind_engine(Forth *f) {
         {"on-tick", p_on_tick}, {"off-tick", p_off_tick}, {"on-draw", p_on_draw}, {"off-draw", p_off_draw},
         {"ticks", p_ticks}, {"dt", p_dt}, {"seconds", p_seconds}, {"step-blend", p_step_blend}, {"pen-color", p_pen_color}, {"pen-scale", p_pen_scale}, {"draw-text", p_draw_text},
         {"draw-rect", p_draw_rect}, {"pen-blend", p_pen_blend}, {"draw-quad", p_draw_quad}, {"screen-size", p_screen_size}, {"char-size", p_char_size}, {"hud", p_hud},
-        {"clear-color", p_clear_color}, {"random", p_random}, {"screenshot", p_screenshot},
+        {"clear-color", p_clear_color}, {"random", p_random}, {"image", p_image}, {"image-size", p_image_size}, {"draw-image", p_draw_image}, {"behind", p_behind}, {"screenshot", p_screenshot},
         {"screenshot-pending?", p_screenshot_pending}, {"console!", p_console_store}, {"exe-table", p_exe_table}, {"library-file", p_library_file}, {"exe-u8", p_exe_u8}, {"exe-s8", p_exe_s8}, {"exe-s16", p_exe_s16}, {"exe-s32", p_exe_s32},
     };
     Vocab *was = f->m.current, *v = forth_vocab(f, "engine");

@@ -24,7 +24,6 @@ PRIVATE>
 
 \ ---- the hour's values (src: func_800234B4, func_800253C8) ----
 24 constant hours
-<PRIVATE
 : hour-now ( -- hour next minute )
     clock-time {: t :}  t time>hour  dup 1+ hours mod  t time>minute ;
 : between ( this next minute level -- n )   \ the minute's value, scaled to the scene's level (100: as it is)
@@ -35,6 +34,7 @@ PRIVATE>
 : hour-s16 ( addr len channel level -- n )
     {: a n c lv :}  hour-now {: h h' m :}
     a n c hours * h + exe-s16  a n c hours * h' + exe-s16  m lv between ;
+<PRIVATE
 : light-colors ( i -- addr len )  case 0 of s" hour-light-1" endof 1 of s" hour-light-2" endof s" hour-light-3" rot endcase ;
 : light-ways ( i -- addr len )  case 0 of s" hour-light-1-way" endof 1 of s" hour-light-2-way" endof s" hour-light-3-way" rot endcase ;
 PRIVATE>

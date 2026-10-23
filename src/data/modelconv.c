@@ -292,14 +292,14 @@ static uint64_t hash_of(const uint8_t *d, size_t n) {
 }
 
 /* a texture page written to (or checked against) path; the page is in j->page */
-static void texture_file(Job *j, const char *path) {
+static void image_file(Job *j, const char *path, const uint8_t *image, int iw, int ih) {
     size_t n;
 
     if (j->failed) {
         return;
     }
     if (j->write != NULL) {
-        uint8_t *png = png_encode_rgba(j->page, PAGE_TEXELS, PAGE_TEXELS, &n);
+        uint8_t *png = png_encode_rgba(image, iw, ih, &n);
         if (png == NULL || !j->write(j->ctx, path, png, n)) {
             snprintf(j->why, j->nwhy, "can't write %s", path);
             j->failed = 1;
@@ -310,7 +310,7 @@ static void texture_file(Job *j, const char *path) {
         int w = 0, h = 0;
 
         rgba = file != NULL ? png_read_rgba(file, n, &w, &h) : NULL;
-        if (rgba == NULL || w != PAGE_TEXELS || h != PAGE_TEXELS || memcmp(rgba, j->page, (size_t)w * h * 4) != 0) {
+        if (rgba == NULL || w != iw || h != ih || memcmp(rgba, image, (size_t)w * h * 4) != 0) {
             snprintf(j->why, j->nwhy, "%s isn't the texture video memory held", path);
             j->failed = 1;
         }
@@ -318,6 +318,51 @@ static void texture_file(Job *j, const char *path) {
         free(file);
     }
     j->textures++;
+}
+
+static void texture_file(Job *j, const char *path) { image_file(j, path, j->page, PAGE_TEXELS, PAGE_TEXELS); }
+
+/* the sky's pieces (src: func_8001E2E4, func_8001E5FC, sky.c): where in video memory each image is - its
+ * page (depth, x, y: the texture page word the game made) and palette - and its rectangle there */
+typedef struct SkyPiece {
+    const char *name;
+    int depth, page_x, page_y, palette_x, palette_y, u, v, w, h;
+} SkyPiece;
+static const SkyPiece kSky[] = {
+    {"clouds", 4, 0x340, 0, 0x340, 0xF4, 0, 0, 256, 240},
+    {"horizon", 4, 0x2C0, 0, 0x2D0, 0xFE, 0, 0, 256, 64},
+    {"sun", 8, 0x2C0, 0x40, 0x2C0, 0xFF, 0x00, 0x40, 0x40, 0x40},
+    {"flare-1", 4, 0x2E0, 0x78, 0x2D0, 0xF8, 0x80, 0x78, 8, 8}, {"flare-2", 4, 0x2E0, 0x78, 0x2D0, 0xF8, 0x80, 0x78, 8, 8},
+    {"flare-3", 4, 0x2E0, 0x78, 0x2D0, 0xF8, 0x80, 0x78, 8, 8}, {"flare-4", 4, 0x2E0, 0x78, 0x2D0, 0xF8, 0x80, 0x78, 8, 8},
+    {"flare-5", 4, 0x2E2, 0x78, 0x2D0, 0xF9, 0x88, 0x78, 8, 8}, {"flare-6", 4, 0x2E2, 0x78, 0x2D0, 0xF9, 0x88, 0x78, 8, 8},
+    {"flare-7", 4, 0x2E4, 0x78, 0x2E0, 0xFE, 0x90, 0x78, 8, 8}, {"flare-8", 4, 0x2EC, 0x58, 0x2C0, 0xFC, 0xB0, 0x58, 16, 16},
+    {"flare-9", 4, 0x2E6, 0x78, 0x2D0, 0xFB, 0x98, 0x78, 8, 8}, {"flare-10", 4, 0x2E8, 0x58, 0x2D0, 0xFC, 0xA0, 0x58, 8, 8},
+    {"flare-11", 4, 0x2E0, 0x40, 0x2C0, 0xF8, 0x80, 0x40, 32, 32}, {"flare-12", 4, 0x2EC, 0x68, 0x2C0, 0xFD, 0xB0, 0x68, 16, 16},
+    {"flare-13", 4, 0x2EE, 0x40, 0x2C0, 0xFE, 0xB8, 0x40, 8, 16}, {"flare-14", 4, 0x2EE, 0x40, 0x2C0, 0xFE, 0xB8, 0x40, 8, 16},
+    {"moon-1", 4, 0x2E0, 0x60, 0x2C0, 0xF9, 0x80, 0x60, 24, 24},   /* (its phases: to the 27th, to the 30th, the 31st) */
+    {"moon-2", 4, 0x2E0, 0x60, 0x2C0, 0xF9, 0x98, 0x60, 24, 24},
+    {"moon-3", 4, 0x2E0, 0x60, 0x2C0, 0xF9, 0xA0, 0x40, 24, 24},
+};
+
+static void sky_images(Job *j, const VramContext *v) {
+    uint8_t *image = malloc((size_t)PAGE_TEXELS * PAGE_TEXELS * 4);
+    size_t i;
+    int y;
+
+    for (i = 0; i < sizeof(kSky) / sizeof(kSky[0]) && !j->failed; i++) {
+        const SkyPiece *p = &kSky[i];
+        uint16_t page = (uint16_t)((p->page_x / 64 & 0xF) | (p->page_y / 256 & 1) << 4 | (p->depth == 4 ? 0 : 1) << 7);
+        uint16_t palette = (uint16_t)(p->palette_x / 16 | p->palette_y << 6);
+        char path[64];
+
+        vram_page_rgba(v, page, palette, j->page);
+        for (y = 0; y < p->h; y++) {
+            memcpy(image + (size_t)y * p->w * 4, j->page + ((size_t)(p->v + y) * PAGE_TEXELS + (size_t)p->u) * 4, (size_t)p->w * 4);
+        }
+        snprintf(path, sizeof(path), "sky/%s.png", p->name);
+        image_file(j, path, image, p->w, p->h);
+    }
+    free(image);
 }
 
 static int cut(Job *j, const VramContext *v, const char *name) {
@@ -537,6 +582,7 @@ static int run(Job *j, const uint8_t *const *entries, const size_t *sizes, int n
                 }
             }
             lamps_set(v, 0);
+            sky_images(j, v);   /* (the sky's: the common images, as in the town) */
         }
         for (i = 0; i < ms.n && !j->failed; i++) {
             const Found *f = &ms.list[i];

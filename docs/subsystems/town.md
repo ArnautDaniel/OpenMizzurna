@@ -23,7 +23,7 @@ func_800243F0). 32 x 24 tiles of 19980 world units; tile (col, row)'s centre is 
 
 ## To come
 
-The sky (its colour by the hour, the stars, clouds, the horizon strip, sun and moon: `sky.c`), the billboards (the trees: each tile's `billboards.bin`), snow, the moving
+The billboards (the trees: each tile's `billboards.bin`), snow, the moving
 signs and the tiles' object animations, the police cordon coming down (12/25 - 12/28), the ground's height for
 people (the terrain), Matthew walking there (the tiles' obstacles and zones), the doors into the buildings, the
 cars' headlights at night.
