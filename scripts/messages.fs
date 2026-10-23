@@ -76,6 +76,7 @@ message person-turn ( slot heading -- )  \ (to the townsfolk) the person faces s
 message person-turning ( slot target speed -- )   \ turns toward the heading, speed a game frame (its sign the way; 0: at once)
 \ (to the townsfolk: what the events and routes do to a person; slot first)
 message person-place ( slot x z -- )      \ stand there (height and area kept: src set_pos keeps y)
+message extra-place ( slot x y z -- )      \ an extra (no schedule) there, in the area being played; (0, 0) parks them
 message person-floor ( slot floor -- )    \ on that floor (its height)
 message person-walk ( slot x z speed motion -- )   \ walk there, speed units a frame, in that motion
 message person-idle ( slot -- )           \ stop walking, stand (src: cmd 0x0C)
@@ -85,7 +86,8 @@ message person-hold ( slot -- )           \ at the motion's end they keep its mo
 message person-arrive ( slot -- )         \ the route is done: the next stop (src: actor_arrive)
 message person-goto-stop ( slot stop -- ) \ put at that stop now (src: actor_goto_stop)
 message person-depart ( slot -- )         \ leave their stop now, walking its route (src: actor_depart)
-message person-through-door ( slot door room flip -- )   \ out of that door into room (flip: the other way)
+message person-through-door ( slot door room flip stage -- )   \ out of that door into room (flip: the other way);
+                                          \ stage: the area they're shown in (-1: the room's own)
 message person-attach ( slot route speed -- )   \ get in their car: it drives that route, they ride (src: cmd 0x2C)
 message person-get-in ( slot -- )         \ climb into their car (src: cmd 0x42)
 message person-unlink ( slot -- )         \ no longer with their car: out of it where they are (src: partner = 0)

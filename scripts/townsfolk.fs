@@ -44,6 +44,12 @@ variable writing   variable writing-row   \ (the rows being written: townsfolk/r
 
 \ ---- where they are ----
 : scheduled? ( slot -- flag )  person-of first-stop @ 0<> ;
+\ the extras: anyone without a schedule (a bouncer, a fan, the food on the counter) - where the scenes put them,
+\ in the area being played (src: actor_set_pos: an actor has no area; put at (0, 0), parked off the scene)
+: extra? ( slot -- flag )  dup 0= over first-car - #cars u< or  swap scheduled? or 0= ;
+: no-extras ( -- )  #slots 0 do  i extra? if  -1 i person-of person-area !  then  loop ;
+no-extras
+: figure? ( slot -- flag )  dup scheduled? swap extra? or ;   \ (the scenes' figures but Matthew's and the cars)
 : stop-for ( person t -- i )   \ the first stop whose time hasn't come (after the last: the last)
     {: p t :}  p #stops @ 0 ?do  p i row-of stop-until @ t > if  i unloop exit  then  loop  p #stops @ 1- ;
 : stop-of ( slot -- stop | -1 )   \ the stop they stand at (-1: walking, or no schedule)
@@ -62,8 +68,8 @@ PRIVATE>
 : james-visiting? ( -- flag )  false ;   \ src: func_8002CBE8 (James by Matthew's bed: his position, to come)
 
 : person-now ( slot -- x y z heading )  person-of {: p :}  p px @  p py @  p pz @  p heading-now @ ;
-: here? ( slot -- flag )   \ in the area being played, not in a car (seated ones: to come)
-    dup scheduled? 0= if  drop false exit  then
+: here? ( slot -- flag )   \ in the area being played, not in a car
+    dup figure? 0= if  drop false exit  then
     person-of {: p :}  p person-area @ area @ =  p person-area @ 0< 0= and  p riding @ 0= and ;
 : walking? ( slot -- flag )  person-of walking @ 0<> ;
 : riding? ( slot -- flag )  person-of riding @ 0<> ;
@@ -174,10 +180,10 @@ $1645 constant getting-in      \ the motion of climbing in (the town's own)
     p on-ground ;
 
 $3F constant through-door-1   $40 constant through-door-0   \ the motions of stepping out of a door, by way
-: through-door ( slot door room flip -- )   \ src: func_8004535C (the door's opening: the doors, to come)
-    {: s n room flip :}  n room flip door-way {: w :}  w 0= if  exit  then
+: through-door ( slot door room flip stage -- )   \ src: func_8004535C (the door's opening: the doors, to come)
+    {: s n room flip stage :}  n room flip door-way {: w :}  w 0= if  exit  then
     s person-of {: p :}  0 p walking !
-    w out-area @ p person-area !  w out-x @ p px !  w out-z @ p pz !  w out-heading @ p heading-now !
+    stage 0< if  w out-area @  else  stage  then  p person-area !  w out-x @ p px !  w out-z @ p pz !  w out-heading @ p heading-now !
     p person-area @ p on-floor @ floor-height p py !
     s  w out-way @ if  through-door-1  else  through-door-0  then  -1 false show
     true p moving hold-move ! ;
@@ -221,7 +227,7 @@ variable controlled
     p heading-now ! ;
 : animate ( -- )   \ walking and motions for everyone (the routes wait on them, seen or not)
     #slots 0 do
-        i scheduled? if
+        i scheduled?  i extra? i person-of person-area @ 0< 0= and  or if
             i walking? i riding? 0= and if  i walk-step  then   \ (riding: their walk waits for the car)
             i person-of forward @ if  i step-forward  then
             i person-of turning @ if  i turn-a-step  then
@@ -245,6 +251,11 @@ behaviour townsfolk
     rot person-of {: t v p :}  v 0= if  t p heading-now !  0 p turning !  exit  then
     t full-circle 1- and p turn-target !  v p turn-speed !  true p turning ! ;
   on person-place ( slot x z -- )  rot person-of {: x z p :}  x p px !  z p pz ! ;
+  on extra-place ( slot x y z -- )   \ (0, 0): parked; a height of 0: on their floor (1 unless a scene says)
+    {: s x y z :}  s person-of {: p :}  0 p walking !  0 p forward !
+    x 0=  z 0= and if  -1 p person-area !  exit  then
+    area @ p person-area !  p on-floor @ 0= if  1 p on-floor !  then
+    x p px !  z p pz !  y ?dup 0= if  area @ p on-floor @ floor-height  then  p py ! ;
   on person-floor ( slot floor -- )
     swap person-of {: f p :}  f p on-floor !  p person-area @ f floor-height p py ! ;
   on person-walk ( slot x z speed motion -- )
@@ -261,7 +272,7 @@ behaviour townsfolk
   on person-arrive ( slot -- )  arrive ;
   on person-goto-stop ( slot stop -- )  goto-stop ;
   on person-depart ( slot -- )  depart ;
-  on person-through-door ( slot door room flip -- )  through-door ;
+  on person-through-door ( slot door room flip stage -- )  through-door ;
   on person-attach ( slot route speed -- )  attach ;
   on person-get-in ( slot -- )  get-in ;
   on car-arrived ( car -- )  unload ;

@@ -33,7 +33,7 @@ T{ 15 town-room false door-way out-area @ -> the-town }T
 T{ 15 7 false door-way -> 0 }T
 
 testing going through it: a person comes out there, stepping out
-T{ nozz 15 3 false the-townsfolk send person-through-door  deliver  nozz person-now
+T{ nozz 15 3 false -1 the-townsfolk send person-through-door  deliver  nozz person-now
    -> 345042 0 285254 2560 }T
 
 testing their cars in the rows: at his counter Nozz's car waits at car route 7's start; Morgan's stop 18 has him

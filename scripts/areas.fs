@@ -4,6 +4,10 @@
 IN: areas
 USING: engine actors messages ;
 
+\ the area whose tables, overlay and text an area uses (src: func_8003F6A8: 29 and 30 are 2's, 31 and 32 19's)
+: content ( area -- area' )
+    case  29 of  2  endof  30 of  2  endof  31 of  19  endof  32 of  19  endof  dup  endcase ;
+
 \ ---- facts: the area being played ----
 variable area   -1 area !
 variable scene

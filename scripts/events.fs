@@ -125,7 +125,9 @@ variable unbuilt-ops   variable event-trace
     2dup find-native ?dup if  nip nip execute result!  else  2drop s" native" note-unbuilt  0 result!  then ;
 
 \ ---- the area overlays' words the main executable's scripts reach by address (in the area being played) ----
-variable event-area   \ the area whose scripts are in (the areas subsystem sets it)
+variable event-area   \ the area whose scripts are in before any is played (a new game's)
+: script-area ( -- area )   \ the area whose overlay is in: the one played (its content area), else event-area
+    area @ dup 0< if  drop event-area @  else  content  then ;
 begin-structure overlay-entry
   field: next-overlay
   field: overlay-area
@@ -138,7 +140,7 @@ variable overlay-words
     a e overlay-address !  xt e overlay-xt !  e overlay-words ! ;
 : overlay-word ( address -- xt )
     {: a :}  overlay-words @  begin  dup while
-        dup overlay-area @ event-area @ =  over overlay-address @ a = and if  overlay-xt @ exit  then  next-overlay @
+        dup overlay-area @ script-area =  over overlay-address @ a = and if  overlay-xt @ exit  then  next-overlay @
     repeat  true abort" no such word in this area's scripts" ;
 : arrival-script ( area address -- xt | 0 )   \ a script of that area's by address (none: 0)
     {: ar a :}  overlay-words @  begin  dup while
@@ -168,7 +170,7 @@ variable loaded-pack
 10000 constant common-ids   15000 constant pack-ids
 200 constant first-pack
 : text-bank ( id -- bank n )
-    dup common-ids < if  event-area @ swap exit  then
+    dup common-ids < if  script-area swap exit  then
     dup pack-ids < if  common-text swap common-ids - exit  then
     loaded-pack @ swap pack-ids - ;
 : the-window ( -- id )  s" window" actor-named ;
@@ -202,9 +204,10 @@ variable loaded-pack
 : text-hold ( -- )  the-window send window-shut  1 wait ;                       \ $13E
 \ talk: a line and the speaker's gesture (src: event_talk; gestures: with the figures)
 : gesture ( a n -- )  2 s" gesture" unbuilt ;
-: talk ( a text gesture -- )  {: a text g :}  text a 0 0 show  text-pending  a g gesture ;   \ $128 ...
+: talk ( a text gesture -- )   \ $128 ...: the line, the gesture with it, then the thread waits for the line
+    {: a text g :}  text a 0 0 show  a g gesture  text-pending settle ;   \ (src: event_talk sets wait_msg)
 : talk-to ( a text gesture who -- )   \ $16F / $164: the portrait `who`'s (0: the speaker's)
-    {: a text g who :}  text  who if  who  else  a  then  0 0 show  text-pending  a g gesture ;
+    {: a text g who :}  text  who if  who  else  a  then  0 0 show  a g gesture  text-pending settle ;
 
 \ ---- answers ----
 : choice ( text kind -- )   \ src $11E: the question; its answer the result
@@ -285,12 +288,13 @@ variable loaded-pack
 
 \ ---- figures: Matthew's body, a scheduled person (the townsfolk), or not built yet ----
 : figure-of ( slot -- id )  matthew = if  s" matthew" actor-named  else  -1  then ;
-: person? ( slot -- flag )  dup matthew <> swap scheduled? and ;
+: person? ( slot -- flag )  dup matthew <> swap figure? and ;   \ (the townsfolk's: scheduled, or an extra)
 : the-townsfolk ( -- id )  s" townsfolk" actor-named ;
 : set-pos ( a x y z -- )   \ cmd $01 (src: actor_set_pos)
     {: a x y z :}
     a matthew = if  x y z a figure-of send figure-place exit  then
-    a person? if  a x z the-townsfolk send person-place exit  then
+    a scheduled? if  a x z the-townsfolk send person-place exit  then
+    a person? if  a x y z the-townsfolk send extra-place exit  then
     a x y z 4 act-unbuilt ;
 : set-rot ( a rx ry rz -- )   \ cmd $02
     {: a rx ry rz :}
@@ -323,9 +327,9 @@ variable loaded-pack
 : set-floor ( a area floor -- )   \ cmd $12
     nip  over person? if  the-townsfolk send person-floor  else  2 act-unbuilt  then ;
 : arrive ( a -- )   \ cmd $1E
-    dup person? if  the-townsfolk send person-arrive  else  1 act-unbuilt  then ;
+    dup scheduled? if  the-townsfolk send person-arrive  else  1 act-unbuilt  then ;
 : goto-stop ( a stop -- )   \ cmd $5D
-    over person? if  the-townsfolk send person-goto-stop  else  2 act-unbuilt  then ;
+    over scheduled? if  the-townsfolk send person-goto-stop  else  2 act-unbuilt  then ;
 : moving? ( a -- flag )  dup matthew = if  drop matthew-walking?  else  walking?  then ;
 : wait-stop ( a -- )   \ $10D: until they stop walking (src: the VM's wait_move)
     settle  dup matthew = over person? or 0= if  drop exit  then
@@ -349,7 +353,7 @@ variable loaded-pack
     {: a b k :}  b where-is 0= if  exit  then  k seat beside {: x z :}
     a x z walk-pace walk-motion walk-with ;
 : attach ( a route speed -- )   \ cmd $2C: into their car, which drives the route (src: actor_attach)
-    {: a n v :}  a person? if  a n v the-townsfolk send person-attach  else  a n v 3 act-unbuilt  then ;
+    {: a n v :}  a scheduled? if  a n v the-townsfolk send person-attach  else  a n v 3 act-unbuilt  then ;
 : wait-follow ( a -- )   \ op $138: until their car has arrived (src: the VM's wait_follow)
     settle  dup person? 0= if  drop exit  then
     begin  yield  dup riding? 0= until  drop ;
@@ -394,7 +398,7 @@ $39 constant to-diner-stool   $44 constant to-club-stool   $45 constant takes-cl
     drop go-seat ;
 : act-command ( actor args.. n cmd -- )   \ a person's riding commands; the rest still to come
     dup seat-command? if  seat-command exit  then
-    over 2 + pick person? if  riding-command  else  act-unbuilt-command  then ;
+    over 2 + pick scheduled? if  riding-command  else  act-unbuilt-command  then ;
 
 \ ---- the camera and the scene ----
 : the-camera ( -- id )  s" camera" actor-named ;
@@ -445,10 +449,13 @@ $3F constant stepping-out-1   $40 constant stepping-out-0   \ (by the side's way
     matthew-through ?dup 0= if  exit  then  {: w :}
     behind-look-y behind-dist behind-eye-y  w out-x @  matthew-now drop nip nip  w out-z @  behind-yaw
     the-camera send camera-place ;
+: in-a-scene? ( -- flag )  thread dup 0< 0= swap #event-threads < and ;   \ (an event's thread, not a route's)
+: stage-for ( door -- area | -1 )   \ a scene stages its people in the room being played: a door of this area,
+    door-of door-area @ area @ =  in-a-scene? and if  area @  else  -1  then ;   \ its town side too, is here
 : door-walk ( a door room flip -- )   \ src: func_8004535C: out at the door's far side, the thread waiting
     {: a n room flip :}                \ while they step through
     a person? 0= if  a n room 3 s" through-door" unbuilt  exit  then   \ (Matthew's: the doors, to come)
-    a n room flip the-townsfolk send person-through-door  a wait-anim ;
+    a n room flip n stage-for the-townsfolk send person-through-door  a wait-anim ;
 : through-door ( a door room -- )  false door-walk ;        \ op $13B, $140
 : through-door-back ( a door room -- )  true door-walk ;    \ op $15F: coming the other way
 

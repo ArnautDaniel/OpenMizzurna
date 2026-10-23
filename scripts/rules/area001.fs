@@ -2,7 +2,7 @@
 \ overlay; decomp/docs/areas/area01.md). What ○ and □ do here beyond the tables' rows, the area's and the
 \ scene's hooks, and the C its events call.
 IN: rules.area001
-USING: engine actors messages clock story-flags items townsfolk floors events look talk ;
+USING: engine actors messages clock story-flags items townsfolk floors events look talk areas ;
 
 1 constant this-area
 $008 9 story-bit constant letter-waiting   \ (not named yet: lets the letter be found - src: D_800F6930 & 0x200)

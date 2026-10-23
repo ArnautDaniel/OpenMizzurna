@@ -84,6 +84,11 @@ them; whoever's part of the story it is sets them (an event's native, an area's 
   (`event_threads_update`) - the only way the prologue's end is reached in the code found so far. A prologue
   skip, or a leftover? Not wired until it's settled.
 
+A line (`talk`, `talk-to`: src event_talk) holds its thread until it closes - the gesture plays with it, the ops
+after it wait (src: wait_msg, checked before every op); the other says wait only with their "-wait" forms or
+`wait-text`. The area's text and the overlay words an event reaches by address are those of the area being
+played (its content area: `script-area`).
+
 A few scripts' own actor is given by the C that starts them (src: `M2C_FIELD(&D_X, s32 *, 4) = ...->id`: the
 counters' orders - the food, the drink): the converter finds them and writes `the-prop @ as-this-one`; the rules
 set `the-prop` before starting them.

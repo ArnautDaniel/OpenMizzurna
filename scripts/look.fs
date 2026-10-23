@@ -30,9 +30,6 @@ create tile-rows  town-columns town-rows * 2* cells allot   tile-rows town-colum
 : town-list ( col row table -- addr )
     {: c r t :}  r town-columns * c + 2*  t act-checks = if  1+  then  cells tile-rows + ;
 
-\ the area whose tables an area uses (src: func_8003F6A8: 29 and 30 are 2's, 31 and 32 19's)
-: content ( area -- area' )
-    case  29 of  2  endof  30 of  2  endof  31 of  19  endof  32 of  19  endof  dup  endcase ;
 
 \ ---- where he stands ----
 768 constant face-zone-range   \ src: player_face_zone (0x300)

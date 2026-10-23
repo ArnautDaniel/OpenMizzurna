@@ -23,7 +23,10 @@ testing 22:00 - 22:59: the attendant sends him out, back to the town before the 
 : answer ( -- )
     window-up? stage @ finished = stage @ page-full = or and pad-circle swap key-hold  1 steps  pad-circle false key-hold ;
 : played-out ( -- )  2000 0 do  answer  started? 0= if  leave  then  loop ;
+121 constant attendant   \ (no schedule: an extra the scene brings in through the door)
 T{ 26 22 10 at-time  0 in-station  started?  closing-done @ -> true 1 }T
+testing he comes in, and his line holds the scene until it's answered (src: event_talk's wait_msg)
+T{ 300 steps  attendant here?  window-up?  started? -> true true true }T
 T{ played-out  20 steps  area @  matthew-now drop nip -> the-town 411712 169863 }T
 testing at 23:00 (Robert's "open 24 hours"): no one sends him out
 T{ 26 23 0 at-time  0 in-station  started? -> false }T

@@ -60,6 +60,16 @@ Turning (src: actor_turn_by / _to_heading / _to_actor, actor_update's turn): `tu
 `face` turn them a speed a game frame toward the heading, its sign the way (`person-turning`); `wait-turned`
 waits on `person-turned?`.
 
+## Extras
+
+Anyone without a schedule - a bouncer, a fan, the gas station's attendant, the food on the counter (every slot
+but Matthew's and the cars' has its kind's model) - is an extra: where the scenes put them (`extra-place ( slot x
+y z )`, an event's `set-pos`), in the area being played; put at (0, 0) they are parked off the scene (src:
+actor_set_pos: an actor has no area). They walk, turn, play their motions and go through doors like the rest;
+the schedule's commands (`arrive`, `goto-stop`, riding) are the scheduled people's alone. `figure?`, `extra?`.
+A scene stages the people it sends through a door of the area being played in that area, its town side too
+(src: they stand at the door's spot, seen from the room); a route's go where the door leads.
+
 ## The stools (src: SREG.C seat_*)
 
 The diner's counter has 9 stools, Club Wolves' bar 6 (`diner-seats`, `club-seats`: their places; x 0x502D0,
