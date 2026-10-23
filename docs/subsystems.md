@@ -44,6 +44,7 @@ phase-1 port's files (`../port/src/game/`), which name the decomp's functions; t
 | Camera | how each area and scene is framed, tweens, the shot a scene asks for | `camera.c` |
 | Window ([page](subsystems/window.md), built) | the message window, its pages and choices | `msgbox.c`, `ctexstr.c`, `cui.c` |
 | List menu ([page](subsystems/list-menu.md), built) | the board of labels to pick from: the diner's, the bar's orders | `cui.c` |
+| Crate ([page](subsystems/crate.md), built) | a crate to push or climb, the perch the rows go by | `player_misc.c`, `player.c` |
 | Counter ([page](subsystems/counter.md), the diner) | sitting at a bar's counter: leaning, calling the barman, ordering | `counter.c`, the overlays |
 | Items | the inventory and the item ring | `items.c`, `ring.c`, `cui.c` |
 | Phone | dialling, calls, who calls when | `ftel.c` |

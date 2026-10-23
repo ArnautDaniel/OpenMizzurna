@@ -18,6 +18,8 @@ The player (src: `player.c`, `player_misc.c`): his body in the world, his figure
   puts him on it.
 - On a stool the pad isn't his: `figure-on-foot` (false) stops his walking (src: the pad's field mode; the
   counter: `docs/subsystems/counter.md`); the fact `matthew-on-foot?`.
+- Pushing a crate (`figure-pushes`): it stays 0xB4 ahead as he walks, its own motions, no running; his perch
+  (`figure-perch`: on his feet, on a crate, on a stool) - `docs/subsystems/crate.md`.
 - Facts: `matthew-there?`, `matthew-now ( -- x y z yaw )`, `matthew-was ( -- x y z )` (before his last step).
 
 ## Motions (`scripts/figures.fs`)

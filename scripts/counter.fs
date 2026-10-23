@@ -103,7 +103,7 @@ $400 constant quarter   $C00 constant three-quarters   4095 constant heading-mas
     seat @ stool-along {: st :}  matthew-xz along {: al :}
     c flip? @ if  al st <=  else  al st <  then if  st sit-step -  0  else  st sit-step +  1  then {: at k :}
     c sit-motions k nth doing !
-    false on-foot  counter-camera
+    false on-foot  counter-camera  2 matthew-id send figure-perch
     at c counter-y @ c stand-cross @ put
     doing @ false pose  matthew-id send figure-hold ;
 : barman-walks ( -- arrived? )   \ src: counter_barman_walk
@@ -153,7 +153,7 @@ $400 constant quarter   $C00 constant three-quarters   4095 constant heading-mas
 : up-and-off ( -- )   \ src: counter_stand
     step @ 0= if  c stand-motions side nth doing !  doing @ false pose  matthew-id send figure-hold  1 step !  exit  then
     play-step 0= if  exit  then
-    matthew the-folk send seat-leave  true on-foot  the-camera send camera-follow
+    matthew the-folk send seat-leave  true on-foot  the-camera send camera-follow  0 matthew-id send figure-perch
     forget-counter ;
 : at-it ( -- )   \ src: counter_at
     mode @ case
@@ -180,7 +180,8 @@ PRIVATE>
 : seat-now ( def seat -- )   \ on that stool at once (src: counter_seat_now: a scene leaves him there)
     {: d n :}  d the-counter !  n seat !
     matthew c bar @ n the-folk send seat-take
-    false on-foot  n stool-along c counter-y @ c seat-cross @ put  sit-still  counter-camera
+    false on-foot  2 matthew-id send figure-perch  n stool-along c counter-y @ c seat-cross @ put  sit-still  counter-camera
     on-a-stool at-state !  area @ sat-in !  on-stool mode !  0 step !  no-lean lean ! ;
 : counter-off ( -- )   \ off his stool at once (src: func_8010371C: the robbery)
-    at-state @ on-a-stool = if  matthew the-folk send seat-leave  true on-foot  then  forget-counter ;
+    at-state @ on-a-stool = if  matthew the-folk send seat-leave  true on-foot  0 matthew-id send figure-perch  then
+    forget-counter ;

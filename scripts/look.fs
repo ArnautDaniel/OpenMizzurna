@@ -62,12 +62,15 @@ variable zone-answer   variable zone-match   variable check-answer   variable ch
     idx faces-zone? if  idx zone-answer !  then ;   \ (src: func_8003FFB0: a zone faced, no row)
 : faced? ( row heading -- flag )   \ the heading within the row's range
     {: r h :}  h  r row-facing @  r row-within @ 4096 * 360 /  heading-within? ;
-: check-table ( table -- )   \ src: func_8003EF88 (no talk states yet: the rows for none)
+: perch-fits? ( row -- flag )   \ a row for on a crate ($4000) or on a stool ($2000), or for neither
+    row-states @ {: st :}  matthew-perch {: p :}
+    st $4000 and 0<>  p 1 = =  st $2000 and 0<>  p 2 = = and ;
+: check-table ( table -- )   \ src: func_8003EF88 (the rows for his perch: talk_state 1 or 2, else neither)
     -1 check-answer !  0 check-match !
     at-zone nip {: t id :}  id 0< if  exit  then
     matthew-now nip nip nip {: h :}
     t rows  begin  dup while
-        dup row-zone @ id =  over row-states @ 0= and  over h faced? and if
+        dup row-zone @ id =  over perch-fits? and  over h faced? and if
             dup row-kind @ ask-the-area = if  drop id check-answer !  else  check-match !  then  exit
         then  next-row @
     repeat  drop ;

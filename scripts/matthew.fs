@@ -58,6 +58,12 @@ variable controlled              \ the player's to move
 variable on-foot   true on-foot !   \ the pad walks him (not on a stool: src pad field mode 0)
 fvariable speed   fvariable run-build   fvariable turn-rate   variable turning   fvariable idle
 variable l-was   variable r-was
+variable pushing   -1 pushing !   \ the crate he pushes (-1: none - src: g_pushing, g_pushed_actor)
+variable perch                     \ 0 on his feet, 1 on a crate, 2 on a stool (src: talk_state: the check rows')
+$BA constant push-walk   $BD constant push-back   $BB constant push-right   $BC constant push-left
+$B4 constant crate-ahead            \ the crate before him as he pushes (src: player_update: 0xB4)
+: pushing? ( -- flag )  pushing @ 0< 0= ;
+: motion-for ( normal pushed -- id )  pushing? if  nip  else  drop  then ;
 : show ( id -- )   \ a motion of his own: started if it isn't the one playing (src: actor_anim's restart rule)
     dup moving anim @ = if  drop exit  then  -1 true moving play ;
 : show-then ( id next -- )  over moving anim @ = if  2drop exit  then  true moving play ;
@@ -71,7 +77,8 @@ variable l-was   variable r-was
     0e idle f! ;
 : press ( key var -- flag )  >r key-down? dup r@ @ 0= and swap r> ! ;
 : steer ( -- )
-    pad-right key-down? if  1 turn  turn-right-motion show  else  pad-left key-down? if  -1 turn  turn-left-motion show
+    pad-right key-down? if  1 turn  turn-right-motion push-right motion-for show
+    else  pad-left key-down? if  -1 turn  turn-left-motion push-left motion-for show
     else  0 turning !  0e turn-rate f!  then  then
     pad-r1 r-was press if  quarter-turn s>f turn-by  then
     pad-l1 l-was press if  quarter-turn negate s>f turn-by  then ;
@@ -79,17 +86,18 @@ variable l-was   variable r-was
     0e speed f!
     pad-up key-down? if
         walk-speed speed f!
-        pad-cross key-down? if  run-build f@ run-build-up frames f* f+ run-build-max fmin
+        pad-cross key-down? pushing? 0= and if  run-build f@ run-build-up frames f* f+ run-build-max fmin
         else  run-build f@ run-build-ease frames f* f- 0e fmax  then  run-build f!
         0e idle f!
     else
         run-build f@ run-build-down frames f* f- 0e fmax run-build f!
     then
     run-build f@ run-build-start f> if  run-build f@ run-build-start f- run-speed-per f* speed f@ f+ speed f!  then
-    speed f@ f0> if  speed f@ run-anim-speed f>= if  run-motion  else  walk-motion  then  show  then
-    pad-down key-down? speed f@ f0= and if  back-speed speed f!  back-motion show  0e run-build f!  0e idle f!  then ;
+    speed f@ f0> if  speed f@ run-anim-speed f>= if  run-motion  else  walk-motion push-walk motion-for  then  show  then
+    pad-down key-down? speed f@ f0= and if
+        back-speed speed f!  back-motion push-back motion-for show  0e run-build f!  0e idle f!  then ;
 : stand ( -- )   \ standing still: the stand, then after a while the fidget
-    speed f@ f0= turning @ 0= and if
+    speed f@ f0= turning @ 0= and  pushing? 0= and if
         idle f@ frames f+ idle f!
         idle f@ idle-frames f>= if  fidget-motion fidget-loop-motion show-then  else  stand-motion show  then
     then ;
@@ -104,6 +112,12 @@ variable was-x   variable was-y   variable was-z   \ where he stood before his l
     {: x z :}  self body-pos 3f>s  was-z !  dup was-y !  swap was-x ! {: y :}
     area @ the-town = if  x z ground-at if  to y  then  then
     x y z  3s>f  self body-area self body-floor body-place ;
+: push-along ( -- )   \ the crate before him, 0xB4 on; blocked, he stops where he was (src: player_update)
+    pushing? 0= if  exit  then
+    self body-yaw 2e f* pi f* 4096e f/ {: F: a :}  self body-pos {: F: x F: y F: z :}
+    x a fsin crate-ahead s>f f* f+ f>s  z a fcos crate-ahead s>f f* f+ f>s {: cx cz :}
+    cx cz open? 0= if  was-x @ was-y @ was-z @ 3s>f self body-area self body-floor body-place  0e speed f!  exit  then
+    pushing @ cx 0 cz s" townsfolk" actor-named send extra-place ;
 : walk ( -- )   \ src: player_update: a blocked step tries 0x30 at a time either side, easing his heading
     speed f@ f0= if  exit  then
     0  turning @ 0= speed f@ f0> and if
@@ -114,7 +128,7 @@ variable was-x   variable was-y   variable was-z   \ where he stood before his l
             slide-step +loop
         then
     then
-    probe 2dup open? if  step-to
+    probe 2dup open? if  step-to  push-along
     else  2drop  0e speed f!  then ;
 \ ---- moved by a scene (src: actor_nav_step, actor_update's move_anim and turn - the events' walk-to, walk-forward,
 \ turn-to): toward a point at a speed a game frame, or straight on until idle; and turning at a speed ----
@@ -148,6 +162,8 @@ behaviour the-player
   on tick ( -- )  control  scene-moves  moving advance if  moving hold-move @ if  keep-move  then  then ;
   on player-control ( flag -- )  controlled ! ;
   on figure-on-foot ( flag -- )  on-foot ! ;
+  on figure-pushes ( crate -- )  pushing ! ;   \ (-1: none)
+  on figure-perch ( n -- )  perch ! ;
   on figure-anim ( id next loop -- )  moving play ;
   on figure-hold ( -- )  true moving hold-move ! ;
   on figure-walk ( x z speed motion -- )
@@ -161,7 +177,8 @@ behaviour the-player
   on figure-turn ( rx ry rz -- )  drop nip s>f body-turn ;   \ (his heading: the turn about the vertical)
   on area-entered ( area scene -- )   \ (off any stool: the stools are the area's)
     drop  self body? if  body-area!  else  drop  then
-    on-foot @ 0= if  true on-foot !  0 s" townsfolk" actor-named send seat-leave  then ;   \ (0: his slot)
+    on-foot @ 0= if  true on-foot !  0 s" townsfolk" actor-named send seat-leave  then   \ (0: his slot)
+    0 perch !  -1 pushing ! ;   \ (and off any crate)
 end-behaviour
 
 : matthew-actor ( -- id )  s" matthew" actor-named ;
@@ -170,6 +187,8 @@ end-behaviour
     matthew-actor {: id :}  id body-pos 3f>s  id body-yaw f>s ;
 : matthew-was ( -- x y z )  was-x @ was-y @ was-z @ ;   \ where he stood before his last step (src: player_restore_pos's)
 : matthew-walking? ( -- flag )  heading-there @ 0<> ;   \ (facts: the events' wait-stop, wait-turned)
+: matthew-perch ( -- n )  perch @ ;   \ 0 on his feet, 1 on a crate, 2 on a stool
+: matthew-pushing? ( -- flag )  pushing @ 0< 0= ;
 : matthew-on-foot? ( -- flag )  on-foot @ 0<> ;
 : matthew-turned? ( -- flag )  turning-to @ 0= ;
 : anim-done? ( -- flag )  moving done @  moving anim @ 0< or ;   \ (a fact: the events' wait-anim)
