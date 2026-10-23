@@ -3,7 +3,7 @@
 \ the tiles around the camera are loaded - a window of 6 x 6, moving with it - and those within two tiles of
 \ the camera's drawn, the ground and the buildings and props on it. Its 38 street lamps light up in the evening.
 IN: town
-USING: engine actors messages clock areas camera ;
+USING: engine actors messages clock areas camera daylight ;
 
 32 constant columns   24 constant rows
 19980 constant tile-size
@@ -44,11 +44,33 @@ create buildings columns rows * cells allot   buildings columns rows * cells era
     {: c r :}  c r tile-centre {: x z :}
     c r terrains tile @ ?dup if  x 0 z 0 draw-model  then
     c r buildings tile @ ?dup if  x 0 z 0 draw-model  then ;
+\ the billboards: the trees, lamps, bins standing in a tile, upright pictures turned to the camera's heading
+\ (src: func_8003B41C, billboard_draw; the library's town/CC-RR/billboards.txt, town/sprites.txt)
+1 constant at-x   2 constant at-z   3 constant bottom   4 constant top   5 constant half-width   6 constant sprite
+3 constant full-bright   4 constant blend-mode    \ (a sprite's fields: 0 index, 1 2 size, 3 full-bright, 4 blend)
+40 constant dimmest   6 constant light-share   128 constant as-it-is
+: nth ( row k -- n )  cells + @ ;
+: billboards ( col row -- table )  s" billboards.txt" tile-path  s" billboard" records ;
+: tile-origin ( col row -- x z )  s" billboards.txt" tile-path  s" origin" records  0 record {: o :}  o 0 nth  o 1 nth ;
+: sprites ( -- table )  s" town/sprites.txt" s" sprite" records ;
+: sprite-image ( i -- image )  $clear  s" town/sprites/" $+  n>str $+  s" .png" $+  $@ image ;
+: billboard-grey ( -- grey )   \ src: D_800A3848: the first light's colour, a sixth of its sum, at least 40
+    colors-now 0 light rgb@ + +  light-share /  dimmest max ;
+: draw-billboard-row ( row ox oz grey -- )
+    {: b ox oz grey :}  sprites b sprite nth record {: sp :}
+    b sprite nth sprite-image
+    ox b at-x nth +  oz b at-z nth +  b bottom nth  b top nth  b half-width nth
+    camera-yaw  sp full-bright nth if  as-it-is  else  grey  then  sp blend-mode nth  draw-billboard ;
+: draw-billboards ( col row -- )
+    2dup billboards {: c r t :}  t 0= if  exit  then
+    c r tile-origin billboard-grey {: ox oz grey :}
+    t #records 0 ?do  t i record ox oz grey draw-billboard-row  loop ;
+: draw-tile-all ( col row -- )  2dup draw-tile  draw-billboards ;
 : draw-town ( -- )
     area @ the-town <> if  exit  then
     camera-tile {: cc cr :}
     reach 1+ reach negate do  reach 1+ reach negate do
-        cc i +  cr j +  2dup on-map? if  draw-tile  else  2drop  then
+        cc i +  cr j +  2dup on-map? if  draw-tile-all  else  2drop  then
     loop  loop ;
 ' draw-town on-draw
 : leave-town ( -- )   \ every tile let go

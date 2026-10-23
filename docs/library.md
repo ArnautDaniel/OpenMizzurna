@@ -166,8 +166,9 @@ world units: twice the models'), and each tile's folder `town/CC-RR/` holds:
 
 - `terrain.gltf` - its ground (a TMD with no parts), `objects.gltf` - its objects (an SPL model), both cut from
   the town's (area 27's) texture set like the area props (`../../textures/`);
-- `obstacles.bin`, `zones.bin` (its region lists), `billboards.bin` (its billboard placements), as they are
-  until the movement and drawing subsystems read them.
+- `obstacles.bin`, `zones.bin` (its region lists, as they are until the movement subsystem reads them), and
+  `billboards.txt`: its billboards (`origin x z`, then `billboard i at x z from bottom to top half-width w sprite s`;
+  the town's sprites: `town/sprites.txt`, `town/sprites/<i>.png`, cut from the town's sheet).
 
 The street lamps: the town's 38 lamps light windows and lamp heads through palettes the game fills as they go on
 and off (src: func_800243F0: the last row of video memory, lamp i's palette at 16 i). Their textures are cut as
@@ -176,7 +177,7 @@ they are by day, unlit, and again lit (`textures/lamps/`); a material that is a 
 
 The sky's pictures (`sky/`: clouds, the horizon strip, sun, flares, moon) are cut from the common images the same way (docs/subsystems/sky.md).
 
-The check: every tile five parts and nothing more, the region and billboard parts the same bytes, the models'
+The check: every tile five parts and nothing more, the region parts the same bytes and the billboards the same again from their text, the models'
 glTF exact as for any model. (MAP.BIN's sector padding, and a tile's padding between parts, hold leftovers of
 the disc's making that the game never reads; they aren't kept.) 768 tiles, 1536 models.
 

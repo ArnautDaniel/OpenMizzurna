@@ -61,6 +61,14 @@ typedef struct Draw {
     int nshown;                       /* (nodes past it are shown) */
 } Draw;
 
+#define MAX_QUADS 4096
+typedef struct Quad {
+    GpuTexture t;
+    float corner[4][3];   /* glTF's space: 0 1 the top, 2 3 the bottom (the PlayStation's order) */
+    float shade;          /* 1.0: the texture as it is */
+    int blend;
+} Quad;
+
 typedef struct Tex {
     char path[200];
     GpuTexture t;
@@ -78,6 +86,9 @@ static struct {
     int ndraws;
     Tex *tex;
     int ntex, captex;
+    Quad *quads;
+    int nquads;
+    uint32_t quad_vao, quad_vbo;
     int area;
     unsigned char lamp_lit[SCENE3D_LAMPS];
     float view[16], eye[3];
@@ -640,12 +651,89 @@ static void light_uniforms(void) {
     glProgramUniform3f(S.program, S.loc_fog_cue, FOG_CUE_A, FOG_CUE_B, S.projection_h);
 }
 
+void scene3d_quad(GpuTexture t, const float corner[4][3], float shade, int blend) {
+    Quad *q;
+    int k;
+
+    if (S.quads == NULL) {
+        S.quads = malloc(sizeof(Quad) * MAX_QUADS);
+    }
+    if (S.nquads == MAX_QUADS || t.id == 0) {
+        return;
+    }
+    q = &S.quads[S.nquads++];
+    q->t = t;
+    for (k = 0; k < 4; k++) {
+        world_point(corner[k], q->corner[k]);
+    }
+    q->shade = shade;
+    q->blend = blend;
+}
+
+/* the quads' vertices this frame, two triangles each (0 1 2, 1 3 2), into their buffer */
+static void quads_upload(void) {
+    static const float kUV[4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
+    static const int kOrder[6] = {0, 1, 2, 1, 3, 2};
+    float *v = malloc(sizeof(float) * FLOATS_PER_VERTEX * 6 * (size_t)S.nquads), *p = v;
+    int i, k;
+
+    if (S.quad_vao == 0) {
+        static const int size[4] = {3, 3, 4, 2}, offset[4] = {0, 3, 6, 10};
+        glCreateBuffers(1, &S.quad_vbo);
+        glNamedBufferStorage(S.quad_vbo, (GLsizeiptr)(sizeof(float) * FLOATS_PER_VERTEX * 6 * MAX_QUADS), NULL,
+                             GL_DYNAMIC_STORAGE_BIT);
+        glCreateVertexArrays(1, &S.quad_vao);
+        glVertexArrayVertexBuffer(S.quad_vao, 0, S.quad_vbo, 0, sizeof(float) * FLOATS_PER_VERTEX);
+        for (i = 0; i < 4; i++) {
+            glEnableVertexArrayAttrib(S.quad_vao, (GLuint)i);
+            glVertexArrayAttribFormat(S.quad_vao, (GLuint)i, size[i], GL_FLOAT, GL_FALSE, (GLuint)(sizeof(float) * offset[i]));
+            glVertexArrayAttribBinding(S.quad_vao, (GLuint)i, 0);
+        }
+    }
+    for (i = 0; i < S.nquads; i++) {
+        for (k = 0; k < 6; k++) {
+            const float *c = S.quads[i].corner[kOrder[k]];
+            float sh = S.quads[i].shade;
+            float vert[FLOATS_PER_VERTEX] = {c[0], c[1], c[2], 0, 1, 0, sh, sh, sh, 1, kUV[kOrder[k]][0], kUV[kOrder[k]][1]};
+            memcpy(p, vert, sizeof(vert));
+            p += FLOATS_PER_VERTEX;
+        }
+    }
+    glNamedBufferSubData(S.quad_vbo, 0, (GLsizeiptr)((char *)p - (char *)v), v);
+    free(v);
+}
+
+static void quads_draw(int pass, const float *vp) {
+    static const float kIdentity[16] = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
+    int i;
+
+    glBindVertexArray(S.quad_vao);
+    glProgramUniformMatrix4fv(S.program, S.loc_mvp, 1, GL_FALSE, vp);
+    glProgramUniformMatrix4fv(S.program, S.loc_model, 1, GL_FALSE, kIdentity);
+    glProgramUniformMatrix4fv(S.program, S.loc_modelview, 1, GL_FALSE, S.view);
+    glProgramUniform1i(S.program, S.loc_lit, 0);
+    glProgramUniform1i(S.program, S.loc_textured, 1);
+    glDisable(GL_CULL_FACE);
+    for (i = 0; i < S.nquads; i++) {
+        glProgramUniform1i(S.program, S.loc_semi, S.quads[i].blend != BLEND_NONE);
+        if (pass == 1) {
+            if (S.quads[i].blend == BLEND_NONE) {
+                continue;
+            }
+            set_blend(S.quads[i].blend);
+        }
+        glBindTextureUnit(0, S.quads[i].t.id);
+        glDrawArrays(GL_TRIANGLES, i * 6, 6);
+    }
+}
+
 void scene3d_flush(int w, int h) {
     float proj[16], vp[16];
     int pass, i, k;
 
-    if (S.ndraws == 0 || !S.have_camera) {
+    if ((S.ndraws == 0 && S.nquads == 0) || !S.have_camera) {
         S.ndraws = 0;
+        S.nquads = 0;
         return;
     }
     if (S.program == 0) {
@@ -670,6 +758,9 @@ void scene3d_flush(int w, int h) {
     glUseProgram(S.program);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
+    if (S.nquads > 0) {
+        quads_upload();
+    }
     for (pass = 0; pass < 2; pass++) {   /* the solid texels, then the blending ones over them */
         glProgramUniform1i(S.program, S.loc_pass, pass);
         glDepthMask(pass == 0 ? GL_TRUE : GL_FALSE);
@@ -717,10 +808,14 @@ void scene3d_flush(int w, int h) {
                 glDrawArrays(GL_TRIANGLES, p->first, p->count);
             }
         }
+        if (S.nquads > 0) {
+            quads_draw(pass, vp);
+        }
     }
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_TRUE);
     glBlendEquation(GL_FUNC_ADD);
     S.ndraws = 0;
+    S.nquads = 0;
 }

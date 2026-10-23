@@ -53,6 +53,12 @@ void scene3d_draw(Model3D *m, const float pos[3], float yaw, const unsigned char
 void scene3d_draw_posed(Model3D *m, const float pos[3], float yaw, const short (*turns)[3], int nturns,
                         const float root_move[3]);
 
+/* a textured quad this frame (the billboards): its corners in world units - 0 1 along the top, 2 3 the bottom - the
+ * whole texture across it, shaded (1.0: as it is); blend: 0 solid, else its texels marked to blend do so by the
+ * PlayStation's mode (1 half, 2 add, 3 subtract, 4 quarter) */
+#include "render.h"
+void scene3d_quad(GpuTexture t, const float corner[4][3], float shade, int blend);
+
 /* draw what was asked this frame (render_end calls it, before the 2D) */
 void scene3d_flush(int w, int h);
 

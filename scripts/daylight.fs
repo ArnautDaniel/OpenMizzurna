@@ -79,13 +79,13 @@ create fog  rgb allot   create fog-now  rgb allot
     fog-now rgb@ fog-color  true fog! ;
 
 \ a scene's light record (the area's light table: src scene_lights, 34 bytes a scene)
-34 constant scene-record   10 constant scene-light   6 constant light-rgb
+34 constant scene-light-record   10 constant scene-light   6 constant light-rgb
 29 constant scene-ambient   32 constant scene-level   33 constant scene-mode
 2 constant hour-light-mode      \ (mode 2: the hour's light and the fog, as outdoors)
-: record ( -- addr )  light-table table  scene @ scene-record * + ;
+: light-record ( -- addr )  light-table table  scene @ scene-light-record * + ;
 : sum ( addr -- n )  dup c@  over 1+ c@ +  swap 2 + c@ + ;
-: scene-way ( i -- x y z )  scene-light * record + {: a :}  a sw@  a 2 + sw@  a 4 + sw@ ;
-: scene-rgb ( i -- addr )  scene-light * light-rgb + record + ;
+: scene-way ( i -- x y z )  scene-light * light-record + {: a :}  a sw@  a 2 + sw@  a 4 + sw@ ;
+: scene-rgb ( i -- addr )  scene-light * light-rgb + light-record + ;
 : way-of ( i -- x y z )   \ the brighter light's way: the scene's or the hour's
     {: i :}  i scene-rgb sum  colors i light rgb@ + + <  if  ways i light rgb@  else  i scene-way  then ;
 : brighter ( mine hours mode -- n )  {: s h md :}  s h <  md 0= or if  h  else  s  then ;
@@ -97,15 +97,15 @@ create fog  rgb allot   create fog-now  rgb allot
            i scene-rgb 1+ c@  colors i light green @  md brighter
            i scene-rgb 2 + c@  colors i light blue @  md brighter  light-color
     loop
-    record scene-ambient + {: a :}
+    light-record scene-ambient + {: a :}
     a c@ ambient red @ md brighter indoor-ambient *
     a 1+ c@ ambient green @ md brighter indoor-ambient *
     a 2 + c@ ambient blue @ md brighter indoor-ambient *  ambient-light
     false fog! ;
 : indoors ( -- )
-    record scene-mode + c@ {: md :}
+    light-record scene-mode + c@ {: md :}
     md hour-light-mode = if  outdoors  else  md mixed  then ;
-: level ( -- pct )  area @ the-town = if  100  else  record scene-level + c@  then ;
+: level ( -- pct )  area @ the-town = if  100  else  light-record scene-level + c@  then ;
 : lighting ( -- )   \ each frame (src: func_80024634)
     area @ 0< if  exit  then
     level the-hours  ease-all
