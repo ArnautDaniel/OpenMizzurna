@@ -57,6 +57,9 @@ rows' alone; arriving (meeting Lorraine on the 25th, Mel and Lorraine arguing), 
 from the 28th 19:00), the robbery on the 27th, who says what by their stops, the farm workers, Lorraine's twelve
 conversations in turn, then her line. Seen: the meeting on the 25th plays through, Mel walking off after it. Sitting at the counter and ordering:
 `docs/subsystems/counter.md`.
+Area 8's (`scripts/rules/area008.fs`, the junkyard's bus; `tests/library/test_area008.fs`): the seat looked at
+twice then searched, getting off the bus, a figure there at its point in the story. Its two real minigames: to
+come.
 Area 7's (`scripts/rules/area007.fs`, the cemetery; `tests/library/test_area007.fs`): its two timed scenes (on
 arriving or as they come), a visitor at a grave, walking out of the grounds, who says what, Father Barton's talk
 here, the day's and the night's lights (`object-shown`, to the areas), the C its events call.

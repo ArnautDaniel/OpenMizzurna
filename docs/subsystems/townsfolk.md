@@ -63,6 +63,12 @@ Turning (src: actor_turn_by / _to_heading / _to_actor, actor_update's turn): `tu
 `face` turn them a speed a game frame toward the heading, its sign the way (`person-turning`); `wait-turned`
 waits on `person-turned?`.
 
+## Their models
+
+A person shows their kind's model (a slot is its kind), or another kind's: a stop's `variant`, or a scene's
+`actor-model` (op $159; src: actor_model_variant, +0x29F) - `person-variant`, the fact `kind-of`. The model is
+loaded again when it changes.
+
 ## A companion
 
 Someone going along with Matthew (src: actor_ride, cmd $26 `ride`; D_800A37B0 / D_800A37B4): `person-ride ( slot

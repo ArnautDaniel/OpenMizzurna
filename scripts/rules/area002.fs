@@ -413,5 +413,6 @@ this-area ovl $80104524 ' from-downstairs native:   this-area ovl $80104584 ' th
 this-area ovl $801045EC ' cohen-to-his-bed native:   this-area ovl $801045CC ' the-ending native:
 
 ' look-check ' look-do ' act-check ' act-do  this-area area-rules!
+' events.ovl002:entry-8010780C 35 minigame-script!   \ (src: area_minigame_start's 35)
 this-area ' entered ' scene-hook area-hooks!
 this-area ' each-frame area-frame!

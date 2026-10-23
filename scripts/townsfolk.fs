@@ -33,6 +33,7 @@ begin-structure person
   field: forward        \ going straight ahead, units a frame (0: not; src: move_speed)
   field: forward-motion \ in this motion (-1: whatever plays; src: move_anim)
   field: seat-bar   field: seat-no   \ the stool they have (bar: at-diner or at-club; 0: none - src: talk_state 2, seat)
+  field: shown-kind   field: figure-kind   \ the kind whose model they show (0: their own - src: +0x29F, a variant)
   field: turning   field: turn-target   field: turn-speed
   field: at-door   field: door-wait   field: answered-door   field: answered-side   \ at a door they answered (src: ACTOR_F_DOOR,
                                                                          \  door_wait, door, door_side)   \ turning toward a heading, a speed a frame (src: turn_target)
@@ -69,6 +70,7 @@ PRIVATE>
     {: s r :}  s stop-of 0< if  false exit  then  s current-row stop-record @ r = ;
 : james-visiting? ( -- flag )  false ;   \ src: func_8002CBE8 (James by Matthew's bed: his position, to come)
 
+: kind-of ( slot -- kind )  dup person-of shown-kind @ ?dup if  nip  then ;   \ the kind whose model they show
 : person-now ( slot -- x y z heading )  person-of {: p :}  p px @  p py @  p pz @  p heading-now @ ;
 : here? ( slot -- flag )   \ in the area being played, not in a car
     dup figure? 0= if  drop false exit  then
@@ -161,7 +163,7 @@ $1645 constant getting-in      \ the motion of climbing in (the town's own)
     s seated-motion -1 true show ;
 : place-at-stop ( slot -- )   \ src: actor_apply_placement (cmd 0x2D)
     {: s :}  s person-of {: p :}  s current-row {: r :}
-    0 p walking !  0 p travelling !  0 p riding !
+    0 p walking !  0 p travelling !  0 p riding !  r stop-variant @ p shown-kind !
     r stop-placed @ partnered = if  s leave-seat  s r ride-on  exit  then
     s r park-car
     r stop-placed @ at-diner =  r stop-placed @ at-club = or if   \ (already on one: they stay)
@@ -222,9 +224,10 @@ variable controlled
     loop ;
 
 \ ---- drawing those where Matthew is ----
-: model-of ( slot -- model )
-    dup person-of figure @ ?dup if  nip exit  then
-    dup kind-model model  dup rot person-of figure ! ;
+: model-of ( slot -- model )   \ (loaded again when the kind it shows changes)
+    {: s :}  s person-of {: p :}  s kind-of {: k :}
+    p figure @  p figure-kind @ k = and if  p figure @ exit  then
+    k kind-model model  dup p figure !  k p figure-kind !  ;
 : draw-person ( slot -- )
     dup model-of {: s m :}  s person-of moving {: mv :}
     m  mv clip @  mv frame  s person-now  draw-figure ;
@@ -313,6 +316,7 @@ behaviour townsfolk
     rot person-of {: n sd p :}  n p answered-door !  sd p answered-side ! ;
   on person-door-hold ( slot -- )  person-of {: p :}  true p at-door !  255 p door-wait ! ;   \ cmd $53
   on person-door-free ( slot -- )  person-of 0 swap at-door ! ;   \ back in (src: ACTOR_F_DOOR cleared)
+  on person-variant ( slot kind -- )  swap person-of shown-kind ! ;   \ src: actor_model_variant
   on person-away ( slot -- )  person-of {: p :}  true p travelling !  0 p walking !  -1 p person-area ! ;
   on person-unlink ( slot -- )  person-of 0 swap riding ! ;
   on person-idle ( slot -- )  dup person-of {: p :}  0 p walking !  0 p forward !  0 -1 true show ;

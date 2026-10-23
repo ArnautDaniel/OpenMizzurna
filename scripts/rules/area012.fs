@@ -249,5 +249,6 @@ $194 negate constant counter-top   $46B81 constant served-z
 this-area ovl $80104F0C ' fan-arrived native:   this-area ovl $801037E8 ' on-the-bar native:
 this-area ovl $80103360 ' on-stool-2 native:
 
+' events.ovl012:entry-8010709C 42 minigame-script!   \ (src: area_minigame_start's 42)
 this-area ' entered ' scene-hook area-hooks!
 this-area ' each-frame area-frame!

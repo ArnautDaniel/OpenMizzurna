@@ -263,11 +263,16 @@ variable loaded-pack
 : picture-hide ( -- )  0 s" picture-hide" unbuilt ;   \ op $124
 : cd-picture ( n -- )  1 s" cd-picture" unbuilt ;   \ op $12B
 : music ( n -- )  1 s" music" unbuilt ;   \ op $144
-: minigame ( n -- )  1 s" minigame" unbuilt ;   \ op $145
+\ the minigames that are a script alone (src: an area's area_minigame_start setting minigame_script), by number
+64 constant #minigames
+create minigame-scripts  #minigames cells allot   minigame-scripts #minigames cells erase
+: minigame-script! ( xt n -- )  cells minigame-scripts + ! ;
+: minigame ( n -- )   \ op $145 (src: minigame_start): a script's, else a minigame - to come
+    dup #minigames u< if  dup cells minigame-scripts + @ ?dup if  nip start-event exit  then  then
+    1 s" minigame" unbuilt ;
 : elevator-doors ( n n -- )  2 s" elevator-doors" unbuilt ;   \ op $148
 : wait-minigame ( -- )  0 s" wait-minigame" unbuilt ;   \ op $149
 : rumble ( n n -- )  2 s" rumble" unbuilt ;   \ op $155
-: actor-model ( a n -- )  2 s" actor-model" unbuilt ;   \ op $159
 : sprite-count+ ( -- )  0 s" sprite-count+" unbuilt ;   \ op $15D
 : sprite-count-close ( -- )  0 s" sprite-count-close" unbuilt ;   \ op $15E
 : face-each-other ( a a -- )  2 s" face-each-other" unbuilt ;   \ op $162
@@ -358,6 +363,8 @@ variable loaded-pack
     dup scheduled? if  dup person-of at-stop @ the-townsfolk send person-goto-stop  else  1 act-unbuilt  then ;
 : door-hold ( a -- )   \ cmd $53: they wait at the door they answered
     dup person? if  the-townsfolk send person-door-hold  else  1 act-unbuilt  then ;
+: actor-model ( a kind -- )   \ op $159: the figure shows that kind's model (src: actor_model_variant)
+    over person? if  the-townsfolk send person-variant  else  2 s" actor-model" unbuilt  then ;
 : walk-beside ( a b seat -- )   \ to a seat's side of b (src: actor_side_point, then path_to)
     {: a b k :}  b where-is 0= if  exit  then  k seat beside {: x z :}
     a x z walk-pace walk-motion walk-with ;

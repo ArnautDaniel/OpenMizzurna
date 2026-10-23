@@ -97,6 +97,7 @@ message companion-halt ( -- )              \ his companion stays where they are 
 message person-at-door ( slot door side -- )   \ (to the townsfolk) they answer that door, on that side
 message person-door-hold ( slot -- )       \ they wait at the door (src: cmd $53, door_wait 255 frames)
 message person-door-free ( slot -- )       \ no longer at the door
+message person-variant ( slot kind -- )   \ (to the townsfolk) they show that kind's model (0 or their own: theirs)
 message person-away ( slot -- )           \ (to the townsfolk) between stops, out of sight until their next (src: travelling = 1)
 message person-unlink ( slot -- )         \ no longer with their car: out of it where they are (src: partner = 0)
 message seat-take ( slot bar seat -- )    \ (to the townsfolk) that stool is theirs (bar: at-diner, at-club; seat -1: the first free)

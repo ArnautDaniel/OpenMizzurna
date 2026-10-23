@@ -97,6 +97,9 @@ The converter also takes the scripts an area's minigame start queues (src: area_
 `minigame_script = &D_X`) and the arrival scripts the overlays' C warps with (src: func_80019F3C's last
 argument), in the destination area's overlay.
 
+The minigames that are a script alone (src: area_minigame_start setting minigame_script) are registered by
+number (`minigame-script!`); the `minigame` op starts that script, the others are to come.
+
 A few scripts' own actor is given by the C that starts them (src: `M2C_FIELD(&D_X, s32 *, 4) = ...->id`: the
 counters' orders - the food, the drink): the converter finds them and writes `the-prop @ as-this-one`; the rules
 set `the-prop` before starting them.
