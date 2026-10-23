@@ -31,6 +31,7 @@ phase-1 port's files (`../port/src/game/`), which name the decomp's functions; t
 | Effects ([page](subsystems/effects.md), built) | fades, wipes, the iris, the flash | `effect.c` |
 | Look ([page](subsystems/look.md), area 1) | ○ and □: the tables' rows, the areas' rules | `cecheck.c`, the overlays |
 | Items ([page](subsystems/items.md), the list) | what Matthew carries | `items.c` |
+| Talk ([page](subsystems/talk.md), Nozz) | ○ on a person: their story talks, the area's lines, their own | `char_talk.c`, the handlers |
 | Doors | locks, knocking, who answers | `door.c` (SCKNOCK.C) |
 | Car | driving, fuel, the roads; the boat | `ovl027.c` (`car_update`, `boat_update`), `hud.c` (fuel) |
 | Traffic | the other cars on the roads | `carline.c` |

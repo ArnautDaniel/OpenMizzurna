@@ -2,7 +2,7 @@
 \ overlay; decomp/docs/areas/area01.md). What ○ and □ do here beyond the tables' rows, the area's and the
 \ scene's hooks, and the C its events call.
 IN: rules.area001
-USING: engine actors messages clock story-flags items townsfolk floors events look ;
+USING: engine actors messages clock story-flags items townsfolk floors events look talk ;
 
 1 constant this-area
 $008 9 story-bit constant letter-waiting   \ (not named yet: lets the letter be found - src: D_800F6930 & 0x200)
@@ -16,7 +16,7 @@ variable cigarettes-asked   variable lighter-seen   variable letter-found   vari
     0 shelves-seen !  0 goods-seen !  0 tools-seen !  0 today-seen !  0 letter-found !  0 flyer-seen ! ;
 
 \ ---- ○: the look check (0x80102564) and its actions (0x8010270C) ----
-enum: look-action  nothing-here  2 photo  5 shelves goods nozz radio fishing-tools  11 bulletin-board cigarettes-note
+enum: look-action  nothing-here  2 photo  5 shelves goods nozz-at-counter radio fishing-tools  11 bulletin-board cigarettes-note
   14 the-lighter  16 the-letter  18 garage-flyer ;
 : look-check ( zone check -- action )
     case
@@ -33,7 +33,7 @@ enum: look-action  nothing-here  2 photo  5 shelves goods nozz radio fishing-too
             else  got-isabella-letter flag? if  nothing-here  else  the-letter  then  then  endof
         21 of  goods  endof
         24 of  photo  endof
-        25 of  nozz-behind-counter? if  nozz  else  nothing-here  then  endof
+        25 of  nozz-behind-counter? if  nozz-at-counter  else  nothing-here  then  endof
         nothing-here swap
     endcase ;
 : look-do ( action -- )
@@ -41,7 +41,7 @@ enum: look-action  nothing-here  2 photo  5 shelves goods nozz radio fishing-too
         photo of  ['] events.ovl001:entry-801051A8 start-event  endof
         shelves of  shelves-seen ['] events.ovl001:entry-801055F4 ['] events.ovl001:entry-80105604 once-then  endof
         goods of  goods-seen ['] events.ovl001:entry-80105614 ['] events.ovl001:entry-80105624 once-then  endof
-        nozz of  ( talking to Nozz: the townsfolk )  endof
+        nozz-at-counter of  nozz talk-to  endof   \ (src: actor_talk_start)
         radio of  ['] events.ovl001:entry-801053A0 start-event  endof
         fishing-tools of  tools-seen ['] events.ovl001:entry-80105644 ['] events.ovl001:entry-80105654 once-then  endof
         bulletin-board of  ['] events.ovl001:entry-80105634 start-event  endof
@@ -108,6 +108,25 @@ enum: act-action  do-nothing the-bed  3 the-shower the-books  10 take-the-key  1
     dr-james-visit-seen flag? 0=  james-visiting? and  $044 0 story-bit flag? and if
         dr-james-visit-seen flag-toggle  ['] events.ovl001:entry-801049F8 start-event
     then ;
+
+\ ---- talking here (0x80102D60): some say a line of the area's by where they are ----
+create nozz-standing   \ Nozz at a stop: its line (src: D_80103DFC)
+  0 , 168 ,  2 , 169 ,  4 , 170 ,  9 , 171 ,  10 , 173 ,  11 , 175 ,  15 , 176 ,  18 , 177 ,  19 , 179 ,  20 , 181 ,
+  23 , 182 ,  24 , 184 ,  25 , 186 ,  28 , 187 ,  29 , 189 ,  30 , 191 ,  32 , 192 ,  33 , 194 ,  34 , 196 ,
+  36 , 197 ,  37 , 199 ,  38 , 201 ,  -1 ,
+create nozz-leaving    \ and leaving it (src: D_80103E58)
+  9 , 172 ,  10 , 174 ,  18 , 178 ,  19 , 180 ,  23 , 183 ,  24 , 185 ,  28 , 188 ,  29 , 190 ,  32 , 193 ,  33 , 195 ,
+  36 , 198 ,  37 , 200 ,  -1 ,
+: nozz-talks ( -- handled? )   \ (until the routes, Nozz is never between stops: his standing lines)
+    nozz-standing nozz stop-of a-line-by-stop  dup 0< if  drop false exit  then
+    nozz 7 one-liner  true ;
+: talks-here ( slot -- handled? )
+    case
+        nozz of  nozz-talks  endof
+        ( Morgan, James, Winona, Lidds, the townspeople 80 and 81, Isabella: their lines by their stops - with them )
+        false swap
+    endcase ;
+' talks-here this-area area-talk!
 
 \ ---- the C its events call (ovl001's evfn_*) ----
 : nozz-greets ( -- )   \ 0x80103204: by the time of day

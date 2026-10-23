@@ -2,7 +2,7 @@
 \ look_execute / act_execute): what ○ and □ would do where Matthew stands, and doing it. The tables' rows
 \ (scripts/events/checks.fs) and each area's rules (scripts/rules/) say what.
 IN: look
-USING: engine actors messages keys areas floors figures matthew events ;
+USING: engine actors messages keys areas floors figures matthew townsfolk events talk ;
 
 \ ---- the rows ----
 enum: table  look-zones look-checks act-checks act-zones ;
@@ -23,21 +23,8 @@ begin-structure check-row
 end-structure
 
 create first-rows  #content-areas 4 * cells allot   first-rows #content-areas 4 * cells erase
-variable building     \ the row being written
+variable building     \ the row being written (look/rows.fs)
 : list-of ( area table -- addr )  swap 4 * + cells first-rows + ;
-: last-of ( addr -- addr' )   \ the link to append at
-    begin  dup @ while  @  repeat ;
-: row ( area table -- )   \ a new row at the end of that area's table; the words below fill it
-    here check-row allot {: a t r :}  r check-row erase  r building !  r  a t list-of last-of ! ;
-: zone ( n -- )  building @ row-zone ! ;
-: facing ( turn -- )  building @ row-facing ! ;   \ (4096 a turn)
-: either-side ( degrees -- )  building @ row-within ! ;   \ (how far the heading may be off)
-: states ( bits -- )  building @ row-states ! ;
-: ask-area ( -- )  ask-the-area building @ row-kind ! ;
-: script ( "word" -- )  ' building @ row-target !  run-script building @ row-kind ! ;
-: native-at ( scope address -- )  building @ row-target !  building @ row-scope !  run-native building @ row-kind ! ;
-: prompt ( n -- )  building @ row-prompt ! ;
-: end-row ( -- ) ;
 
 \ the area whose tables an area uses (src: func_8003F6A8: 29 and 30 are 2's, 31 and 32 19's)
 : content ( area -- area' )
@@ -53,26 +40,26 @@ variable building     \ the row being written
 : faces-zone? ( index -- flag )  floor @ zone-centre faces? ;
 
 \ ---- what a table answers: a row to run, or (asking the area) the zone ----
-variable zone-answer   variable zone-row   variable check-answer   variable check-row
+variable zone-answer   variable zone-match   variable check-answer   variable check-match
 : rows ( table -- first )  area @ content swap list-of @ ;
 : zone-table ( table -- )   \ src: func_8003F1A8
-    -1 zone-answer !  0 zone-row !
+    -1 zone-answer !  0 zone-match !
     at-zone drop {: t idx :}  idx 0< if  exit  then
     t rows  begin  dup while
         dup row-zone @ idx =  idx faces-zone? and if
-            dup row-kind @ ask-the-area = if  drop idx zone-answer !  else  zone-row !  then  exit
+            dup row-kind @ ask-the-area = if  drop idx zone-answer !  else  zone-match !  then  exit
         then  next-row @
     repeat  drop
     idx faces-zone? if  idx zone-answer !  then ;   \ (src: func_8003FFB0: a zone faced, no row)
 : faced? ( row heading -- flag )   \ the heading within the row's range
     {: r h :}  h  r row-facing @  r row-within @ 4096 * 360 /  heading-within? ;
 : check-table ( table -- )   \ src: func_8003EF88 (no talk states yet: the rows for none)
-    -1 check-answer !  0 check-row !
+    -1 check-answer !  0 check-match !
     at-zone nip {: t id :}  id 0< if  exit  then
     matthew-now nip nip nip {: h :}
     t rows  begin  dup while
         dup row-zone @ id =  over row-states @ 0= and  over h faced? and if
-            dup row-kind @ ask-the-area = if  drop id check-answer !  else  check-row !  then  exit
+            dup row-kind @ ask-the-area = if  drop id check-answer !  else  check-match !  then  exit
         then  next-row @
     repeat  drop ;
 : run-row ( row -- )
@@ -82,7 +69,7 @@ variable zone-answer   variable zone-row   variable check-answer   variable chec
         run-native of  dup row-scope @ swap row-target @ native  endof
         nip
     endcase ;
-: run-rows ( -- )  check-row @ ?dup if  run-row  else  zone-row @ run-row  then ;   \ src: func_800401B0
+: run-rows ( -- )  check-match @ ?dup if  run-row  else  zone-match @ run-row  then ;   \ src: func_800401B0
 
 \ ---- the areas' rules ----
 begin-structure rules
@@ -99,7 +86,8 @@ create area-rules  #content-areas rules * allot   area-rules #content-areas rule
 
 \ ---- pressing ○ and □ ----
 81 constant look-motion   \ src: func_8003FA8C (0x51)
-: look ( -- )   \ src: look_execute's case 0 (the figures: to come)
+: look ( -- )   \ src: look_execute: a person before him (case 1: talking), else the place (case 0)
+    in-front dup 0< 0= if  talk-to exit  then  drop
     look-zones zone-table  look-checks check-table
     area @ content rules-of {: r :}
     r look-check @ if

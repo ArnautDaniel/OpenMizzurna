@@ -3,7 +3,7 @@
 \ A row: its area and table, its zone (zone tables: the index on the floor; check tables: the id),
 \ for checks the heading (4096 a turn) and degrees either side, its target, its hint's text.
 IN: events.checks
-USING: events events.all look ;   \ (look last: its prompt, not the events' op)
+USING: events events.all look look.rows ;   \ (look.rows last: its prompt, not the events' op)
 
 \ ---- area 0 ----
 0 look-zones row  3 zone  ask-area  -1 prompt  end-row

@@ -21,6 +21,8 @@ end-schedule
 `in-area` area and floor, `place` x z (world), `facing` (4096 a turn), `pose` the motion held; or placed
 `with-partner` (riding with someone), at the `diner-seat` / `club-seat` (src: func_80027944 types 1-3);
 `variant` another model; `route` the event they walk on leaving (an address until the routes are converted).
+The row words live apart, in `townsfolk.rows` (`scripts/townsfolk/rows.fs`): `until`, `stop`, `place` would
+hide the language's own elsewhere.
 
 ## Now
 
@@ -34,6 +36,6 @@ route and, if it hadn't finished by the next row's time, put them there: cmd 0x1
 
 ## To come
 
-Talking to them (○ on a figure: their handlers' conversations by time and story), the routes (event bytecode
+Talking to them: built in part (`docs/subsystems/talk.md`). The routes (event bytecode
 walked by the person themself), seats and partners (the diner, Club Wolves, riding along), the events placing
 and moving them (`set-pos`, `walk-to` ... for every slot), the streamed models' variants.

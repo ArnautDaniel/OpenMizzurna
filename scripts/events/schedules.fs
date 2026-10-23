@@ -4,7 +4,7 @@
 \ hold there - or how they are placed (with a partner, at the diner's counter, at Club Wolves), the route
 \ they walk on leaving it.
 IN: events.schedules
-USING: townsfolk ;
+USING: townsfolk.rows ;
 
 \ ---- slot 1: morgan ----
 1 schedule

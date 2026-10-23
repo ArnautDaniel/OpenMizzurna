@@ -53,7 +53,7 @@ def main():
              '\\ executable\'s and the overlays\' tables by tools/checks2forth.py; edited by hand from here on.',
              '\\ A row: its area and table, its zone (zone tables: the index on the floor; check tables: the id),',
              '\\ for checks the heading (4096 a turn) and degrees either side, its target, its hint\'s text.',
-             'IN: events.checks', 'USING: events events.all look ;   \\ (look last: its prompt, not the events\' op)', '']
+             'IN: events.checks', 'USING: events events.all look look.rows ;   \\ (look.rows last: its prompt, not the events\' op)', '']
     n = 0
     for a, ts in sorted(tables(exe, src).items()):
         if not any(rows for _, rows in ts):

@@ -64,3 +64,4 @@ message camera-pivot ( x y z -- )            \ pivot set now (src: camera_at)
 message give-item ( item -- )            \ Matthew has it now (src: item_add)
 message take-item ( item -- )            \ and no longer (src: item_remove)
 message items-reset ( -- )               \ a new game's: the phone, the waist bag, the watch (src: items_init)
+message person-turn ( slot heading -- )  \ (to the townsfolk) the person faces so, until their next stop

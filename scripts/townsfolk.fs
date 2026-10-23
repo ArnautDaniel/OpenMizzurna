@@ -25,30 +25,14 @@ begin-structure person
   field: #stops
   field: at-stop        \ the stop the clock puts them at
   field: figure         \ their model (0: not loaded yet)
+  field: heading-now    \ which way they face (their stop's, until turned)
   playing +field moving \ the motion they hold
 end-structure
 create people  #slots person * allot   people #slots person * erase
 : person-of ( slot -- addr )  person * people + ;
 : row-of ( person i -- row )  stop-row * swap first-stop @ + ;
 
-variable writing   variable writing-row
-: schedule ( slot -- )  person-of dup writing !  here swap first-stop !  0 writing @ #stops ! ;
-: stop ( i -- )   \ (rows are written in order: i is the next)
-    drop  here stop-row allot  dup stop-row erase  writing-row !  1 writing @ #stops +! ;
-: row ( -- addr )  writing-row @ ;
-: until ( day hour minute -- )  date>time row stop-until ! ;
-: record ( k -- )  row stop-record ! ;
-: in-area ( area floor -- )  row stop-floor !  row stop-area ! ;
-: place ( x z -- )  row stop-z !  row stop-x ! ;
-: facing ( heading -- )  row stop-heading ! ;
-: pose ( motion -- )  row stop-pose ! ;
-: with-partner ( -- )  partnered row stop-placed ! ;
-: diner-seat ( -- )  at-diner row stop-placed ! ;
-: club-seat ( -- )  at-club row stop-placed ! ;
-: variant ( n -- )  row stop-variant ! ;
-: route ( address -- )  row stop-route ! ;
-: end-stop ( -- ) ;
-: end-schedule ( -- ) ;
+variable writing   variable writing-row   \ (the rows being written: townsfolk/rows.fs)
 
 \ ---- where the clock puts them ----
 : scheduled? ( slot -- flag )  person-of first-stop @ 0<> ;
@@ -72,6 +56,7 @@ variable writing   variable writing-row
         i scheduled? if
             i person-of {: p :}  p t stop-for  dup p at-stop @ <> if
                 p at-stop !  p dup at-stop @ row-of stop-pose @ -1 true p moving play
+                p dup at-stop @ row-of stop-heading @ p heading-now !
             else  drop  then
         then
     loop ;
@@ -83,10 +68,12 @@ variable writing   variable writing-row
 : model-of ( slot -- model )
     dup person-of figure @ ?dup if  nip exit  then
     dup kind-model model  dup rot person-of figure ! ;
+: person-now ( slot -- x y z heading )   \ where they stand (a fact)
+    dup current-row {: s r :}  r stop-x @  r stop-area @ r stop-floor @ floor-height  r stop-z @
+    s person-of heading-now @ ;
 : draw-person ( slot -- )
     dup model-of {: s m :}  s current-row {: r :}  s person-of moving {: mv :}
-    m  mv clip @  mv frame  r stop-x @  r stop-area @ r stop-floor @ floor-height  r stop-z @  r stop-heading @
-    draw-figure ;
+    m  mv clip @  mv frame  s person-now  draw-figure ;
 : draw-townsfolk ( -- )  #slots 0 do  i here? if  i draw-person  then  loop ;
 ' draw-townsfolk on-draw
 : animate ( -- )  #slots 0 do  i here? if  i person-of moving advance drop  then  loop ;
@@ -97,6 +84,7 @@ behaviour townsfolk
   on tick ( -- )  animate ;
   on time-set ( t -- )  settle-all ;
   on minute-passed ( t -- )  settle-all ;
+  on person-turn ( slot heading -- )  swap person-of heading-now ! ;
 end-behaviour
 
 : spawn-townsfolk ( -- id )  townsfolk townsfolk-state s" townsfolk" spawn ;

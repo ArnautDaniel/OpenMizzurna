@@ -2,7 +2,7 @@
 \ (models/073_1.gltf: kind 0's model, CD.BIN 073_1, drawn in the area's textures). Walking, looking and acting
 \ come next; for now the events place and turn him.
 IN: matthew
-USING: engine actors messages keys areas floors figures ;
+USING: engine actors messages keys areas floors figures window ;
 
 
 : figure-path ( -- addr len )  s" models/073_1.gltf" ;
@@ -108,7 +108,7 @@ variable l-was   variable r-was
     probe 2dup open? if  step-to
     else  2drop  0e speed f!  then ;
 : control ( -- )
-    controlled @ 0= self body? 0= or if  exit  then
+    controlled @ 0= self body? 0= or  window-up? or if  exit  then   \ (src: field_update: not while ui_busy)
     steer pace stand walk ;
 
 behaviour matthew

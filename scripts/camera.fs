@@ -4,7 +4,7 @@
 \ distance; an event puts it where it wants (fixed). Its state is its own (variables: the only camera), drawn
 \ each frame through the engine's `camera`.
 IN: camera
-USING: engine actors messages areas matthew ;
+USING: engine actors messages areas matthew window ;
 
 500 constant indoor-projection   400 constant town-projection   \ src: GsSetProjection(g_on_overworld ? 400 : 500)
 \ the town's profile (src: camera_reset / camera_follow on the overworld)
@@ -12,7 +12,7 @@ USING: engine actors messages areas matthew ;
 \ the follow's lag: two of the original's frames (15 a second indoors, 30 in the town) - in steps (30 a second)
 4 constant indoor-lag   2 constant town-lag
 
-variable following
+variable following   variable reset-due
 create target 3 cells allot   variable yaw
 variable dist   variable eye-y   variable look-y   variable projection
 : target! ( x y z -- )  target 2 cells + !  target cell+ !  target ! ;
@@ -83,8 +83,10 @@ variable pulling   variable dist-goal   variable dist-step
 state: camera-state end-state
 behaviour the-camera
   on spawned ( -- )  self subscribe tick  self subscribe area-entered  self subscribe scene-shown
+    self subscribe player-control
     indoor-projection projection !  true following ! ;
-  on tick ( -- )  following @ if  follow  then  tweens ;
+  on tick ( -- )   \ (src: field_update: no following while a window is up - ui_busy)
+    following @ window-up? 0= and if  reset-due @ if  reset  false reset-due !  then  follow  then  tweens ;
   on camera-move-to ( x y z speed -- )  move-speed !  goal 2 cells + !  goal cell+ !  goal !  true moving ! ;
   on camera-turn-to ( yaw step -- )  turn-step !  full-turn 1- and turn-goal !  true turning ! ;
   on camera-height-to ( eye-y step -- )  height-step !  height-goal !  true lifting ! ;
@@ -93,8 +95,10 @@ behaviour the-camera
   on camera-pivot ( x y z -- )  target! ;
   on area-entered ( area scene -- )  2drop  reset ;
   on scene-shown ( scene -- )  drop  reset ;   \ src: set_scene_state's camera_reset
-  on camera-place ( look-y dist eye-y x y z yaw -- )
-    yaw !  target!  eye-y !  dist !  look-y !  false following ! ;
+  on camera-place ( look-y dist eye-y x y z yaw -- )   \ (src: camera_set writes the camera; following is control's)
+    yaw !  target!  eye-y !  dist !  look-y ! ;
+  on player-control ( flag -- )   \ src: player_control_on / off: camera_follow_set (behind him again - once
+    dup following @ 0= and if  true reset-due !  then  following ! ;   \ no window is up)
   on camera-follow ( -- )  following @ 0= if  reset  then  true following ! ;   \ src: camera_follow_set
   on camera-fixed ( -- )  false following ! ;
 end-behaviour

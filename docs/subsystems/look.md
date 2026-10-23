@@ -30,7 +30,7 @@ check row's target, else the zone row's. □ the same with `act-check` / `act-do
 vocabulary `rules.areaNNN` (`scripts/rules/areaNNN.fs`): its four words and the natives its events call,
 registered with `area-rules!` / `native:`.
 
-Facts it keeps for the rules: `zone-answer` / `check-answer` (what the tables gave), `zone-row` / `check-row`
+Facts it keeps for the rules: `zone-answer` / `check-answer` (what the tables gave), `zone-match` / `check-match`
 (their rows to run: `run-rows`). The areas' hooks (`area-hooks!`: entering, a scene) run on `area-entered` /
 `scene-shown`.
 

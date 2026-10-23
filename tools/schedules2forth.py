@@ -55,7 +55,7 @@ def main():
              '\\ (day hour minute) they stay at a stop, where it is - area floor, x z, heading (4096 a turn), the motion they',
              '\\ hold there - or how they are placed (with a partner, at the diner\'s counter, at Club Wolves), the route',
              '\\ they walk on leaving it.',
-             'IN: events.schedules', 'USING: townsfolk ;', '']
+             'IN: events.schedules', 'USING: townsfolk.rows ;', '']
     count = 0
     for slot in range(182):
         fn = syms.get(hand[slot])

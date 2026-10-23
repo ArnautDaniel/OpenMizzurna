@@ -5,7 +5,7 @@
 \ Each op does its work through its subsystem's messages; an op whose subsystem isn't built yet is a stub
 \ that takes its arguments and notes it (`unbuilt`).
 IN: events
-USING: engine actors messages clock window matthew effects camera ;
+USING: engine actors messages clock window matthew townsfolk effects camera ;
 
 \ ---- the cast: actor slots (decomp/include/actor.h); the others by number (`160 actor`) ----
 0 constant matthew    1 constant morgan    2 constant nozz       3 constant cohen     5 constant samuel
@@ -191,7 +191,6 @@ variable loaded-pack
 : run ( a x1 -- )  2 act-unbuilt ;   \ cmd $0B
 : idle ( a -- )  1 act-unbuilt ;   \ cmd $0C
 : face-point ( a x1 x2 x3 -- )  4 act-unbuilt ;   \ cmd $0D
-: face ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $0E
 : walk-to-ex ( a x1 x2 x3 x4 -- )  5 act-unbuilt ;   \ cmd $0F
 : move-forward ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $10
 : turn-to ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $11
@@ -327,11 +326,22 @@ variable loaded-pack
 : wait-camera-turn ( -- )  ['] camera-turning? until-still ;                         \ $14B
 : wait-camera-height ( -- )  ['] camera-height-moving? until-still ;                 \ $14F
 : wait-camera-dist ( -- )  ['] camera-dist-moving? until-still ;                     \ $160
-: figure-place@ ( a -- x y z yaw true | false )   \ where a figure is (Matthew's so far)
-    figure-of 0< if  false  else  matthew-now true  then ;
+: figure-place@ ( a -- x y z yaw true | false )   \ where a figure is: Matthew, or a person standing here
+    dup matthew = if  drop matthew-now true exit  then
+    dup here? if  person-now true  else  drop false  then ;
 : camera-at ( a -- )   \ $113: the pivot where the figure stands
     figure-place@ if  drop the-camera send camera-pivot  then ;
 : camera-heading ( a -- )   \ $150: the camera faces as the figure does
     figure-place@ if  >r 2drop drop r> the-camera send camera-face  then ;
 : camera-face ( a b -- )   \ $11B: heading from one figure toward the other
     2 s" camera-face" unbuilt ;
+
+: heading-to ( x z x' z' -- heading )   \ from the first point toward the second (4096 a turn)
+    rot - s>f  swap - s>f fswap fatan2 4096e f* 2e pi f* f/ f>s  4095 and ;
+: face ( a target speed -- )   \ cmd $0E: the figure turns to face another (at once: the turning speed - to come)
+    drop {: a t :}
+    a figure-place@ 0= if  exit  then  drop nip {: ax az :}
+    t figure-place@ 0= if  exit  then  drop nip {: tx tz :}
+    ax az tx tz heading-to {: h :}
+    a matthew = if  0 h 0 s" matthew" actor-named send figure-turn
+    else  a h s" townsfolk" actor-named send person-turn  then ;
