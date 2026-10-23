@@ -28,6 +28,11 @@ minutes/hour hours/day * constant minutes/day
 \ ---- the time, as a fact (the clock keeps it; anyone reads it) ----
 variable time-now
 : clock-time ( -- t )  time-now @ ;
+: between? ( day h1 m1 h2 m2 -- flag )   \ now within h1:m1 .. h2:m2 of that day (day 0: any; src: event_time_window)
+    {: d h1 m1 h2 m2 :}  clock-time time>date {: day hour minute :}
+    d 0<>  d day <> and if  false exit  then
+    hour minutes/hour * minute + {: t :}  t h1 minutes/hour * m1 + >=  t h2 minutes/hour * m2 + <= and ;
+: reached? ( day hour minute -- flag )  date>time clock-time <= ;   \ src: event_time_reached
 
 \ ---- the actor ----
 state: clock-state

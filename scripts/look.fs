@@ -82,6 +82,7 @@ variable zone-answer   variable zone-match   variable check-answer   variable ch
 begin-structure rules
   field: look-check-xt   field: look-do-xt   field: act-check-xt   field: act-do-xt
   field: on-enter     field: on-scene     \ the area's hooks: entered ( -- ), a scene ( scene -- )
+  field: on-frame     \ and each step while Matthew is the player's ( -- ) (src: the overlay's per-frame hook)
 end-structure
 create area-rules  #content-areas rules * allot   area-rules #content-areas rules * erase
 : rules-of ( area -- addr )
@@ -90,6 +91,7 @@ create area-rules  #content-areas rules * allot   area-rules #content-areas rule
     rules-of {: lc ld ac ad r :}  lc r look-check-xt !  ld r look-do-xt !  ac r act-check-xt !  ad r act-do-xt ! ;
 : area-hooks! ( area enter scene -- )  rot rules-of {: e sc r :}  e r on-enter !  sc r on-scene ! ;
 : hook ( xt|0 -- )  ?dup if  execute  then ;
+: area-frame! ( area xt -- )  swap rules-of on-frame ! ;
 
 \ ---- pressing ○ and □ ----
 81 constant look-motion   \ src: func_8003FA8C (0x51)
@@ -111,7 +113,9 @@ variable controlled   variable circle-was   variable square-was
 : pressed ( key var -- flag )  >r key-down? dup r@ @ 0= and swap r> ! ;   \ (a held button: once)
 : watch ( -- )
     pad-circle circle-was pressed  pad-square square-was pressed  {: o s :}
-    controlled @ 0= events-running @ or  area @ 0< or if  exit  then
+    controlled @ 0= events-running @ or  area @ 0< or  matthew-there? 0= or if  exit  then
+    area @ content rules-of on-frame @ hook
+    events-running @ if  exit  then   \ (the hook may have started one)
     o if  press-circle exit  then
     s if  press-square  then ;
 

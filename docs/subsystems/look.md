@@ -33,7 +33,8 @@ registered with `area-rules!` / `native:`.
 
 Facts it keeps for the rules: `zone-answer` / `check-answer` (what the tables gave), `zone-match` / `check-match`
 (their rows to run: `run-rows`). The areas' hooks (`area-hooks!`: entering, a scene) run on `area-entered` /
-`scene-shown`.
+`scene-shown`; an area's frame hook (`area-frame!`, src: the overlay's per-frame hook) runs each step while
+Matthew is the player's and no event runs, before ○ and □ (it may start one: then they wait).
 
 ## Status
 
@@ -41,8 +42,13 @@ Facts it keeps for the rules: `zone-answer` / `check-answer` (what the tables ga
 (`scripts/rules/area001.fs`: its looks, its acts - the bed, the shower, the books, the key, the lighter, the
 letter, Barbara's cigarettes - its hooks: Morgan's morning visit, Dr. James's; the C its events call). Seen: □
 by the bed - "I can't sleep now..."; the events' lines that wait now wait at once (src: they slept a frame).
+Area 0's (`scripts/rules/area000.fs`, the police station; `tests/library/test_area000.fs`): the map board, the
+cabinet, the poster, the cells' confrontations, the computer's knock; arriving (Father Barton, "shove it", the
+wolf); each frame - behind the front desk he is put back where he stood (`matthew-was`) and told off, the
+stand-in at the desk while Hudson is away, the scene upstairs on the 28th, closing at 22:00; who says what by
+their stops; the desk officer's scenes in turn; the C its events call (the cell visit, Isabella held).
 **To come**: talking to the townsfolk (○ on a figure), the hints (prompts), the town's per-tile rows, the
-other areas' rules.
+other areas' rules; in area 0 the computer's case files and minigames 29, 30 and 36.
 
 ## The town
 

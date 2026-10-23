@@ -5,11 +5,6 @@ USING: engine actors messages clock story-flags townsfolk events events.ovl027 ;
 
 27 constant this-area
 
-\ ---- the time: between two times of the day (day 0: any day; src: event_time_window) ----
-: between? ( day h1 m1 h2 m2 -- flag )
-    {: d h1 m1 h2 m2 :}  clock-time time>date {: day hour minute :}
-    d 0<>  d day <> and if  false exit  then
-    hour 60 * minute + {: t :}  t h1 60 * m1 + >=  t h2 60 * m2 + <= and ;
 : today ( -- day )  clock-time time>day ;
 
 \ ---- a person where their schedule has them (src: at_place: standing at a stop of that record) ----

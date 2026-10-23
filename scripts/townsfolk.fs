@@ -202,6 +202,7 @@ behaviour townsfolk
   on person-hold ( slot -- )  person-of moving true swap hold-move ! ;
   on person-arrive ( slot -- )  arrive ;
   on person-goto-stop ( slot stop -- )  goto-stop ;
+  on person-depart ( slot -- )  depart ;
   on person-through-door ( slot door room flip -- )  through-door ;
   on person-attach ( slot route speed -- )  attach ;
   on person-get-in ( slot -- )  get-in ;

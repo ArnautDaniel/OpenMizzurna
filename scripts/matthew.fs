@@ -98,8 +98,9 @@ variable l-was   variable r-was
     frot fdup fsin speed f@ f* frames f*  fswap fcos speed f@ f* frames f*   ( F: x z dx dz )
     frot f+ f>s  f+ f>s  swap ;
 : open? ( x z -- flag )  floor @ blocked? 0= ;
+variable was-x   variable was-y   variable was-z   \ where he stood before his last step (src: player_restore_pos)
 : step-to ( x z -- )   \ his new place across the floor: indoors his height kept, in the town the ground's there
-    {: x z :}  self body-pos 3f>s drop nip {: y :}
+    {: x z :}  self body-pos 3f>s  was-z !  dup was-y !  swap was-x ! {: y :}
     area @ the-town = if  x z ground-at if  to y  then  then
     x y z  3s>f  self body-area self body-floor body-place ;
 : walk ( -- )   \ src: player_update: a blocked step tries 0x30 at a time either side, easing his heading
@@ -135,6 +136,7 @@ end-behaviour
 : matthew-there? ( -- flag )  matthew-actor dup 0< if  drop false  else  body?  then ;
 : matthew-now ( -- x y z yaw )   \ where he stands and his heading, in whole units (a fact: his body)
     matthew-actor {: id :}  id body-pos 3f>s  id body-yaw f>s ;
+: matthew-was ( -- x y z )  was-x @ was-y @ was-z @ ;   \ where he stood before his last step (src: player_restore_pos's)
 : anim-done? ( -- flag )  moving done @  moving anim @ 0< or ;   \ (a fact: the events' wait-anim)
 : draw-matthew ( -- )
     matthew-there? if
