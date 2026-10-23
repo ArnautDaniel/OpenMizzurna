@@ -16,7 +16,7 @@ for this game. Names are case-insensitive.
   decompiles a colon definition.
 - **Tasks**: every running piece of Forth has its own stacks. `' word spawn` starts one (it gives
   an id); the engine runs each ready task a little every tick. Inside a task, `yield` gives way
-  until the next tick and `n wait` for n ticks. `id kill` stops one, `.tasks` lists them.
+  until the next step and `n wait` for n steps - game code writes the time in seconds: `0.5e seconds wait`. `id kill` stops one, `.tasks` lists them.
   `spawn-held` starts one the engine leaves alone: `id resume` gives it its turn (whoever drives
   it decides when; it answers whether the task is still alive). `xt restart` makes the running
   task start over in another word at once, its stacks emptied (the event scripts' "go to").
@@ -140,7 +140,10 @@ are built, each listed here.
 | `key-down?`, `key-pressed?` | `scancode -- flag` | held now / went down this tick |
 | `key-hold` | `scancode flag --` | hold a key from a script (demos, tests) |
 | `on-tick`, `off-tick` | `xt --` | run a word every tick |
-| `ticks` | `-- n` | game ticks since start (30 a second) |
+| `ticks` | `-- n` | simulation steps since start (for tools; game logic uses real time) |
+| `dt` | `F: -- seconds` | a step's length (1/30 by default) |
+| `seconds` | `F: s -- steps` | real time as steps, for `wait` (`0.5e seconds wait`); at least one for any time |
+| `step-blend` | `F: -- 0..1` | how far the display is between the last step and the next (drawing only) |
 | `on-draw`, `off-draw` | `xt --` | run a word every frame to draw 2D |
 | `pen-color`, `pen-scale` | `rgba --`, `n --` | colour (0xRRGGBBAA) and text size for the drawing words |
 | `draw-text`, `draw-rect` | `addr len x y --`, `x y w h --` | in window pixels from the top left |

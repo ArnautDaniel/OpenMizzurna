@@ -7,7 +7,7 @@
 #include "../platform/platform.h"
 #include "console.h"
 
-#define TICKS_PER_SECOND 30   /* the game's fixed tick (docs/design.md: "A frame") */
+#define STEPS_PER_SECOND 30   /* the simulation's fixed step rate (docs/design.md: "A frame"); scripts read dt */
 #define MAX_HOOKS 64
 
 typedef struct Engine {
@@ -16,7 +16,9 @@ typedef struct Engine {
     Console console;
     int width, height;           /* the window's drawable size */
     int hidden;                  /* no window shown (tests, screenshots) */
-    long ticks;                  /* game ticks since start */
+    long ticks;                  /* simulation steps since start */
+    float step_blend;            /* how far the display is between the last step and the next (0..1): drawing
+                                  * blends the last two steps' state by it */
     bool held[SDL_SCANCODE_COUNT];   /* keys held by scripts (key-hold: demos, tests) */
     Word *tick_hooks[MAX_HOOKS];     /* on-tick */
     int ntick_hooks;

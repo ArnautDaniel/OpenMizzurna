@@ -8,7 +8,8 @@
  *
  * Start-up: the window (SDL3, OpenGL 4.6 core), the renderer, the Forth system with the engine's words and
  * the actor kernel, then scripts/prelude.fs and scripts/game.fs - which decide everything else. Each
- * frame: input, game ticks at a fixed 30 a second (engine_tick: hooks, tasks, the actors), then drawing. */
+ * frame: input, simulation steps at a fixed rate as real time asks (engine_tick: hooks, tasks, the actors), then
+ * drawing at the display's rate (vsync), blending the last two steps. */
 #include "forth/forth.h"
 #include "game/engine.h"
 #include "kernel/mactor.h"
@@ -132,7 +133,7 @@ int main(int argc, char **argv) {
     Engine *e = &gEngine;
     Options opt;
     Uint64 last, lag = 0;
-    const Uint64 tick_ns = 1000000000ull / TICKS_PER_SECOND;
+    const Uint64 tick_ns = 1000000000ull / STEPS_PER_SECOND;
     long frame = 0;
     int typing = 0, i, status = 0;
 
@@ -199,10 +200,7 @@ int main(int argc, char **argv) {
         if (ticks == 4) {
             lag = 0;   /* (far behind - a stall: don't try to catch up) */
         }
-        if (ticks == 0 && opt.frames == 0) {
-            SDL_DelayNS(tick_ns - lag > 2000000ull ? tick_ns - lag - 1000000ull : 0);
-            continue;
-        }
+        e->step_blend = (float)lag / (float)tick_ns;   /* (drawing every display frame: vsync paces it) */
         draw(e);
         if (opt.frames > 0 && ++frame >= opt.frames) {
             break;

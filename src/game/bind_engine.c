@@ -99,6 +99,13 @@ PRIM(p_off_tick) { hook_remove(gEngine.tick_hooks, &gEngine.ntick_hooks, (Word *
 PRIM(p_on_draw) { hook_add(f, gEngine.draw_hooks, &gEngine.ndraw_hooks, (Word *)POP()); }
 PRIM(p_off_draw) { hook_remove(gEngine.draw_hooks, &gEngine.ndraw_hooks, (Word *)POP()); }
 PRIM(p_ticks) { PUSH(gEngine.ticks); }
+PRIM(p_dt) { forth_fpush(f, 1.0 / STEPS_PER_SECOND); }   /* ( F: -- seconds ) a step's length */
+PRIM(p_seconds) {   /* ( F: seconds -- steps ) as whole steps, at least one for any time > 0 (for `wait`) */
+    Float s = forth_fpop(f);
+    Cell n = (Cell)(s * STEPS_PER_SECOND + 0.5);
+    PUSH(s > 0 && n < 1 ? 1 : n);
+}
+PRIM(p_step_blend) { forth_fpush(f, gEngine.step_blend); }   /* ( F: -- 0..1 ) (drawing) */
 
 /* ---- 2D (inside an on-draw hook), in window pixels ---- */
 PRIM(p_pen_color) { gEngine.pen = (uint32_t)POP(); }   /* ( rgba -- ) */
@@ -134,7 +141,7 @@ void bind_engine(Forth *f) {
     static const struct { const char *name; Code code; } kWords[] = {
         {"key:", p_key_name}, {"key-down?", p_key_down}, {"key-pressed?", p_key_pressed}, {"key-hold", p_key_hold},
         {"on-tick", p_on_tick}, {"off-tick", p_off_tick}, {"on-draw", p_on_draw}, {"off-draw", p_off_draw},
-        {"ticks", p_ticks}, {"pen-color", p_pen_color}, {"pen-scale", p_pen_scale}, {"draw-text", p_draw_text},
+        {"ticks", p_ticks}, {"dt", p_dt}, {"seconds", p_seconds}, {"step-blend", p_step_blend}, {"pen-color", p_pen_color}, {"pen-scale", p_pen_scale}, {"draw-text", p_draw_text},
         {"draw-rect", p_draw_rect}, {"screen-size", p_screen_size}, {"char-size", p_char_size}, {"hud", p_hud},
         {"clear-color", p_clear_color}, {"screenshot", p_screenshot},
         {"screenshot-pending?", p_screenshot_pending}, {"console!", p_console_store},

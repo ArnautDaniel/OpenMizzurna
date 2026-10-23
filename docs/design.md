@@ -63,17 +63,31 @@ Kernel details: `docs/actors.md`. The Forth dialect: `docs/forth.md`.
 ## A frame
 
 ```
-input -> tasks -> [ tick ] -> deliver -> [ frame-end ] -> deliver -> figures advance -> draw
+a step (fixed rate): input -> tasks -> [ tick ] -> deliver -> [ frame-end ] -> deliver -> figures advance
+a frame (display rate): draw, blending the last two steps
 ```
 
-The engine ticks at a fixed 30 a second. **The original's pace is not fixed**: the field loop waited for 2
-vertical blanks outdoors (30 frames a second) and 4 indoors (15), and every per-frame speed, timer and
-animation step was tuned to that frame. Rule: a subsystem keeps the original's per-frame values and runs
-them on the original's frame, which the world announces (`world-step`, every tick or every other tick by
-the area's pace), so walking speed, the clock and timers come out as on the PS1. Drawing can interpolate
-between steps (later, a nicety).
+**Time is real time.** The game's logic never counts frames: speeds are units a second, durations seconds,
+the story's clock minutes. The simulation steps at a fixed rate (30 steps a second by default; `dt` is the
+step's length, an engine setting the scripts read), and drawing runs as fast as the display allows - 60, 120,
+144 a second - interpolating figures, the camera and anything moving between the last two steps. Changing the
+step rate changes no script.
 
-- `tick` goes to every actor subscribed to it.
+- **Fixed steps, not variable ones**: every step the same length keeps the game deterministic (the same inputs
+  give the same game; tests and traces repeat exactly).
+- **The original's per-frame values are converted.** Its field loop waited for 2 vertical blanks outdoors (30
+  frames a second) and 4 indoors (15), and its speeds, timers, animation steps and script waits were tuned to
+  whichever applied. Each is rewritten in what it means - units a second, seconds - named, with the
+  original's value and frame rate in a comment (`\ src: 12 a frame at 15 fps (180 a second)`). The words that
+  turn real time into steps (`seconds>steps`, `per-second*dt`) live in one place.
+- **The event scripts' waits** are converted the same way when the bytecode becomes Forth: `n frames` at the
+  area's frame rate becomes seconds (`0.5 seconds wait`).
+- **Behaviours tied to the frame itself** (a decision every frame, a random roll every frame) are restated so
+  they happen as often in real time, and the subsystem's page says so.
+- **Drawing never changes the game**: the renderer reads the last two steps' state and blends; only steps
+  change state.
+
+- `tick` goes to every actor subscribed to it, once a step.
 - **deliver**: the queued messages are handled in rounds; what a round sends waits for the next. It stops
   when the queue is empty, or after a limit (the rest carries over and the kernel reports it).
 - `frame-end` is for actors that collect during the frame and act on the whole of it.

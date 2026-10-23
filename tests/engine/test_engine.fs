@@ -19,4 +19,11 @@ end-behaviour
 state: no-state end-state
 T{ counting no-state s" counter" spawn  drop  deliver  actors-frame actors-frame  ticked @ -> 2 }T
 
+testing real time
+T{ 1e seconds -> 30 }T
+T{ 0.5e seconds -> 15 }T
+T{ 0.001e seconds -> 1 }T
+T{ 0e seconds -> 0 }T
+T{ dt 30e f* 1e f- fabs 1e-9 f< -> true }T
+
 test-summary
