@@ -1,5 +1,5 @@
 \ the story actor: a new game, the prologue's end (docs/subsystems/story.md)
-USING: tester engine actors messages clock story-flags events story ;
+USING: tester engine actors messages keys clock story-flags window events story ;
 
 : steps ( n -- )  0 ?do  1 tick-tasks  actors-frame  loop ;
 variable last-time   variable minutes   variable over
@@ -21,7 +21,9 @@ T{ 3 got-barbaras-cigarettes story+!  got-barbaras-cigarettes story@ -> 3 }T
 testing a new game: 12/25 09:00, the flags clear, the opening playing, the clock held
 T{ prologue-done flag-set  s" story" actor-named send new-game  deliver
    last-time @  prologue-done flag?  events-running @ -> new-game-time false 1 }T
-T{ 0 minutes !  25e seconds steps  events-running @  minutes @ -> 0 0 }T
+: answer ( -- )  window-up? stage @ finished = and if  pad-circle true key-hold  then  1 steps  pad-circle false key-hold ;
+: play ( n -- )  0 ?do  answer  loop ;
+T{ 0 minutes !  120e seconds play  events-running @  minutes @ -> 0 0 }T
 
 testing the prologue's end (src: the script $80096598): 12/25 10:00, the flag set, the clock running
 T{ ' events.main:exe-80096598 start-event  10 steps

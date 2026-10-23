@@ -42,7 +42,7 @@ find_package(SDL3 REQUIRED CONFIG)
 # the checks')
 add_library(omdata STATIC src/data/disc.c src/data/cdbin.c src/data/container.c src/data/png.c src/data/tim.c
     src/data/text.c src/data/cdconv.c src/data/exetables.c src/data/vab.c src/data/seqmidi.c src/data/xa.c
-    src/data/flacenc.c src/data/tmd.c src/data/vramctx.c src/data/modelgltf.c src/data/modelconv.c src/data/town.c src/data/str.c src/data/movieconv.c src/data/motion.c
+    src/data/flacenc.c src/data/tmd.c src/data/vramctx.c src/data/modelgltf.c src/data/modelconv.c src/data/town.c src/data/str.c src/data/mfo.c src/data/movieconv.c src/data/motion.c
     src/third_party/stb.c src/third_party/dr_flac.c src/third_party/cgltf.c)
 target_include_directories(omdata PUBLIC src/third_party)
 # the movies' encoder (the import) and decoder: libavcodec, when there is one
@@ -62,7 +62,7 @@ add_executable(openmizzurna
     src/main.c
     src/platform/platform.c src/platform/gl.c
     src/render/render.c
-    src/game/bind_engine.c src/game/console.c
+    src/game/bind_engine.c src/game/text.c src/game/console.c
     src/platform/library.c src/core/files.c)
 target_link_libraries(openmizzurna PRIVATE omdata)
 target_include_directories(openmizzurna PRIVATE src/third_party)

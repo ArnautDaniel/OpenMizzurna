@@ -160,6 +160,10 @@ are built, each listed here.
 | `screenshot-pending?` | `-- flag` | |
 | `console!` | `flag --` | open or close the console |
 | `hidden?` | `-- flag` | no window (tests, screenshots) |
+| `text-of` | `bank id -- addr len` | a message of the game's text (docs/subsystems/window.md); `0 0` if none |
+| `font` / `font-palette` | `n --` | the game's font to draw with (0 the dialogue font, 1 the list font) / its palette |
+| `font-text` | `addr len x y --` | text in the game's font at the pen's scale and colour |
+| `font-width` | `addr len -- px` | its widest line in the font's pixels; `font-line` the line pitch (16), `font-ready?` |
 | `exe-table` | `addr len -- addr n` | a table of the executable by name (`s" music" exe-table`); `0 0` if none |
 
 The pad's buttons as keys: `scripts/keys.fs` (`pad-circle`, `pad-cross`, ... the d-pad `pad-up` ...).

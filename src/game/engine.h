@@ -34,6 +34,7 @@ typedef struct Engine {
 extern Engine gEngine;
 
 void bind_engine(Forth *f);
+void bind_text(Forth *f);   /* text.c: the game's text and fonts */
 /* one game tick: the scripts' hooks, their tasks, the actors' frame */
 void engine_tick(Engine *e);
 /* the 2D the scripts draw (on-draw hooks, the HUD line) */

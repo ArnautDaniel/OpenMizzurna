@@ -293,6 +293,9 @@ int render_screenshot(const char *path) {
     for (y = 0; y < R.h; y++) {   /* (GL's rows go up from the bottom) */
         memcpy(flipped + (size_t)y * R.w * 4, R.last_frame + (size_t)(R.h - 1 - y) * R.w * 4, (size_t)R.w * 4);
     }
+    for (y = 0; y < R.w * R.h; y++) {   /* (opaque, as the screen shows it: blending leaves alpha below 1) */
+        flipped[y * 4 + 3] = 255;
+    }
     {
         FILE *out = fopen(path, "wb");
 

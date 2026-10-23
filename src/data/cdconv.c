@@ -2,6 +2,7 @@
 #include "cdconv.h"
 
 #include "container.h"
+#include "mfo.h"
 #include "motion.h"
 #include "seqmidi.h"
 #include "vab.h"
@@ -16,8 +17,8 @@
 #define INDEX_FORMAT "om-container 1"
 #define MODEL_MAGIC 0x88FA   /* a model (SPL: its parts, then a TMD) starts with this u16 */
 
-typedef enum { PART_EMPTY, PART_FOLDER, PART_IMAGE, PART_TEXT, PART_BANK, PART_SEQUENCES, PART_MODEL, PART_RAW } PartKind;
-static const char *kKindNames[] = {"empty", "folder", "image", "text", "bank", "sequences", "model", "raw"};
+typedef enum { PART_EMPTY, PART_FOLDER, PART_IMAGE, PART_TEXT, PART_BANK, PART_SEQUENCES, PART_MODEL, PART_FONT, PART_RAW } PartKind;
+static const char *kKindNames[] = {"empty", "folder", "image", "text", "bank", "sequences", "model", "font", "raw"};
 
 static PartKind kind_of(const uint8_t *d, size_t n) {
     Tim t;
@@ -42,6 +43,9 @@ static PartKind kind_of(const uint8_t *d, size_t n) {
     }
     if (model_is(d, n)) {
         return PART_MODEL;
+    }
+    if (mfo_is(d, n)) {
+        return PART_FONT;
     }
     return PART_RAW;
 }
@@ -210,6 +214,13 @@ static int convert_part(const char *base, const char *what, const uint8_t *d, si
         snprintf(file, nfile, "models/%s.gltf", id);
         return 1;
     }
+    case PART_FONT:
+        snprintf(file, nfile, "%s.font.png", leaf);
+        if (!mfo_convert(d, n, base, what, write, ctx)) {
+            snprintf(why, nwhy, "%s: can't write the font", base);
+            return 0;
+        }
+        return 1;
     case PART_RAW:
         snprintf(path, sizeof(path), "%s.%s", base, raw_extension(d, n));
         snprintf(file, nfile, "%s.%s", leaf, raw_extension(d, n));
@@ -476,6 +487,14 @@ static int check_part(const char *base, const uint8_t *d, size_t n, CdconvReadFn
     case PART_TEXT:
         snprintf(path, sizeof(path), "%s.txt", base);
         return same_text(path, d, n, read, ctx, why, nwhy);
+    case PART_FONT:
+        got = mfo_rebuild(base, (MfoReadFn)read, ctx, &len);
+        ok = got != NULL && len == n && memcmp(got, d, n) == 0;
+        free(got);
+        if (!ok) {
+            snprintf(why, nwhy, "%s: the font doesn't make the same bytes again", base);
+        }
+        return ok;
     case PART_BANK: {
         char err[256] = "";
         uint8_t *text;

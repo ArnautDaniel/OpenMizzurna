@@ -93,4 +93,6 @@ lookups by number and address).
 
 Also built: the flags and the story actor's new game and prologue end (`tests/story/test_story.fs`: 8).
 
-**Next**: the window and text ops; the flags in the saves (with the saves subsystem); the areas' rules.
+The text ops go to the message window (`docs/subsystems/window.md`).
+
+**Next**: the flags in the saves (with the saves subsystem); the areas' rules.

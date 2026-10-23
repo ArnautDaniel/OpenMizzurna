@@ -31,7 +31,7 @@ phase-1 port's files (`../port/src/game/`), which name the decomp's functions; t
 | Car | driving, fuel, the roads; the boat | `ovl027.c` (`car_update`, `boat_update`), `hud.c` (fuel) |
 | Traffic | the other cars on the roads | `carline.c` |
 | Camera | how each area and scene is framed, tweens, the shot a scene asks for | `camera.c` |
-| Window | the message window, its pages and choices | `msgbox.c`, `cui.c` |
+| Window ([page](subsystems/window.md), built) | the message window, its pages and choices | `msgbox.c`, `ctexstr.c`, `cui.c` |
 | Items | the inventory and the item ring | `items.c`, `ring.c`, `cui.c` |
 | Phone | dialling, calls, who calls when | `ftel.c` |
 | Notebook | the people and numbers Matthew knows | `fhbook.c` |

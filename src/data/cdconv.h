@@ -5,6 +5,7 @@
  *   a text block      N.txt (data/text.h)
  *   a sound bank's header   N.bank.txt (data/vab.h); its body (another entry) M.samples/ - WAVs
  *   sequences         N.sep/ - MIDI files (data/seqmidi.h)
+ *   a font            N.font.png (+ N.font.clut.png, N.font.txt: data/mfo.h)
  *   a model           models/<path>.gltf (data/modelconv.h; index.txt names it)
  *   anything else     N.<kind> as it is: .exe (a program), .bin (not known yet)
  * An event pack (its script, then its text block) is kept as it is and its text also written as N.txt: the

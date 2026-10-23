@@ -5,7 +5,7 @@
 \ Each op does its work through its subsystem's messages; an op whose subsystem isn't built yet is a stub
 \ that takes its arguments and notes it (`unbuilt`).
 IN: events
-USING: engine actors messages clock ;
+USING: engine actors messages clock window ;
 
 \ ---- the cast: actor slots (decomp/include/actor.h); the others by number (`160 actor`) ----
 0 constant matthew    1 constant morgan    2 constant nozz       3 constant cohen     5 constant samuel
@@ -25,6 +25,7 @@ create thread-task    #threads cells allot   \ its task (0: free)
 create thread-xt      #threads cells allot   \ the word it starts in
 create thread-own     #threads cells allot   \ its own actor (this-one)
 create thread-result  #threads cells allot   \ the last result an op gave (the VM's result register)
+create thread-text    #threads cells allot   \ it waits for its message to close (src: the thread's wait_msg)
 thread-task #threads cells erase
 
 variable events-running   \ how many
@@ -112,8 +113,50 @@ variable loaded-pack
 : time-skip ( minutes -- )   \ src: time_skip: the clock on a minute at a time (the townsfolk follow: to come)
     0 ?do  the-clock send advance-minute  loop ;
 
-\ ---- answers: until their screens are built, the first choice ----
-: choice ( text n -- )  2 s" choice" unbuilt  0 result! ;
+\ ---- text: the message window (docs/subsystems/window.md) ----
+\ a text id: < 10000 the area's, < 15000 the common text's, else the loaded pack's (src: msg_bank)
+10000 constant common-ids   15000 constant pack-ids
+200 constant first-pack
+: text-bank ( id -- bank n )
+    dup common-ids < if  event-area @ swap exit  then
+    dup pack-ids < if  common-text swap common-ids - exit  then
+    loaded-pack @ swap pack-ids - ;
+: the-window ( -- id )  s" window" actor-named ;
+3 constant phone-palette   \ (the other end of a telephone: src phone_say, 3)
+: show ( text speaker palette secs -- )  >r >r >r text-bank r> r> r> the-window send window-say ;
+: text-pending ( -- )  thread 0< 0= if  true thread thread-text slot !  then ;
+: settle ( -- )   \ an event's waits first let its message close (src: the VM's wait_msg, checked first)
+    thread 0< if  exit  then
+    thread thread-text slot @ if   \ (a step first: the window takes the message as the actors run)
+        begin  yield  window-up? 0= until
+        false thread thread-text slot !
+    then ;
+: wait ( steps -- )  settle  forth:wait ;
+: secs ( n -- steps )  s>f seconds ;
+
+: say ( text -- )  nobody 0 0 show ;                                  \ src $108
+: say-by ( text a -- )  0 0 show ;                                    \ $109
+: say-by-wait ( text a -- )  say-by text-pending ;                    \ $125
+: say-mode ( text palette -- )  nobody swap 0 show ;                  \ $153
+: say-mode-wait ( text palette -- )  say-mode text-pending ;          \ $137
+: say-n ( text palette a -- )  swap 0 show text-pending ;             \ $13C
+: say-wait-close ( text -- )  say text-pending ;                      \ $158
+: say-timed-by ( text a secs -- )  0 swap show ;                     \ $13D: it closes itself
+: say-timed-by-wait ( text a secs -- )  dup >r say-timed-by r> secs wait ;   \ $13F
+: caption-for-nowait ( text secs -- )  nobody 0 rot show ;           \ $177
+: caption-for ( text secs -- )  dup >r caption-for-nowait r> secs wait ;     \ $15B
+: wait-text ( -- )  text-pending settle ;                                       \ $10A
+: text-close ( -- )  the-window send window-shut  1 wait ;                      \ $14C
+: text-hold ( -- )  the-window send window-shut  1 wait ;                       \ $13E
+\ talk: a line and the speaker's gesture (src: event_talk; gestures: with the figures)
+: gesture ( a n -- )  2 s" gesture" unbuilt ;
+: talk ( a text gesture -- )  {: a text g :}  text a 0 0 show  text-pending  a g gesture ;   \ $128 ...
+: talk-to ( a text gesture who -- )   \ $16F / $164: the portrait `who`'s (0: the speaker's)
+    {: a text g who :}  text  who if  who  else  a  then  0 0 show  text-pending  a g gesture ;
+
+\ ---- answers ----
+: choice ( text kind -- )   \ src $11E: the question; its answer the result
+    >r text-bank r> the-window send window-ask  text-pending settle  window-answer @ result! ;
 : prompt ( a b -- )  2 s" prompt" unbuilt  1 result! ;
 : fight ( a style b style -- )  4 s" fight" unbuilt  0 result! ;
 : memory-card ( mode -- )  1 s" memory-card" unbuilt  0 result! ;
@@ -181,22 +224,17 @@ variable loaded-pack
 
 \ ---- the other ops: until their subsystems are built ----
 : camera-set ( n n n n n n n -- )  7 s" camera-set" unbuilt ;   \ op $102
-: wait-anim ( a -- )  1 s" wait-anim" unbuilt ;   \ op $103
-: say-reset ( text -- )  1 s" say-reset" unbuilt ;   \ op $105
-: phone-say ( text -- )  1 s" phone-say" unbuilt ;   \ op $106
-: say ( text -- )  1 s" say" unbuilt ;   \ op $108
-: say-by ( text a -- )  2 s" say-by" unbuilt ;   \ op $109
-: wait-text ( -- )  0 s" wait-text" unbuilt ;   \ op $10A
+: wait-anim ( a -- )  1 s" wait-anim" unbuilt  settle ;   \ op $103
 : camera-follow ( -- )  0 s" camera-follow" unbuilt ;   \ op $10B
 : camera-fixed ( -- )  0 s" camera-fixed" unbuilt ;   \ op $10C
-: wait-stop ( a -- )  1 s" wait-stop" unbuilt ;   \ op $10D
+: wait-stop ( a -- )  1 s" wait-stop" unbuilt  settle ;   \ op $10D
 : set-scene ( n -- )  1 s" set-scene" unbuilt ;   \ op $110
-: wait-turned ( a -- )  1 s" wait-turned" unbuilt ;   \ op $112
+: wait-turned ( a -- )  1 s" wait-turned" unbuilt  settle ;   \ op $112
 : camera-at ( a -- )  1 s" camera-at" unbuilt ;   \ op $113
 : sound ( n -- )  1 s" sound" unbuilt ;   \ op $114
 : sequence-play ( n n -- )  2 s" sequence-play" unbuilt ;   \ op $115
 : sequence-stop ( n -- )  1 s" sequence-stop" unbuilt ;   \ op $116
-: wait-near ( a n n n -- )  4 s" wait-near" unbuilt ;   \ op $117
+: wait-near ( a n n n -- )  4 s" wait-near" unbuilt  settle ;   \ op $117
 : camera-move ( n n n n -- )  4 s" camera-move" unbuilt ;   \ op $119
 : scene-reset ( n -- )  1 s" scene-reset" unbuilt ;   \ op $11A
 : camera-face ( a a -- )  2 s" camera-face" unbuilt ;   \ op $11B
@@ -205,55 +243,46 @@ variable loaded-pack
 : wait-effect ( -- )  0 s" wait-effect" unbuilt ;   \ op $121
 : picture-show ( n -- )  1 s" picture-show" unbuilt ;   \ op $123
 : picture-hide ( -- )  0 s" picture-hide" unbuilt ;   \ op $124
-: say-by-wait ( text a -- )  2 s" say-by-wait" unbuilt ;   \ op $125
 : door-reveal-room ( n -- )  1 s" door-reveal-room" unbuilt ;   \ op $126
 : door-anim ( n -- )  1 s" door-anim" unbuilt ;   \ op $127
-: talk ( a text n -- )  3 s" talk" unbuilt ;   \ op $128
 : warp ( n n n n n n -- )  6 s" warp" unbuilt ;   \ op $12A
 : cd-picture ( n -- )  1 s" cd-picture" unbuilt ;   \ op $12B
-: say-mode-wait ( text n -- )  2 s" say-mode-wait" unbuilt ;   \ op $137
-: wait-follow ( a -- )  1 s" wait-follow" unbuilt ;   \ op $138
+: wait-follow ( a -- )  1 s" wait-follow" unbuilt  settle ;   \ op $138
 : door-animate ( w1 -- )  1 s" door-animate" unbuilt ;   \ op $139
 : door-animate-alt ( w1 -- )  1 s" door-animate-alt" unbuilt ;   \ op $13A
 : through-door ( a w1 w2 -- )  3 s" through-door" unbuilt ;   \ op $13B
-: say-n ( text n a -- )  3 s" say-n" unbuilt ;   \ op $13C
-: say-timed-by ( text a secs -- )  3 s" say-timed-by" unbuilt ;   \ op $13D
-: text-hold ( -- )  0 s" text-hold" unbuilt ;   \ op $13E
-: say-timed-by-wait ( text a secs -- )  3 s" say-timed-by-wait" unbuilt ;   \ op $13F
 : camera-angle ( n n -- )  2 s" camera-angle" unbuilt ;   \ op $142
 : music ( n -- )  1 s" music" unbuilt ;   \ op $144
 : minigame ( n -- )  1 s" minigame" unbuilt ;   \ op $145
 : elevator-doors ( n n -- )  2 s" elevator-doors" unbuilt ;   \ op $148
 : wait-minigame ( -- )  0 s" wait-minigame" unbuilt ;   \ op $149
 : wait-camera-turn ( -- )  0 s" wait-camera-turn" unbuilt ;   \ op $14B
-: text-close ( -- )  0 s" text-close" unbuilt ;   \ op $14C
 : wait-camera-move ( -- )  0 s" wait-camera-move" unbuilt ;   \ op $14D
 : camera-height-to ( n n -- )  2 s" camera-height-to" unbuilt ;   \ op $14E
 : wait-camera-height ( -- )  0 s" wait-camera-height" unbuilt ;   \ op $14F
 : camera-heading ( a -- )  1 s" camera-heading" unbuilt ;   \ op $150
-: say-mode ( text n -- )  2 s" say-mode" unbuilt ;   \ op $153
 : camera-dist-to ( n n -- )  2 s" camera-dist-to" unbuilt ;   \ op $154
 : rumble ( n n -- )  2 s" rumble" unbuilt ;   \ op $155
 : object-anim ( n -- )  1 s" object-anim" unbuilt ;   \ op $156
-: say-wait-close ( text -- )  1 s" say-wait-close" unbuilt ;   \ op $158
 : actor-model ( a n -- )  2 s" actor-model" unbuilt ;   \ op $159
-: caption-for ( text secs -- )  2 s" caption-for" unbuilt ;   \ op $15B
 : sprite-count+ ( -- )  0 s" sprite-count+" unbuilt ;   \ op $15D
 : sprite-count-close ( -- )  0 s" sprite-count-close" unbuilt ;   \ op $15E
 : through-door-back ( a w1 w2 -- )  3 s" through-door-back" unbuilt ;   \ op $15F
 : wait-camera-dist ( -- )  0 s" wait-camera-dist" unbuilt ;   \ op $160
 : effect-level ( n n -- )  2 s" effect-level" unbuilt ;   \ op $161
 : face-each-other ( a a -- )  2 s" face-each-other" unbuilt ;   \ op $162
-: talk-to ( a text n n -- )  4 s" talk-to" unbuilt ;   \ op $164
 : map-reveal ( n -- )  1 s" map-reveal" unbuilt ;   \ op $165
 : ambient-start ( n -- )  1 s" ambient-start" unbuilt ;   \ op $166
 : ambient-stop ( n -- )  1 s" ambient-stop" unbuilt ;   \ op $167
-: wait-attached ( a -- )  1 s" wait-attached" unbuilt ;   \ op $16E
+: wait-attached ( a -- )  1 s" wait-attached" unbuilt  settle ;   \ op $16E
 : set-357c ( n -- )  1 s" set-357c" unbuilt ;   \ op $170
 : map-sync ( -- )  0 s" map-sync" unbuilt ;   \ op $172
 : xa-play ( n -- )  1 s" xa-play" unbuilt ;   \ op $173
 : xa-stop ( -- )  0 s" xa-stop" unbuilt ;   \ op $174
 : door-sound ( n -- )  1 s" door-sound" unbuilt ;   \ op $176
-: caption-for-nowait ( text secs -- )  2 s" caption-for-nowait" unbuilt ;   \ op $177
-: wait-attached-to ( a a -- )  2 s" wait-attached-to" unbuilt ;   \ op $178
+: wait-attached-to ( a a -- )  2 s" wait-attached-to" unbuilt  settle ;   \ op $178
 : cd-pictures ( n n -- )  2 s" cd-pictures" unbuilt ;   \ op $179
+
+\ ---- text with a picture (after its stub) ----
+: say-reset ( text -- )  picture-hide  matthew 0 0 show  text-pending ;              \ $105
+: phone-say ( text -- )  0 picture-show  nobody phone-palette 0 show  text-pending ;   \ $106
