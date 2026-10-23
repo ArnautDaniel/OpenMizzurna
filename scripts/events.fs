@@ -39,6 +39,7 @@ variable control-given    \ an event gave Matthew back to the player (the rest n
     -1  #threads 0 do  i thread-task slot @ me = if  drop i leave  then  loop ;
 : this-one ( -- actor )  thread thread-own slot @ ;
 : as-this-one ( actor -- )  thread thread-own slot ! ;
+variable the-prop   \ the actor the C gives a script it starts (src: the script's actor word set: the food, the drink)
 : result! ( n -- )  thread dup 0< if  2drop  else  thread-result slot !  then ;
 : result= ( n -- flag )  thread thread-result slot @ = ;
 
@@ -213,8 +214,6 @@ variable loaded-pack
 : memory-card ( mode -- )  1 s" memory-card" unbuilt  0 result! ;
 
 \ ---- actor commands ( actor args -- ): until the townsfolk and Matthew take them ----
-: anim-once ( a x1 -- )  2 act-unbuilt ;   \ cmd $05
-: anim-then-loop ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $06
 : run ( a x1 -- )  2 act-unbuilt ;   \ cmd $0B
 : face-point ( a x1 x2 x3 -- )  4 act-unbuilt ;   \ cmd $0D
 : anim-at ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $13
@@ -411,6 +410,8 @@ $39 constant to-diner-stool   $44 constant to-club-stool   $45 constant takes-cl
     a person? if  a id nx lp the-townsfolk send person-anim exit  then
     a id nx lp 4 act-unbuilt ;
 : anim ( a id loop -- )  -1 swap anim-then ;   \ cmd $03 (src: actor_anim): play it (looping or not)
+: anim-once ( a id -- )  false anim ;               \ cmd $05: once, from its start
+: anim-then-loop ( a id next -- )  false anim-then ;   \ cmd $06: once, then the next
 : anim-hold ( a -- )   \ cmd $07: at the motion's end the figure stays where it moved
     dup matthew = if  figure-of send figure-hold exit  then
     dup person? if  the-townsfolk send person-hold exit  then

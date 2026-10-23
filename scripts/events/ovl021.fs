@@ -6,7 +6,7 @@ USING: events events.main ;
 
 \ $80104AFC
 : entry-80104AFC
-    matthew as-this-one
+    the-prop @ as-this-one
     this-one 326845 -4080 270511 set-pos
     rolein 327557 269934 walk-to
     rolein wait-stop
@@ -31,7 +31,7 @@ USING: events events.main ;
 
 \ $80104BE0
 : entry-80104BE0
-    matthew as-this-one
+    the-prop @ as-this-one
     ovl021 $8010383C native
     rolein wait-stop
     rolein 1024 0 turn-to
@@ -45,7 +45,7 @@ USING: events events.main ;
 
 \ $80104C50
 : entry-80104C50
-    matthew as-this-one
+    the-prop @ as-this-one
     matthew 4517 0 anim
     matthew wait-anim
     matthew 4563 0 anim
@@ -60,7 +60,7 @@ USING: events events.main ;
 
 \ $80104CB8
 : entry-80104CB8
-    matthew as-this-one
+    the-prop @ as-this-one
     matthew 4517 0 anim
     matthew wait-anim
     matthew this-one ignore-a

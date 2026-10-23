@@ -34,7 +34,8 @@ registered with `area-rules!` / `native:`.
 Facts it keeps for the rules: `zone-answer` / `check-answer` (what the tables gave), `zone-match` / `check-match`
 (their rows to run: `run-rows`). The areas' hooks (`area-hooks!`: entering, a scene) run on `area-entered` /
 `scene-shown`; an area's frame hook (`area-frame!`, src: the overlay's per-frame hook) runs each step while
-Matthew is the player's and no event runs, before ○ and □ (it may start one: then they wait).
+Matthew is the player's and no event runs, before ○ and □ (it may start one: then they wait; or `take-pad`:
+the pad is its own this step - a stool's keys).
 
 ## Status
 
@@ -50,10 +51,10 @@ their stops; the desk officer's scenes in turn; the C its events call (the cell 
 Area 21's (`scripts/rules/area021.fs`, Haines Diner; `tests/library/test_area021.fs`): its look and act are the
 rows' alone; arriving (meeting Lorraine on the 25th, Mel and Lorraine arguing), today's special, closing (20:00,
 from the 28th 19:00), the robbery on the 27th, who says what by their stops, the farm workers, Lorraine's twelve
-conversations in turn, then her line. Seen: the meeting on the 25th plays through, Mel walking off after it.
+conversations in turn, then her line. Seen: the meeting on the 25th plays through, Mel walking off after it. Sitting at the counter and ordering:
+`docs/subsystems/counter.md`.
 **To come**: talking to the townsfolk (○ on a figure), the hints (prompts), the town's per-tile rows, the
-other areas' rules; in area 21 sitting at the counter and ordering (the order menu), Matthew's sitting
-after the meeting; in area 0 the computer's case files and minigames 29, 30 and 36.
+other areas' rules; in area 0 the computer's case files and minigames 29, 30 and 36.
 
 ## The town
 

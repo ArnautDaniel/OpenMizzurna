@@ -187,7 +187,7 @@ USING: events events.main ;
 
 \ $80104358
 : entry-80104358
-    matthew as-this-one
+    the-prop @ as-this-one
     this-one 332555 0 437885 set-pos
     97 actor this-one ignore-a
     97 actor 1024 0 turn-to
@@ -204,7 +204,7 @@ USING: events events.main ;
 
 \ $801043E8
 : entry-801043E8
-    matthew as-this-one
+    the-prop @ as-this-one
     97 actor 1024 0 turn-to
     97 actor this-one ignore-a
     97 actor 2126 0 anim
@@ -216,7 +216,7 @@ USING: events events.main ;
 
 \ $80104448
 : entry-80104448
-    matthew as-this-one
+    the-prop @ as-this-one
     matthew 2128 0 anim
     matthew wait-anim
     matthew this-one ignore-a

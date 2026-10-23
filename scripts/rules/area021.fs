@@ -1,9 +1,9 @@
 \ area021.fs - area 21's rules: Haines Diner (src: ovl021.c, the area's overlay; decomp/docs/areas/area21.md). Its
 \ look and act are the tables' rows alone (its three doors); here: the area's hooks (arriving, each frame: closing,
-\ the robbery), today's special, who says what, Lorraine's conversations, and the C its events call.
-\ (Sitting at the counter and ordering: to come.)
+\ the robbery), today's special, who says what, Lorraine's conversations, the C its events call; sitting at the
+\ counter (counter.fs) and ordering from Lorraine's menu (list-menu.fs).
 IN: rules.area021
-USING: engine actors messages clock story-flags townsfolk events look talk areas matthew ;
+USING: engine actors messages clock story-flags townsfolk events look talk areas matthew window list-menu counter ;
 
 21 constant this-area
 40 constant passing-car   $1D constant passing-car-route   \ src: carline_start(40, 0x1D): a car passing outside
@@ -28,6 +28,61 @@ create specials-line  238 , 239 , 240 , 241 , 242 , 243 , 237 ,   \ src: D_80104
 variable special-line
 : today's-special ( -- )  today first-day - cells specials-line + @ special-line ! ;
 
+\ ---- ordering at the counter (0x80102554): Lorraine asks, the menu, she brings it; ○ talks, □ eats or drinks,
+\ she clears it away (no money or time passes: the overlay's own) ----
+48 constant burger-label   54 constant first-special-label   \ the list bank's: "0" .. "5" the diner's, "6" .. the specials
+229 constant welcome   230 constant another   248 constant changed-your-mind
+create order-lines  231 , 232 , 233 , 234 , 235 , 236 ,   \ src: D_80104ACC (the special's: special-line)
+63 constant the-food   64 constant the-drink   4 constant first-drink   6 constant the-special
+variable orders   \ this visit (src: D_80104AC1)
+enum: order-steps  welcoming choosing bringing served eating clearing ;
+variable order-step   variable order-pick
+: lorraine-says ( msg -- )  rolein 0 one-liner ;
+: drink? ( -- flag )  order-pick @ first-drink the-special within ;
+: order-line ( pick -- msg )  dup the-special = if  drop special-line @  else  cells order-lines + @  then ;
+: menu ( -- )   \ the six, and today's special
+    burger-label  burger-label 1+  burger-label 2 +  burger-label 3 +  burger-label 4 +  burger-label 5 +
+    first-special-label today first-day - +  s" list-menu" actor-named send list-open ;
+: picked ( -- done? )   \ the menu's answer (opened once her line has closed)
+    menu-up? window-up? or if  false exit  then
+    menu-answer @ still-open = if  menu  false exit  then
+    menu-answer @ cancelled = if
+        changed-your-mind lorraine-says  welcoming order-step !  still-open menu-answer !  true exit  then
+    menu-answer @ order-pick !  still-open menu-answer !
+    drink? if  the-drink  else  the-food  then the-prop !
+    order-pick @ order-line lorraine-says  bringing order-step !  false ;
+: diner-order ( -- done? )   \ a step a frame (the counter's)
+    order-step @ case
+        welcoming of  orders @ if  another  else  welcome  then lorraine-says  choosing order-step !  false  endof
+        choosing of  picked  endof
+        bringing of  ['] events.ovl021:entry-80104AFC start-event  served order-step !  false  endof
+        served of   \ ○ talks to her, □ eats or drinks
+            stool-circle? if  rolein talk-with  false exit  then
+            stool-square? if  eating order-step !  then  false  endof
+        eating of
+            drink? if  ['] events.ovl021:entry-80104CB8  else  ['] events.ovl021:entry-80104C50  then start-event
+            clearing order-step !  false  endof
+        clearing of  ['] events.ovl021:entry-80104BE0 start-event  1 orders +!  welcoming order-step !  true  endof
+    endcase ;
+
+\ the counter's settings (src: ovl021's copy of it; port/src/game/ovl021.c DINER_COUNTER)
+create diner-counter  bar-counter allot
+at-diner diner-counter bar !   false diner-counter along-x? !
+$5029E diner-counter cross-lo !   $5037A diner-counter cross-hi !   3072 diner-counter facing !
+true diner-counter last-front-only? !   $FF0 negate diner-counter counter-y !
+$502A2 diner-counter stand-cross !   $502D0 diner-counter seat-cross !
+: two ( a b addr -- )  tuck cell+ !  ! ;
+$11CA $119B diner-counter sit-motions two   $11A0 $119D diner-counter lean-in-motions two
+$11A1 $119E diner-counter lean-motions two   $11A2 $119F diner-counter lean-out-motions two
+$119C $11CC diner-counter stand-motions two   $11CB diner-counter beckon-motion !
+8 diner-counter last-right !   0 diner-counter last-left !   8 diner-counter no-lean-right !
+$520 negate diner-counter camera-yaw !   $1AC negate diner-counter camera-yaw-alt !
+1 5 lshift 1 8 lshift or diner-counter camera-alt-seats !
+$7AC negate diner-counter camera-eye-y !   $242 negate diner-counter camera-look-y !   $6D4 negate diner-counter camera-dist !
+$502D0 diner-counter camera-cross !
+rolein diner-counter barman !   $500DC diner-counter barman-cross !   1024 diner-counter barman-heading !
+' diner-order diner-counter order-xt !
+
 \ ---- the area's hooks (0x8010362C entering, 0x801036B0 each frame) ----
 variable closing-done   variable worker-told
 : lorraine-meets-him ( -- )   \ 12/25: the car outside, Mel waiting
@@ -39,7 +94,8 @@ variable closing-done   variable worker-told
     diner-mel-lorraine-argued flag? 0=  mel 13 standing-at? and if
         diner-mel-lorraine-argued flag-toggle  ['] events.ovl021:entry-80105828 start-event  then ;
 : entered ( -- )
-    11 map-reveal  0 worker-told !  0 closing-done !  today's-special  arrival ;
+    11 map-reveal  0 worker-told !  0 closing-done !  0 orders !  welcoming order-step !  forget-counter
+    today's-special  arrival ;
 : scene-hook ( scene -- )  drop ;
 
 1 constant the-back   \ (scene 1: behind door 84)
@@ -49,8 +105,10 @@ $50179 constant near-morgans-x   $42125 constant near-morgans-z   22 constant mo
     today earlier-closing-day < if  hour closing-hour >=  else  hour earlier-closing-hour >=  then ;
 : by-morgan? ( -- flag )   \ Matthew past the table Morgan sits at
     matthew-now drop nip {: x z :}  x near-morgans-x >  z near-morgans-z > and ;
-: robbery ( xt -- )  diner-robbery-seen flag-toggle  start-event ;   \ (his seat left, Morgan's talk ended: to come)
-: each-frame ( -- )   \ src: func_80103C64
+: robbery ( xt -- )  diner-robbery-seen flag-toggle  counter-off  start-event ;   \ (Morgan's talk ended: to come)
+: each-frame ( -- )   \ src: func_801036B0: the counter, then func_80103C64's times
+    menu-up? if  exit  then
+    diner-counter counter-step  events-running @ if  exit  then
     closing-done @ 0=  closing? and if  1 closing-done !  ['] events.ovl021:entry-80104D4C start-event exit  then
     diner-robbery-seen flag? if  exit  then
     scene @ the-back <>  27 11 30 11 59 between? and if  ['] events.ovl021:entry-80106DF0 robbery exit  then
@@ -150,10 +208,13 @@ $5071B constant workers-spot-x   $4188B constant workers-spot-z
 ' lorraine-talks rolein conversation!
 
 \ ---- the C its events call (ovl021's evfn_*) ----
-: mel-goes ( -- )   \ 0x8010497C: after meeting Lorraine, Mel walks his way (src: func_8002E13C; Matthew seated - to come)
-    $800870F0 main-word ?dup if  mel start-route  then ;
-: to-the-seat ( -- )  0 s" Lorraine to a counter seat" unbuilt ;     \ 0x8010383C (the counter: to come)
-: on-the-counter ( -- )  0 s" the order on the counter" unbuilt ;   \ 0x8010389C
+: mel-goes ( -- )   \ 0x8010497C: after meeting Lorraine, Mel walks his way; Matthew stays on stool 5
+    $800870F0 main-word ?dup if  mel start-route  then  diner-counter 5 seat-now ;
+$11CE constant carrying-motion   40 constant lorraine-pace
+: his-stool-z ( -- z )  at-diner  matthew seat-of nip  seat-spot drop nip nip ;
+: to-the-seat ( -- )   \ 0x8010383C: Lorraine to his stool with the order
+    rolein $500DC his-stool-z lorraine-pace carrying-motion  s" townsfolk" actor-named send person-walk ;
+: on-the-counter ( -- )  0 s" the order on the counter" unbuilt ;   \ 0x8010389C (the props: to come)
 this-area ovl $8010497C ' mel-goes native:
 this-area ovl $8010383C ' to-the-seat native:   this-area ovl $8010389C ' on-the-counter native:
 

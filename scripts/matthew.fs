@@ -55,6 +55,7 @@ create moving playing allot   -1 moving anim !
 4 constant turn-right-motion   5 constant run-motion   20 constant fidget-motion   22 constant fidget-loop-motion
 
 variable controlled              \ the player's to move
+variable on-foot   true on-foot !   \ the pad walks him (not on a stool: src pad field mode 0)
 fvariable speed   fvariable run-build   fvariable turn-rate   variable turning   fvariable idle
 variable l-was   variable r-was
 : show ( id -- )   \ a motion of his own: started if it isn't the one playing (src: actor_anim's restart rule)
@@ -136,7 +137,7 @@ variable turning-to   variable turn-target   variable turn-speed
     turning-to @ if  yaw turn-target @ turn-speed @ heading-step  if  0 turning-to !  then  s>f body-turn  then ;
 
 : control ( -- )
-    controlled @ 0= self body? 0= or  window-up? or if  exit  then   \ (src: field_update: not while ui_busy)
+    controlled @ 0= self body? 0= or  window-up? or  on-foot @ 0= or if  exit  then   \ (src: field_update: not while ui_busy)
     steer pace stand walk ;
 
 PRIVATE>
@@ -146,6 +147,7 @@ behaviour the-player
   on figure-place ( x y z -- )  0 heading-there !  0 ahead !  place ;
   on tick ( -- )  control  scene-moves  moving advance if  moving hold-move @ if  keep-move  then  then ;
   on player-control ( flag -- )  controlled ! ;
+  on figure-on-foot ( flag -- )  on-foot ! ;
   on figure-anim ( id next loop -- )  moving play ;
   on figure-hold ( -- )  true moving hold-move ! ;
   on figure-walk ( x z speed motion -- )
@@ -166,6 +168,7 @@ end-behaviour
     matthew-actor {: id :}  id body-pos 3f>s  id body-yaw f>s ;
 : matthew-was ( -- x y z )  was-x @ was-y @ was-z @ ;   \ where he stood before his last step (src: player_restore_pos's)
 : matthew-walking? ( -- flag )  heading-there @ 0<> ;   \ (facts: the events' wait-stop, wait-turned)
+: matthew-on-foot? ( -- flag )  on-foot @ 0<> ;
 : matthew-turned? ( -- flag )  turning-to @ 0= ;
 : anim-done? ( -- flag )  moving done @  moving anim @ 0< or ;   \ (a fact: the events' wait-anim)
 : draw-matthew ( -- )

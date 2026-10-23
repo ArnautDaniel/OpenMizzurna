@@ -23,10 +23,12 @@ message new-game ( -- )                 \ (to the story) start the game afresh: 
 message prologue-over ( -- )            \ broadcast: the prologue ended (Matthew at the station, 12/25 10:00)
 
 \ ---- the message window (docs/subsystems/window.md) ----
-\ a text bank: 0..32 an area's, 33 the common text, 200+ an event pack's (its CD.BIN entry): engine text-of
+\ a text bank: 0..32 an area's, 33 the common text, 34 the list menus' labels, 200+ an event pack's (its CD.BIN entry): engine text-of
 33 constant common-text
 message window-say ( bank id speaker palette secs -- )   \ show a message; secs 0: it waits for ○ (else it closes itself)
 message window-ask ( bank id kind -- )   \ a question with its answers (kind: src msg_choice)
+message list-open ( id0 id1 id2 id3 id4 id5 id6 -- )   \ (to the list menu) its labels, top first (0: none)
+message list-closed ( answer -- )         \ broadcast: the row picked (0..), or -1 cancelled
 message window-shut ( -- )               \ close it now
 message window-closed ( answer -- )      \ broadcast: the window closed (the answer chosen; -1 none)
 
@@ -49,6 +51,7 @@ message camera-fixed ( -- )              \ stay where it is
 message camera-reset ( -- )              \ behind Matthew now, where he stands (src: camera_reset)
 message figure-anim ( id next loop -- )  \ play motion id (looping or not); then `next` (-1: hold its last frame)
 message figure-hold ( -- )               \ at the motion's end, the figure keeps where it moved (src: anim_hold)
+message figure-on-foot ( flag -- )         \ (to Matthew) the pad walks him, or not (on a stool: src pad_set_field_mode)
 message figure-walk ( x z speed motion -- )   \ (to Matthew) a scene walks him there, speed a game frame
 message figure-forward ( speed motion -- )     \ straight on, until idle (-1: the motion as it is)
 message figure-idle ( -- )                     \ stop walking, stand

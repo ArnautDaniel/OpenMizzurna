@@ -16,6 +16,8 @@ The player (src: `player.c`, `player_misc.c`): his body in the world, his figure
   way (`figure-turning`; 0 at once). `wait-stop` / `wait-turned` wait on the facts `matthew-walking?` /
   `matthew-turned?`. On a stool: `take-diner-seat` takes it (the townsfolk keep the stools), `sit-diner-seat`
   puts him on it.
+- On a stool the pad isn't his: `figure-on-foot` (false) stops his walking (src: the pad's field mode; the
+  counter: `docs/subsystems/counter.md`); the fact `matthew-on-foot?`.
 - Facts: `matthew-there?`, `matthew-now ( -- x y z yaw )`, `matthew-was ( -- x y z )` (before his last step).
 
 ## Motions (`scripts/figures.fs`)

@@ -67,7 +67,7 @@ defer entry-80106954
 
 \ $80105124
 : entry-80105124
-    matthew as-this-one
+    the-prop @ as-this-one
     wolf 0 0 turn-to
     wolf this-one ignore-a
     wolf 2716 0 anim

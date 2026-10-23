@@ -24,6 +24,8 @@ A line is a **one-liner** (src: func_8003FBFC and the executable's templates): t
 camera's talk shot about them (indoors -470 -908 -1370, heading 1856; the town's -474 -2210 -1106, 260),
 Matthew standing, the speaker facing him, the line with its gesture. While its window is up the camera holds
 and Matthew can't move (src: field_update skips both while ui_busy); control and the follow return as it closes.
+With Matthew on a stool the line alone, no shot, no turning (src: template 0x80096230 - the game forces it then);
+with the speaker on one, the shot but no turning, no gesture (0x80096298).
 
 ## Status
 

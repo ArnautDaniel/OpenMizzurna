@@ -271,6 +271,8 @@ def emit_insn(src, i, main_src, names_used, text_comment):
         line = '%s %d %d talk' % ('matthew' if op == 0x16C else 'this-one', i.imm, i.sub)
         return [line + text_comment(i.imm)]
     if op == 0x12D:
+        if (src.scope, i.a) in PROP_SCRIPTS:   # (its actor set by the C that starts it: a prop, a companion)
+            return ['the-prop @ as-this-one']
         return ['%s as-this-one' % actor(args[0])]
     if op == 0x107:
         return ['%d frames wait' % s32(args[0])]
@@ -442,6 +444,16 @@ def route_addresses(exe, src_dir, root, exe_img):
 
 # what a trip goes on with when the person's car arrives (src: the handlers' CMD_LINK_NOTIFY - Nozz at stops 2
 # and 6, Cohen at 1 3 5 13 and 6): converted with the routes
+# scripts whose own actor the overlay's C sets before starting them (src: M2C_FIELD(&D_X, s32 *, 4) = ...->id: the
+# counters' orders - the food, the drink): their `as-this-one` takes events.fs's the-prop
+PROP_SCRIPTS = set()
+
+
+def find_prop_scripts(scope, c):
+    for x in re.findall(r'M2C_FIELD\(&D_([0-9A-F]{8}), s32 \*, 4\) = \(s32\) [^;]*->id;', c):
+        PROP_SCRIPTS.add((scope, int(x, 16)))
+
+
 ARRIVAL_SCRIPTS = [0x80081F94, 0x80081F74, 0x8008299C, 0x800829B4]
 
 
@@ -491,6 +503,7 @@ def main():
             continue
         area = d[3:]
         c = open(os.path.join(root, 'src', d, d + '.c')).read()
+        find_prop_scripts(d, c)
         addrs = set(EV.started_scripts(c)) | {x for ar, x in check_targets if ar == int(area) and x >= OVL_BASE} | \
             {x for x, h in homes.items() if h == area}
         if not addrs:

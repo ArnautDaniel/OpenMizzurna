@@ -1,6 +1,7 @@
 \ area 21's rules on the game's data (scripts/rules/area021.fs): Haines Diner - meeting Lorraine on the 25th,
 \ today's special, closing time, the robbery on the 27th, Lorraine's conversations in turn
-USING: tester engine actors messages clock areas matthew townsfolk events story-flags talk rules.area021 ;
+USING: tester engine actors messages clock areas keys matthew townsfolk events window story-flags talk list-menu counter
+    rules.area021 ;
 
 : steps ( n -- )  0 ?do  1 tick-tasks  actors-frame  loop ;
 : settled ( -- )  10 0 do  deliver  loop  events-stop  deliver ;
@@ -47,5 +48,28 @@ testing a scene walks Matthew and turns him: there at its pace, then round at it
 T{ 25 10 0 at-time  in-diner  events-stop  ' walk-there start-event  scene-over  started? -> false }T
 : where-he-is ( -- x z heading )  matthew-now {: x y z h :}  x z h ;
 T{ where-he-is -> to-x to-z 1024 }T
+
+testing the counter: □ before a free stool, facing it, sits him down (the pad's now the stool's)
+328450 constant before-the-stools   4 constant stool-4   269930 constant stool-4-z
+: answer ( -- )   \ ○ on a line that waits for it
+    window-up? stage @ finished = stage @ page-full = or and pad-circle swap key-hold  1 steps  pad-circle false key-hold ;
+: answering ( n -- )  0 ?do  answer  loop ;
+: press ( key -- )  dup true key-hold  2 steps  false key-hold  2 steps ;
+: held ( key n -- )  over true key-hold  steps  false key-hold ;
+: at-the-stools ( -- )
+    before-the-stools 0 stool-4-z s" matthew" actor-named send figure-place  0 3072 0 s" matthew" actor-named send figure-turn
+    deliver  2 steps ;
+T{ 25 13 0 at-time  diner-lorraine-intro-seen flag-set  in-diner  events-stop  at-the-stools
+   pad-square press  60 steps  at-the-counter?  matthew seat-of  matthew-on-foot? -> true at-diner stool-4 false }T
+testing □ waves Lorraine over: she comes to his stool
+T{ pad-square 10 held  200 steps  barman-here -> stool-4 }T
+testing □ again orders: her welcome, then the menu; ○ picks the pancakes, she brings them; □ eats
+: until-the-menu ( -- )  100 0 do  answer  menu-up? if  leave  then  loop ;
+T{ pad-square 3 held  until-the-menu  menu-up? -> true }T
+T{ pad-down press  pad-down press  pad-circle press  400 answering  menu-up? -> false }T
+T{ pad-square 3 held  600 answering  events-running @  orders @ -> 0 1 }T
+testing leaning toward the next stool, □ gets him up: on his feet, the stool free
+T{ pad-left 20 held  pad-left true key-hold  20 steps  pad-square press  pad-left false key-hold  100 steps
+   at-the-counter?  at-diner stool-4 seat-taken?  matthew-on-foot? -> false false true }T
 
 test-summary

@@ -84,6 +84,10 @@ them; whoever's part of the story it is sets them (an event's native, an area's 
   (`event_threads_update`) - the only way the prologue's end is reached in the code found so far. A prologue
   skip, or a leftover? Not wired until it's settled.
 
+A few scripts' own actor is given by the C that starts them (src: `M2C_FIELD(&D_X, s32 *, 4) = ...->id`: the
+counters' orders - the food, the drink): the converter finds them and writes `the-prop @ as-this-one`; the rules
+set `the-prop` before starting them.
+
 ## Status
 
 **Built**: the conversion (102 files, 1942 words), the language's core (threads, time, flow, lookups), its

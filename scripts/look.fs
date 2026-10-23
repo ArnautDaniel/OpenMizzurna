@@ -111,11 +111,13 @@ create area-rules  #content-areas rules * allot   area-rules #content-areas rule
 
 variable controlled   variable circle-was   variable square-was
 : pressed ( key var -- flag )  >r key-down? dup r@ @ 0= and swap r> ! ;   \ (a held button: once)
+variable pad-taken   \ a frame hook took the pad this step (src: the pad's field mode: a stool's keys)
+: take-pad ( -- )  true pad-taken ! ;
 : watch ( -- )
     pad-circle circle-was pressed  pad-square square-was pressed  {: o s :}
     controlled @ 0= events-running @ or  area @ 0< or  matthew-there? 0= or if  exit  then
-    area @ content rules-of on-frame @ hook
-    events-running @ if  exit  then   \ (the hook may have started one)
+    false pad-taken !  area @ content rules-of on-frame @ hook
+    events-running @ pad-taken @ or if  exit  then   \ (the hook may have started one, or have the pad)
     o if  press-circle exit  then
     s if  press-square  then ;
 
