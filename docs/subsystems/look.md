@@ -57,6 +57,9 @@ rows' alone; arriving (meeting Lorraine on the 25th, Mel and Lorraine arguing), 
 from the 28th 19:00), the robbery on the 27th, who says what by their stops, the farm workers, Lorraine's twelve
 conversations in turn, then her line. Seen: the meeting on the 25th plays through, Mel walking off after it. Sitting at the counter and ordering:
 `docs/subsystems/counter.md`.
+Area 23's (`scripts/rules/area023.fs`, Cohen's house; `tests/library/test_area023.fs`): the locked door upstairs
+(looked at, something found to force it, three tries), the room behind it (a scene, once), the envelope (□,
+once), the front door by the story, who says what. (To come: its sounds, a texture's animation in scene 0.)
 Area 19's (`scripts/rules/area019.fs`, the apartment building - 31 and 32 its ground floor and its air duct;
 `tests/library/test_area019.fs`): the crate, the photo on the shelf (□, two scenes, then a scene ○ starts), the
 doors (○: the keyhole when it's time, or in when open; □: knocking at two), the mailboxes, the duct cover's
