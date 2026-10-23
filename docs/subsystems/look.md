@@ -57,6 +57,8 @@ rows' alone; arriving (meeting Lorraine on the 25th, Mel and Lorraine arguing), 
 from the 28th 19:00), the robbery on the 27th, who says what by their stops, the farm workers, Lorraine's twelve
 conversations in turn, then her line. Seen: the meeting on the 25th plays through, Mel walking off after it. Sitting at the counter and ordering:
 `docs/subsystems/counter.md`.
+Area 9's (`scripts/rules/area009.fs`, the lake; `tests/library/test_area009.fs`): the hut's coffee counter
+(four stools, ordering from the counterman), the boat, a scene at the pier once, who says what.
 Area 8's (`scripts/rules/area008.fs`, the junkyard's bus; `tests/library/test_area008.fs`): the seat looked at
 twice then searched, getting off the bus, a figure there at its point in the story. Its two real minigames: to
 come.

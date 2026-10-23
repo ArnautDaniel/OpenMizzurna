@@ -81,32 +81,49 @@ PRIVATE>
 : seated? ( slot -- flag )  person-of seat-bar @ 0<> ;
 : seat-of ( slot -- bar seat )  person-of dup seat-bar @ swap seat-no @ ;
 
-\ ---- the stools: the diner's counter, Club Wolves' bar (src: SREG.C seat_*) - who sits on which ----
-9 constant #diner-seats   6 constant #club-seats
-create diner-sitters  #diner-seats cells allot   create club-sitters  #club-seats cells allot
+\ ---- the stools: the diner's counter, Club Wolves' bar, the lake hut's (src: SREG.C seat_*) - who sits on which ----
+begin-structure stools
+  field: stools-count   field: stools-sitters   field: stools-area
+  field: stools-x   field: stools-y   field: stools-z   field: stools-facing
+  field: stools-along-x?                       \ the stools run along x (else z), each its table's offset on
+  2 cells +field stools-table                  \ their offsets (an executable table's name)
+  2 cells +field stools-order                  \ the order the townsfolk take them in (none: the first free)
+end-structure
+create bars  5 stools * allot   bars 5 stools * erase   \ (by placed: at-diner, at-club, at-lake)
+: bar-of ( bar -- addr )  stools * bars + ;
+: two! ( addr len dest -- )  tuck cell+ !  ! ;
+: stools! ( bar count area x y z facing along-x? table len order len -- )
+    {: b n ar x y z h ax t tl o ol :}  b bar-of {: r :}
+    n r stools-count !  here n cells allot  r stools-sitters !  ar r stools-area !
+    x r stools-x !  y r stools-y !  z r stools-z !  h r stools-facing !  ax r stools-along-x? !
+    t tl r stools-table two!  o ol r stools-order two! ;
+4 constant at-lake   21 constant the-diner   12 constant the-club   9 constant the-lake
+at-diner 9 the-diner  $502D0 $FF0 negate $4182A 3072 false  s" diner-seats" s" diner-seat-order" stools!
+at-club 6 the-club  $720C1 0 $46C49 2048 true  s" club-seats" s" club-seat-order" stools!
+at-lake 4 the-lake  $5130B 0 $6AE7D 3072 false  s" lake-seats" 0 0 stools!
+: free-all ( bar -- )  bar-of {: r :}  r stools-sitters @ r stools-count @ cells -1 fill ;
 : no-sitters ( -- )   \ (-1: free)
-    diner-sitters #diner-seats cells -1 fill  club-sitters #club-seats cells -1 fill ;
+    at-lake 1+ at-diner do  i free-all  loop ;
 no-sitters
-: sitters ( bar -- addr )  at-club = if  club-sitters  else  diner-sitters  then ;
-: #stools ( bar -- n )  at-club = if  #club-seats  else  #diner-seats  then ;
+: sitters ( bar -- addr )  bar-of stools-sitters @ ;
+: #stools ( bar -- n )  bar-of stools-count @ ;
 : sitter ( bar seat -- slot | -1 )  cells swap sitters + @ ;
 : seat-taken? ( bar seat -- flag )  sitter 0< 0= ;
-21 constant the-diner   12 constant the-club   1 constant stools-floor   $77 constant seated-motion
-$502D0 constant diner-stools-x   $FF0 negate constant diner-stools-y   $4182A constant diner-stools-z   3072 constant facing-counter
-$720C1 constant club-stools-x    0 constant club-stools-y   $46C49 constant club-stools-z   2048 constant facing-bar
-: diner-spot ( seat -- x y z heading )  {: n :}  diner-stools-x diner-stools-y  s" diner-seats" n exe-s16 diner-stools-z +
-    facing-counter ;
-: club-spot ( seat -- x y z heading )  {: n :}  s" club-seats" n exe-s16 club-stools-x +  club-stools-y club-stools-z  facing-bar ;
-: seat-spot ( bar seat -- x y z heading )   \ src: seat_diner_place, seat_club_place
-    swap at-club = if  club-spot  else  diner-spot  then ;
-$7202F constant club-approach-x   $46C77 constant club-approach-z
+1 constant stools-floor   $77 constant seated-motion
+: seat-spot ( bar seat -- x y z heading )   \ src: seat_diner_place, seat_club_place, seat_lake_place
+    {: b n :}  b bar-of {: r :}  r stools-table 2@ swap n exe-s16 {: d :}
+    r stools-along-x? @ if  r stools-x @ d +  r stools-y @  r stools-z @
+    else  r stools-x @  r stools-y @  r stools-z @ d +  then  r stools-facing @ ;
+$7202F constant club-approach-x   $46C77 constant club-approach-z   $502D0 constant diner-approach-x
 : seat-approach ( bar seat -- x z )   \ where one walks to before sitting (src: actor commands 0x39, 0x44)
     {: b n :}  b at-club = if  n 400 * club-approach-x +  club-approach-z
-    else  diner-stools-x  s" diner-seat-approach" n exe-s32  then ;
-: seat-area ( bar -- area )  at-club = if  the-club  else  the-diner  then ;
+    else  diner-approach-x  s" diner-seat-approach" n exe-s32  then ;
+: seat-area ( bar -- area )  bar-of stools-area @ ;
 : free-seat ( bar -- seat | -1 )   \ the first free in the order they're taken (src: seat_*_pick_free)
-    {: b :}  b at-club = if  s" club-seat-order"  else  s" diner-seat-order"  then {: a n :}
-    b #stools 0 do  a n i exe-u8  b over seat-taken? 0= if  unloop exit  then  drop  loop  -1 ;
+    {: b :}  b bar-of stools-order 2@ swap {: a n :}
+    b #stools 0 do
+        n if  a n i exe-u8  else  i  then  b over seat-taken? 0= if  unloop exit  then  drop
+    loop  -1 ;
 \ ---- a companion: someone going along with Matthew (src: actor_ride, D_800A37B0 / D_800A37B4) ----
 variable companion   -1 companion !   \ who (-1: no one)
 variable companion-mode                \ 0 stopped where they are, 1 following him on foot, 2 in his car

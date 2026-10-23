@@ -89,7 +89,8 @@ A scene stages the people it sends through a door of the area being played in th
 
 ## The stools (src: SREG.C seat_*)
 
-The diner's counter has 9 stools, Club Wolves' bar 6 (`diner-seats`, `club-seats`: their places; x 0x502D0,
+The stools are kept by bar (a structure each: count, area, place, the way they run, their offsets' table, the
+order they're taken in): the diner's counter has 9, Club Wolves' bar 6, the lake hut's 4 (`diner-seats`, `club-seats`: their places; x 0x502D0,
 z 0x4182A + it facing the counter, or x 0x720C1 + it, z 0x46C49 facing the bar). The townsfolk keep who sits on
 which (`sitter`, `seat-taken?`, `seated?`, `seat-of`; Matthew's too). A stop "at the diner" / "at Club Wolves"
 puts one on the first free in the game's order (`diner-seat-order`, `club-seat-order`) unless they sit already;

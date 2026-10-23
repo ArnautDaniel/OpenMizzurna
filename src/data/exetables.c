@@ -40,6 +40,8 @@ static const ExeTable kTables[] = {
      "where one walks to before sitting on each stool: s32 z, x 0x502D0 (src: actor command 0x39)"},
     {"club-seats", 0x800968F0, 6 * 2,
      "Club Wolves' stools: s16 each, along x from the first (src: seat_club_place: x 0x720C1 + it, z 0x46C49)"},
+    {"lake-seats", 0x800968FC, 4 * 2,
+     "the lake hut's counter stools: s16 each, along z from the first (src: seat_lake_place: x 0x5130B, z 0x6AE7D + it)"},
     {"club-seat-order", 0x800A34BC, 6, "the order they take its stools in (src: seat_club_pick_free)"},
     {"lane-steps", 0x800935C0, 32 * 4,
      "a parking node's lanes: s16 x, z between one car's place and the next's (src: car_lane)"},

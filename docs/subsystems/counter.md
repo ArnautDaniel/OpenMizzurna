@@ -31,6 +31,8 @@ the stool below (`right-step` -1); Wolf asks ("What? You wanna order?", once he'
 again?"), the menu (chips, coffee, milk, beer), each item's first line and its "again" line, no beer for a kid,
 cancelling ends it ("If you ain't drinkin', buzz off."). A warp takes him off his stool (the area he sat in).
 
+The lake hut's (`rules/area009.fs`): four stools along z, the counterman, a list of two drinks.
+
 ## Status
 
-The diner's and Club Wolves' built. To come: the button prompts (hints), the props on the counter, the sounds.
+The diner's, Club Wolves' and the lake hut's built. To come: the button prompts (hints), the props on the counter, the sounds.
