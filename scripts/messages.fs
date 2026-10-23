@@ -88,6 +88,7 @@ message person-anim ( slot id next loop -- )
 message person-hold ( slot -- )           \ at the motion's end they keep its move
 message person-arrive ( slot -- )         \ the route is done: the next stop (src: actor_arrive)
 message person-goto-stop ( slot stop -- ) \ put at that stop now (src: actor_goto_stop)
+message person-set-stop ( slot stop travelling -- ) \ their stop now, not placed (-1: off their schedule; src: actor_set_stop)
 message person-depart ( slot -- )         \ leave their stop now, walking its route (src: actor_depart)
 message person-through-door ( slot door room flip stage -- )   \ out of that door into room (flip: the other way);
                                           \ stage: the area they're shown in (-1: the room's own)

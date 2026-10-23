@@ -102,6 +102,10 @@ number (`minigame-script!`); the `minigame` op starts that script, the others ar
 
 The minigame scripts include those an area picks from a table (src: `minigame_script = *(... + &D_T)`: the old
 man's lessons): the converter reads the table's words that point into the overlay.
+Those an area runs on a private thread each frame (src: `event_thread_start(&D_T, &D_X)` there: area 17's
+companion leading the way) are taken too; the area starts them as a route (`start-route`: Matthew stays the
+player's). The main executable's (src: minigame_main_start: Winona's ride to the school, 6 - 9, and 23) are
+registered in `scripts/game.fs`.
 
 A few scripts' own actor is given by the C that starts them (src: `M2C_FIELD(&D_X, s32 *, 4) = ...->id`: the
 counters' orders - the food, the drink): the converter finds them and writes `the-prop @ as-this-one`; the rules

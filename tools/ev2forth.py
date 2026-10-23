@@ -456,6 +456,8 @@ def minigame_scripts(c, ovl=None):
     if not m:
         return set()
     out = set(int(x, 16) for x in re.findall(r'\w+ = &D_([0-9A-F]{8})', m.group(1)))
+    # (or one it runs on a private thread of its own each frame: event_thread_start(&D_T, &D_X))
+    out |= set(int(x, 16) for x in re.findall(r'event_thread_start\(&D_[0-9A-F]{8}, &D_([0-9A-F]{8})\)', m.group(1)))
     if ovl is not None:
         for t in re.findall(r'minigame_script = \*\([^;]*&D_([0-9A-F]{8})\)', m.group(1)):
             a = int(t, 16) - OVL_BASE
@@ -541,7 +543,10 @@ def main():
         if bad:
             print('%s: undecodable at %s' % (s.scope, ' '.join('%08X' % x for x in bad)))
         extern |= s.extern
-    addrs = sorted(set(x for x in EV.started_scripts(main_c) if x < EXE_BASE + len(exe_img)) |
+    # (and the minigames that are a script alone: src: minigame_main_start's)
+    m = re.search(r'\nvoid minigame_main_start\(void\) \{\n(.*?)\n\}\n', main_c, re.S)
+    main_minigames = set(int(x, 16) for x in re.findall(r'&D_([0-9A-F]{8})', m.group(1))) if m else set()
+    addrs = sorted(set(x for x in EV.started_scripts(main_c) if x < EXE_BASE + len(exe_img)) | main_minigames |
                    {x for _, x in check_targets if EXE_BASE <= x < EXE_BASE + len(exe_img)})
     tx = (lambda m: texts.get('033_4', m - 10000) if 10000 <= m < 15000 else None) if texts else (lambda m: None)
     main_src = Source('main', EV.Mem([(EXE_BASE, exe_img)]), {x: 'exe-%08X' % x for x in addrs})

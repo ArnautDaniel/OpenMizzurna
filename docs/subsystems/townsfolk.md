@@ -77,6 +77,13 @@ Following (src: func_80037944): they face him and keep 0x100 .. 0x200 behind - p
 (walking), stepping back to 0x101 when nearer (unless that's blocked) - in his area and on his floor; the
 minute's rules leave them be. Facts: `going-along?`, `following?`. (In his car: to come.)
 
+## Off their schedule
+
+A scene can set someone's stop without placing them (cmd $43 `set-stop ( a stop travelling )`, src: actor_set_stop,
+message `person-set-stop`): stop -1 sets their schedule aside (src: Winona's handler, while she is with Matthew) -
+the minute's rules, a jump in time and placing at their stop leave them be until a scene puts them at a stop
+again (`goto-stop`). Fact: `off-schedule?`.
+
 ## Extras
 
 Anyone without a schedule - a bouncer, a fan, the gas station's attendant, the food on the counter (every slot

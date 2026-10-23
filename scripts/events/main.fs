@@ -9164,6 +9164,65 @@ defer L-80099064
     end-script
     ;
 
+: L-80096904
+    winona as-this-one
+    matthew winona face-each-other
+    matthew 10058 0 talk
+    this-one 10059 7 talk
+    matthew 10060 1 talk
+    this-one 10061 6 talk
+    matthew 10062 2 talk
+    this-one 10063 1 talk
+    matthew 10064 0 talk
+    this-one 10065 0 talk
+    matthew 87 0 anim
+    matthew wait-anim
+    end-script
+    ;
+
+\ $80096950
+: exe-80096950
+    L-80096904
+    winona 1 ride
+    winona -1 1 set-stop
+    end-script
+    ;
+
+\ $80096978
+: exe-80096978
+    L-80096904
+    winona 10066 2 talk
+    end-script
+    ;
+
+: L-80096994
+    winona as-this-one
+    matthew winona face-each-other
+    this-one 10067 7 talk
+    matthew 10068 0 talk
+    end-script
+    ;
+
+\ $800969B4
+: exe-800969B4
+    L-80096994
+    winona 1 ride
+    winona -1 1 set-stop
+    end-script
+    ;
+
+\ $800969DC
+: exe-800969DC
+    L-80096994
+    this-one 10066 2 talk
+    end-script
+    ;
+
+\ $800969EC
+: exe-800969EC
+    27 -1 305840 304897 1024 0 warp
+    ;
+
 \ $80096A34
 : exe-80096A34
     matthew as-this-one

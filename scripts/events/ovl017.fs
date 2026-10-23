@@ -4,6 +4,91 @@
 IN: events.ovl017
 USING: events events.main ;
 
+\ $801025D8
+: entry-801025D8
+    winona as-this-one
+    winona unride
+    winona 379483 0 151015 set-pos
+    winona 378515 147485 1 60 walk-to-ex
+    this-one wait-stop
+    winona 369492 147485 1 60 walk-to-ex
+    this-one wait-stop
+    winona 369492 149314 1 60 walk-to-ex
+    this-one wait-stop
+    winona 10 0 anim
+    winona anim-hold
+    this-one wait-anim
+    winona 11 0 anim
+    winona anim-hold
+    this-one wait-anim
+    winona 11 0 anim
+    winona anim-hold
+    this-one wait-anim
+    winona 11 0 anim
+    winona anim-hold
+    this-one wait-anim
+    winona 12 0 anim
+    winona anim-hold
+    this-one wait-anim
+    winona 369000 150514 1 60 walk-to-ex
+    this-one wait-stop
+    winona -90 0 turn-by
+    winona 10 0 anim
+    winona anim-hold
+    this-one wait-anim
+    winona 11 0 anim
+    winona anim-hold
+    this-one wait-anim
+    winona 11 0 anim
+    winona anim-hold
+    this-one wait-anim
+    winona 12 0 anim
+    winona anim-hold
+    this-one wait-anim
+    winona 17 2 set-floor
+    winona 369492 149014 1 60 walk-to-ex
+    this-one wait-stop
+    winona 369492 149360 1 60 walk-to-ex
+    this-one wait-stop
+    winona 10 0 anim
+    winona anim-hold
+    this-one wait-anim
+    winona 11 0 anim
+    winona anim-hold
+    this-one wait-anim
+    winona 11 0 anim
+    winona anim-hold
+    this-one wait-anim
+    winona 11 0 anim
+    winona anim-hold
+    this-one wait-anim
+    winona 12 0 anim
+    winona anim-hold
+    this-one wait-anim
+    winona 369000 150514 1 60 walk-to-ex
+    this-one wait-stop
+    winona -90 0 turn-by
+    winona 10 0 anim
+    winona anim-hold
+    this-one wait-anim
+    winona 11 0 anim
+    winona anim-hold
+    this-one wait-anim
+    winona 11 0 anim
+    winona anim-hold
+    this-one wait-anim
+    winona 12 0 anim
+    winona anim-hold
+    this-one wait-anim
+    winona 17 3 set-floor
+    winona 368621 147372 1 60 walk-to-ex
+    this-one wait-stop
+    winona 364482 147078 1 60 walk-to-ex
+    this-one wait-stop
+    winona -90 0 turn-by
+    end-script
+    ;
+
 \ $80102874
 : entry-80102874
     winona as-this-one

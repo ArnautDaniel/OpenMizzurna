@@ -57,6 +57,10 @@ rows' alone; arriving (meeting Lorraine on the 25th, Mel and Lorraine arguing), 
 from the 28th 19:00), the robbery on the 27th, who says what by their stops, the farm workers, Lorraine's twelve
 conversations in turn, then her line. Seen: the meeting on the 25th plays through, Mel walking off after it. Sitting at the counter and ordering:
 `docs/subsystems/counter.md`.
+Area 17's (`scripts/rules/area017.fs`, the school's main building; `tests/library/test_area017.fs`): with a
+companion along (off her schedule) she leads the way up on her own thread - Matthew stays the player's - and waits
+at the locker; ○ there opens it (items taken and given), the desk after it, the way out not without her, closing
+time by floor and where he is (once).
 Area 16's (`scripts/rules/area016.fs`, the school library; `tests/library/test_area016.fs`): the crate, closing
 time by room (once), a teacher by the hour, the key rack and the key (with a companion along), a poster, the doors'
 scenes by the key and the hours, a book and the newspaper archive (once each), who says what, the building's halves

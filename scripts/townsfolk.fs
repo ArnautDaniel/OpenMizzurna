@@ -58,6 +58,8 @@ no-extras
 : stop-of ( slot -- stop | -1 )   \ the stop they stand at (-1: walking, or no schedule)
     dup scheduled? 0= if  drop -1 exit  then  person-of dup travelling @ if  drop -1  else  at-stop @  then ;
 : current-row ( slot -- row )  person-of dup at-stop @ row-of ;
+: off-schedule? ( slot -- flag )   \ stop -1: their schedule set aside (src: Winona's, while she's with Matthew)
+    dup scheduled? if  person-of at-stop @ 0<  else  drop false  then ;
 
 \ the facts the areas' rules ask
 <PRIVATE   \ (the cast's names are the events': events.fs)
@@ -180,8 +182,8 @@ $1645 constant getting-in      \ the motion of climbing in (the town's own)
     p seat-bar @ p seat-no @ seat-spot  p heading-now !  p pz !  p py !  p px !
     p seat-bar @ seat-area p person-area !  stools-floor p on-floor !
     s seated-motion -1 true show ;
-: place-at-stop ( slot -- )   \ src: actor_apply_placement (cmd 0x2D)
-    {: s :}  s person-of {: p :}  s current-row {: r :}
+: place-at-stop ( slot -- )   \ src: actor_apply_placement (cmd 0x2D) - off their schedule, nowhere to put them
+    dup off-schedule? if  drop exit  then  {: s :}  s person-of {: p :}  s current-row {: r :}
     0 p walking !  0 p travelling !  0 p riding !  r stop-variant @ p shown-kind !
     r stop-placed @ partnered = if  s leave-seat  s r ride-on  exit  then
     s r park-car
@@ -226,7 +228,7 @@ $3F constant through-door-1   $40 constant through-door-0   \ the motions of ste
 variable controlled
 : minute ( t -- )
     {: t :}  #slots 0 do
-        i scheduled?  i going-along? 0= and if   \ (one going along with Matthew keeps with him)
+        i scheduled?  i going-along? 0= and  i off-schedule? 0= and if   \ (one going along with Matthew keeps with him)
             i person-of {: p :}
             p travelling @ if
                 p at-stop @ 1+ p #stops @ < if
@@ -239,7 +241,7 @@ variable controlled
     loop ;
 : settle-all ( t -- )   \ a jump in time: each to the stop for it (src: time_skip's finishing and catching up)
     {: t :}  no-sitters  #slots 0 do  0 i person-of seat-bar !  loop  #slots 0 do
-        i scheduled? if  i  i person-of t stop-for  goto-stop  then
+        i scheduled?  i off-schedule? 0= and if  i  i person-of t stop-for  goto-stop  then
     loop ;
 
 \ ---- drawing those where Matthew is ----
@@ -344,6 +346,7 @@ behaviour townsfolk
   on person-hold ( slot -- )  person-of moving true swap hold-move ! ;
   on person-arrive ( slot -- )  arrive ;
   on person-goto-stop ( slot stop -- )  goto-stop ;
+  on person-set-stop ( slot stop travelling -- )  rot person-of {: st tr p :}  st p at-stop !  tr 0<> p travelling ! ;
   on person-depart ( slot -- )  depart ;
   on person-through-door ( slot door room flip stage -- )  through-door ;
   on person-attach ( slot route speed -- )  attach ;

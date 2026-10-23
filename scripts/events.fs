@@ -241,7 +241,6 @@ variable loaded-pack
 : move-by ( a x1 x2 x3 -- )  4 act-unbuilt ;   \ cmd $38
 : ignore-a ( a x1 -- )  2 act-unbuilt ;   \ cmd $3C
 : ignore-b ( a x1 -- )  2 act-unbuilt ;   \ cmd $3D
-: set-stop ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $43
 : examine ( a -- )  1 act-unbuilt ;   \ cmd $4A
 : reset ( a -- )  1 act-unbuilt ;   \ cmd $4D
 : kill-thread ( a -- )  1 act-unbuilt ;   \ cmd $4E
@@ -336,6 +335,8 @@ create minigame-scripts  #minigames cells allot   minigame-scripts #minigames ce
     dup scheduled? if  the-townsfolk send person-arrive  else  1 act-unbuilt  then ;
 : goto-stop ( a stop -- )   \ cmd $5D
     over scheduled? if  the-townsfolk send person-goto-stop  else  2 act-unbuilt  then ;
+: set-stop ( a stop travelling -- )   \ cmd $43: their stop, not placed (-1: off their schedule, with Matthew)
+    rot dup scheduled? if  -rot the-townsfolk send person-set-stop  else  -rot 3 act-unbuilt  then ;
 : moving? ( a -- flag )  dup matthew = if  drop matthew-walking?  else  walking?  then ;
 : wait-stop ( a -- )   \ $10D: until they stop walking (src: the VM's wait_move)
     settle  dup matthew = over person? or 0= if  drop exit  then
