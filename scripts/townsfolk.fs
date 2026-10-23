@@ -112,6 +112,9 @@ $1645 constant getting-in      \ the motion of climbing in (the town's own)
 : depart ( slot -- )   \ src: depart: travelling, the stop's route on their own thread
     dup person-of {: s p :}  true p travelling !  s  s current-row stop-route @  broadcast person-departs ;
 : heading-to ( dx dz -- heading )  s>f s>f fswap fatan2 4096e f* 2e pi f* f/ f>s 4095 and ;
+: on-ground ( person -- )   \ in the town, their height the ground's under them (src: func_8001C264)
+    {: p :}  p person-area @ the-town <> if  exit  then
+    p px @ p pz @ ground-at if  p py !  then ;
 : walk-step ( slot -- )   \ src: actor_nav_step, nav_step: a step of their speed toward the goal
     person-of {: p :}  p goal-x @ p px @ -  p goal-z @ p pz @ -  {: dx dz :}
     p stride @ s>f game-frames f*  {: F: v :}
@@ -120,7 +123,8 @@ $1645 constant getting-in      \ the motion of climbing in (the town's own)
     then
     dx dz heading-to {: h :}  h p heading-now !
     h s>f 2e f* pi f* 4096e f/ {: F: a :}
-    p px @ s>f  a fsin v f* f+ f>s p px !   p pz @ s>f  a fcos v f* f+ f>s p pz ! ;
+    p px @ s>f  a fsin v f* f+ f>s p px !   p pz @ s>f  a fcos v f* f+ f>s p pz !
+    p on-ground ;
 
 $3F constant through-door-1   $40 constant through-door-0   \ the motions of stepping out of a door, by way
 : through-door ( slot door room flip -- )   \ src: func_8004535C (the door's opening: the doors, to come)

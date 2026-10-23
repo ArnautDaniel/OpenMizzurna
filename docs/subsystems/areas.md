@@ -30,7 +30,11 @@ the objects' group by the same index (src: object_show).
 Each floor has an obstacle list and a zone list (`NNN_4` part 2: parts 0 / 1 floor 1; other floors by area,
 src load_area). A region list: u16 header (count, in use, with ids, off), then boxes s16 x0 x1 z0 z1 (with
 ids: u16 the id and "inverted"); z0 < z1 an upright box, else one turned 45 degrees (src: zone_inside).
-`blocked? ( x z floor -- flag )`, `zone-at ( x z floor -- id | -1 )`.
+`blocked? ( x z floor -- flag )`, `zone-at ( x z floor -- id | -1 )`, `zone-hit ( x z floor -- index id )`,
+`zone-centre ( index x z floor -- x z )`. In the town the lists are the tile's the point is in
+(`town/CC-RR/obstacles.bin`, `zones.bin`), measured from the tile's centre; a point off the map is blocked. The town's
+tiles (`tile-of`, `tile-centre`, `on-map?`) and the ground under a point (`ground-at`, the town's terrain: filled in by
+town.fs) are areas' words.
 
 ## API (`scripts/messages.fs`)
 

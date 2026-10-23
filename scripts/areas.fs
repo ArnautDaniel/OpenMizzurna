@@ -32,6 +32,18 @@ create path 32 allot
     swap floors/area * +  >r s" area-height" r> exe-s16 ;
 : origin-height ( area -- y )  1 floor-height ;
 
+\ ---- the town's tiles (docs/subsystems/town.md): 32 x 24 of 19980 world units ----
+32 constant town-columns   24 constant town-rows
+19980 constant tile-size   9990 constant half-tile
+: tile-centre ( col row -- x z )   \ (src: func_8001D374: the rows one further than the sum says)
+    swap tile-size * half-tile +  swap 1+ tile-size * half-tile + ;
+: tile-of ( x z -- col row )  tile-size /  swap tile-size /  swap 1- ;   \ (src: an actor's tile_col, tile_row)
+: on-map? ( col row -- flag )  town-rows u<  swap town-columns u<  and ;
+\ the ground under a point in the town (town.fs fills it in: the tiles' terrain; none: false)
+defer ground-at ( x z -- y true | false )
+: no-ground ( x z -- false )  2drop false ;
+' no-ground is ground-at
+
 \ ---- the models, and which of their parts show ----
 variable shell   variable models
 create shell-shown 256 allot   create models-shown 256 allot

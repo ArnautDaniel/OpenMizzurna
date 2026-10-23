@@ -1,5 +1,5 @@
 \ the town on the game's data: its tiles streamed around the camera, its street lamps
-USING: tester engine actors messages clock areas daylight town town.private events ;
+USING: tester engine actors messages clock keys areas floors daylight matthew town town.private events ;
 
 : the-areas ( -- id )  s" areas" actor-named ;
 : at-time ( day hour minute -- )  date>time s" clock" actor-named send set-time  deliver ;
@@ -18,6 +18,26 @@ testing the lamps: lit from 17:01 to 23:00, unlit by day, coming on between 16:0
 T{ 25 20 0 at-time  step  all-lamps -> #lamps }T
 T{ 25 12 0 at-time  step  all-lamps -> 0 }T
 T{ 25 16 30 at-time  20 steps  all-lamps -> #lamps }T
+
+testing the ground under a point: the loaded tile's terrain, its highest polygon (src: func_8001C264)
+T{ 344771 285059 ground-at -> -4082 true }T
+
+testing on foot: the tile's obstacles block, from its centre (src: point_blocked); off the map is blocked
+T{ 344771 285059 1 blocked?  349650 289710 1 blocked?  344771 284200 1 blocked?  -100 -100 1 blocked?
+   -> false true false true }T
+T{ 344771 285059 1 zone-hit -> 0 0 }T
+
+testing Matthew walking in the town: along the street, on the ground; into the shop's wall, not
+: matthew-at ( x z heading -- )
+    0 swap 0 s" matthew" actor-named send figure-turn  0 swap s" matthew" actor-named send figure-place  deliver ;
+: steps ( n -- )  0 ?do  1 tick-tasks  actors-frame  loop ;   \ (a tick of the game's)
+: walked ( ticks -- x y z )   \ up held so long
+    pad-up true key-hold  steps  pad-up false key-hold  1 steps  matthew-now drop ;
+: along-the-street? ( x y z -- west? south? on-ground? )
+    {: x y z :}  x 344771 <  z 285059 <  y -4082 -4000 1+ within ;
+T{ true broadcast player-control  deliver  344771 285059 2560 matthew-at  30 walked along-the-street?
+   -> true true true }T
+T{ 344771 285059 0 matthew-at  30 walked nip nip  285300 < -> true }T
 
 testing its billboards (the library's text): tile 17,13 has 12 about its origin; the town 8 sprites
 T{ 17 13 billboards #records  17 13 tile-origin  sprites #records -> 12 349650 289710 8 }T

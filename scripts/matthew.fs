@@ -14,8 +14,10 @@ variable figure
 state: matthew-state end-state
 create moving playing allot   -1 moving anim !
 
+: floor-at ( x z -- y )   \ his floor's height there: in the town the ground (src: func_8001C264), else the floor's
+    area @ the-town = if  ground-at if  exit  then  0 exit  then  2drop  area @ floor @ floor-height ;
 : place ( x y z -- )   \ a height of 0 is "on his floor" (the scripts' set_pos; then the floor holds him)
-    {: x y z :}  x  y ?dup 0= if  area @ floor @ floor-height  then  z  3s>f  area @ floor @ body-place ;
+    {: x y z :}  x  y ?dup 0= if  x z floor-at  then  z  3s>f  area @ floor @ body-place ;
 
 \ at a held motion's end he stays where it moved him (src: func_8001CA5C: the last frame's root move, turned
 \ by his heading, added to his place as it is)
@@ -95,8 +97,10 @@ variable l-was   variable r-was
     frot fdup fsin speed f@ f* frames f*  fswap fcos speed f@ f* frames f*   ( F: x z dx dz )
     frot f+ f>s  f+ f>s  swap ;
 : open? ( x z -- flag )  floor @ blocked? 0= ;
-: step-to ( x z -- )   \ his new place across the floor, his height kept
-    {: x z :}  x  self body-pos 3f>s drop nip  z  3s>f  self body-area self body-floor body-place ;
+: step-to ( x z -- )   \ his new place across the floor: indoors his height kept, in the town the ground's there
+    {: x z :}  self body-pos 3f>s drop nip {: y :}
+    area @ the-town = if  x z ground-at if  to y  then  then
+    x y z  3s>f  self body-area self body-floor body-place ;
 : walk ( -- )   \ src: player_update: a blocked step tries 0x30 at a time either side, easing his heading
     speed f@ f0= if  exit  then
     0  turning @ 0= speed f@ f0> and if

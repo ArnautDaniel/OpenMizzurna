@@ -37,7 +37,7 @@ variable building     \ the row being written (look/rows.fs)
 : faces? ( x z -- flag )   \ his heading within range of the way to (x, z)
     matthew-now {: tx tz mx my mz h :}  tx mx - s>f tz mz - s>f fatan2 turned f>s  h swap face-zone-range
     heading-within? ;
-: faces-zone? ( index -- flag )  floor @ zone-centre faces? ;
+: faces-zone? ( index -- flag )  matthew-now drop nip floor @ zone-centre faces? ;
 
 \ ---- what a table answers: a row to run, or (asking the area) the zone ----
 variable zone-answer   variable zone-match   variable check-answer   variable check-match

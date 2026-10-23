@@ -5,21 +5,16 @@
 IN: town
 USING: engine actors messages clock areas camera daylight ;
 
-32 constant columns   24 constant rows
-19980 constant tile-size
-9990 constant half-tile
 6 constant window      \ tiles a side kept loaded (src: map_stream_update)
 2 constant reach       \ tiles drawn either side of the camera's (src: func_80107F80's 5 x 5)
 
-: tile-centre ( col row -- x z )   \ (src: func_8001D374: the rows one further than the camera's sum says)
-    swap tile-size * half-tile +  swap 1+ tile-size * half-tile + ;
-: camera-tile ( -- col row )  target@ nip  {: x z :}  x tile-size /  z tile-size / 1- ;
+: camera-tile ( -- col row )  target@ nip tile-of ;
+town-columns constant columns   town-rows constant rows
 
 <PRIVATE
 create terrains  columns rows * cells allot   terrains columns rows * cells erase
 create buildings columns rows * cells allot   buildings columns rows * cells erase
 : tile ( col row table -- addr )  -rot columns * + cells + ;
-: on-map? ( col row -- flag )  rows u<  swap columns u<  and ;
 : two-digits ( n -- )  dup 10 < if  s" 0" $+  then  n>str $+ ;
 : tile-path ( col row addr len -- addr len )   \ "town/CC-RR/<file>"
     {: c r s n :}  $clear  s" town/" $+  c two-digits  s" -" $+  r two-digits  s" /" $+  s n $+  $@ ;
@@ -44,6 +39,13 @@ create buildings columns rows * cells allot   buildings columns rows * cells era
     {: c r :}  c r tile-centre {: x z :}
     c r terrains tile @ ?dup if  x 0 z 0 draw-model  then
     c r buildings tile @ ?dup if  x 0 z 0 draw-model  then ;
+\ the ground: the highest of the loaded tile's terrain polygons under the point (src: func_8001C264)
+: town-ground ( x z -- y true | false )
+    2dup tile-of 2dup on-map? 0= if  2drop 2drop false exit  then
+    {: x z c r :}  c r terrains tile @ ?dup 0= if  false exit  then
+    x z  c r tile-centre  ground-height ;
+' town-ground is ground-at
+
 \ the billboards: the trees, lamps, bins standing in a tile, upright pictures turned to the camera's heading
 \ (src: func_8003B41C, billboard_draw; the library's town/CC-RR/billboards.txt, town/sprites.txt)
 1 constant at-x   2 constant at-z   3 constant bottom   4 constant top   5 constant half-width   6 constant sprite

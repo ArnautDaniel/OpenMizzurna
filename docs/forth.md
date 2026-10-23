@@ -211,7 +211,7 @@ the code and checks the stack against the results; `testing name` labels what fo
 
 - `tests/test_*.fs`: the language and the kernel, run by the `forth` tool (no game).
 - `tests/<subsystem>/test_*.fs`: the game's, headless - `openmizzurna --test file.fs` loads the scripts,
-  runs the file and exits with its status. `game-tick` runs a tick,
+  runs the file and exits with its status. `1 tick-tasks actors-frame` runs a tick,
   `deliver` delivers what is queued; `key: X true key-hold` holds a key. Run them with
   `SDL_AUDIO_DRIVER=dummy` (and `--hidden` for other headless runs).
 - `tests/library/test_*.fs`: the game's on its data - run on the library `ctest` imports from the developers' disc

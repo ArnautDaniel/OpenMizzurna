@@ -42,6 +42,10 @@ time (15 a second indoors, ~30 in the town: he was twice as quick in the town, a
 Motions: stand 0, walk 1, back 2, turning 3 / 4, run 5. The walls are his floor's obstacles
 (`floors.fs`: `blocked?`).
 
+In the town the walls are the obstacles of the tile he steps into (off the map: a wall), and his height is the
+ground's under him: the highest of the tile's terrain polygons there (src: point_blocked, func_8001C264; where
+there is none he keeps his height). The town's tiles stream around the camera as he walks.
+
 ## To come
 
 Looking and acting (○: the zones and the areas' rules), doors, the floors' zones and heights, the car with the pad by the original's speeds and turning, the

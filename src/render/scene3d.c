@@ -48,6 +48,8 @@ struct Model3D {
     int *parent;               /* -1: a root */
     float *part_scale;         /* each part's place scale (its extras: 2^scale) - a motion's root move is in it */
     int nnodes;
+    float *positions;          /* every vertex's place in its node (x y z): the ground's height is found in them */
+    int nverts;
 };
 
 #define MAX_SHOWN 256
@@ -455,6 +457,11 @@ Model3D *model3d_load(const char *path) {
         glVertexArrayAttribFormat(m->vao, (GLuint)i, size[i], GL_FLOAT, GL_FALSE, (GLuint)(sizeof(float) * offset[i]));
         glVertexArrayAttribBinding(m->vao, (GLuint)i, 0);
     }
+    m->nverts = nverts;
+    m->positions = malloc(sizeof(float) * 3 * (size_t)(nverts > 0 ? nverts : 1));
+    for (v = 0; v < (size_t)nverts; v++) {
+        memcpy(m->positions + v * 3, verts + v * FLOATS_PER_VERTEX, sizeof(float) * 3);
+    }
     free(verts);
     free(binary);
     cgltf_free(data);
@@ -468,6 +475,7 @@ void model3d_free(Model3D *m) {
     }
     glDeleteBuffers(1, &m->vbo);
     glDeleteVertexArrays(1, &m->vao);
+    free(m->positions);
     free(m->prims);
     free(m->materials);
     free(m->node_world);
@@ -568,6 +576,54 @@ void scene3d_draw_posed(Model3D *m, const float pos[3], float yaw, const short (
             memcpy(d->node[i], local, sizeof(local));
         }
     }
+}
+
+/* the ground under (x, z) in a model standing at pos, unturned (src: func_80046504: the highest polygon) */
+int scene3d_ground(const Model3D *m, const float pos[3], float x, float z, float *y) {
+    float base[3], p[3] = {x, 0, z}, g[3], best = 0;
+    int k, t, found = 0;
+
+    if (m == NULL || m->positions == NULL) {
+        return 0;
+    }
+    world_point(pos, base);
+    world_point(p, g);
+    for (k = 0; k < m->nprims; k++) {
+        const Primitive *pr = &m->prims[k];
+        const float *mw = m->node_world[pr->node];
+
+        for (t = 0; t + 2 < pr->count; t += 3) {
+            float v[3][3], d, l0, l1, l2, gy;
+            int c, j;
+
+            for (c = 0; c < 3; c++) {
+                const float *q = m->positions + (size_t)(pr->first + t + c) * 3;
+                for (j = 0; j < 3; j++) {
+                    v[c][j] = mw[j] * q[0] + mw[4 + j] * q[1] + mw[8 + j] * q[2] + mw[12 + j] + base[j];
+                }
+            }
+            /* (barycentric across x and z: glTF's y is the height) */
+            d = (v[1][2] - v[2][2]) * (v[0][0] - v[2][0]) + (v[2][0] - v[1][0]) * (v[0][2] - v[2][2]);
+            if (fabsf(d) < 1e-12f) {
+                continue;
+            }
+            l0 = ((v[1][2] - v[2][2]) * (g[0] - v[2][0]) + (v[2][0] - v[1][0]) * (g[2] - v[2][2])) / d;
+            l1 = ((v[2][2] - v[0][2]) * (g[0] - v[2][0]) + (v[0][0] - v[2][0]) * (g[2] - v[2][2])) / d;
+            l2 = 1 - l0 - l1;
+            if (l0 < 0 || l1 < 0 || l2 < 0) {
+                continue;
+            }
+            gy = l0 * v[0][1] + l1 * v[1][1] + l2 * v[2][1];
+            if (!found || gy > best) {
+                best = gy;
+                found = 1;
+            }
+        }
+    }
+    if (found) {
+        *y = -best / WORLD_TO_GLTF;
+    }
+    return found;
 }
 
 void scene3d_draw(Model3D *m, const float pos[3], float yaw, const unsigned char *shown, int nshown) {

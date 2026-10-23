@@ -48,6 +48,10 @@ void scene3d_camera(const float target[3], float yaw, float dist, float eye_y, f
  * node: 0 hidden), NULL all of them */
 void scene3d_draw(Model3D *m, const float pos[3], float yaw, const unsigned char *shown, int nshown);
 
+/* the ground under (x, z) (world units) in a model standing at pos, unturned: the highest of its polygons there -
+ * its height to *y (world units, y downward); 0 if none is under it */
+int scene3d_ground(const Model3D *m, const float pos[3], float x, float z, float *y);
+
 /* a figure in a frame of a motion: each node's turn (rx, ry, rz; nodes past nturns keep their rest turn) and
  * the root's move this frame (model units: side, up, forward) */
 void scene3d_draw_posed(Model3D *m, const float pos[3], float yaw, const short (*turns)[3], int nturns,

@@ -26,9 +26,12 @@ func_800243F0). 32 x 24 tiles of 19980 world units; tile (col, row)'s centre is 
   lights show their lit textures (the engine's `lamp`). Facts: `lamp-lit? ( i -- flag )`, `tiles-loaded`,
   `camera-tile`, `tile-centre`.
 
+- On foot (docs/subsystems/matthew.md): the tiles' obstacles and zones, the ground's height (`ground-at`); the
+  townsfolk walking there follow the ground too.
+
 ## To come
 
 Snow, the moving
-signs and the tiles' object animations, the police cordon coming down (12/25 - 12/28), the ground's height for
-people (the terrain), Matthew walking there (the tiles' obstacles and zones), the doors into the buildings, the
+signs and the tiles' object animations, the police cordon coming down (12/25 - 12/28), the doors into the buildings (and the zones' scripts), the cars and props in his way (src: player_probe_blocked), the
+two road tiles closed on foot until 12/28 03:00, driving, the
 cars' headlights at night.

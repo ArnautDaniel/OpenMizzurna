@@ -8,6 +8,7 @@
 
 #include <stdlib.h>
 
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -62,6 +63,18 @@ PRIM(p_draw_model) {   /* ( model x y z yaw -- ) this frame, at a world place, t
 
     if (m >= 1 && m <= sNModels) {
         scene3d_draw(sModels[m - 1].m, pos, (float)yaw, NULL, 0);
+    }
+}
+PRIM(p_ground_height) {   /* ( model x z cx cz -- y true | false ) the ground under x z in the model standing at
+                            * cx 0 cz (the town's tiles): its height, world units */
+    Cell cz = POP(), cx = POP(), z = POP(), x = POP(), m = POP();
+    float pos[3] = {(float)cx, 0, (float)cz}, y;
+
+    if (m >= 1 && m <= sNModels && scene3d_ground(sModels[m - 1].m, pos, (float)x, (float)z, &y)) {
+        PUSH((Cell)lroundf(y));
+        PUSH(-1);
+    } else {
+        PUSH(0);
     }
 }
 PRIM(p_draw_model_shown) {   /* ( model x y z yaw addr n -- ) only the parts whose byte (of n) isn't 0 */
@@ -183,6 +196,7 @@ void bind_scene(Forth *f) {
     forth_prim(f, "model", p_model);
     forth_prim(f, "forget-model", p_forget_model);
     forth_prim(f, "draw-model", p_draw_model);
+    forth_prim(f, "ground-height", p_ground_height);
     forth_prim(f, "draw-model-shown", p_draw_model_shown);
     forth_prim(f, "camera", p_camera);
     forth_prim(f, "texture-area", p_texture_area);
