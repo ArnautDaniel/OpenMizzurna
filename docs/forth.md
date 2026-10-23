@@ -164,6 +164,10 @@ are built, each listed here.
 | `font` / `font-palette` | `n --` | the game's font to draw with (0 the dialogue font, 1 the list font) / its palette |
 | `font-text` | `addr len x y --` | text in the game's font at the pen's scale and colour |
 | `font-width` | `addr len -- px` | its widest line in the font's pixels; `font-line` the line pitch (16), `font-ready?` |
+| `model` | `addr len -- model` | a model from the library (`s" models/001_4.3.0.gltf" model`); 0 if none |
+| `draw-model` | `model x y z yaw --` | draw it this frame at a place in the game's world units, turned (4096 a turn) |
+| `camera` | `x y z yaw dist eye-y look-y h --` | the game's camera (render/scene3d.h): its target, heading, distance, heights, projection |
+| `texture-area` | `area --` | whose texture set the area models use |
 | `exe-table` | `addr len -- addr n` | a table of the executable by name (`s" music" exe-table`); `0 0` if none |
 
 The pad's buttons as keys: `scripts/keys.fs` (`pad-circle`, `pad-cross`, ... the d-pad `pad-up` ...).

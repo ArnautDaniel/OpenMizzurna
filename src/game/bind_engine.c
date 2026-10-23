@@ -195,6 +195,7 @@ void bind_engine(Forth *f) {
         }
     }
     bind_text(f);   /* (the text and fonts: text.c) */
+    bind_scene(f);  /* (the 3D: bind_scene.c) */
     forth_set_current(f, was);
     gEngine.pen = 0xFFFFFFFF;
     gEngine.pen_scale = 2;

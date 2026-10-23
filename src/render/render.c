@@ -3,6 +3,7 @@
  * font.h (glyph i at column i, 6 x 8 cells), and plain rectangles use a 1 x 1 white texture, so every quad
  * goes through the same shader. */
 #include "render.h"
+#include "scene3d.h"
 
 #include "../platform/gl.h"
 #include "font.h"
@@ -185,6 +186,7 @@ void render_begin(int window_w, int window_h, float r, float g, float b) {
     R.nbatches = 0;
     glViewport(0, 0, window_w, window_h);
     glClearNamedFramebufferfv(0, GL_COLOR, 0, clear);
+    glClearNamedFramebufferfi(0, GL_DEPTH_STENCIL, 0, 1.0f, 0);
 }
 
 static uint32_t swap_rgba(uint32_t rgba) {   /* 0xRRGGBBAA to the bytes R G B A in memory */
@@ -257,6 +259,7 @@ float render_line_height(float scale) { return GLYPH_H * scale + scale; }
 void render_end(void) {
     int i;
 
+    scene3d_flush(R.w, R.h);   /* (the 3D first: the 2D goes over it) */
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDisable(GL_DEPTH_TEST);
@@ -275,6 +278,8 @@ void render_end(void) {
         R.want_shot = 0;
     }
 }
+
+uint32_t render_program(const char *vs, const char *fs) { return link(vs, fs); }
 
 static void write_to_file(void *ctx, void *data, int n) {
     fwrite(data, 1, (size_t)n, ctx);

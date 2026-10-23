@@ -8,6 +8,7 @@
 /* GL 1.0 / 1.1's, loaded too (nothing linked against libGL: SDL finds the driver's) */
 typedef void (APIENTRY *OM_GLBLENDFUNC)(GLenum, GLenum);
 typedef void (APIENTRY *OM_GLDELETETEXTURES)(GLsizei, const GLuint *);
+typedef void (APIENTRY *OM_GLCULLFACE)(GLenum);
 typedef void (APIENTRY *OM_GLDEPTHFUNC)(GLenum);
 typedef void (APIENTRY *OM_GLDEPTHMASK)(GLboolean);
 typedef void (APIENTRY *OM_GLDEPTHRANGE)(GLdouble, GLdouble);
@@ -95,6 +96,10 @@ typedef void (APIENTRY *OM_GLVIEWPORT)(GLint, GLint, GLsizei, GLsizei);
     X(PFNGLNAMEDFRAMEBUFFERTEXTURELAYERPROC, glNamedFramebufferTextureLayer) \
     X(PFNGLTEXTURESTORAGE3DPROC, glTextureStorage3D) \
     X(PFNGLPROGRAMUNIFORM1FVPROC, glProgramUniform1fv) \
+    X(PFNGLGETUNIFORMLOCATIONPROC, glGetUniformLocation) \
+    X(PFNGLBLENDEQUATIONPROC, glBlendEquation) \
+    X(PFNGLBLENDCOLORPROC, glBlendColor) \
+    X(OM_GLCULLFACE, glCullFace) \
     X(OM_GLBLENDFUNC, glBlendFunc) \
     X(OM_GLDELETETEXTURES, glDeleteTextures) \
     X(OM_GLDEPTHFUNC, glDepthFunc) \
@@ -126,6 +131,10 @@ GL_FUNCTIONS(GL_DECLARE)
 #define glStencilFunc p_glStencilFunc
 #define glStencilOp p_glStencilOp
 #define glViewport p_glViewport
+#define glGetUniformLocation p_glGetUniformLocation
+#define glBlendEquation p_glBlendEquation
+#define glBlendColor p_glBlendColor
+#define glCullFace p_glCullFace
 #define glCreateShader p_glCreateShader
 #define glShaderSource p_glShaderSource
 #define glCompileShader p_glCompileShader

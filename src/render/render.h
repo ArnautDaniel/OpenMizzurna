@@ -35,6 +35,9 @@ void render_text(float x, float y, float scale, uint32_t rgba, const char *s, in
 float render_text_width(float scale, int chars);
 float render_line_height(float scale);
 
+/* a shader program from GLSL sources (errors printed) */
+uint32_t render_program(const char *vs, const char *fs);
+
 /* the last drawn frame as a PNG; 0 on failure */
 int render_screenshot(const char *path);
 
