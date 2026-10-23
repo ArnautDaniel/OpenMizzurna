@@ -19,6 +19,7 @@ typedef struct Input {
 /* open the window (hidden: nothing shown, for tests and screenshots); 0 on failure */
 int platform_open(const char *title, int w, int h, int hidden);
 void platform_close(void);
+SDL_Window *platform_window(void);   /* (for dialogs) */
 /* gather this frame's events into the input state */
 void platform_poll(Input *in);
 /* the drawable size in pixels */

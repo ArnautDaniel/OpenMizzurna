@@ -5,6 +5,10 @@
  *     --frames N        stop after N frames
  *     --eval "code"     run Forth after the scripts have loaded (repeatable)
  *     --test file.fs    run a test file after the scripts, headless, and exit with its status
+ *     --import disc.cue the disc imported into the library, then out
+ *
+ * The game's data is the library (platform/library.c, docs/library.md): on the first run, with no library, the
+ * player picks their disc and it is imported.
  *
  * Start-up: the window (SDL3, OpenGL 4.6 core), the renderer, the Forth system with the engine's words and
  * the actor kernel, then scripts/prelude.fs and scripts/game.fs - which decide everything else. Each
@@ -13,6 +17,7 @@
 #include "forth/forth.h"
 #include "game/engine.h"
 #include "kernel/mactor.h"
+#include "platform/library.h"
 #include "platform/platform.h"
 #include "render/render.h"
 
@@ -38,6 +43,7 @@ typedef struct Options {
     const char *evals[MAX_EVALS];
     int nevals;
     const char *test;
+    const char *import;
 } Options;
 
 static int parse_options(int argc, char **argv, Options *o) {
@@ -51,11 +57,13 @@ static int parse_options(int argc, char **argv, Options *o) {
             o->frames = atol(argv[++i]);
         } else if (strcmp(argv[i], "--eval") == 0 && i + 1 < argc && o->nevals < MAX_EVALS) {
             o->evals[o->nevals++] = argv[++i];
+        } else if (strcmp(argv[i], "--import") == 0 && i + 1 < argc) {
+            o->import = argv[++i];
         } else if (strcmp(argv[i], "--test") == 0 && i + 1 < argc) {
             o->test = argv[++i];
             o->hidden = 1;
         } else {
-            fprintf(stderr, "usage: openmizzurna [--hidden] [--frames N] [--eval code] [--test file.fs]\n");
+            fprintf(stderr, "usage: openmizzurna [--hidden] [--frames N] [--eval code] [--test file.fs] [--import disc.cue]\n");
             return 0;
         }
     }
@@ -140,7 +148,14 @@ int main(int argc, char **argv) {
     if (!parse_options(argc, argv, &opt)) {
         return 2;
     }
+    if (opt.import != NULL) {
+        return library_import_from(opt.import) ? 0 : 1;
+    }
     if (!platform_open("OpenMizzurna", 1280, 960, opt.hidden) || !render_init()) {
+        return 1;
+    }
+    /* the library: a headless run goes on without one (the engine's own tests need none) */
+    if (!library_choose(opt.hidden) && !opt.hidden) {
         return 1;
     }
     e->hidden = opt.hidden;

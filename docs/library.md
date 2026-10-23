@@ -51,12 +51,37 @@ tracks), five `.STR` movies (260 MB), `FILELINK.BIN`.
 | sound banks | VAB (programs, tones, envelopes; ADPCM samples) | a WAV per sample (its loop in a `smpl` chunk) and the bank as text (programs, tones, envelopes) | replace a sound |
 | sequences | SEP / SEQ (the music and effect sequences) | Standard MIDI files, the loop points as markers | replace a tune |
 | music and voices | TSG.XA (XA ADPCM, 7 tracks) | FLAC, one per track | replace a track |
-| movies | STR (MDEC video, XA audio) | the video as it is (the engine decodes MDEC) and its sound as FLAC; a modern video container later | |
+| movies | STR (MDEC video, XA audio) | a modern video file (decoded once at import and encoded with a video library, e.g. libavcodec); the sound as FLAC | any player opens them; a mod's movie is any video |
 | the executable's tables | addresses in SLPS_017.83 | a file each, by name; readable forms as subsystems want them | no addresses at run time; mods |
 | event scripts | bytecode in CD.BIN's event packs and the areas' overlays | converted **once**, at development time, into Forth (`scripts/story/`), not at import | edited by hand from then on |
 
 Order: the executable's tables, CD.BIN's containers unpacked, textures and text first (the first subsystems
 need them); then sound, music, models, the town, movies; areas last. Until its turn a kind is copied as it is.
 
+**Libraries.** The conversions may use libraries (as OpenHuey does: stb, dr_flac, cgltf): small vendored ones
+where they're enough, a real codec library where one is needed (video). They are needed for a release anyway.
+
 **Conversions are exact**: a converted format gives the engine the same data the original did; each kind has a
 check (a ctest) that decodes both and compares.
+
+## Status
+
+**Built** (step 1, the plain library): the picker and the import with its progress (`src/platform/library.c`), the
+disc image reader (`src/data/disc.c`: .cue / .bin, ISO 9660, XA streams as raw sectors), CD.BIN's table and
+unpacking (`src/data/cdbin.c`), the manifest and the check at start-up (every file listed there at its size),
+`--import`. The library today:
+
+```
+library/
+  manifest.txt     openmizzurna-library 1 / disc <crc> <program> / convert ... / file <size> <path> ...
+  exe/SLPS_017.83  the executable (until the tables the game reads from it are files of their own)
+  cdbin/NNN_K.bin  CD.BIN's 565 entries, unpacked (group NNN, kind K)
+  disc/            MAP.BIN, TSG.XA, FILELINK.BIN as they are
+  movies/          the five .STR as they are
+```
+
+Checks (ctest, with the developers' disc - `OM_DEV_DISC`): `disc_check` (every file of the image the same as
+phase 1's extraction) and `cdbin_check` (every CD.BIN entry unpacked the same).
+
+**Next**: the containers inside CD.BIN's entries, their TIM images to PNG; the text to UTF-8; the executable's
+tables by name.

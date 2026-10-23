@@ -204,6 +204,8 @@ int platform_open(const char *title, int w, int h, int hidden) {
     return 1;
 }
 
+SDL_Window *platform_window(void) { return sWindow; }
+
 void platform_close(void) {
     if (sPad != NULL) {
         SDL_CloseGamepad(sPad);

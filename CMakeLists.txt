@@ -38,12 +38,18 @@ endforeach()
 
 # ---- the game ----
 find_package(SDL3 REQUIRED CONFIG)
+# the game's data: the disc image, CD.BIN, the formats and their conversions (the engine's, the import's and
+# the checks')
+add_library(omdata STATIC src/data/disc.c src/data/cdbin.c)
+target_link_libraries(omdata PUBLIC m)
 add_executable(openmizzurna
     src/main.c
     src/platform/platform.c src/platform/gl.c
     src/render/render.c
     src/game/bind_engine.c src/game/console.c
+    src/platform/library.c src/core/files.c
     src/third_party/stb.c)
+target_link_libraries(openmizzurna PRIVATE omdata)
 target_include_directories(openmizzurna PRIVATE src/third_party)
 target_link_libraries(openmizzurna PRIVATE forth mactor SDL3::SDL3 m)
 target_compile_definitions(openmizzurna PRIVATE "OM_SCRIPT_DIR=\"${SCRIPT_DIR}\"")
@@ -59,3 +65,16 @@ foreach(t ${GAME_TESTS})
         set_tests_properties(${sub}_${name} PROPERTIES ENVIRONMENT "SDL_AUDIO_DRIVER=dummy")
     endif()
 endforeach()
+
+# ---- the data checks (the developers' disc: OM_DEV_DISC, a .cue; skipped without it) ----
+set(OM_DEV_DISC "${CMAKE_CURRENT_SOURCE_DIR}/../Mizzurna Falls (English 31-03-2021)/Mizzurna Falls (English 31-03-2021).cue"
+    CACHE FILEPATH "a disc image for the data checks")
+set(OM_DEV_EXTRACT "${CMAKE_CURRENT_SOURCE_DIR}/../extract" CACHE PATH "phase 1's extraction (fs/, cdbin/) to compare with")
+add_executable(disc_ls tools/disc_ls.c)
+target_link_libraries(disc_ls PRIVATE omdata)
+add_executable(cdbin_check tools/cdbin_check.c)
+target_link_libraries(cdbin_check PRIVATE omdata)
+if(EXISTS "${OM_DEV_DISC}" AND EXISTS "${OM_DEV_EXTRACT}/fs")
+    add_test(NAME disc_check COMMAND disc_ls "${OM_DEV_DISC}" "${OM_DEV_EXTRACT}/fs")
+    add_test(NAME cdbin_check COMMAND cdbin_check "${OM_DEV_DISC}" "${OM_DEV_EXTRACT}/cdbin")
+endif()
