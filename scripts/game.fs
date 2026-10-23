@@ -2,7 +2,7 @@
 \ their subsystems are built (docs/subsystems.md: the map).
 IN: game
 USING: engine actors keys messages clock effects window list-menu knock items areas daylight sky snow billboards town traffic townsfolk routes matthew camera talk look story
-    events.checks events.schedules events.doors events.car-routes rules.area000 rules.area001 rules.area002 rules.area003 rules.area012 rules.area018 rules.area021 rules.area027 ;
+    events.checks events.schedules events.doors events.car-routes rules.area000 rules.area001 rules.area002 rules.area003 rules.area005 rules.area012 rules.area018 rules.area021 rules.area027 ;
 
 spawn-clock drop  spawn-effects drop  spawn-window drop  spawn-list-menu drop  spawn-knock drop  spawn-items drop  spawn-daylight drop  spawn-sky drop  spawn-snow drop  spawn-town drop  spawn-traffic drop  spawn-townsfolk drop  spawn-routes drop  spawn-look drop  spawn-areas drop  spawn-matthew drop  spawn-camera drop  spawn-story drop
 

@@ -53,6 +53,8 @@ rows' alone; arriving (meeting Lorraine on the 25th, Mel and Lorraine arguing), 
 from the 28th 19:00), the robbery on the 27th, who says what by their stops, the farm workers, Lorraine's twelve
 conversations in turn, then her line. Seen: the meeting on the 25th plays through, Mel walking off after it. Sitting at the counter and ordering:
 `docs/subsystems/counter.md`.
+Area 5 (`scripts/rules/area005.fs`; `tests/library/test_area005.fs`): one chain of scripts from the warp in to the
+warp out; its fights, shoot-out and flare are the minigames' (to come) - the scripts carry on past them.
 Area 4 (James's house) has no rules: the visit is one script, reached by knocking at his door
 (`docs/subsystems/doors.md`).
 Area 3's (`scripts/rules/area003.fs`, the Roland residence; `tests/library/test_area003.fs`): heading home at
