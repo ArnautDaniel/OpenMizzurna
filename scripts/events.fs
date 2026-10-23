@@ -5,7 +5,7 @@
 \ Each op does its work through its subsystem's messages; an op whose subsystem isn't built yet is a stub
 \ that takes its arguments and notes it (`unbuilt`).
 IN: events
-USING: engine actors messages clock areas window matthew townsfolk traffic doors effects camera ;
+USING: engine actors messages clock areas window matthew townsfolk traffic doors effects camera fight ;
 
 \ ---- the cast: actor slots (decomp/include/actor.h); the others by number (`160 actor`) ----
 0 constant matthew    1 constant morgan    2 constant nozz       3 constant cohen     5 constant samuel
@@ -219,7 +219,9 @@ variable loaded-pack
 : choice ( text kind -- )   \ src $11E: the question; its answer the result
     >r text-bank r> the-window send window-ask  text-pending settle  window-answer @ result! ;
 : prompt ( a b -- )  2 s" prompt" unbuilt  1 result! ;
-: fight ( a style b style -- )  4 s" fight" unbuilt  0 result! ;
+: fight ( a style b style -- )   \ op $169: until it's won (src: wait_fight; the result its winner)
+    s" fight" actor-named send fight-start  settle  yield
+    begin  fighting? while  yield  repeat  fight-winner @ result! ;
 : memory-card ( mode -- )  1 s" memory-card" unbuilt  0 result! ;
 
 \ ---- actor commands ( actor args -- ): until the townsfolk and Matthew take them ----

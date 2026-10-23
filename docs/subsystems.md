@@ -53,7 +53,8 @@ phase-1 port's files (`../port/src/game/`), which name the decomp's functions; t
 | HUD | the clock and fuel on screen, prompts | `hud.c`, `hudprim.c` |
 | Weather | snow, the sky, the day's light | `snow.c`, `sky.c`, `clock.c` |
 | Music | the background music, ambience, stage music | `sound.c`, `ambience.c` |
-| Minigames | fights, the shootouts, the bar counters, chases | `fight.c`, `qte.c`, `shootout.c`, `counter.c`, `ovl0xx.c` |
+| Fight ([page](subsystems/fight.md), built) | a fistfight: the pad or the AI each side, the hits, the game over | `fight.c` |
+| Minigames | the shootouts, the bar counters, chases | `fight.c`, `qte.c`, `shootout.c`, `counter.c`, `ovl0xx.c` |
 | Saves | saving and loading the story | `cmcard.c`, `cnrev.c` (story_save) |
 | Title | the logo, the title and its menu, the movies, the endings | `opening.c` |
 | Pause | the pause | `cui.c` |

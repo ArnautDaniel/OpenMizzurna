@@ -66,6 +66,22 @@ static const ExeTable kTables[] = {
     {"stars-x", 0x800806F8, 20 * 4, "the 20 stars: where across (s32; a 320-pixel repeat; src: func_8001F000)"},
     {"stars-y", 0x80080748, 20 * 4, "and how high above the horizon's top"},
     {"snow-wobble", 0x8009583C, 32 * 2, "a snowflake's sway: 32 steps of s8 x, z (src: the flakes' loop)"},
+    /* the fight (src: fight.c, SUGI) */
+    {"fight-moves", 0x80092A80, 30 * 4,
+     "a fighter's moves: s16 motion, u8 kind (0 acting, 1 hit or down: not to be hit, 2 ready), u8 the move after it"},
+    {"fight-ai", 0x80092AFC, 7 * 20,
+     "the AI's ways, styles 2 - 8, 20 bytes each: u8 chances of dodging, jabbing, kicking, its special (two moods "
+     "each), s16 ranges it backs off within (two moods), comes in beyond (two), u8 its special move, s16 its reach"},
+    {"fight-attacks", 0x80092B88, 13 * 8,
+     "the attacks (moves 0 - 12): s16 the frame it lands on, its reach; u8 damage, the victim's move; u16 the push"},
+    {"fight-hit-sounds", 0x80092BF0, 16, "an attack's sound when it lands: from the area's first (u8, by move)"},
+    {"fight-voices", 0x80092C00, 16, "and the voice with it"},
+    {"fight-sound-base", 0x80092C10, 32, "an area's first fight sound (u8, by area; 0 none)"},
+    {"fight-hook-steps", 0x80092C30, 12, "the hook's moves forward, a frame (s8)"},
+    {"fight-down-steps", 0x80092C3C, 16, "falling down: the moves a frame (s8)"},
+    {"fight-ko-steps", 0x80092C4C, 20, "knocked out: the moves a frame (s8)"},
+    {"fight-special-steps", 0x80092C60, 16, "the special move 6's moves a frame (s8)"},
+    {"fight-icons", 0x80092C70, 9, "a style's name icon over its health bar (u8)"},
     {"music", 0x800814DC, MUSIC_TRACKS * MUSIC_ENTRY,
      "the background music: per track its sequence's CD.BIN entry, then 0 or 1, and its volume (src: music_play)"},
 };

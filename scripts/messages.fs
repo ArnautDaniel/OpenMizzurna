@@ -49,6 +49,7 @@ message figure-turn ( rx ry rz -- )      \ turned so (4096 a turn)
 message camera-place ( look-y dist eye-y x y z yaw -- )   \ a fixed shot (src: the events' camera_set)
 message camera-follow ( -- )             \ behind Matthew again, the scene's way
 message camera-fixed ( -- )              \ stay where it is
+message fight-start ( a style b style -- ) \ a fistfight: each the pad's (style 0) or the AI's (2 - 8) (src: fight_start)
 message camera-behind ( look-y dist eye-y -- ) \ low behind Matthew, turning as he turns (src: ovl019's duct crawl)
 message camera-reset ( -- )              \ behind Matthew now, where he stands (src: camera_reset)
 message figure-anim ( id next loop -- )  \ play motion id (looping or not); then `next` (-1: hold its last frame)
