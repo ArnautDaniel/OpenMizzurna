@@ -154,6 +154,7 @@ variable turning-to   variable turn-target   variable turn-speed
 \ scene runs - ahead 0x28 a frame, back 0x1E, turning 0x80; a move that would put a wall within three of his
 \ lengths (0x78 each) ahead is undone ----
 variable crawling
+variable unseen   \ not drawn (src: actors[0].visible 0: the shoot-outs' view)
 40e fconstant crawl-ahead   -30e fconstant crawl-back   128e fconstant crawl-turn   120 constant crawl-length
 $1006 constant crawl-motion   $1005 constant crawl-still-motion
 : clear-ahead? ( -- flag )   \ his place and two lengths on, the way he faces, all open
@@ -191,6 +192,7 @@ behaviour the-player
   on figure-pushes ( crate -- )  pushing ! ;   \ (-1: none)
   on figure-perch ( n -- )  perch ! ;
   on figure-crawl ( flag -- )  crawling ! ;
+  on figure-shown ( flag -- )  0= unseen ! ;
   on figure-floor ( floor -- )   \ src: actor_set_floor: his floor, and its height under him
     floor !  self body? 0= if  exit  then  self body-pos {: F: x F: y F: z :}
     x  area @ floor @ floor-height s>f  z  area @ floor @ body-place ;
@@ -208,7 +210,7 @@ behaviour the-player
   on area-entered ( area scene -- )   \ (off any stool: the stools are the area's)
     drop  self body? if  body-area!  else  drop  then
     on-foot @ 0= if  true on-foot !  0 s" townsfolk" actor-named send seat-leave  then   \ (0: his slot)
-    0 perch !  -1 pushing ! ;   \ (and off any crate)
+    0 perch !  -1 pushing !  false unseen ! ;   \ (and off any crate; seen)
 end-behaviour
 
 : matthew-actor ( -- id )  s" matthew" actor-named ;
@@ -224,7 +226,7 @@ end-behaviour
 : matthew-turned? ( -- flag )  turning-to @ 0= ;
 : anim-done? ( -- flag )  moving done @  moving anim @ 0< or ;   \ (a fact: the events' wait-anim)
 : draw-matthew ( -- )
-    matthew-there? if
+    matthew-there? unseen @ 0= and if
         figure @  moving anim @ 0< if  0 0  else  moving clip @ moving frame  then  matthew-now draw-figure
     then ;
 ' draw-matthew on-draw

@@ -67,8 +67,8 @@ remembered the next visit); the morning hunt - his walk away on an even minute a
 "Hey!" in the clearing and his chase, through to the hunters, following Cohen along his route at his pace (too
 far, running, lingering: his words), his signs (○), each leg's deadline, the run back to the cabin with the bear
 after him; the cabin door, the shell box (○ then □); closing time, the ways in and out (zones), the waterfall
-meeting at its time; the last evening's way chosen on arriving and its places. (To come: the shoot-out minigame,
-the movies the last scenes end in, the ambience, the water's animated texture; the events' lock is the area's
+meeting at its time; the last evening's way chosen on arriving and its places; the shoot-out in the cabin
+(`shootout.md`). (To come: the movies the last scenes end in, the ambience, the water's animated texture; the events' lock is the area's
 own for now.)
 Area 28's (`scripts/rules/area028.fs`, the hideout cabin; `tests/library/test_area028.fs`): the closed door (□: a
 first knock, then the later ones), the call its scene makes. (To come: the fight its scene runs.)
@@ -118,7 +118,8 @@ here, the day's and the night's lights (`object-shown`, to the areas), the C its
 Area 6's (`scripts/rules/area006.fs`, Astin Farm; `tests/library/test_area006.fs`): the two things in the room to
 take, the warning when its owner heads home, the closet and the way out, the closet's doors.
 Area 5 (`scripts/rules/area005.fs`; `tests/library/test_area005.fs`): one chain of scripts from the warp in to the
-warp out; its fights, shoot-out and flare are the minigames' (to come) - the scripts carry on past them.
+warp out; its fights (`fight.md`) and shoot-out (`shootout.md`) are played; the flare is to come - the scripts
+carry on past it.
 Area 4 (James's house) has no rules: the visit is one script, reached by knocking at his door
 (`docs/subsystems/doors.md`).
 Area 3's (`scripts/rules/area003.fs`, the Roland residence; `tests/library/test_area003.fs`): heading home at

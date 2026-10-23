@@ -50,6 +50,7 @@ message camera-place ( look-y dist eye-y x y z yaw -- )   \ a fixed shot (src: t
 message camera-follow ( -- )             \ behind Matthew again, the scene's way
 message camera-fixed ( -- )              \ stay where it is
 message fight-start ( a style b style -- ) \ a fistfight: each the pad's (style 0) or the AI's (2 - 8) (src: fight_start)
+message shootout-start ( plan -- )         \ a shoot-out by an area's plan (shootout.fs; src: shootout_begin)
 message camera-behind ( look-y dist eye-y -- ) \ low behind Matthew, turning as he turns (src: ovl019's duct crawl)
 message camera-reset ( -- )              \ behind Matthew now, where he stands (src: camera_reset)
 message figure-anim ( id next loop -- )  \ play motion id (looping or not); then `next` (-1: hold its last frame)
@@ -58,6 +59,7 @@ message figure-on-foot ( flag -- )         \ (to Matthew) the pad walks him, or 
 message figure-pushes ( crate -- )         \ (to Matthew) he pushes that crate as he walks (-1: lets go)
 message figure-perch ( n -- )              \ he's on his feet (0), on a crate (1), on a stool (2) (src: talk_state)
 message figure-crawl ( flag -- )        \ the pad drives him crawling, tank-like, while a scene runs (src: ovl019's duct)
+message figure-shown ( flag -- )        \ (to Matthew) drawn or not (src: actors[0].visible)
 message figure-floor ( floor -- )        \ his floor now, its height under him (src: actor_set_floor)
 message figure-walk ( x z speed motion -- )   \ (to Matthew) a scene walks him there, speed a game frame
 message figure-forward ( speed motion -- )     \ straight on, until idle (-1: the motion as it is)

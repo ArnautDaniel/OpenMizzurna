@@ -539,9 +539,18 @@ static void turn_matrix(const short t[3], float *m) {
     }
 }
 
+static void place_matrix(const float pos[3], float yaw, float *world) {   /* standing at pos, turned by yaw */
+    float p[3], a = -yaw * 2.0f * (float)M_PI / TURN;   /* (the game's turn about its y, which points down) */
+
+    world_point(pos, p);
+    mat_identity(world);
+    world[0] = cosf(a), world[2] = -sinf(a);
+    world[8] = sinf(a), world[10] = cosf(a);
+    world[12] = p[0], world[13] = p[1], world[14] = p[2];
+}
+
 static Draw *new_draw(Model3D *m, const float pos[3], float yaw) {
     Draw *d;
-    float p[3], a = -yaw * 2.0f * (float)M_PI / TURN;   /* (the game's turn about its y, which points down) */
 
     if (m == NULL || S.ndraws == MAX_DRAWS) {
         return NULL;
@@ -550,11 +559,7 @@ static Draw *new_draw(Model3D *m, const float pos[3], float yaw) {
     d->m = m;
     d->posed = 0;
     d->nshown = 0;
-    world_point(pos, p);
-    mat_identity(d->world);
-    d->world[0] = cosf(a), d->world[2] = -sinf(a);
-    d->world[8] = sinf(a), d->world[10] = cosf(a);
-    d->world[12] = p[0], d->world[13] = p[1], d->world[14] = p[2];
+    place_matrix(pos, yaw, d->world);
     return d;
 }
 
@@ -578,17 +583,10 @@ static void chain(const Model3D *m, float (*node)[16], int i, const float *local
     }
 }
 
-void scene3d_draw_posed(Model3D *m, const float pos[3], float yaw, const short (*turns)[3], int nturns,
-                        const float root_move[3]) {
-    Draw *d = new_draw(m, pos, yaw);
-    float (*node)[16];
+static void pose_nodes(const Model3D *m, const short (*turns)[3], int nturns, const float root_move[3],
+                       float (*node)[16]) {
     int i;
 
-    if (d == NULL) {
-        return;
-    }
-    node = pool_take(m->nnodes, &d->node);
-    d->posed = 1;
     for (i = 0; i < m->nnodes; i++) {   /* (the converter writes parents before their children) */
         float local[16], r[16];
 
@@ -605,6 +603,45 @@ void scene3d_draw_posed(Model3D *m, const float pos[3], float yaw, const short (
         }
         chain(m, node, i, local);
     }
+}
+
+void scene3d_draw_posed(Model3D *m, const float pos[3], float yaw, const short (*turns)[3], int nturns,
+                        const float root_move[3]) {
+    Draw *d = new_draw(m, pos, yaw);
+
+    if (d == NULL) {
+        return;
+    }
+    d->posed = 1;
+    pose_nodes(m, turns, nturns, root_move, pool_take(m->nnodes, &d->node));
+}
+
+int scene3d_node_on_screen(Model3D *m, const float pos[3], float yaw, const short (*turns)[3], int nturns,
+                           const float root_move[3], int which, int w, int h, float out[2]) {
+    float (*node)[16], world[16], at[16], v[4], t;
+    int k;
+
+    if (m == NULL || which < 0 || which >= m->nnodes || !S.have_camera || w <= 0 || h <= 0) {
+        return 0;
+    }
+    node = malloc(sizeof(*node) * (size_t)m->nnodes);
+    if (node == NULL) {
+        return 0;
+    }
+    pose_nodes(m, turns, nturns, root_move, node);
+    place_matrix(pos, yaw, world);
+    mat_mul(at, world, node[which]);
+    free(node);
+    for (k = 0; k < 3; k++) {   /* its origin, in the camera's space */
+        v[k] = S.view[k] * at[12] + S.view[4 + k] * at[13] + S.view[8 + k] * at[14] + S.view[12 + k];
+    }
+    if (v[2] >= 0) {   /* behind the camera */
+        return 0;
+    }
+    t = tanf(S.fovy / 2);
+    out[0] = ((v[0] / -v[2]) / (t * (float)w / (float)h) + 1) * 0.5f * (float)w;
+    out[1] = (1 - (v[1] / -v[2]) / t) * 0.5f * (float)h;
+    return 1;
 }
 
 void scene3d_draw_objects(Model3D *m, const float pos[3], float yaw, const unsigned char *shown, int nshown,

@@ -5,7 +5,7 @@
 \ meeting at the waterfall at its time, the last evening's places and scenes, who says what. The cabin's
 \ shoot-out is a minigame to come.
 IN: rules.area026
-USING: engine actors messages keys clock story-flags items townsfolk events look talk areas matthew ;
+USING: engine actors messages keys clock story-flags items townsfolk events look talk areas matthew shootout ;
 
 26 constant this-area
 10 constant the-deputy   9 constant the-bear   24 constant the-gun   59 constant the-marker   58 constant the-other
@@ -419,7 +419,28 @@ create cohen-lines  5 , 92 ,  11 , 93 ,  13 , 94 ,  15 , 95 ,  19 , 96 ,  21 , 9
 : door-shown ( -- )  true cabin-door ;    \ 0x80104218 (src: the cabin door's two objects)
 : door-hidden ( -- )  false cabin-door ;  \ 0x80104238
 : window-patch ( -- ) ;   \ 0x80104258 / 0x80104278: the window's texture (to come)
-: shootout-begin ( -- )  in-the-cabin 2 + hunt !  1 shot-out !  0 s" shootout" unbuilt ;   \ 0x801040D0
+\ the shoot-out at the cabin (src: shootout_update): three rounds against the bear
+$86A2 constant his-x   $6392C constant his-z   $8D89 constant bear-x   $63770 constant bear-z   $C40 constant bear-heading
+$158D constant bear-stance   $1593 constant bear-hit   $15A2 constant gun-down   $1598 constant gun-fired
+$1599 constant gun-up   90 constant bear-health   3 constant a-hit   18 constant first-swipe   24 constant second-swipe
+30 constant third-swipe   0 constant bear-pool   9 constant after-the-bear-stop
+create the-shootout  3 plan-bytes allot   the-shootout 3 plan-bytes erase
+: bear-shot ( -- )   \ src: func_801043AC: the hunters to the cabin
+    0 exits-locked !  hunt-thread @ kill-event  after-the-shootout hunt !
+    ['] events.ovl026:entry-801064C4 start-event
+    cohen after-the-bear-stop goto-stop  nozz after-the-bear-stop goto-stop  bear-down flag-toggle ;
+: plan! ( -- )
+    the-shootout {: p :}  s" shootout-26" p plan-table-len ! p plan-table !  3 p plan-rounds !
+    his-x p plan-him-x !  his-z p plan-him-z !  gun-down p plan-stance !  gun-fired p plan-shot-motion !
+    gun-up p plan-aimed-motion !  bear-x p plan-foe-x !  bear-z p plan-foe-z !  bear-heading p plan-foe-heading !
+    bear-stance p plan-foe-stance !  bear-hit p plan-foe-hit !  bear-health p plan-full-0 !  0 p plan-full-1 !
+    ['] bear-shot p plan-won !
+    p 0 bear-pool a-hit first-swipe ['] events.ovl026:entry-80106454 ['] events.ovl026:entry-80106484 ['] events.ovl026:entry-801064A4 round!
+    p 1 bear-pool a-hit second-swipe ['] events.ovl026:entry-80106464 ['] events.ovl026:entry-80106494 ['] events.ovl026:entry-801064A4 round!
+    p 2 bear-pool a-hit third-swipe ['] events.ovl026:entry-80106474 ['] events.ovl026:entry-801064B4 ['] events.ovl026:entry-801064A4 round! ;
+plan!
+: shootout-begin ( -- )   \ 0x801040D0
+    shooting hunt !  1 shot-out !  the-shootout s" shootout" actor-named send shootout-start ;
 : reloaded ( -- ) ;       \ 0x8010431C (the shoot-out's)
 this-area ovl $801020F8 ' place-deputy native:   this-area ovl $80104340 ' back-to-the-chase native:
 this-area ovl $80104350 ' the-bear-slows native:   this-area ovl $80104218 ' door-shown native:

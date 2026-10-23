@@ -63,7 +63,8 @@ and height are read from - and puts him at its height; one going along with him 
 (`figure-crawl ( flag )`, src: ovl019's duct crawl): while a scene runs the pad drives him tank-like - up ahead
 0x28 a frame, down back 0x1E, left / right turn 0x80 - and a move that would put a wall at his place or one or two
 of his lengths (0x78) ahead is undone, turn and all; motions 0x1006 moving, 0x1005 still. Fact:
-`matthew-crawling?`.
+`matthew-crawling?`. Unseen (`figure-shown ( flag )`, src: actors[0].visible): not drawn, as while a shoot-out
+aims; seen again on entering an area.
 
 ## To come
 

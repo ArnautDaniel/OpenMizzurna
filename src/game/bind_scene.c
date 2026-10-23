@@ -167,20 +167,9 @@ PRIM(p_motion_turn) {   /* ( motion frame -- rx ry rz ) a prop motion's turn tha
     PUSH(m->turns[(size_t)frame * m->parts * 3]), PUSH(m->turns[(size_t)frame * m->parts * 3 + 1]);
     PUSH(m->turns[(size_t)frame * m->parts * 3 + 2]);
 }
-PRIM(p_draw_figure) {   /* ( model motion frame x y z yaw -- ) a figure posed in a frame of a motion */
-    Cell yaw = POP(), z = POP(), y = POP(), x = POP(), frame = POP(), mo = POP(), m = POP();
-    float pos[3] = {(float)x, (float)y, (float)z}, move[3];
-    Motion *mt = motion_arg(mo);
-    short turns[MAX_PARTS][3];
+static int pose_of(Motion *mt, Cell frame, short (*turns)[3], float move[3]) {   /* a motion's frame: its parts */
     int k, parts;
 
-    if (m < 1 || m > sNModels) {
-        return;
-    }
-    if (mt == NULL || mt->frames <= 0) {
-        scene3d_draw(sModels[m - 1].m, pos, (float)yaw, NULL, 0);
-        return;
-    }
     frame = ((frame % mt->frames) + mt->frames) % mt->frames;
     parts = mt->parts < MAX_PARTS ? mt->parts : MAX_PARTS;
     for (k = 0; k < parts; k++) {
@@ -190,7 +179,47 @@ PRIM(p_draw_figure) {   /* ( model motion frame x y z yaw -- ) a figure posed in
     for (k = 0; k < 3; k++) {
         move[k] = (float)mt->move[frame][k];
     }
+    return parts;
+}
+PRIM(p_draw_figure) {   /* ( model motion frame x y z yaw -- ) a figure posed in a frame of a motion */
+    Cell yaw = POP(), z = POP(), y = POP(), x = POP(), frame = POP(), mo = POP(), m = POP();
+    float pos[3] = {(float)x, (float)y, (float)z}, move[3];
+    Motion *mt = motion_arg(mo);
+    short turns[MAX_PARTS][3];
+    int parts;
+
+    if (m < 1 || m > sNModels) {
+        return;
+    }
+    if (mt == NULL || mt->frames <= 0) {
+        scene3d_draw(sModels[m - 1].m, pos, (float)yaw, NULL, 0);
+        return;
+    }
+    parts = pose_of(mt, frame, turns, move);
     scene3d_draw_posed(sModels[m - 1].m, pos, (float)yaw, (const short (*)[3])turns, parts, move);
+}
+PRIM(p_part_on_screen) {   /* ( model motion frame x y z yaw part -- px py true | false ) where a part of the figure,
+                            * posed so, falls on the window (its pixels), with this frame's camera */
+    Cell part = POP(), yaw = POP(), z = POP(), y = POP(), x = POP(), frame = POP(), mo = POP(), m = POP();
+    float pos[3] = {(float)x, (float)y, (float)z}, move[3], at[2];
+    Motion *mt = motion_arg(mo);
+    short turns[MAX_PARTS][3];
+    int parts = 0, seen;
+
+    if (m < 1 || m > sNModels) {
+        PUSH(0);
+        return;
+    }
+    if (mt != NULL && mt->frames > 0) {
+        parts = pose_of(mt, frame, turns, move);
+    }
+    seen = scene3d_node_on_screen(sModels[m - 1].m, pos, (float)yaw, (const short (*)[3])turns, parts,
+                                  parts > 0 ? move : NULL, (int)part, gEngine.width, gEngine.height, at);
+    if (!seen) {
+        PUSH(0);
+        return;
+    }
+    PUSH((Cell)at[0]), PUSH((Cell)at[1]), PUSH(-1);
 }
 PRIM(p_texture_area) { scene3d_texture_area((int)POP()); }   /* ( area -- ) */
 /* the light (scene3d.h): set a piece at a time, given whole each time */
@@ -243,4 +272,5 @@ void bind_scene(Forth *f) {
     forth_prim(f, "motion-turn", p_motion_turn);
     forth_prim(f, "pose-object", p_pose_object);
     forth_prim(f, "draw-figure", p_draw_figure);
+    forth_prim(f, "part-on-screen", p_part_on_screen);
 }

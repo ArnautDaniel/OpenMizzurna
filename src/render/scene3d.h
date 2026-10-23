@@ -56,6 +56,10 @@ int scene3d_ground(const Model3D *m, const float pos[3], float x, float z, float
  * the root's move this frame (model units: side, up, forward) */
 void scene3d_draw_posed(Model3D *m, const float pos[3], float yaw, const short (*turns)[3], int nturns,
                         const float root_move[3]);
+/* where one of its nodes (its origin) falls on a screen w x h pixels, with the camera as it stands: 0 if behind
+ * the camera */
+int scene3d_node_on_screen(Model3D *m, const float pos[3], float yaw, const short (*turns)[3], int nturns,
+                           const float root_move[3], int node, int w, int h, float out[2]);
 
 /* a textured quad this frame (the billboards): its corners in world units - 0 1 along the top, 2 3 the bottom - the
  * whole texture across it, shaded (1.0: as it is); blend: 0 solid, else its texels marked to blend do so by the

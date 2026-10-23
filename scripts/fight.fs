@@ -242,17 +242,12 @@ variable held   variable pressed
     lost @ if  game-over exit  then
     steps-due 0 ?do  fighting? 0= lost @ or if  leave  then  fight-frame  loop ;
 
-\ ---- drawing: the health bars (src: hp_bar_draw), the game over ----
-$302030E0 constant bar-back   $E0B040FF constant bar-fill   $FFFFFFFF constant game-over-ink
+\ ---- drawing: the health bars, the game over ----
 140 negate constant bar-1-x   18 constant bar-2-x   80 negate constant bars-y
-: bar ( x value -- )
-    {: x v :}  scale {: k :}
-    bar-back pen-color  x bars-y 8 + >screen  full-health 3 + k *  8 k *  draw-rect
-    v 0> if  bar-fill pen-color  x 2 + bars-y 9 + >screen  v k *  6 k *  draw-rect  then ;
 : draw-fight ( -- )
     fighting? 0= if  exit  then
-    lost @ if  game-over-ink pen-color  scale 2 * pen-scale  s" GAME OVER" -40 -8 >screen draw-text  exit  then
-    bar-1-x 0 fighter# shown @ bar  bar-2-x 1 fighter# shown @ bar ;
+    lost @ if  draw-game-over exit  then
+    bar-1-x bars-y 0 fighter# shown @ full-health health-bar  bar-2-x bars-y 1 fighter# shown @ full-health health-bar ;
 ' draw-fight on-draw
 
 : start ( a style b style -- )

@@ -9,6 +9,8 @@
 #define MUSIC_TRACKS 19
 #define MUSIC_ENTRY 12   /* {s32 CD.BIN entry, u16 0 / 1, u16 0, u8 volume, 3 bytes 0} */
 
+#define AREA_CODE_LOAD_ADDRESS 0x80101ED0u   /* an area's code file (its overlay) in the running program */
+
 #define AREA_TABLE (34 * 2)   /* an s16 an area */
 #define HOURS 24
 #define HOUR_RGB (HOURS * 3)       /* u8 red, green, blue tables */
@@ -99,6 +101,29 @@ const ExeTable *exetable_named(const char *name) {
         }
     }
     return NULL;
+}
+
+/* the areas' tables: in an area's code file */
+#define SHOOTOUT_ROUND (224 + 612)   /* a round's 17 target rows (13 bytes; 3 to spare), 17 camera steps (36 bytes) */
+static const AreaTable kAreaTables[] = {
+    {"shootout-5", 5, 0x80106A68, 4 * SHOOTOUT_ROUND,
+     "the warehouse's shoot-out: four rounds (src: ovl005 shootout_update). A round: 17 rows of 13 bytes - u8 the "
+     "target's slot, frames its targets are up - 1, frames until the next row, shots, 0 (0xFF: the end), then "
+     "four of u8 body part, u8 button (1 triangle, 2 square, 3 cross, 4 circle; 0xFF none) - 3 bytes to spare, "
+     "then the camera's 17 steps of 36 bytes: s32 the slot it looks at, x, z (unused then), s16 eye height (at "
+     "12), look height (16), distance (20), turn (24), frames (28), u8 how it moves to the next (32: 0 cut, 1 "
+     "tween, 2 / 3 turning up / down; 0xFF the end) (src: qte.c)"},
+    {"shootout-26", 26, 0x80106E84, 3 * SHOOTOUT_ROUND, "the forest's shoot-out: three rounds, as above (src: ovl026)"},
+};
+#define NAREATABLES (int)(sizeof(kAreaTables) / sizeof(kAreaTables[0]))
+
+int areatable_count(void) { return NAREATABLES; }
+const AreaTable *areatable_at(int i) { return i >= 0 && i < NAREATABLES ? &kAreaTables[i] : NULL; }
+
+const uint8_t *areatable_bytes(const AreaTable *t, const uint8_t *code, size_t code_size) {
+    size_t at = t->address - AREA_CODE_LOAD_ADDRESS;
+
+    return at + t->size <= code_size ? code + at : NULL;
 }
 
 const uint8_t *exetable_bytes(const ExeTable *t, const uint8_t *exe, size_t exe_size) {

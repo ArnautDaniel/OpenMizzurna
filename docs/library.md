@@ -101,7 +101,8 @@ and the first conversions (`src/data/cdconv.c`):
 - **XA music and voices** (`src/data/xa.c`, OpenHuey's FLAC encoder): TSG.XA as `xa/TSG/<channel>.flac`, one per
   channel (7, stereo, 37.8 kHz), and `index.txt` - the same samples the XA decodes to.
 - **The executable's tables** (`src/data/exetables.c`): each table a subsystem names, as `exe/<name>.bin`; the
-  engine reads them by name (`exe-table`). The first: `music`.
+  engine reads them by name (`exe-table`). The first: `music`. The areas' tables (an area's code file, CD.BIN's
+  `<area>_0`, loaded at 0x80101ED0) go the same way: the shoot-outs' `shootout-5`, `shootout-26`.
 - **Fonts** (`src/data/mfo.c`): the game's two (MFO: the dialogue font 033_4/5/3, the list font 5/4) as
   `N.font.png` (the glyphs, an indexed PNG), `N.font.clut.png` (their palettes) and `N.font.txt` (cell, each
   glyph's width and height); the bytes come back from them.
@@ -112,7 +113,7 @@ library/
   manifest.txt     openmizzurna-library 1 / disc <crc> <program> / convert <kind> <format> <version> ... / file <size> <path> ...
   exe/SLPS_017.83  the executable (until the tables the game reads from it are files of their own)
   cdbin/           CD.BIN's 565 entries: folders, PNG, text, the rest as it is (29 MB)
-  exe/<name>.bin   the executable's tables by name
+  exe/<name>.bin   the executable's and the areas' tables by name
   xa/TSG/          TSG.XA's channels as FLAC
   town/            MAP.BIN's 768 tiles: index.txt, a folder per tile (CC-RR/: terrain, objects as glTF; the rest as it is)
   disc/            FILELINK.BIN as it is

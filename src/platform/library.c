@@ -319,6 +319,20 @@ static int import_disc(Import *im) {
                 failed = 1;
             }
         }
+        for (i = 0; !failed && i < areatable_count(); i++) {   /* the areas' tables (data/exetables.c) */
+            const AreaTable *t = areatable_at(i);
+            int e = t->area * CDBIN_KINDS;
+            const uint8_t *bytes = e < table.n && entries[e] != NULL ? areatable_bytes(t, entries[e], sizes[e]) : NULL;
+            char rel[128];
+
+            snprintf(rel, sizeof(rel), "exe/%s.bin", t->name);
+            if (bytes == NULL) {
+                snprintf(im->why, sizeof(im->why), "area %d's code has no %s", t->area, t->name);
+                failed = 1;
+            } else if (!write_file(im, root, rel, bytes, t->size)) {
+                failed = 1;
+            }
+        }
         if (!failed) {   /* the models, and the textures they're drawn with */
             ImportWrite w = {im, root};
             char mwhy[512] = "";

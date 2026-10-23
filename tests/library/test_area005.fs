@@ -1,8 +1,8 @@
 \ area 5 on the game's data (scripts/rules/area005.fs): Wolf's warehouse - the finale's chain of scripts plays
-\ from the warp in to the warp out to the town (its fights won at once - the AI's side knocked out; the shoot-out
-\ passed over until it exists)
+\ from the warp in to the warp out to the town (its fights won at once - the AI's side knocked out; the
+\ shoot-out's rounds won at their first rows - nine hits counted and the targets cleared)
 USING: tester engine actors messages clock areas keys matthew events window story-flags fight fight.private
-    rules.area005 ;
+    shootout rules.area005 ;
 
 : steps ( n -- )  0 ?do  1 tick-tasks  actors-frame  loop ;
 : settled ( -- )  10 0 do  deliver  loop  events-stop  deliver ;
@@ -10,7 +10,10 @@ settled
 : started? ( -- flag )  events-running @ 0<> ;
 : knock-out ( f -- )   \ (the AI's fighter down)
     dup human? if  drop exit  then  dup move @ knocked-out < if  0 over health !  knocked-out start-move  1 ko !  else  drop  then ;
-: win ( -- )  fighting? if  0 fighter# knock-out  1 fighter# knock-out  then ;
+: hit-it ( -- )   \ (a shoot-out's row: its targets down, ten hits at its close)
+    shootout.private:targets-shown? if  9 shootout.private:hits !
+        shootout.private:#targets 0 do  false i shootout.private:target# shootout.private:up !  loop  then ;
+: win ( -- )  fighting? if  0 fighter# knock-out  1 fighter# knock-out  then  shooting? if  hit-it  then ;
 : reply ( -- )  win
     window-up?  stage @ finished =  stage @ page-full = or  stage @ asking = or  and
     pad-circle swap key-hold  1 steps  pad-circle false key-hold ;
