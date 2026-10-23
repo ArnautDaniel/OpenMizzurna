@@ -42,7 +42,7 @@ find_package(SDL3 REQUIRED CONFIG)
 # the checks')
 add_library(omdata STATIC src/data/disc.c src/data/cdbin.c src/data/container.c src/data/png.c src/data/tim.c
     src/data/text.c src/data/cdconv.c src/data/exetables.c src/data/vab.c src/data/seqmidi.c src/data/xa.c
-    src/data/flacenc.c src/data/tmd.c src/data/vramctx.c src/data/modelgltf.c src/data/modelconv.c src/data/motion.c
+    src/data/flacenc.c src/data/tmd.c src/data/vramctx.c src/data/modelgltf.c src/data/modelconv.c src/data/town.c src/data/motion.c
     src/third_party/stb.c src/third_party/dr_flac.c src/third_party/cgltf.c)
 target_include_directories(omdata PUBLIC src/third_party)
 target_compile_options(omdata PRIVATE $<$<CONFIG:Debug>:-O2>)   # (the import's conversions: slow unoptimized)

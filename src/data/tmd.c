@@ -103,9 +103,19 @@ static int read_polygon(ModelPolygon *p, const uint8_t *pk, size_t avail, size_t
     return 1;
 }
 
+static int read_tmd(Model *m, const uint8_t *d, size_t n, size_t t);
+
+int model_read_tmd(Model *m, const uint8_t *d, size_t n) {
+    memset(m, 0, sizeof(*m));
+    if (n < TMD_HEADER || le32(d) != TMD_ID) {
+        return 0;
+    }
+    return read_tmd(m, d, n, 0);
+}
+
 int model_read(Model *m, const uint8_t *d, size_t n) {
-    size_t t, base;
-    int i, k;
+    size_t t;
+    int i;
 
     memset(m, 0, sizeof(*m));
     if (!model_is(d, n)) {
@@ -127,6 +137,14 @@ int model_read(Model *m, const uint8_t *d, size_t n) {
         p->flags = le16(e + 14);
     }
     t = 4 + (size_t)m->nparts * SPL_PART;
+    return read_tmd(m, d, n, t);
+}
+
+/* the TMD at t: its objects */
+static int read_tmd(Model *m, const uint8_t *d, size_t n, size_t t) {
+    size_t base;
+    int i, k;
+
     m->nobjects = (int)le32(d + t + 8);
     base = t + TMD_HEADER;   /* (offsets count from the object table) */
     if (base + (size_t)m->nobjects * TMD_OBJECT > n) {

@@ -57,6 +57,8 @@ typedef struct Model {
 int model_is(const uint8_t *d, size_t n);
 /* read one; 0 if it isn't one or is damaged */
 int model_read(Model *m, const uint8_t *d, size_t n);
+/* a TMD on its own (no parts: the town's terrain) */
+int model_read_tmd(Model *m, const uint8_t *d, size_t n);
 void model_free(Model *m);
 
 #endif

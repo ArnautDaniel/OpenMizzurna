@@ -6,6 +6,7 @@
 #include "modelgltf.h"
 #include "png.h"
 #include "tmd.h"
+#include "town.h"
 #include "vramctx.h"
 
 #include <stdio.h>
@@ -63,6 +64,9 @@ enum { MODEL_AREA, MODEL_STREAMED, MODEL_OTHER };
 
 typedef struct Found {
     char id[64];          /* "001_4.3.1", "073_1" */
+    char path[64];        /* its glTF, less ".gltf": "models/001_4.3.1", "town/03-05/terrain" */
+    char comment[64];     /* where it's from */
+    int terrain;          /* a TMD on its own (a town tile's ground) */
     const uint8_t *data;
     size_t size;
     int kind;
@@ -84,6 +88,9 @@ static void add(Models *ms, const char *id, const uint8_t *d, size_t n, int kind
     }
     f = &ms->list[ms->n++];
     snprintf(f->id, sizeof(f->id), "%s", id);
+    snprintf(f->path, sizeof(f->path), "models/%s", id);
+    snprintf(f->comment, sizeof(f->comment), "CD.BIN %s", id);
+    f->terrain = 0;
     f->data = d;
     f->size = n;
     f->kind = kind;
@@ -120,6 +127,39 @@ static void walk(Models *ms, const uint8_t *d, size_t n, const char *id, int gro
             walk(ms, c.parts[i].data, c.parts[i].size, sub, group, depth == 0 ? i : top_part, depth + 1, texture_of);
         }
     }
+}
+
+/* the town's tiles: their ground and objects, props of the town's area */
+static void find_town(Models *ms, const uint8_t *exe, size_t exe_n, const uint8_t *map, size_t map_n) {
+    const uint8_t *part[TOWN_TILE_PARTS];
+    size_t size[TOWN_TILE_PARTS], n;
+    char folder[32];
+    int c, r, p;
+
+    for (r = 0; r < TOWN_ROWS; r++) {
+        for (c = 0; c < TOWN_COLUMNS; c++) {
+            const uint8_t *d = town_tile(exe, exe_n, map, map_n, c, r, &n);
+
+            if (d == NULL || !town_tile_parts(d, n, part, size)) {
+                continue;
+            }
+            town_folder(c, r, folder, sizeof(folder));
+            for (p = TOWN_TERRAIN; p <= TOWN_OBJECTS; p++) {
+                Found *f;
+
+                add(ms, folder, part[p], size[p], MODEL_AREA, TOWN_AREA, -1);
+                f = &ms->list[ms->n - 1];
+                snprintf(f->path, sizeof(f->path), "%s/%s", folder, p == TOWN_TERRAIN ? "terrain" : "objects");
+                snprintf(f->comment, sizeof(f->comment), "MAP.BIN tile %d, %d: its %s", c, r,
+                         p == TOWN_TERRAIN ? "ground" : "objects");
+                f->terrain = p == TOWN_TERRAIN;
+            }
+        }
+    }
+}
+
+static int read_found(const Found *f, Model *m) {
+    return f->terrain ? model_read_tmd(m, f->data, f->size) : model_read(m, f->data, f->size);
 }
 
 static void find_models(Models *ms, const uint8_t *const *entries, const size_t *sizes, int n, const uint8_t *exe,
@@ -162,8 +202,11 @@ static void area_context(VramContext *v, int area, const uint8_t *const *entries
             vram_load_tim(v, d, size);
         }
     }
-    path[1] = 0;
+    path[1] = 0;   /* (the area's sheet: part 0's first part; the town's part 0 is its sheet itself) */
     d = own < n && entries[own] ? part_of(entries[own], sizes[own], path, 2, &size) : NULL;
+    if (d == NULL && own < n && entries[own]) {
+        d = part_of(entries[own], sizes[own], path, 1, &size);
+    }
     if (d != NULL) {
         vram_load_tim(v, d, size);
     }
@@ -280,13 +323,12 @@ typedef const char *(*UriFn)(void *ctx, const char *texture);
 
 static void model(Job *j, const Found *f, const Model *m, const char *set, UriFn uri, void *uctx) {
     GltfOut g;
-    char gltf[200], bin[200], bin_uri[100], comment[160];
+    char gltf[200], bin[200], bin_uri[100];
 
-    snprintf(bin_uri, sizeof(bin_uri), "%s.bin", f->id);
-    snprintf(gltf, sizeof(gltf), "models/%s.gltf", f->id);
-    snprintf(bin, sizeof(bin), "models/%s.bin", f->id);
-    snprintf(comment, sizeof(comment), "CD.BIN %s", f->id);
-    model_gltf(m, set, (const char *(*)(void *, const char *))uri, uctx, bin_uri, comment, &g);
+    snprintf(bin_uri, sizeof(bin_uri), "%s.bin", strrchr(f->path, '/') + 1);
+    snprintf(gltf, sizeof(gltf), "%s.gltf", f->path);
+    snprintf(bin, sizeof(bin), "%s.bin", f->path);
+    model_gltf(m, set, (const char *(*)(void *, const char *))uri, uctx, bin_uri, f->comment, &g);
     if (j->write != NULL) {
         if (!j->write(j->ctx, gltf, (const uint8_t *)g.json, g.json_size) || !j->write(j->ctx, bin, g.bin, g.bin_size)) {
             snprintf(j->why, j->nwhy, "can't write %s", gltf);
@@ -341,6 +383,7 @@ typedef struct Sets {
     uint64_t common[MAX_NAMES];   /* the version most areas have: textures/common/ */
     int common_area[MAX_NAMES];   /* the first area with it (where it is cut from) */
     int area;                     /* the area a model's URIs are for */
+    const char *up;               /* from the model's folder to the library's ("../") */
     char uri[128];
 } Sets;
 
@@ -363,9 +406,9 @@ static const char *area_uri(void *ctx, const char *texture) {
     int i = name_index(s, texture, 0);
 
     if (i >= 0 && s->hash[i][s->area] != 0 && s->hash[i][s->area] != s->common[i]) {
-        snprintf(s->uri, sizeof(s->uri), "../textures/area-%03d/%s.png", s->area, texture);
+        snprintf(s->uri, sizeof(s->uri), "%stextures/area-%03d/%s.png", s->up, s->area, texture);
     } else {
-        snprintf(s->uri, sizeof(s->uri), "../textures/common/%s.png", texture);
+        snprintf(s->uri, sizeof(s->uri), "%stextures/common/%s.png", s->up, texture);
     }
     return s->uri;
 }
@@ -382,7 +425,8 @@ static const char *own_uri(void *ctx, const char *texture) {
     return o->uri;
 }
 
-static int run(Job *j, const uint8_t *const *entries, const size_t *sizes, int n, const uint8_t *exe, size_t exe_n) {
+static int run(Job *j, const uint8_t *const *entries, const size_t *sizes, int n, const uint8_t *exe, size_t exe_n,
+               const uint8_t *map, size_t map_n) {
     Models ms;
     VramContext *v = malloc(sizeof(VramContext));
     Sets *sets = calloc(1, sizeof(Sets));
@@ -392,12 +436,13 @@ static int run(Job *j, const uint8_t *const *entries, const size_t *sizes, int n
 
     j->page = malloc((size_t)PAGE_TEXELS * PAGE_TEXELS * 4);
     find_models(&ms, entries, sizes, n, exe, exe_n);
+    find_town(&ms, exe, exe_n, map, map_n);
     /* the streamed characters: each with its own textures */
     for (i = 0; i < ms.n && !j->failed; i++) {
         const Found *f = &ms.list[i];
         Model m;
 
-        if (f->kind != MODEL_STREAMED || !model_read(&m, f->data, f->size)) {
+        if (f->kind != MODEL_STREAMED || !read_found(f, &m)) {
             continue;
         }
         if (entries[f->texture_entry] != NULL &&
@@ -423,7 +468,7 @@ static int run(Job *j, const uint8_t *const *entries, const size_t *sizes, int n
             const Found *f = &ms.list[i];
             Model m;
 
-            if (f->kind == MODEL_STREAMED || (f->kind == MODEL_AREA && f->area != a) || !model_read(&m, f->data, f->size)) {
+            if (f->kind == MODEL_STREAMED || (f->kind == MODEL_AREA && f->area != a) || !read_found(f, &m)) {
                 continue;
             }
             nn = names_of(&m, names, MODEL_MAX_TEXTURES);
@@ -471,11 +516,12 @@ static int run(Job *j, const uint8_t *const *entries, const size_t *sizes, int n
             const Found *f = &ms.list[i];
             Model m;
 
-            if (f->kind == MODEL_STREAMED || !model_read(&m, f->data, f->size)) {
+            if (f->kind == MODEL_STREAMED || !read_found(f, &m)) {
                 continue;
             }
             if ((f->kind == MODEL_AREA && f->area == a) || (f->kind == MODEL_OTHER && a == 1)) {
                 sets->area = a;   /* (the others' default images: Matthew's area) */
+                sets->up = strchr(f->path, '/') == strrchr(f->path, '/') ? "../" : "../../";
                 model(j, f, &m, "area", area_uri, sets);
             }
             model_free(&m);
@@ -490,7 +536,7 @@ static int run(Job *j, const uint8_t *const *entries, const size_t *sizes, int n
 }
 
 int modelconv_write(const uint8_t *const *entries, const size_t *sizes, int n, const uint8_t *exe, size_t exe_n,
-                    ModelconvWriteFn write, void *ctx, char *why, size_t nwhy) {
+                    const uint8_t *map, size_t map_n, ModelconvWriteFn write, void *ctx, char *why, size_t nwhy) {
     Job j;
 
     memset(&j, 0, sizeof(j));
@@ -498,11 +544,11 @@ int modelconv_write(const uint8_t *const *entries, const size_t *sizes, int n, c
     j.ctx = ctx;
     j.why = why;
     j.nwhy = nwhy;
-    return run(&j, entries, sizes, n, exe, exe_n);
+    return run(&j, entries, sizes, n, exe, exe_n, map, map_n);
 }
 
 int modelconv_check(const uint8_t *const *entries, const size_t *sizes, int n, const uint8_t *exe, size_t exe_n,
-                    ModelconvReadFn read, void *ctx, int *models, int *textures, char *why, size_t nwhy) {
+                    const uint8_t *map, size_t map_n, ModelconvReadFn read, void *ctx, int *models, int *textures, char *why, size_t nwhy) {
     Job j;
     int ok;
 
@@ -511,7 +557,7 @@ int modelconv_check(const uint8_t *const *entries, const size_t *sizes, int n, c
     j.ctx = ctx;
     j.why = why;
     j.nwhy = nwhy;
-    ok = run(&j, entries, sizes, n, exe, exe_n);
+    ok = run(&j, entries, sizes, n, exe, exe_n, map, map_n);
     *models = j.models;
     *textures = j.textures;
     return ok;

@@ -5,6 +5,7 @@
 #include "../src/data/cdconv.h"
 #include "../src/data/disc.h"
 #include "../src/data/modelconv.h"
+#include "../src/data/town.h"
 #include "../src/data/xa.h"
 #include "../src/third_party/dr_flac.h"
 
@@ -13,7 +14,7 @@
 #include <string.h>
 
 static const char *sLibrary;
-static int sImages, sTexts, sFiles, sBodies, sXa, sModels, sTextures;
+static int sImages, sTexts, sFiles, sBodies, sXa, sModels, sTextures, sTiles;
 
 static uint8_t *read_library(void *ctx, const char *path, size_t *n) {
     char full[1400];
@@ -94,11 +95,19 @@ int main(int argc, char **argv) {
         }
         {
             int models = 0, textures = 0;
-            if (!modelconv_check((const uint8_t *const *)entries, sizes, t.n, exe, exe_n, read_library, NULL, &models,
-                                 &textures, why, sizeof(why))) {
+            size_t map_n = 0;
+            uint8_t *map = disc_read_all(d, "MAP.BIN", &map_n);
+
+            if (!modelconv_check((const uint8_t *const *)entries, sizes, t.n, exe, exe_n, map, map_n, read_library, NULL,
+                                 &models, &textures, why, sizeof(why))) {
                 printf("models: %s\n", why);
                 bad++;
             }
+            if (!town_check(exe, exe_n, map, map_n, read_library, NULL, &sTiles, why, sizeof(why))) {
+                printf("town: %s\n", why);
+                bad++;
+            }
+            free(map);
             sModels = models;
             sTextures = textures;
         }
@@ -143,7 +152,7 @@ int main(int argc, char **argv) {
         }
         free(xa);
     }
-    printf("%d entries checked, %d differ; %d files read: %d images, %d text files, %d sound bank bodies, %d XA tracks, %d models, %d model textures\n",
-           checked, bad, sFiles, sImages, sTexts, sBodies, sXa, sModels, sTextures);
+    printf("%d entries checked, %d differ; %d files read: %d images, %d text files, %d sound bank bodies, %d XA tracks, %d models, %d model textures, %d town tiles\n",
+           checked, bad, sFiles, sImages, sTexts, sBodies, sXa, sModels, sTextures, sTiles);
     return bad != 0;
 }

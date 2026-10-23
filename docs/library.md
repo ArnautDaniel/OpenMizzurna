@@ -111,7 +111,8 @@ library/
   cdbin/           CD.BIN's 565 entries: folders, PNG, text, the rest as it is (29 MB)
   exe/<name>.bin   the executable's tables by name
   xa/TSG/          TSG.XA's channels as FLAC
-  disc/            MAP.BIN, FILELINK.BIN as they are
+  town/            MAP.BIN's 768 tiles: index.txt, a folder per tile (CC-RR/: terrain, objects as glTF; the rest as it is)
+  disc/            FILELINK.BIN as it is
   movies/          the five .STR as they are
 ```
 
@@ -149,5 +150,24 @@ its place and turn). The game packs a character's frames ("hold this value n fra
 frame's values. 1193 motions. Which motion ids are an area's own: the executable's tables `area-motion-first` and
 `area-motion-count`. `tools/gltf_view.py` poses a model by a motion's frame.
 
-**Next**: areas (their floors, walls, zones, cameras, objects, lights); MAP.BIN's town; the movies
-(a video library); the executable's tables as each subsystem names them.
+### The town
+
+MAP.BIN (`src/data/town.c`) is the town's 32 x 24 tiles, which the game streams in around the camera; the
+executable's grid says where each is. `town/index.txt` lists them (`tile <col> <row> <folder> centre <x> <z>`, in
+world units: twice the models'), and each tile's folder `town/CC-RR/` holds:
+
+- `terrain.gltf` - its ground (a TMD with no parts), `objects.gltf` - its objects (an SPL model), both cut from
+  the town's (area 27's) texture set like the area props (`../../textures/`);
+- `obstacles.bin`, `zones.bin` (its region lists), `billboards.bin` (its billboard placements), as they are
+  until the movement and drawing subsystems read them.
+
+The check: every tile five parts and nothing more, the region and billboard parts the same bytes, the models'
+glTF exact as for any model. (MAP.BIN's sector padding, and a tile's padding between parts, hold leftovers of
+the disc's making that the game never reads; they aren't kept.) 768 tiles, 1536 models.
+
+**Deferred to their subsystems**: the areas' own data (`NNN_4` part 0: the area's description, scenes' object
+visibility and cameras, object animations, lights, reverb; part 2: floors' obstacles and zones; parts 5-7:
+billboards and snow; parts 8, 10: not known yet) stays as it is in `cdbin/` until the subsystem that reads it is
+built and its fields are named - then it becomes text. The town's region and billboard parts the same.
+
+**Next**: the movies (a video library); the executable's tables as each subsystem names them.
