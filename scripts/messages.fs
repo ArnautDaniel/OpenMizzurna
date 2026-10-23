@@ -87,3 +87,6 @@ message car-drive ( car route speed -- ) \ drive the route from its start (speed
 message car-carry ( car route speed -- ) \ the same with someone riding: car-arrived at its end
 message car-stop ( car -- )              \ stop where it is, riders still in (src: carline_stop)
 message car-arrived ( car -- )           \ broadcast: a car with riders reached its route's end; they get out
+
+\ ---- the day's light and the weather (docs/subsystems/daylight.md) ----
+message set-weather ( weather hold -- )  \ (to the daylight) clear, overcast or snowing; hold: it stays (src: func_80025384)

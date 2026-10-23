@@ -150,6 +150,33 @@ PRIM(p_draw_figure) {   /* ( model motion frame x y z yaw -- ) a figure posed in
     scene3d_draw_posed(sModels[m - 1].m, pos, (float)yaw, (const short (*)[3])turns, parts, move);
 }
 PRIM(p_texture_area) { scene3d_texture_area((int)POP()); }   /* ( area -- ) */
+/* the light (scene3d.h): set a piece at a time, given whole each time */
+static Scene3DLight sLight;
+PRIM(p_light_way) {   /* ( i x y z -- ) the way light i shines (the game's axes) */
+    Cell z = POP(), y = POP(), x = POP(), i = POP();
+    if (i >= 0 && i < 3) {
+        sLight.way[i][0] = (float)x, sLight.way[i][1] = (float)y, sLight.way[i][2] = (float)z;
+        scene3d_light(&sLight);
+    }
+}
+PRIM(p_light_color) {   /* ( i r g b -- ) its colour (256 full) */
+    Cell b = POP(), g = POP(), r = POP(), i = POP();
+    if (i >= 0 && i < 3) {
+        sLight.color[i][0] = (float)r, sLight.color[i][1] = (float)g, sLight.color[i][2] = (float)b;
+        scene3d_light(&sLight);
+    }
+}
+PRIM(p_ambient_light) {   /* ( r g b -- ) the ambient (4096 full) */
+    Cell b = POP(), g = POP(), r = POP();
+    sLight.ambient[0] = (float)r, sLight.ambient[1] = (float)g, sLight.ambient[2] = (float)b;
+    scene3d_light(&sLight);
+}
+PRIM(p_fog_color) {   /* ( r g b -- ) the fog's colour (128: a texture as it is) */
+    Cell b = POP(), g = POP(), r = POP();
+    sLight.fog_color[0] = (float)r, sLight.fog_color[1] = (float)g, sLight.fog_color[2] = (float)b;
+    scene3d_light(&sLight);
+}
+PRIM(p_fog_store) { sLight.fog = POP() != 0; scene3d_light(&sLight); }   /* ( flag -- ) fog or none */
 PRIM(p_lamp) { Cell lit = POP(); scene3d_lamp((int)POP(), lit != 0); }   /* ( lamp flag -- ) a street lamp on or off */
 
 void bind_scene(Forth *f) {
@@ -160,6 +187,11 @@ void bind_scene(Forth *f) {
     forth_prim(f, "camera", p_camera);
     forth_prim(f, "texture-area", p_texture_area);
     forth_prim(f, "lamp", p_lamp);
+    forth_prim(f, "light-way", p_light_way);
+    forth_prim(f, "light-color", p_light_color);
+    forth_prim(f, "ambient-light", p_ambient_light);
+    forth_prim(f, "fog-color", p_fog_color);
+    forth_prim(f, "fog!", p_fog_store);
     forth_constant(f, "#lamps", SCENE3D_LAMPS);
     forth_prim(f, "motion", p_motion);
     forth_prim(f, "motion-frames", p_motion_frames);

@@ -10,6 +10,9 @@
 #define MUSIC_ENTRY 12   /* {s32 CD.BIN entry, u16 0 / 1, u16 0, u8 volume, 3 bytes 0} */
 
 #define AREA_TABLE (34 * 2)   /* an s16 an area */
+#define HOURS 24
+#define HOUR_RGB (HOURS * 3)       /* u8 red, green, blue tables */
+#define HOUR_XYZ (HOURS * 3 * 2)   /* s16 x, y, z tables */
 
 static const ExeTable kTables[] = {
     {"area-motion-first", 0x80080670, AREA_TABLE,
@@ -32,6 +35,26 @@ static const ExeTable kTables[] = {
      "a car's seats: s16 side, forward from the car (world units; turned with it) - where a rider gets out"},
     {"lane-steps", 0x800935C0, 32 * 4,
      "a parking node's lanes: s16 x, z between one car's place and the next's (src: car_lane)"},
+    /* the day's light (src: clock.c): tables by the hour, 24 entries; the game takes the minute's value between
+     * this hour's and the next */
+    {"hour-fog", 0x800815E8, HOUR_RGB, "the fog's colour by the hour: 24 red, 24 green, 24 blue (u8)"},
+    {"hour-ambient", 0x80081630, HOUR_RGB, "the ambient light by the hour: 24 red, 24 green, 24 blue"},
+    {"hour-light-1", 0x80081678, HOUR_RGB, "the first of the three lights' colour by the hour: red, green, blue"},
+    {"hour-light-1-way", 0x800816C0, HOUR_XYZ, "its direction by the hour: 24 x, 24 y, 24 z (s16; y downward)"},
+    {"hour-light-2", 0x80081750, HOUR_RGB, "the second light's colour"},
+    {"hour-light-2-way", 0x80081798, HOUR_XYZ, "its direction"},
+    {"hour-light-3", 0x80081828, HOUR_RGB, "the third light's colour"},
+    {"hour-light-3-way", 0x80081870, HOUR_XYZ, "its direction"},
+    {"hour-sky-top", 0x80081900, HOUR_RGB, "the sky's colour above by the hour (src: func_800248C0)"},
+    {"hour-sky-low", 0x80081948, HOUR_RGB, "and at the horizon"},
+    {"hour-clouds", 0x80081990, HOURS, "the clouds' shade by the hour (u8; src: func_80024E48)"},
+    {"hour-horizon", 0x800819A8, HOURS, "the horizon strip's shade by the hour (src: func_80024FAC)"},
+    {"sun-heights", 0x80080798, HOURS * 2, "the sun's height on the screen by the hour (s16; src: func_8001F670)"},
+    {"moon-heights", 0x800807F4, HOURS * 2, "the moon's, by its own hour (src: func_8001F9B0)"},
+    {"flare-distances", 0x800807C8, 14 * 2, "the sun's 14 lens flares: how far each is along the line through the centre"},
+    {"flare-sizes", 0x800807E4, 14, "and its half size (u8)"},
+    {"stars-x", 0x800806F8, 20 * 4, "the 20 stars: where across (s32; a 320-pixel repeat; src: func_8001F000)"},
+    {"stars-y", 0x80080748, 20 * 4, "and how high above the horizon's top"},
     {"music", 0x800814DC, MUSIC_TRACKS * MUSIC_ENTRY,
      "the background music: per track its sequence's CD.BIN entry, then 0 or 1, and its volume (src: music_play)"},
 };

@@ -175,6 +175,8 @@ are built, each listed here.
 | `forget-model` | `model --` | let a model go: its memory freed, its number another's later (the town's tiles) |
 | `lamp` / `#lamps` | `i flag --` | a town street lamp lit or not: its lights' materials show their lit textures (38) |
 | `road-node` / `road-point` | `i -- x y z points first` / `i -- dx dy dz length` | the town's road graph (docs/subsystems/traffic.md) |
+| `light-way` / `light-color` | `i x y z --` / `i r g b --` | light i's way (game axes) and colour (256 full): docs/subsystems/daylight.md |
+| `ambient-light` / `fog-color` / `fog!` | `r g b --` / `r g b --` / `flag --` | the ambient (4096 full), the fog's colour (128: as it is), fog on |
 | `random` | `n -- 0..n-1` | chance |
 | `motion` / `motion-frames` / `motion-move` | `addr len -- motion` / `motion -- n` / `motion frame -- dx dy dz` | a character motion from the library and its frames |
 | `draw-figure` | `model motion frame x y z yaw --` | a figure posed in a motion's frame |

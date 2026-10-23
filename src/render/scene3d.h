@@ -25,6 +25,17 @@ void model3d_free(Model3D *m);
 /* whose texture set "area" materials use (the area being played) */
 void scene3d_texture_area(int area);
 
+/* the light the lit models are drawn in (the game's: src clock.c, the scenes' light records): three lights, each
+ * the way it shines (the game's axes: y downward) and its colour (256 full); the ambient (4096 full, the
+ * PlayStation's); and in the town the fog - the PlayStation's depth cue, its colour (128: a texture as it is) */
+typedef struct Scene3DLight {
+    float way[3][3], color[3][3];
+    float ambient[3];
+    int fog;
+    float fog_color[3];
+} Scene3DLight;
+void scene3d_light(const Scene3DLight *l);
+
 /* the town's street lamps, lit or not: a material that is a lamp's light (its glTF extras' "lamp") shows its lit
  * texture (textures/lamps/) while its lamp is */
 #define SCENE3D_LAMPS 38

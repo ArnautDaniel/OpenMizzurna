@@ -70,7 +70,10 @@ typedef struct Tex {
 
 static struct {
     uint32_t program;
-    int loc_mvp, loc_model, loc_lit, loc_textured, loc_pass, loc_semi;
+    int loc_mvp, loc_model, loc_modelview, loc_lit, loc_textured, loc_pass, loc_semi;
+    int loc_light_way, loc_light_color, loc_ambient, loc_fog, loc_fog_color, loc_fog_cue;
+    Scene3DLight light;
+    int light_set;
     Draw draws[MAX_DRAWS];
     int ndraws;
     Tex *tex;
@@ -78,26 +81,43 @@ static struct {
     int area;
     unsigned char lamp_lit[SCENE3D_LAMPS];
     float view[16], eye[3];
-    float fovy;
+    float fovy, projection_h;
     int have_camera;
 } S;
 
 static const char *kVS =
     "#version 460 core\n"
+    "#define GTE_MAX 1.9921875\n"   /* (the lighting's result: 255 over the colours' 128) */
+    "#define MODEL_UNITS 256.0\n"   /* (glTF's units in the models') */
     "layout(location = 0) in vec3 a_pos;\n"
     "layout(location = 1) in vec3 a_normal;\n"
     "layout(location = 2) in vec4 a_color;\n"
     "layout(location = 3) in vec2 a_uv;\n"
     "uniform mat4 mvp;\n"
     "uniform mat4 model;\n"
+    "uniform mat4 modelview;\n"
     "uniform int lit;\n"
+    "uniform vec3 light_way[3];\n"     /* the way each light shines (glTF's axes) */
+    "uniform vec3 light_color[3];\n"   /* 1.0: full */
+    "uniform vec3 ambient;\n"
+    "uniform int fog;\n"
+    "uniform vec3 fog_color;\n"        /* in the vertex colours' units: 1.0 the texture as it is */
+    "uniform vec3 fog_cue;\n"          /* the PlayStation's depth cue: a, b, the projection's h */
     "out vec4 v_color;\n"
     "out vec2 v_uv;\n"
     "void main() {\n"
     "    vec3 n = normalize(mat3(model) * a_normal);\n"
-    /* (until the areas' lights: a soft light from above and in front, and ambient) */
-    "    float light = lit != 0 ? 0.55 + 0.45 * max(dot(n, normalize(vec3(0.3, 0.8, 0.5))), 0.0) : 1.0;\n"
-    "    v_color = vec4(a_color.rgb * light, a_color.a);\n"
+    "    vec3 c = a_color.rgb;\n"
+    "    if (lit != 0) {\n"
+    "        vec3 l = ambient;\n"
+    "        for (int i = 0; i < 3; i++) l += max(dot(n, -light_way[i]), 0.0) * light_color[i];\n"
+    "        c = min(c * l, vec3(GTE_MAX));\n"
+    "        if (fog != 0) {\n"   /* how far into the fog: b + a h / depth (the depth in the models' units) */
+    "            float depth = max(-(modelview * vec4(a_pos, 1.0)).z * MODEL_UNITS, 1.0);\n"
+    "            c = mix(c, fog_color, clamp(fog_cue.y + fog_cue.x * fog_cue.z / depth, 0.0, 1.0));\n"
+    "        }\n"
+    "    }\n"
+    "    v_color = vec4(c, a_color.a);\n"
     "    v_uv = a_uv;\n"
     "    gl_Position = mvp * vec4(a_pos, 1.0);\n"
     "}\n";
@@ -463,7 +483,8 @@ void scene3d_camera(const float target[3], float yaw, float dist, float eye_y, f
     world_point(at_w, at);
     look_at(S.view, eye, at);
     memcpy(S.eye, eye, sizeof(eye));
-    S.fovy = 2.0f * atanf(SCREEN_HALF_HEIGHT / (projection_h > 0 ? projection_h : 500.0f));
+    S.projection_h = projection_h > 0 ? projection_h : 500.0f;
+    S.fovy = 2.0f * atanf(SCREEN_HALF_HEIGHT / S.projection_h);
     S.have_camera = 1;
 }
 
@@ -573,6 +594,52 @@ static void set_blend(int mode) {
     }
 }
 
+/* ---- the light (scene3d.h) ---- */
+#define FOG_CUE_A (-0xC80 / 256.0f)          /* src: func_80023D70's GsFOGPARAM: dqa (8.8) */
+#define FOG_CUE_B ((float)0x01400000 / (1 << 24))   /* and dqb (8.24) */
+#define VERTEX_UNIT 128.0f                  /* a vertex colour that leaves the texture as it is */
+#define LIGHT_UNIT 256.0f                   /* a light's colour at full */
+#define AMBIENT_UNIT 4096.0f                /* the PlayStation's 1.0 */
+
+void scene3d_light(const Scene3DLight *l) {
+    S.light = *l;
+    S.light_set = 1;
+}
+
+static void light_uniforms(void) {
+    float way[9], color[9], amb[3], fog[3];
+    int i, k;
+
+    if (!S.light_set) {   /* (no light given: a soft one from above and in front, and ambient) */
+        memset(&S.light, 0, sizeof(S.light));
+        S.light.way[0][0] = -0.3f, S.light.way[0][1] = 0.8f, S.light.way[0][2] = 0.5f;
+        for (k = 0; k < 3; k++) {
+            S.light.color[0][k] = 0.45f * LIGHT_UNIT;
+            S.light.ambient[k] = 0.55f * AMBIENT_UNIT;
+        }
+    }
+    for (i = 0; i < 3; i++) {
+        float w[3] = {S.light.way[i][0], S.light.way[i][1], S.light.way[i][2]}, g[3], len;
+
+        world_point(w, g);   /* (a direction: the axes turned as the points') */
+        len = sqrtf(g[0] * g[0] + g[1] * g[1] + g[2] * g[2]);
+        for (k = 0; k < 3; k++) {
+            way[i * 3 + k] = len > 0 ? g[k] / len : 0;
+            color[i * 3 + k] = S.light.color[i][k] / LIGHT_UNIT;
+        }
+    }
+    for (k = 0; k < 3; k++) {
+        amb[k] = S.light.ambient[k] / AMBIENT_UNIT;
+        fog[k] = S.light.fog_color[k] / VERTEX_UNIT;
+    }
+    glProgramUniform3fv(S.program, S.loc_light_way, 3, way);
+    glProgramUniform3fv(S.program, S.loc_light_color, 3, color);
+    glProgramUniform3fv(S.program, S.loc_ambient, 1, amb);
+    glProgramUniform1i(S.program, S.loc_fog, S.light.fog);
+    glProgramUniform3fv(S.program, S.loc_fog_color, 1, fog);
+    glProgramUniform3f(S.program, S.loc_fog_cue, FOG_CUE_A, FOG_CUE_B, S.projection_h);
+}
+
 void scene3d_flush(int w, int h) {
     float proj[16], vp[16];
     int pass, i, k;
@@ -589,7 +656,15 @@ void scene3d_flush(int w, int h) {
         S.loc_textured = glGetUniformLocation(S.program, "textured");
         S.loc_pass = glGetUniformLocation(S.program, "pass");
         S.loc_semi = glGetUniformLocation(S.program, "semi");
+        S.loc_modelview = glGetUniformLocation(S.program, "modelview");
+        S.loc_light_way = glGetUniformLocation(S.program, "light_way");
+        S.loc_light_color = glGetUniformLocation(S.program, "light_color");
+        S.loc_ambient = glGetUniformLocation(S.program, "ambient");
+        S.loc_fog = glGetUniformLocation(S.program, "fog");
+        S.loc_fog_color = glGetUniformLocation(S.program, "fog_color");
+        S.loc_fog_cue = glGetUniformLocation(S.program, "fog_cue");
     }
+    light_uniforms();
     perspective(proj, S.fovy, (float)w / (float)(h > 0 ? h : 1));
     mat_mul(vp, proj, S.view);
     glUseProgram(S.program);
@@ -610,7 +685,7 @@ void scene3d_flush(int w, int h) {
             for (k = 0; k < m->nprims; k++) {
                 const Primitive *p = &m->prims[k];
                 const Material *mt = p->material >= 0 ? &m->materials[p->material] : NULL;
-                float model[16], mvp[16];
+                float model[16], mvp[16], modelview[16];
                 int has_tex = 0;
                 GpuTexture t = mt != NULL ? material_texture(mt, &has_tex) : (GpuTexture){0, 0, 0};
 
@@ -622,6 +697,8 @@ void scene3d_flush(int w, int h) {
                 mat_mul(mvp, vp, model);
                 glProgramUniformMatrix4fv(S.program, S.loc_mvp, 1, GL_FALSE, mvp);
                 glProgramUniformMatrix4fv(S.program, S.loc_model, 1, GL_FALSE, model);
+                mat_mul(modelview, S.view, model);
+                glProgramUniformMatrix4fv(S.program, S.loc_modelview, 1, GL_FALSE, modelview);
                 glProgramUniform1i(S.program, S.loc_lit, mt == NULL || mt->lit);
                 glProgramUniform1i(S.program, S.loc_textured, has_tex);
                 glProgramUniform1i(S.program, S.loc_semi, mt != NULL && mt->blend != BLEND_NONE);
