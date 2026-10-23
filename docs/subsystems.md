@@ -23,7 +23,7 @@ phase-1 port's files (`../port/src/game/`), which name the decomp's functions; t
 | Subsystem | Owns | Original |
 |---|---|---|
 | Clock ([page](subsystems/clock.md), built) | the date and time (12/25 to 12/31), whether time runs, minutes passing | `clock.c`, `field.c` |
-| Story | story flags, the event scripts (bytecode converted to Forth once), event packs, chapters | `cevent.c`, `cnrev.c`, `boot.c` |
+| Story ([page](subsystems/story.md), the events built) | story flags, the event scripts (bytecode converted to Forth once), event packs, chapters | `cevent.c`, `cnrev.c`, `boot.c` |
 | Areas | the area being played, its scene, going from area to area | `area.c`, `field.c`, `session.c` |
 | Matthew | walking and running, collision, looking and acting, his state | `player.c`, `player_misc.c`, `cecheck.c` |
 | Townsfolk | each person's daily schedule, where they are, what they do; talking to them | `timetable.c`, `handlers_chars.c`, `char_talk.c`, `walker.c`, `sreg.c` |

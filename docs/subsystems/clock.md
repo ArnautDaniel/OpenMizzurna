@@ -39,9 +39,10 @@ To the clock:
 - `advance-minute ( -- )` - one minute on, as a jump (src: `clock_advance_minute`: the story's waits).
 - `hold-clock ( reason -- )` / `release-clock ( reason -- )` - the clock runs only while nothing holds it.
   Reasons (`enum: clock-hold`): `story-stopped` (the scripts' own stop and go: `clock_pause` /
-  `clock_resume`), `event-running` (an event script has the game: `event_locked`), `no-control` (the player
-  can't move Matthew: `player_has_control`), `menu-open` (a screen over the game: `ui_busy`). The original
-  checked all four every frame; here each subsystem says when its own starts and ends.
+  `clock_resume` from C), `event-running` (an event script has the game: `event_locked`), `no-control` (the player
+  can't move Matthew: `player_has_control`), `menu-open` (a screen over the game: `ui_busy`), `text-shown` (an
+  event's line on screen: the VM's `clock_pause` while a message is up, `clock_resume` as it closes). The original
+  checked these every frame (the run flag shared by the scripts' and the text's stops); here each subsystem says when its own starts and ends.
 - `in-town ( flag -- )` - the pace: the town's or indoors' (the areas subsystem, entering an area).
 - `what-time ( -- )` - the clock answers the sender with `the-time ( t -- )`.
 

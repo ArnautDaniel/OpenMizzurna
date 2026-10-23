@@ -63,6 +63,12 @@ defer on-hit   ' noop is on-hit   action-of on-hit   \ (what it does now: a hook
 : array ( n "name" -- ) create cells allot does> ( i -- addr ) swap cells + ;
 ```
 
+A deferred word runs its word in its place (no frame of its own). `xt jump` leaves the running word for xt -
+a tail call: a chain of them never grows the return stack (the event scripts' `goto`; not from a word with
+locals or a loop open). `flag abort" text"` is an error with that text when flag is true; `erase ( addr n -- )`
+zeroes. A vocabulary's own word can shadow a core one of the same name (the actors' `spawn`): `forth:spawn`
+reaches the core's.
+
 Control: `if else then`, `begin until`, `begin while repeat`, `begin again`,
 `do loop`, `?do loop`, `+loop`, `i j leave unloop`, `case of endof endcase`, `exit`, `recurse`.
 

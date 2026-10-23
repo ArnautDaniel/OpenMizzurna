@@ -56,11 +56,12 @@ IN: forth
 \ deferred words: `defer name`, later `' word is name`; `action-of name` what it does now (a mod
 \ setting a hook keeps it, to call for the rest)
 : noop ;
-: defer  create ['] noop , does> @ execute ;
 : is     ' >body state @ if postpone literal postpone ! else ! then ; immediate
 : action-of ( "name" -- xt )  ' >body @ ;
 \ a run of memory with a name: `16 cells buffer: name`
 : buffer: create allot ;
+: erase ( addr n -- )  0 fill ;
+: abort" ( flag "text" -- )  postpone s" postpone (abort") ; immediate   \ an error with the text when flag
 \ records (Forth 2012's structures): a name for each field's offset, and the size -
 \   begin-structure /point  ffield: p.x  ffield: p.y  end-structure     ( addr p.y f@ )
 : begin-structure ( "name" -- addr 0 )  create here 0 ,  0  does> @ ;

@@ -36,7 +36,7 @@ end-state
 : hold-bit ( reason -- mask )  1 swap lshift ;
 : running? ( -- flag )  holds @ 0= ;
 : pace ( F: -- p )  town? @ if  town-pace  else  indoor-pace  then ;
-: jump ( t -- )  dup now !  0e second f!  broadcast time-set ;
+: jump-to ( t -- )  dup now !  0e second f!  broadcast time-set ;
 : minute-on ( -- )  1 now +!  now @ broadcast minute-passed ;
 : run ( -- )   \ a step's worth of game seconds; each whole minute told
     second f@  pace dt f* f+
@@ -46,8 +46,8 @@ end-state
 behaviour clock
   on spawned ( -- )  self subscribe tick  new-game-time now !  story-stopped hold-bit holds ! ;
   on tick ( -- )  running? if  run  then ;
-  on set-time ( t -- )  jump ;
-  on advance-minute ( -- )  now @ 1+ jump ;
+  on set-time ( t -- )  jump-to ;
+  on advance-minute ( -- )  now @ 1+ jump-to ;
   on hold-clock ( reason -- )  hold-bit holds @ or holds ! ;
   on release-clock ( reason -- )  hold-bit invert holds @ and holds ! ;
   on in-town ( flag -- )  town? ! ;

@@ -522,6 +522,27 @@ PRIM(p_execute) {   /* not nested: jump into the word as the inner interpreter w
     x->code(f, x);
 }
 
+PRIM(p_jump) {   /* ( xt -- ) leave the running word for xt: a tail call (the event scripts' goto: the
+                  * return stack doesn't grow however long a chain of them runs). Not from a word with
+                  * locals or a loop open: their frames stay. */
+    Word *x = (Word *)POP();
+
+    if (x == NULL) {
+        forth_error(f, "jump: null");
+    }
+    IP = (Cell *)rpop(f);
+    x->code(f, x);
+}
+
+PRIM(p_abort_q) {   /* ( flag addr len -- ) an error with that message when flag is true (abort") */
+    Cell len = POP();
+    const char *msg = (const char *)POP();
+
+    if (POP()) {
+        forth_error(f, "%.*s", (int)len, msg);
+    }
+}
+
 /* counted loops: the return stack holds the exit address, the limit and the index */
 PRIM(p_do) {
     Cell exit = *IP++, start = POP(), limit = POP();
@@ -1345,6 +1366,23 @@ PRIM(p_postpone) {   /* compile the next word's compile-time behaviour */
     }
 }
 PRIM(p_recurse) { comma(f, (Cell)f->latest); }
+/* defer name: a word that runs another, chosen later (`' word is name`); body[0] its xt. It runs it as
+ * `execute` does, not nested, so a call through it costs no frame (and a `jump` through it is a tail call). */
+static void dodefer(Forth *f, Word *w) {
+    Word *x = (Word *)w->body[0];
+
+    if (x == NULL) {
+        forth_error(f, "%s: deferred, and nothing set to it", w->name);
+    }
+    x->code(f, x);
+}
+PRIM(p_defer) {
+    size_t len;
+    const char *name = parse_name(f, &len, "defer");
+
+    new_word(f, name, len, dodefer);
+    comma(f, (Cell)forth_find(f, "noop", 4));
+}
 PRIM(p_create) {
     size_t len;
     const char *name = parse_name(f, &len, "create");
@@ -1749,6 +1787,7 @@ static const char *word_kind(Word *x) {
     if (x->code == docon) return "constant";
     if (x->code == dofcon) return "fconstant";
     if (x->code == dodoes) return "does>";
+    if (x->code == dodefer) return "defer";
     return "primitive";
 }
 
@@ -2194,7 +2233,7 @@ static void define_core(Forth *f) {
         {"inside-definition", p_inside_definition},
         {"'", p_tick}, {"create", p_create}, {">body", p_tobody}, {"latest", p_latest},
         {"find", p_find}, {"parse-name", p_parse_name}, {"parse-line", p_parse_line}, {"char", p_char}, {"include", p_include},
-        {"included", p_included}, {"evaluate", p_evaluate}, {"execute", p_execute},
+        {"included", p_included}, {"evaluate", p_evaluate}, {"execute", p_execute}, {"jump", p_jump}, {"defer", p_defer}, {"(abort\")", p_abort_q},
         {"list", p_list}, {"list-free", p_list_free}, {"push", p_push}, {"pop", p_pop}, {"nth", p_nth},
         {"nth!", p_nth_store}, {"length", p_length}, {"list-clear", p_list_clear}, {"{", p_brace_open},
         {"}", p_brace_close},

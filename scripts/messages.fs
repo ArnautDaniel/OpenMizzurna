@@ -16,4 +16,4 @@ message minute-passed ( t -- )          \ broadcast: a minute ran by; t the new 
 message time-set ( t -- )               \ broadcast: the time jumped to t
 
 \ why the clock is held (src: field_update's checks, each now said by its subsystem)
-enum: clock-hold  story-stopped event-running no-control menu-open ;
+enum: clock-hold  story-stopped event-running no-control menu-open text-shown ;
