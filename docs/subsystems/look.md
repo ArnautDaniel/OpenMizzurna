@@ -57,6 +57,8 @@ rows' alone; arriving (meeting Lorraine on the 25th, Mel and Lorraine arguing), 
 from the 28th 19:00), the robbery on the 27th, who says what by their stops, the farm workers, Lorraine's twelve
 conversations in turn, then her line. Seen: the meeting on the 25th plays through, Mel walking off after it. Sitting at the counter and ordering:
 `docs/subsystems/counter.md`.
+Area 28's (`scripts/rules/area028.fs`, the hideout cabin; `tests/library/test_area028.fs`): the closed door (□: a
+first knock, then the later ones), the call its scene makes. (To come: the fight its scene runs.)
 Area 24's (`scripts/rules/area024.fs`, the church; `tests/library/test_area024.fs`): the crate (its place by the
 floor he's on), the caretaker, the scenes on arriving (the first that fits), a room's scene once, being shown
 out before the 25th's meeting and at closing time, the meeting seen from above by its time, the doors by the
