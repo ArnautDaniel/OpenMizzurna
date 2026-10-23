@@ -125,6 +125,9 @@ behaviour areas
   on play-area-anim ( entry -- )   \ src: func_8001A150: the list's entry, played once
     area @ 0< area @ the-town = or if  drop exit  then  area-anim false play-object ;
   on tick ( -- )  objects-step ;
+  on object-shown ( object flag -- )   \ src: object_show / object_hide (the area's hooks: day and night lights)
+    {: o f :}  o 256 u< 0= if  exit  then  f 0<> 1 and {: b :}
+    b models-shown o + c!  o shell-objects < if  b shell-shown o + c!  then ;
 end-behaviour
 
 : spawn-areas ( -- id )  areas areas-state s" areas" spawn ;

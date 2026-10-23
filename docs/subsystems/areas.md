@@ -1,5 +1,8 @@
 # Areas
 
+`object-shown ( object flag )` shows or hides one of the area's objects until the next scene (src: object_show /
+object_hide: the areas' hooks - the cemetery's day and night lights).
+
 ## Purpose
 
 The area being played (src: `area.c` load_area, `model.c` func_8001D698, `draw.c` area_draw): its two model

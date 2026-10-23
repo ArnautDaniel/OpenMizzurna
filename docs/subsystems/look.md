@@ -57,6 +57,9 @@ rows' alone; arriving (meeting Lorraine on the 25th, Mel and Lorraine arguing), 
 from the 28th 19:00), the robbery on the 27th, who says what by their stops, the farm workers, Lorraine's twelve
 conversations in turn, then her line. Seen: the meeting on the 25th plays through, Mel walking off after it. Sitting at the counter and ordering:
 `docs/subsystems/counter.md`.
+Area 7's (`scripts/rules/area007.fs`, the cemetery; `tests/library/test_area007.fs`): its two timed scenes (on
+arriving or as they come), a visitor at a grave, walking out of the grounds, who says what, Father Barton's talk
+here, the day's and the night's lights (`object-shown`, to the areas), the C its events call.
 Area 6's (`scripts/rules/area006.fs`, Astin Farm; `tests/library/test_area006.fs`): the two things in the room to
 take, the warning when its owner heads home, the closet and the way out, the closet's doors.
 Area 5 (`scripts/rules/area005.fs`; `tests/library/test_area005.fs`): one chain of scripts from the warp in to the
