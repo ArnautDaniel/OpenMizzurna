@@ -32,6 +32,11 @@ its caption, the door, a fade, and a **warp**. Shut: the "closed" script with th
 not open yet or closing, the hospital's). Nozz's store: shut from midnight to 6:59 and from 17:25 (18:20 from the
 29th) to 22:59 - Matthew lives above it.
 
+**Matthew through a door** (`door-animate` op $139, `door-animate-alt` $13A; src: func_80045008): from the room he
+is in (the scene; the town's side in the town) he is put at the door's spot on his side, turned through it and
+stepping (motion $3F / $40, its move held) - the scripts wait for that; $13A also sets a fixed camera behind him.
+(The door's own opening and the next room's objects: to come.)
+
 **Warp** (op $12A, `events.fs`: `warp ( area scene x z heading script )`; src: func_80019F3C, func_80019D90):
 the area changes (scene -1: the town's), Matthew is put at x z facing heading (-1: as he is), the camera behind
 him, then the arrival script (the destination area's, by address: converted with the events) or a fade in; the
@@ -43,6 +48,6 @@ People go through doors on their routes (`through-door` in an event, for a perso
 
 ## To come
 
-Matthew through the doors between an area's rooms (through-door for him), the town's doors' remaining rules (Winona
+the doors opening (their object animations), the next room's objects shown as he steps through, the town's doors' remaining rules (Winona
 riding along, the diner's robber, Mel's first visit to the diner), the door opening as one passes (its object
 animation, when Matthew's room is on one side), knocking (`door.c`: door_knock, door_answer), the door sounds.

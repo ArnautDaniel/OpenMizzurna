@@ -5,7 +5,7 @@
 \ Each op does its work through its subsystem's messages; an op whose subsystem isn't built yet is a stub
 \ that takes its arguments and notes it (`unbuilt`).
 IN: events
-USING: engine actors messages clock window matthew townsfolk traffic effects camera ;
+USING: engine actors messages clock areas window matthew townsfolk traffic doors effects camera ;
 
 \ ---- the cast: actor slots (decomp/include/actor.h); the others by number (`160 actor`) ----
 0 constant matthew    1 constant morgan    2 constant nozz       3 constant cohen     5 constant samuel
@@ -268,8 +268,6 @@ variable loaded-pack
 : door-reveal-room ( n -- )  1 s" door-reveal-room" unbuilt ;   \ op $126
 : door-anim ( n -- )  1 s" door-anim" unbuilt ;   \ op $127
 : cd-picture ( n -- )  1 s" cd-picture" unbuilt ;   \ op $12B
-: door-animate ( w1 -- )  1 s" door-animate" unbuilt ;   \ op $139
-: door-animate-alt ( w1 -- )  1 s" door-animate-alt" unbuilt ;   \ op $13A
 : music ( n -- )  1 s" music" unbuilt ;   \ op $144
 : minigame ( n -- )  1 s" minigame" unbuilt ;   \ op $145
 : elevator-doors ( n n -- )  2 s" elevator-doors" unbuilt ;   \ op $148
@@ -390,6 +388,23 @@ $42 constant into-car       $4B constant at-car-door       \ ($4B: nothing for t
     begin  yield  dup anim-finished? until  drop ;
 
 \ ---- doors (docs/subsystems/doors.md) ----
+\ Matthew steps through a door from the room he is in (src: func_80045008: put at its spot on his side, turned,
+\ stepping through - a motion that holds its move; the door's opening and the next room's objects: to come)
+$3F constant stepping-out-1   $40 constant stepping-out-0   \ (by the side's way)
+-470 constant behind-look-y   -812 constant behind-dist   -1802 constant behind-eye-y   -693 constant behind-yaw
+: my-room ( -- room )  area @ the-town = if  town-room  else  scene @  then ;
+: matthew-through ( door -- way | 0 )   \ (where he went)
+    {: n :}  n door-of door-area @  area @ <>  area @ the-town <> and if  0 exit  then
+    n my-room false door-way {: w :}  w 0= if  0 exit  then
+    w out-x @ 0 w out-z @  matthew figure-of send figure-place
+    0 w out-heading @ 0  matthew figure-of send figure-turn
+    w out-way @ if  stepping-out-1  else  stepping-out-0  then  -1 false  matthew figure-of send figure-anim
+    matthew figure-of send figure-hold  w ;
+: door-animate ( door -- )  matthew-through drop ;   \ op $139
+: door-animate-alt ( door -- )   \ op $13A: and a fixed camera behind him
+    matthew-through ?dup 0= if  exit  then  {: w :}
+    behind-look-y behind-dist behind-eye-y  w out-x @  matthew-now drop nip nip  w out-z @  behind-yaw
+    the-camera send camera-place ;
 : door-walk ( a door room flip -- )   \ src: func_8004535C: out at the door's far side, the thread waiting
     {: a n room flip :}                \ while they step through
     a person? 0= if  a n room 3 s" through-door" unbuilt  exit  then   \ (Matthew's: the doors, to come)
