@@ -50,7 +50,10 @@ create shell-shown 256 allot   create models-shown 256 allot
     models @ area-origin 0 models-shown 256 draw-model-shown ;
 ' draw-area on-draw
 
+: load-town ( scene -- )   \ the town: its textures; its tiles the town's own (town.fs)
+    scene !  the-town area !  the-town texture-area  0 origin !  0 origin cell+ !  0 origin 2 cells + ! ;
 : load ( area scene -- )
+    over the-town = if  nip load-town exit  then
     scene !  dup area !
     dup texture-area
     dup 0 model-path model shell !  dup 1 model-path model models !

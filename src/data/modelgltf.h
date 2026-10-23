@@ -32,6 +32,15 @@ typedef struct GltfOut {
 
 /* the model as glTF: `set` the materials' texture set ("area" or "own"), `uri` each texture's default image
  * (relative to the glTF; NULL: none written), `bin_uri` the binary buffer's file name */
+/* the town's street lamps (src: func_800243F0): each lamp's light is drawn through a 16-colour palette of video
+ * memory's last row (lamp i's at 16 i), which the game fills with the lit or the unlit colours as the lamps go on
+ * and off; the import cuts its textures both ways (textures/lamps/: lit) and a material says its lamp */
+#define LAMPS 38
+#define LAMP_ROW 255
+#define LAMP_UNLIT_X 0x2A0   /* where the town's sheet keeps the two palettes, on that row */
+#define LAMP_LIT_X 0x2B0
+int model_lamp(uint16_t palette);   /* the lamp a palette is (-1: none) */
+
 int model_gltf(const Model *m, const char *set, const char *(*uri)(void *ctx, const char *texture), void *uri_ctx,
                const char *bin_uri, const char *comment, GltfOut *out);
 void model_gltf_free(GltfOut *out);

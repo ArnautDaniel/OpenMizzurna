@@ -30,18 +30,31 @@ PRIM(p_model) {   /* ( addr len -- model ) a model from the library (0: none the
 
     snprintf(path, sizeof(path), "%.*s", (int)len, s);
     for (i = 0; i < sNModels; i++) {
-        if (strcmp(sModels[i].path, path) == 0) {
+        if (sModels[i].path[0] != 0 && strcmp(sModels[i].path, path) == 0) {
             PUSH(sModels[i].m != NULL ? i + 1 : 0);
             return;
         }
     }
-    if (sNModels == MAX_MODELS) {
+    for (i = 0; i < sNModels && sModels[i].path[0] != 0; i++) {   /* (a slot forgotten, or a new one) */
+    }
+    if (i == MAX_MODELS) {
         forth_error(f, "model: too many models");
     }
-    snprintf(sModels[sNModels].path, sizeof(sModels[sNModels].path), "%s", path);
-    sModels[sNModels].m = model3d_load(path);
-    sNModels++;
-    PUSH(sModels[sNModels - 1].m != NULL ? sNModels : 0);
+    snprintf(sModels[i].path, sizeof(sModels[i].path), "%s", path);
+    sModels[i].m = model3d_load(path);
+    if (i == sNModels) {
+        sNModels++;
+    }
+    PUSH(sModels[i].m != NULL ? i + 1 : 0);
+}
+PRIM(p_forget_model) {   /* ( model -- ) let it go: its memory freed, its number another's later (the town's tiles) */
+    Cell m = POP();
+
+    if (m >= 1 && m <= sNModels && sModels[m - 1].path[0] != 0) {
+        model3d_free(sModels[m - 1].m);
+        sModels[m - 1].m = NULL;
+        sModels[m - 1].path[0] = 0;
+    }
 }
 PRIM(p_draw_model) {   /* ( model x y z yaw -- ) this frame, at a world place, turned */
     Cell yaw = POP(), z = POP(), y = POP(), x = POP(), m = POP();
@@ -137,13 +150,17 @@ PRIM(p_draw_figure) {   /* ( model motion frame x y z yaw -- ) a figure posed in
     scene3d_draw_posed(sModels[m - 1].m, pos, (float)yaw, (const short (*)[3])turns, parts, move);
 }
 PRIM(p_texture_area) { scene3d_texture_area((int)POP()); }   /* ( area -- ) */
+PRIM(p_lamp) { Cell lit = POP(); scene3d_lamp((int)POP(), lit != 0); }   /* ( lamp flag -- ) a street lamp on or off */
 
 void bind_scene(Forth *f) {
     forth_prim(f, "model", p_model);
+    forth_prim(f, "forget-model", p_forget_model);
     forth_prim(f, "draw-model", p_draw_model);
     forth_prim(f, "draw-model-shown", p_draw_model_shown);
     forth_prim(f, "camera", p_camera);
     forth_prim(f, "texture-area", p_texture_area);
+    forth_prim(f, "lamp", p_lamp);
+    forth_constant(f, "#lamps", SCENE3D_LAMPS);
     forth_prim(f, "motion", p_motion);
     forth_prim(f, "motion-frames", p_motion_frames);
     forth_prim(f, "motion-move", p_motion_move);

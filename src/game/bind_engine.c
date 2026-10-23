@@ -241,6 +241,20 @@ PRIM(p_exe_table) {   /* ( addr len -- addr n ) a table of the executable by nam
     PUSH(n);
 }
 
+/* ---- chance ---- */
+PRIM(p_random) {   /* ( n -- 0..n-1 ) (a xorshift; seeded once from the clock) */
+    static uint32_t state;
+    Cell n = POP();
+
+    if (state == 0) {
+        state = (uint32_t)SDL_GetTicksNS() | 1u;
+    }
+    state ^= state << 13;
+    state ^= state >> 17;
+    state ^= state << 5;
+    PUSH(n > 0 ? (Cell)(state % (uint32_t)n) : 0);
+}
+
 /* ---- tools ---- */
 PRIM(p_screenshot) { cstring(f, gEngine.screenshot, sizeof(gEngine.screenshot)); }   /* ( addr len -- ) */
 PRIM(p_screenshot_pending) { PUSH(gEngine.screenshot[0] ? -1 : 0); }
@@ -252,7 +266,7 @@ void bind_engine(Forth *f) {
         {"on-tick", p_on_tick}, {"off-tick", p_off_tick}, {"on-draw", p_on_draw}, {"off-draw", p_off_draw},
         {"ticks", p_ticks}, {"dt", p_dt}, {"seconds", p_seconds}, {"step-blend", p_step_blend}, {"pen-color", p_pen_color}, {"pen-scale", p_pen_scale}, {"draw-text", p_draw_text},
         {"draw-rect", p_draw_rect}, {"pen-blend", p_pen_blend}, {"draw-quad", p_draw_quad}, {"screen-size", p_screen_size}, {"char-size", p_char_size}, {"hud", p_hud},
-        {"clear-color", p_clear_color}, {"screenshot", p_screenshot},
+        {"clear-color", p_clear_color}, {"random", p_random}, {"screenshot", p_screenshot},
         {"screenshot-pending?", p_screenshot_pending}, {"console!", p_console_store}, {"exe-table", p_exe_table}, {"library-file", p_library_file}, {"exe-u8", p_exe_u8}, {"exe-s8", p_exe_s8}, {"exe-s16", p_exe_s16}, {"exe-s32", p_exe_s32},
     };
     Vocab *was = f->m.current, *v = forth_vocab(f, "engine");

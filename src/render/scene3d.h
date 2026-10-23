@@ -25,6 +25,11 @@ void model3d_free(Model3D *m);
 /* whose texture set "area" materials use (the area being played) */
 void scene3d_texture_area(int area);
 
+/* the town's street lamps, lit or not: a material that is a lamp's light (its glTF extras' "lamp") shows its lit
+ * texture (textures/lamps/) while its lamp is */
+#define SCENE3D_LAMPS 38
+void scene3d_lamp(int lamp, int lit);
+
 /* the camera, in world units (see above) */
 void scene3d_camera(const float target[3], float yaw, float dist, float eye_y, float look_y, float projection_h);
 

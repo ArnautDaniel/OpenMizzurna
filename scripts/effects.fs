@@ -28,7 +28,6 @@ variable iris   variable iris-target   variable r-in   variable r-out
     soft-iris = if  soft-iris-solid  else  255  then  solid !  0e due f!
     kind @ no-effect = if  0 frames-left !  then ;   \ (effect 0, or no table: nothing runs, nothing to wait for)
 
-: random ( n -- 0..n-1 )  ticks 1103515245 * 12345 + 16 rshift swap mod ;
 : radii ( -- )   \ the iris's ring, by its level (or flickering: level 1)
     level @ 1 = if  8 random 116 + r-out !  8 random 52 + r-in !  exit  then
     iris @ dup iris-ring >= if  iris-ring - iris-pixels *  else  drop 0  then r-in !

@@ -172,6 +172,10 @@ are built, each listed here.
 | `camera` | `x y z yaw dist eye-y look-y h --` | the game's camera (render/scene3d.h): its target, heading, distance, heights, projection |
 | `texture-area` | `area --` | whose texture set the area models use |
 | `draw-model-shown` | `model x y z yaw addr n --` | only the parts whose byte (of n) isn't 0 |
+| `forget-model` | `model --` | let a model go: its memory freed, its number another's later (the town's tiles) |
+| `lamp` / `#lamps` | `i flag --` | a town street lamp lit or not: its lights' materials show their lit textures (38) |
+| `road-node` / `road-point` | `i -- x y z points first` / `i -- dx dy dz length` | the town's road graph (docs/subsystems/traffic.md) |
+| `random` | `n -- 0..n-1` | chance |
 | `motion` / `motion-frames` / `motion-move` | `addr len -- motion` / `motion -- n` / `motion frame -- dx dy dz` | a character motion from the library and its frames |
 | `draw-figure` | `model motion frame x y z yaw --` | a figure posed in a motion's frame |
 | `n>str` / `$clear $+ $@` | `n -- addr len` / ... | a number's digits; a string built a piece at a time (prelude) |

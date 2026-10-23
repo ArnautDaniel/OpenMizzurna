@@ -169,6 +169,11 @@ world units: twice the models'), and each tile's folder `town/CC-RR/` holds:
 - `obstacles.bin`, `zones.bin` (its region lists), `billboards.bin` (its billboard placements), as they are
   until the movement and drawing subsystems read them.
 
+The street lamps: the town's 38 lamps light windows and lamp heads through palettes the game fills as they go on
+and off (src: func_800243F0: the last row of video memory, lamp i's palette at 16 i). Their textures are cut as
+they are by day, unlit, and again lit (`textures/lamps/`); a material that is a lamp's light says which
+(`"lamp": i` in its extras).
+
 The check: every tile five parts and nothing more, the region and billboard parts the same bytes, the models'
 glTF exact as for any model. (MAP.BIN's sector padding, and a tile's padding between parts, hold leftovers of
 the disc's making that the game never reads; they aren't kept.) 768 tiles, 1536 models.

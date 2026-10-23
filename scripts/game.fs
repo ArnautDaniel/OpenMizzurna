@@ -1,10 +1,10 @@
 \ game.fs - where the game starts (after prelude.fs): the actors that make up the game are spawned here, as
 \ their subsystems are built (docs/subsystems.md: the map).
 IN: game
-USING: engine actors keys messages clock effects window items areas traffic townsfolk routes matthew camera talk look story
+USING: engine actors keys messages clock effects window items areas town traffic townsfolk routes matthew camera talk look story
     events.checks events.schedules events.doors events.car-routes rules.area001 ;
 
-spawn-clock drop  spawn-effects drop  spawn-window drop  spawn-items drop  spawn-traffic drop  spawn-townsfolk drop  spawn-routes drop  spawn-look drop  spawn-areas drop  spawn-matthew drop  spawn-camera drop  spawn-story drop
+spawn-clock drop  spawn-effects drop  spawn-window drop  spawn-items drop  spawn-town drop  spawn-traffic drop  spawn-townsfolk drop  spawn-routes drop  spawn-look drop  spawn-areas drop  spawn-matthew drop  spawn-camera drop  spawn-story drop
 
 \ until the title exists: with the game's library there, a new game at once; without (the tests), a word on
 \ the screen

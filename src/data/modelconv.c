@@ -186,6 +186,15 @@ static void find_models(Models *ms, const uint8_t *const *entries, const size_t 
 }
 
 /* ---- video memory ---- */
+/* every street lamp's palette lit or not (src: func_800243F0's palette copies) */
+static void lamps_set(VramContext *v, int lit) {
+    int i;
+
+    for (i = 0; i < LAMPS; i++) {
+        memmove(&v->vram[LAMP_ROW][i * 16], &v->vram[LAMP_ROW][lit ? LAMP_LIT_X : LAMP_UNLIT_X], 16 * sizeof(uint16_t));
+    }
+}
+
 static void area_context(VramContext *v, int area, const uint8_t *const *entries, const size_t *sizes, int n,
                          const uint8_t *exe, size_t exe_n) {
     size_t size;
@@ -213,6 +222,9 @@ static void area_context(VramContext *v, int area, const uint8_t *const *entries
     sheet = sheets != NULL ? le16s(sheets + area * 2) : 0;
     if (sheet > 0 && sheet < n && entries[sheet] != NULL) {
         vram_load_tim(v, entries[sheet], sizes[sheet]);
+    }
+    if (area == TOWN_AREA) {
+        lamps_set(v, 0);   /* (the lamps as by day) */
     }
 }
 
@@ -511,6 +523,20 @@ static int run(Job *j, const uint8_t *const *entries, const size_t *sizes, int n
                 snprintf(path, sizeof(path), "textures/common/%s.png", sets->names[i]);
                 texture_file(j, path);
             }
+        }
+        if (a == TOWN_AREA) {   /* the lamps' textures lit */
+            lamps_set(v, 1);
+            for (i = 0; i < sets->n && !j->failed; i++) {
+                uint16_t page, palette;
+                char path[200];
+
+                if (sets->hash[i][a] != 0 && texture_words(sets->names[i], &page, &palette) &&
+                    model_lamp(palette) >= 0 && cut(j, v, sets->names[i])) {
+                    snprintf(path, sizeof(path), "textures/lamps/%s.png", sets->names[i]);
+                    texture_file(j, path);
+                }
+            }
+            lamps_set(v, 0);
         }
         for (i = 0; i < ms.n && !j->failed; i++) {
             const Found *f = &ms.list[i];

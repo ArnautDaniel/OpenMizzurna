@@ -26,6 +26,11 @@ typedef struct MaterialKey {
     int lit, double_sided;
 } MaterialKey;
 
+int model_lamp(uint16_t palette) {
+    int x = palette & 0x3F, y = palette >> 6;
+    return y == LAMP_ROW && x < LAMPS ? x : -1;
+}
+
 static MaterialKey key_of(const ModelPolygon *p) {
     MaterialKey k;
 
@@ -322,6 +327,7 @@ int model_gltf(const Model *m, const char *set, const char *(*uri)(void *ctx, co
         }
         tf(&materials, ",\"extras\":{\"om\":{\"texture-set\":\"%s\"", mk->textured ? set : "none");
         if (mk->textured) tf(&materials, ",\"texture\":\"%s\"", name);
+        if (mk->textured && model_lamp(mk->palette) >= 0) tf(&materials, ",\"lamp\":%d", model_lamp(mk->palette));
         if (mk->blend >= 0) tf(&materials, ",\"blend\":\"%s\"", kBlendNames[mk->blend]);
         tf(&materials, "}}}");
     }

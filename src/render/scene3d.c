@@ -19,7 +19,7 @@
 #define NEAR_PLANE 0.02f
 #define FAR_PLANE 2000.0f
 #define MAX_DRAWS 1024
-#define MAX_TEXTURES 1024
+#define TEXTURES_AT_FIRST 256
 #define FLOATS_PER_VERTEX 12            /* position 3, normal 3, colour 4, uv 2 */
 
 enum { BLEND_NONE, BLEND_HALF, BLEND_ADD, BLEND_SUBTRACT, BLEND_QUARTER };
@@ -29,6 +29,7 @@ typedef struct Material {
     int area_set;       /* 1: the area's set; 0: the model's own (uri) */
     char uri[160];      /* the model's own: its library path */
     int blend, lit, double_sided;
+    int lamp;           /* a town street lamp's light (its lit texture when the lamp is on); -1: none */
 } Material;
 
 typedef struct Primitive {
@@ -64,6 +65,7 @@ typedef struct Tex {
     char path[200];
     GpuTexture t;
     int missing;
+    uint32_t hash;
 } Tex;
 
 static struct {
@@ -71,9 +73,10 @@ static struct {
     int loc_mvp, loc_model, loc_lit, loc_textured, loc_pass, loc_semi;
     Draw draws[MAX_DRAWS];
     int ndraws;
-    Tex tex[MAX_TEXTURES];
-    int ntex;
+    Tex *tex;
+    int ntex, captex;
     int area;
+    unsigned char lamp_lit[SCENE3D_LAMPS];
     float view[16], eye[3];
     float fovy;
     int have_camera;
@@ -183,32 +186,48 @@ static void perspective(float *m, float fovy, float aspect) {
 }
 
 /* ---- textures ---- */
+/* every texture asked for, by its library path (one that isn't there too: asked again, it isn't), found by a hash
+ * of the path; kept for the run (the town's hundreds: a few hundred megabytes of video memory at most) */
+static uint32_t path_hash(const char *s) {
+    uint32_t h = 2166136261u;   /* (FNV-1a) */
+
+    while (*s) {
+        h = (h ^ (uint8_t)*s++) * 16777619u;
+    }
+    return h;
+}
+
 static GpuTexture texture_at(const char *path, int *ok) {
     size_t n;
     uint8_t *file, *rgba;
     int i, w = 0, h = 0;
+    uint32_t hash = path_hash(path);
+    Tex *t;
 
     for (i = 0; i < S.ntex; i++) {
-        if (strcmp(S.tex[i].path, path) == 0) {
+        if (S.tex[i].hash == hash && strcmp(S.tex[i].path, path) == 0) {
             *ok = !S.tex[i].missing;
             return S.tex[i].t;
         }
     }
-    if (S.ntex == MAX_TEXTURES) {
-        *ok = 0;
-        return S.tex[0].t;
+    if (S.ntex == S.captex) {
+        S.captex = S.captex ? S.captex * 2 : TEXTURES_AT_FIRST;
+        S.tex = realloc(S.tex, sizeof(Tex) * (size_t)S.captex);
     }
     file = files_read(path, &n);
     rgba = file != NULL ? png_read_rgba(file, n, &w, &h) : NULL;
     free(file);
-    snprintf(S.tex[S.ntex].path, sizeof(S.tex[S.ntex].path), "%s", path);
-    S.tex[S.ntex].missing = rgba == NULL;
+    t = &S.tex[S.ntex++];
+    memset(t, 0, sizeof(*t));
+    snprintf(t->path, sizeof(t->path), "%s", path);
+    t->hash = hash;
+    t->missing = rgba == NULL;
     if (rgba != NULL) {
-        S.tex[S.ntex].t = render_texture_rgba(rgba, w, h);
+        t->t = render_texture_rgba(rgba, w, h);
         free(rgba);
     }
-    *ok = !S.tex[S.ntex].missing;
-    return S.tex[S.ntex++].t;
+    *ok = !t->missing;
+    return t->t;
 }
 
 static GpuTexture material_texture(const Material *mt, int *ok) {
@@ -218,6 +237,13 @@ static GpuTexture material_texture(const Material *mt, int *ok) {
     *ok = 0;
     if (!mt->texture[0]) {
         return t = (GpuTexture){0, 0, 0};
+    }
+    if (mt->lamp >= 0 && mt->lamp < SCENE3D_LAMPS && S.lamp_lit[mt->lamp]) {
+        snprintf(path, sizeof(path), "textures/lamps/%s.png", mt->texture);
+        t = texture_at(path, ok);
+        if (*ok) {
+            return t;
+        }
     }
     if (mt->area_set) {
         snprintf(path, sizeof(path), "textures/area-%03d/%s.png", S.area, mt->texture);
@@ -239,6 +265,15 @@ static void read_extras(const cgltf_data *data, const cgltf_extras *e, char *out
     if (cgltf_copy_extras_json(data, e, out, &size) != cgltf_result_success) {
         out[0] = 0;
     }
+}
+
+static int json_int(const char *json, const char *key, int none) {   /* "key": n */
+    char pat[64];
+    const char *p;
+
+    snprintf(pat, sizeof(pat), "\"%s\":", key);
+    p = strstr(json, pat);
+    return p != NULL ? atoi(p + strlen(pat)) : none;
 }
 
 static void json_string(const char *json, const char *key, char *out, size_t n) {   /* "key": "value" */
@@ -303,6 +338,7 @@ Model3D *model3d_load(const char *path) {
         json_string(extras, "texture", mt->texture, sizeof(mt->texture));
         json_string(extras, "blend", blend, sizeof(blend));
         mt->area_set = strcmp(set, "area") == 0;
+        mt->lamp = json_int(extras, "lamp", -1);
         if (strcmp(set, "none") == 0) {
             mt->texture[0] = 0;
         }
@@ -412,6 +448,11 @@ void model3d_free(Model3D *m) {
 
 /* ---- the frame ---- */
 void scene3d_texture_area(int area) { S.area = area; }
+void scene3d_lamp(int lamp, int lit) {
+    if (lamp >= 0 && lamp < SCENE3D_LAMPS) {
+        S.lamp_lit[lamp] = (unsigned char)(lit != 0);
+    }
+}
 
 void scene3d_camera(const float target[3], float yaw, float dist, float eye_y, float look_y, float projection_h) {
     float a = yaw * 2.0f * (float)M_PI / TURN;

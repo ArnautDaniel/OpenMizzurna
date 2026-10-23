@@ -3,7 +3,7 @@
 \ along each road's bends, easing their speed and turning toward the way ahead; a car parking takes a free lane
 \ at its parking node. Facts: car-now, car-driving?, car-carrying?, partner-of, beside.
 IN: traffic
-USING: engine actors messages figures ;
+USING: engine actors messages areas figures ;
 
 26 constant first-car   35 constant #cars
 181 constant #car-routes
@@ -155,6 +155,19 @@ PRIVATE>
     #cars 0 do  cars i car * +  -1 over lane-node !  drop  loop ;
 : step-car ( c slot -- )  over driving @ if  drive  else  2drop  then ;
 : traffic-step ( -- )  #cars 0 do  cars i car * +  i first-car +  step-car  loop ;
+PRIVATE>
+
+\ ---- drawing them, in the town ----
+<PRIVATE
+create car-models  #cars cells allot   car-models #cars cells erase
+: car-model ( slot -- model )   \ its kind's model, loaded when first drawn
+    dup first-car - cells car-models + {: s at :}
+    at @ 0= if  s kind-model model at !  then  at @ ;
+: draw-car ( slot -- )
+    dup car-of {: s c :}  c shown @ 0= if  exit  then
+    s car-model ?dup if  c x @  c y @  c z @  s car-now nip nip nip  draw-model  then ;
+: draw-cars ( -- )  area @ the-town = if  #cars 0 do  i first-car + draw-car  loop  then ;
+' draw-cars on-draw
 PRIVATE>
 
 state: traffic-state end-state

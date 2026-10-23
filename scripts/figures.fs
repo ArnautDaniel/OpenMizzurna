@@ -6,6 +6,11 @@ USING: engine actors messages areas ;
 
 193 constant shared-motions   \ ids below are the common set (CD.BIN 033_4 part 1); from here an area's own
                               \ (src: func_80020464, 0xC1)
+$16E constant character-entries   \ the kinds' models: CD.BIN entries from here
+: kind-model ( slot -- addr len )   \ "models/NNN_K.gltf": the kind's model (a slot is its kind)
+    {: s :}  s" kind-models" s exe-u8 character-entries +
+    $clear  s" models/" $+  dup 5 / dup 100 < if  s" 0" $+  then  dup 10 < if  s" 0" $+  then  n>str $+
+    s" _" $+  5 mod n>str $+  s" .gltf" $+  $@ ;
 15e fconstant indoor-motion-rate   \ frames a second
 30e fconstant town-motion-rate
 

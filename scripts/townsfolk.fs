@@ -7,7 +7,6 @@ USING: engine actors messages clock areas figures doors traffic ;
 
 182 constant #slots
 enum: placed  standing partnered at-diner at-club ;   \ how a stop puts them (src: func_80027944)
-$16E constant character-entries                          \ the kinds' models: CD.BIN entries from here
 
 \ ---- the rows ----
 begin-structure stop-row
@@ -48,10 +47,6 @@ variable writing   variable writing-row   \ (the rows being written: townsfolk/r
 : stop-of ( slot -- stop | -1 )   \ the stop they stand at (-1: walking, or no schedule)
     dup scheduled? 0= if  drop -1 exit  then  person-of dup travelling @ if  drop -1  else  at-stop @  then ;
 : current-row ( slot -- row )  person-of dup at-stop @ row-of ;
-: kind-model ( slot -- addr len )   \ "models/NNN_K.gltf": the kind's model (a slot is its kind)
-    >r s" kind-models" r> exe-u8 character-entries +
-    $clear  s" models/" $+  dup 5 / dup 100 < if  s" 0" $+  then  dup 10 < if  s" 0" $+  then  n>str $+
-    s" _" $+  5 mod n>str $+  s" .gltf" $+  $@ ;
 
 \ the facts the areas' rules ask
 <PRIVATE   \ (the cast's names are the events': events.fs)
