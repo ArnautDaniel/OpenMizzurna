@@ -70,6 +70,7 @@ typedef struct Quad {
     float corner[4][3];   /* glTF's space: 0 1 the top, 2 3 the bottom (the PlayStation's order) */
     float shade;          /* 1.0: the texture as it is */
     int blend;
+    float uv[4];          /* the part of the texture across it: u0 v0 u1 v1 */
 } Quad;
 
 typedef struct Tex {
@@ -779,28 +780,62 @@ static void light_uniforms(void) {
     glProgramUniform3f(S.program, S.loc_fog_cue, FOG_CUE_A, FOG_CUE_B, S.projection_h);
 }
 
-void scene3d_quad(GpuTexture t, const float corner[4][3], float shade, int blend) {
+static Quad *quad_new(GpuTexture t, float shade, int blend) {
     Quad *q;
-    int k;
 
     if (S.quads == NULL) {
         S.quads = malloc(sizeof(Quad) * MAX_QUADS);
     }
     if (S.nquads == MAX_QUADS || t.id == 0) {
-        return;
+        return NULL;
     }
     q = &S.quads[S.nquads++];
     q->t = t;
+    q->shade = shade;
+    q->blend = blend;
+    q->uv[0] = 0, q->uv[1] = 0, q->uv[2] = 1, q->uv[3] = 1;
+    return q;
+}
+
+void scene3d_quad(GpuTexture t, const float corner[4][3], float shade, int blend) {
+    Quad *q = quad_new(t, shade, blend);
+    int k;
+
+    if (q == NULL) {
+        return;
+    }
     for (k = 0; k < 4; k++) {
         world_point(corner[k], q->corner[k]);
     }
-    q->shade = shade;
-    q->blend = blend;
+}
+
+void scene3d_sprite(GpuTexture t, const float pos[3], float pixels, const float uv[4], float shade, int blend) {
+    float p[3], depth, half;
+    const float *v = S.view;
+    float right[3] = {v[0], v[4], v[8]}, up[3] = {v[1], v[5], v[9]};
+    Quad *q;
+    int k, j;
+
+    if (!S.have_camera) {
+        return;
+    }
+    world_point(pos, p);
+    depth = -(v[2] * p[0] + v[6] * p[1] + v[10] * p[2] + v[14]);
+    if (depth <= 0 || (q = quad_new(t, shade, blend)) == NULL) {
+        return;
+    }
+    half = pixels * 0.5f * depth / S.projection_h;   /* (the original's pixels: its screen 240 high seen from h) */
+    for (k = 0; k < 4; k++) {
+        float sx = (k & 1) ? half : -half, sy = (k & 2) ? -half : half;
+        for (j = 0; j < 3; j++) {
+            q->corner[k][j] = p[j] + right[j] * sx + up[j] * sy;
+        }
+    }
+    memcpy(q->uv, uv, sizeof(q->uv));
 }
 
 /* the quads' vertices this frame, two triangles each (0 1 2, 1 3 2), into their buffer */
 static void quads_upload(void) {
-    static const float kUV[4][2] = {{0, 0}, {1, 0}, {0, 1}, {1, 1}};
     static const int kOrder[6] = {0, 1, 2, 1, 3, 2};
     float *v = malloc(sizeof(float) * FLOATS_PER_VERTEX * 6 * (size_t)S.nquads), *p = v;
     int i, k;
@@ -822,7 +857,9 @@ static void quads_upload(void) {
         for (k = 0; k < 6; k++) {
             const float *c = S.quads[i].corner[kOrder[k]];
             float sh = S.quads[i].shade;
-            float vert[FLOATS_PER_VERTEX] = {c[0], c[1], c[2], 0, 1, 0, sh, sh, sh, 1, kUV[kOrder[k]][0], kUV[kOrder[k]][1]};
+            const float *uv = S.quads[i].uv;
+            float vert[FLOATS_PER_VERTEX] = {c[0], c[1], c[2], 0, 1, 0, sh, sh, sh, 1,
+                                             uv[(kOrder[k] & 1) ? 2 : 0], uv[(kOrder[k] & 2) ? 3 : 1]};
             memcpy(p, vert, sizeof(vert));
             p += FLOATS_PER_VERTEX;
         }

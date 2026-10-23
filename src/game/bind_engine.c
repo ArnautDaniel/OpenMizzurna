@@ -279,6 +279,7 @@ PRIM(p_image) {   /* ( addr len -- image ) a picture from the library (a PNG); 0
     sNImages++;
     PUSH(sImages[sNImages - 1].t.id != 0 ? sNImages : 0);
 }
+GpuTexture engine_image(Cell i) { return i >= 1 && i <= sNImages ? sImages[i - 1].t : (GpuTexture){0, 0, 0}; }
 PRIM(p_image_size) {   /* ( image -- w h ) */
     Cell i = POP();
     PUSH(i >= 1 && i <= sNImages ? sImages[i - 1].t.w : 0);
@@ -349,6 +350,7 @@ void bind_engine(Forth *f) {
     bind_scene(f);  /* (the 3D: bind_scene.c) */
     bind_roads(f);  /* (the roads: roads.c) */
     bind_records(f);   /* (records.c) */
+    bind_snow(f);      /* (snow.c) */
     forth_set_current(f, was);
     gEngine.pen = 0xFFFFFFFF;
     gEngine.pen_scale = 2;

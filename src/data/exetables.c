@@ -55,6 +55,7 @@ static const ExeTable kTables[] = {
     {"flare-sizes", 0x800807E4, 14, "and its half size (u8)"},
     {"stars-x", 0x800806F8, 20 * 4, "the 20 stars: where across (s32; a 320-pixel repeat; src: func_8001F000)"},
     {"stars-y", 0x80080748, 20 * 4, "and how high above the horizon's top"},
+    {"snow-wobble", 0x8009583C, 32 * 2, "a snowflake's sway: 32 steps of s8 x, z (src: the flakes' loop)"},
     {"music", 0x800814DC, MUSIC_TRACKS * MUSIC_ENTRY,
      "the background music: per track its sequence's CD.BIN entry, then 0 or 1, and its volume (src: music_play)"},
 };

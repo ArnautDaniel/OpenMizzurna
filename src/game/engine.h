@@ -5,6 +5,7 @@
 
 #include "../forth/forth.h"
 #include "../platform/platform.h"
+#include "../render/render.h"
 #include "console.h"
 
 #define STEPS_PER_SECOND 30   /* the simulation's fixed step rate (docs/design.md: "A frame"); scripts read dt */
@@ -37,7 +38,9 @@ void bind_engine(Forth *f);
 void bind_text(Forth *f);   /* text.c: the game's text and fonts */
 void bind_scene(Forth *f);  /* bind_scene.c: models and the camera */
 void bind_roads(Forth *f);  /* roads.c: the town's road graph */
-void bind_records(Forth *f);  /* records.c: numbers from the library's texts */
+void bind_records(Forth *f);
+void bind_snow(Forth *f);   /* snow.c: the snowflakes */
+GpuTexture engine_image(Cell image);   /* an image word's picture (bind_engine.c) */  /* records.c: numbers from the library's texts */
 /* one game tick: the scripts' hooks, their tasks, the actors' frame */
 void engine_tick(Engine *e);
 /* the 2D the scripts draw (on-draw hooks, the HUD line) */

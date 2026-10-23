@@ -364,6 +364,7 @@ static const SkyPiece kSky[] = {
     {"moon-1", 4, 0x2E0, 0x60, 0x2C0, 0xF9, 0x80, 0x60, 24, 24},   /* (its phases: to the 27th, to the 30th, the 31st) */
     {"moon-2", 4, 0x2E0, 0x60, 0x2C0, 0xF9, 0x98, 0x60, 24, 24},
     {"moon-3", 4, 0x2E0, 0x60, 0x2C0, 0xF9, 0xA0, 0x40, 24, 24},
+    {"snow", 4, 0x380, 0, 0x350, 0xFE, 0, 0, 256, 64},   /* (the flakes: a column by nearness, a row by their fall) */
 };
 
 /* the town's billboard sprites (027_4's part 7: 12 bytes a sprite, {s16 w, h, u, v, texture page, palette}; the

@@ -62,6 +62,9 @@ void scene3d_draw_posed(Model3D *m, const float pos[3], float yaw, const short (
  * PlayStation's mode (1 half, 2 add, 3 subtract, 4 quarter) */
 #include "render.h"
 void scene3d_quad(GpuTexture t, const float corner[4][3], float shade, int blend);
+/* a small square facing the camera (the snow) at a world place, `pixels` across on the original's screen (240
+ * high), a part of the texture (u0 v0 u1 v1) across it */
+void scene3d_sprite(GpuTexture t, const float pos[3], float pixels, const float uv[4], float shade, int blend);
 
 /* a model with some of its objects moved this frame (the areas' animated props: doors ...): each pose an object
  * (its node), its place from where it rests (side, height, forward - along its rest heading; model units, height

@@ -62,7 +62,7 @@ add_executable(openmizzurna
     src/main.c
     src/platform/platform.c src/platform/gl.c
     src/render/render.c src/render/scene3d.c
-    src/game/bind_engine.c src/game/text.c src/game/bind_scene.c src/game/roads.c src/game/records.c src/game/console.c
+    src/game/bind_engine.c src/game/text.c src/game/bind_scene.c src/game/roads.c src/game/records.c src/game/snow.c src/game/console.c
     src/platform/library.c src/core/files.c)
 target_link_libraries(openmizzurna PRIVATE omdata)
 target_include_directories(openmizzurna PRIVATE src/third_party)

@@ -185,6 +185,7 @@ are built, each listed here.
 | `records` / `#records` / `record` | `path len word len -- table` / `table -- n` / `table i -- addr` | a library text's lines that start with the word: each line's numbers a row (a cell each) |
 | `draw-billboard` | `image x z bottom top half yaw grey blend --` | an upright picture in the world facing the heading yaw (grey 128: as it is; blend: 0 solid, 1 half ...) |
 | `pose-object` / `motion-turn` | `object side height forward rx ry rz --` / `motion frame -- rx ry rz` | an object moved in the next `draw-model-shown` (the areas' props); a prop motion's turn |
+| `snow-scene` / `snow-emitter` / `snow-flakes` / `snow-step` / `draw-snow` | docs/subsystems/snow.md | the snowflakes |
 | `random` | `n -- 0..n-1` | chance |
 | `motion` / `motion-frames` / `motion-move` | `addr len -- motion` / `motion -- n` / `motion frame -- dx dy dz` | a character motion from the library and its frames |
 | `draw-figure` | `model motion frame x y z yaw --` | a figure posed in a motion's frame |

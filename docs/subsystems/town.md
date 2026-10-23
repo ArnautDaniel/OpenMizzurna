@@ -31,7 +31,7 @@ func_800243F0). 32 x 24 tiles of 19980 world units; tile (col, row)'s centre is 
 
 ## To come
 
-Snow, the moving
+ the moving
 signs and the tiles' object animations, the police cordon coming down (12/25 - 12/28), the doors into the buildings (and the zones' scripts), the cars and props in his way (src: player_probe_blocked), the
 two road tiles closed on foot until 12/28 03:00, driving, the
 cars' headlights at night.

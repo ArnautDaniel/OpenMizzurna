@@ -29,6 +29,7 @@ phase-1 port's files (`../port/src/game/`), which name the decomp's functions; t
 | Townsfolk ([page](subsystems/townsfolk.md), placed by the clock, walking their routes) | each person's daily schedule, where they are, what they do; talking to them | `timetable.c`, `handlers_chars.c`, `char_talk.c`, `walker.c`, `sreg.c` |
 | Daylight ([page](subsystems/daylight.md), lights and fog) | the hour's light, the scenes' lights, the fog, the weather | `clock.c` |
 | Sky ([page](subsystems/sky.md), drawn) | the sky's colour, stars, clouds, horizon strip, sun and flares, moon | `sky.c` |
+| Snow ([page](subsystems/snow.md), falling) | the flakes around the camera or past a scene's windows | `snow.c` |
 | Town ([page](subsystems/town.md), drawn) | the streamed outdoors: its tiles around the camera, the street lamps; the sky, the day's light (to come) | `map_stream.c`, `ovl027.c`, `clock.c` |
 | Traffic ([page](subsystems/traffic.md), cars driving, people riding) | the town's cars, their routes, riding in them | `carline.c`, `cobj.c` |
 | Doors ([page](subsystems/doors.md), people through them) | the doors between rooms and out to the town; going through, opening, knocking | `door.c` |
