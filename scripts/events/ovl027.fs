@@ -10,6 +10,206 @@ USING: events events.main ;
     end-script
     ;
 
+\ $80109E54
+: entry-80109E54
+    106 actor as-this-one
+    106 actor idle
+    106 actor 0 0 face
+    this-one 64 5 talk
+    matthew 65 7 talk
+    this-one 66 7 talk
+    this-one 67 1 talk
+    matthew 68 3 talk
+    this-one 69 5 talk
+    106 actor 578366 219816 walk-to
+    20 frames wait
+    70 2 say-mode-wait
+    71 2 say-mode-wait
+    end-script
+    ;
+
+\ $80109F04
+: entry-80109F04
+    winona 147 7 talk
+    matthew 148 7 talk
+    end-script
+    ;
+
+\ $80109F5C
+: entry-80109F5C
+    -600 -2850 -1024 329874 -4080 269309 3524 camera-set
+    matthew 329850 -4082 269377 set-pos
+    matthew 3072 0 turn-to
+    106 actor 329539 -4080 269282 set-pos
+    106 actor 1024 0 turn-to
+    matthew 330396 269461 2 20 walk-to-ex
+    106 actor 82 0 through-door
+    106 actor 331741 268121 walk-to
+    15 frames wait
+    matthew 17 18 1 anim-then
+    106 actor wait-stop
+    end-script
+    ;
+
+: L-80109BB4
+    matthew this-one camera-face
+    45 0 camera-turn
+    matthew this-one face-each-other
+    this-one 180 0 turn-by
+    this-one 177 0 anim
+    this-one anim-hold
+    matthew 176 0 anim
+    matthew anim-hold
+    matthew wait-anim
+    matthew this-one face-each-other
+    end-script
+    ;
+
+: L-80109B84
+    matthew this-one face-each-other
+    matthew 91 92 1 anim-then
+    this-one 94 95 1 anim-then
+    end-script
+    ;
+
+: L-80109ADC
+    45 frames wait
+    0 12 effect-level
+    40 frames wait
+    12 0 effect-level
+    15 frames wait
+    -600 -2850 -700 0 0 0 0 camera-set
+    matthew camera-at
+    45 frames wait
+    matthew 84 84 1 anim-then
+    4 screen-effect
+    wait-effect
+    180 64 camera-turn
+    matthew 99 0 talk
+    wait-camera-turn
+    matthew 85 0 1 anim-then
+    matthew 100 0 talk
+    end-script
+    ;
+
+\ $8010A178
+: entry-8010A178
+    112 actor as-this-one
+    L-80109BB4
+    L-80109B84
+    this-one 102 0 talk
+    matthew 103 0 talk
+    this-one 104 0 talk
+    matthew 105 0 talk
+    this-one 106 0 talk
+    L-80109B84
+    matthew 107 0 talk
+    this-one 108 0 talk
+    matthew 109 0 talk
+    this-one 110 0 talk
+    this-one 111 0 talk
+    this-one 112 0 talk
+    matthew 113 0 talk
+    this-one 114 0 talk
+    matthew 115 0 talk
+    this-one 116 0 talk
+    matthew 117 0 talk
+    this-one 118 0 talk
+    matthew 119 0 talk
+    16 0 effect-level
+    15 screen-effect
+    18 frames wait
+    112 actor 0 0 0 set-pos
+    -600 -2850 -700 116013 0 199722 -1414 camera-set
+    L-80109ADC
+    3 map-reveal
+    end-script
+    ;
+
+\ $8010A240
+: entry-8010A240
+    153 actor 7 actor-model
+    10 actor as-this-one
+    -312 -2402 -1884 107289 -200 199727 2338 camera-set
+    10 actor 106787 -200 199196 set-pos
+    matthew 107419 -200 199613 set-pos
+    153 actor 108883 -200 197954 set-pos
+    matthew 10 actor face-each-other
+    matthew 59 60 1 anim-then
+    this-one 120 7 talk
+    matthew 121 0 talk
+    this-one 122 7 talk
+    matthew 123 0 talk
+    this-one 124 7 talk
+    153 actor 107424 198992 walk-to  153 actor wait-stop
+    153 actor 125 7 talk
+    this-one 126 7 talk
+    matthew 127 1 talk
+    153 actor 128 5 talk
+    matthew 129 6 talk
+    this-one 130 7 talk
+    matthew 131 4 talk
+    153 actor 132 0 talk
+    11 screen-effect
+    wait-effect
+    153 actor 0 0 0 set-pos
+    8 0 106284 218754 2554 0 warp
+    ;
+
+\ $8010A358
+: entry-8010A358
+    153 actor 1 actor-model
+    102 actor 7 actor-model
+    153 actor 92199 0 53156 set-pos
+    153 actor 0 1024 0 set-rot
+    102 actor 92199 0 53156 set-pos
+    102 actor 0 1024 0 set-rot
+    -608 -3066 -164 92845 -200 53196 -1214 camera-set
+    153 actor as-this-one
+    2 object-anim
+    153 actor 64 0 anim
+    153 actor anim-hold
+    this-one wait-anim
+    153 actor 93075 52820 walk-to
+    153 actor wait-stop
+    102 actor as-this-one
+    2 object-anim
+    102 actor 64 0 anim
+    102 actor anim-hold
+    this-one wait-anim
+    102 actor 93075 53340 walk-to
+    morgan as-this-one
+    matthew 133 0 talk
+    this-one 134 0 talk
+    102 actor 135 0 talk
+    this-one 136 0 talk
+    matthew 137 0 talk
+    this-one 138 0 talk
+    matthew 139 0 talk
+    this-one 140 0 talk
+    matthew 141 0 talk
+    this-one 142 0 talk
+    matthew 143 0 talk
+    this-one 144 0 talk
+    this-one 145 0 talk
+    matthew 146 0 talk
+    153 actor 96031 53419 walk-to
+    102 actor 93031 53419 walk-to
+    10 actor 93031 53419 walk-to
+    30 frames wait
+    11 screen-effect
+    wait-effect
+    153 actor idle
+    153 actor 0 0 0 set-pos
+    102 actor idle
+    102 actor 0 0 0 set-pos
+    10 actor idle
+    10 actor 0 0 0 set-pos
+    10 screen-effect
+    wait-effect
+    end-script
+    ;
+
 \ $8010A510
 : entry-8010A510
     events.main:sub-80096E34
@@ -255,6 +455,22 @@ USING: events events.main ;
     2 0 104609 357908 3400 -2146414048 warp
     ;
 
+\ $8010B700
+: arrive-8010B700
+    245 1 call-pack-script
+    -1 music
+    -930 -8250 -280 250361 -336 135015 -2258 camera-set
+    30 frames wait
+    2 screen-effect
+    wait-effect
+    20 3 caption-for
+    text-close
+    3 screen-effect
+    wait-effect
+    main-exe $80047620 native
+    end-script
+    ;
+
 \ $8010B770
 : entry-8010B770
     247 0 call-pack-script
@@ -414,6 +630,12 @@ USING: events events.main ;
     ovl027 $80106950 native
     wait-minigame
     ovl027 $801060BC native
+    end-script
+    ;
+
+\ $8010BC20
+: arrive-8010BC20
+    252 3 call-pack-script
     end-script
     ;
 
@@ -631,8 +853,10 @@ USING: events events.main ;
 ' arrive-8010B644 $8010B644 27 overlay-word!
 ' arrive-8010B694 $8010B694 27 overlay-word!
 ' arrive-8010B6D4 $8010B6D4 27 overlay-word!
+' arrive-8010B700 $8010B700 27 overlay-word!
 ' arrive-8010B8AC $8010B8AC 27 overlay-word!
 ' arrive-8010B8D8 $8010B8D8 27 overlay-word!
 ' arrive-8010BB78 $8010BB78 27 overlay-word!
 ' arrive-8010BBDC $8010BBDC 27 overlay-word!
+' arrive-8010BC20 $8010BC20 27 overlay-word!
 ' arrive-8010BC30 $8010BC30 27 overlay-word!

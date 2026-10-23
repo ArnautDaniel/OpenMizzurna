@@ -231,3 +231,84 @@ USING: events events.main ;
     matthew 119 1 anim
     end-script
     ;
+
+\ $80104508
+: entry-80104508
+    153 actor 1 actor-model
+    102 actor 10 actor-model
+    177 actor 58 actor-model
+    153 actor as-this-one
+    matthew 0 0 anim
+    177 actor 334909 0 436120 set-pos
+    177 actor 9 1 set-floor
+    matthew 334051 0 436969 set-pos
+    matthew 2176 0 turn-to
+    153 actor 333608 0 437040 set-pos
+    153 actor 2030 0 turn-to
+    102 actor 333223 0 436991 set-pos
+    102 actor 1576 0 turn-to
+    26 actor 0 0 0 set-pos
+    177 actor 332800 433498 0 50 walk-to-ex
+    -448 -1682 -620 334846 0 433537 3872 camera-set
+    map-sync
+    1 2 sequence-play
+    8 screen-effect
+    wait-effect
+    177 actor wait-stop
+    this-one 46 2 talk
+    matthew 47 7 talk
+    this-one 48 7 talk
+    0 0 sequence-play
+    20 frames wait
+    153 actor 334047 437545 walk-to
+    20 frames wait
+    153 actor idle
+    153 actor 104 anim-once
+    5 frames wait
+    0 sequence-stop
+    15 frames wait
+    this-one 49 0 talk
+    1 sequence-stop
+    102 actor as-this-one
+    matthew 333556 436987 walk-to
+    10 frames wait
+    102 actor 0 -256 face
+    this-one wait-turned
+    matthew 50 0 talk
+    this-one 51 7 talk
+    matthew 52 1 talk
+    this-one 53 7 talk
+    matthew 54 2 talk
+    this-one 55 7 talk
+    matthew 56 4 talk
+    153 actor as-this-one
+    153 actor 103 0 anim
+    this-one wait-anim
+    153 actor 2548 256 turn-to
+    this-one wait-turned
+    matthew 153 256 face
+    102 actor 153 -256 face
+    matthew wait-turned
+    matthew 57 7 talk
+    -672 -1362 -1260 333679 0 436374 4064 camera-set
+    15 music
+    this-one 58 2 talk
+    matthew 59 1 talk
+    this-one 60 7 talk
+    13 music
+    matthew 61 0 talk
+    this-one 62 7 talk
+    matthew 63 7 talk
+    this-one 64 7 talk
+    11 screen-effect
+    wait-effect
+    26 actor 334778 0 435796 set-pos
+    153 actor 0 0 0 set-pos
+    102 actor 0 0 0 set-pos
+    177 actor 0 0 0 set-pos
+    ovl009 $80102344 native
+    27 -1 -1 -1 -1 0 warp
+    ;
+
+\ the words the main executable's scripts go to here, by address
+' entry-80104508 $80104508 9 overlay-word!

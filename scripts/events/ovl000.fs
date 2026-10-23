@@ -21,6 +21,292 @@ USING: events events.main ;
     end-script
     ;
 
+\ $801041AC
+: entry-801041AC
+    153 actor 1 actor-model
+    102 actor 92 actor-model
+    8 actor as-this-one
+    153 actor 249944 -360 134174 set-pos
+    153 actor 0 0 turn-to
+    102 actor 249644 -360 134174 set-pos
+    102 actor 0 0 turn-to
+    -620 -936 -796 250407 -360 135198 1280 camera-set
+    this-one 172 9 talk
+    matthew 250407 135198 walk-to
+    matthew wait-stop
+    matthew 8 0 face
+    matthew 173 7 talk
+    this-one 174 12 talk
+    matthew 175 6 talk
+    this-one 176 10 talk
+    matthew 177 7 talk
+    this-one 178 11 talk
+    matthew 14 15 anim-then-loop
+    20 frames wait
+    153 actor as-this-one
+    this-one 102 0 face
+    -556 -1448 -828 250094 -360 134542 -1428 camera-set
+    102 actor 179 3 talk
+    this-one 180 4 talk
+    102 actor 181 1 talk
+    this-one 182 7 talk
+    102 actor 183 3 talk
+    102 actor 249644 135380 walk-to
+    102 actor wait-stop
+    this-one 184 3 talk
+    102 actor 0 0 0 set-pos
+    153 actor as-this-one
+    matthew 250050 134491 walk-to
+    15 frames wait
+    this-one 250050 134491 200 face-point
+    -556 -1480 -1244 249881 -360 134632 -5942 camera-set
+    matthew wait-stop
+    matthew 153 actor face-each-other
+    177 actor 8 actor-model
+    177 actor 250558 -360 134175 set-pos
+    matthew 185 7 talk
+    this-one 186 7 talk
+    matthew 187 7 talk
+    this-one 188 7 talk
+    matthew 189 1 talk
+    this-one 190 7 talk
+    matthew 191 2 talk
+    this-one 192 7 talk
+    153 actor 8 128 face
+    this-one 193 0 talk
+    177 actor 251014 0 135224 set-pos
+    177 actor 250216 134105 walk-to
+    177 actor 194 0 8 talk-to
+    177 actor wait-stop
+    this-one 195 5 talk
+    177 actor 196 2 8 talk-to
+    153 actor 249644 135380 walk-to
+    177 actor as-this-one
+    events.main:sub-800979B4
+    11 screen-effect
+    wait-effect
+    1 set-scene
+    1 frames wait
+    camera-fixed
+    -678 -4404 -210 251489 -360 133283 -3038 camera-set
+    10 screen-effect
+    wait-effect
+    events.main:sub-8009788C
+    events.main:sub-800978B8
+    this-one 249616 133744 walk-to  this-one wait-stop
+    this-one 3 1 through-door
+    11 screen-effect
+    wait-effect
+    0 set-scene
+    1 frames wait
+    camera-fixed
+    -556 -1480 -1244 249881 -360 134632 -5942 camera-set
+    10 screen-effect
+    wait-effect
+    this-one 251184 134160 walk-to  this-one wait-stop
+    matthew 197 0 talk
+    153 actor 0 0 0 set-pos
+    177 actor 0 0 0 set-pos
+    end-script
+    ;
+
+\ $801045B8
+: entry-801045B8
+    177 actor as-this-one
+    this-one 8 actor-model
+    matthew 251057 -360 132265 set-pos
+    matthew 3200 0 turn-to
+    -12 -2376 -2012 250607 -360 132735 3496 camera-set
+    this-one 6 1 through-door
+    this-one 251107 132569 walk-to
+    this-one wait-stop
+    this-one 198 0 talk
+    this-one 2716 128 turn-to
+    this-one wait-turned
+    this-one 199 7 talk
+    matthew 200 7 talk
+    this-one 201 1 talk
+    matthew 202 5 talk
+    matthew 203 2 talk
+    matthew 204 0 talk
+    this-one 205 0 talk
+    matthew 206 7 talk
+    this-one 207 2 talk
+    matthew 208 7 talk
+    matthew 209 0 talk
+    this-one 210 1 talk
+    matthew 211 4 talk
+    this-one 251216 132880 walk-to  this-one wait-stop
+    this-one 6 3 through-door
+    this-one 0 0 0 set-pos
+    19 map-reveal
+    end-script
+    ;
+
+\ $80104708
+: entry-80104708
+    153 actor 1 actor-model
+    102 actor 7 actor-model
+    -1 music
+    153 actor 0 0 set-floor
+    mel 0 0 set-floor
+    102 actor 0 0 set-floor
+    153 actor as-this-one
+    -420 -1594 -1026 249444 840 132557 -2386 camera-set
+    153 actor 249444 840 132557 set-pos
+    mel 252511 840 131187 set-pos
+    mel 3072 0 turn-to
+    matthew 250208 840 132380 set-pos
+    matthew 0 0 turn-to
+    102 actor 250431 840 133912 set-pos
+    mel 161 1 anim
+    map-sync
+    250386 840 132798 32 camera-move
+    this-one 250384 132784 walk-to  this-one wait-stop
+    this-one 7 5 through-door
+    -324 -1850 -418 252421 840 130902 4032 camera-set
+    153 actor 252448 132496 walk-to  153 actor wait-stop
+    mel 164 72 1 anim-then
+    153 actor 13 128 face
+    20 frames wait
+    mel 168 169 1 anim-then
+    20 frames wait
+    153 actor 86 0 anim
+    30 frames wait
+    mel as-this-one
+    6 music
+    -324 -1946 -770 252374 840 131711 6080 camera-set
+    mel 252383 132115 5 80 walk-to-ex
+    this-one wait-stop
+    matthew 250352 840 132515 set-pos
+    matthew 1024 0 turn-to
+    102 actor 250352 840 132855 set-pos
+    102 actor 1024 0 turn-to
+    matthew 0 1 anim
+    102 actor 0 1 anim
+    104 sound
+    mel 92 1 anim
+    this-one 212 0 talk
+    this-one 213 0 talk
+    153 actor 3104 256 turn-to
+    153 actor 214 0 talk
+    153 actor wait-turned
+    mel 312 313 1 anim-then
+    this-one 215 0 talk
+    -452 -2906 -578 251578 840 132496 1052 camera-set
+    15 frames wait
+    104 sound
+    5 frames wait
+    104 sound
+    7 frames wait
+    104 sound
+    3 frames wait
+    104 sound
+    20 frames wait
+    matthew 17 anim-once
+    102 actor 14 anim-once
+    20 frames wait
+    mel 92 1 anim
+    153 actor 13 0 face
+    -324 -1946 -770 252374 840 131711 6080 camera-set
+    153 actor 216 1 talk
+    this-one 217 0 talk
+    153 actor as-this-one
+    this-one 218 0 talk
+    mel 23 anim-once
+    30 frames wait
+    9 screen-effect
+    wait-effect
+    -836 -1818 -1762 249780 840 133565 2048 camera-set
+    matthew 249767 840 132923 set-pos
+    matthew 6426 0 turn-to
+    153 actor 249937 840 132604 set-pos
+    153 actor 2680 0 turn-to
+    mel 249485 840 132361 set-pos
+    mel 2048 0 turn-to
+    102 actor 249167 840 132361 set-pos
+    102 actor 2048 0 turn-to
+    8 screen-effect
+    8 frames wait
+    mel as-this-one
+    102 actor 10 0 anim
+    102 actor anim-hold
+    mel 10 0 anim
+    mel anim-hold
+    this-one wait-anim
+    102 actor 11 0 anim
+    102 actor anim-hold
+    mel 11 0 anim
+    mel anim-hold
+    this-one wait-anim
+    102 actor 11 0 anim
+    102 actor anim-hold
+    mel 11 0 anim
+    mel anim-hold
+    this-one wait-anim
+    102 actor 11 0 anim
+    102 actor anim-hold
+    mel 11 0 anim
+    mel anim-hold
+    this-one wait-anim
+    102 actor 12 0 anim
+    102 actor anim-hold
+    mel 12 0 anim
+    mel anim-hold
+    this-one wait-anim
+    153 actor as-this-one
+    matthew 219 3 talk
+    this-one 220 4 talk
+    matthew 221 7 talk
+    this-one 222 2 talk
+    matthew 223 4 talk
+    10 frames wait
+    this-one 85 0 anim-at  this-one wait-anim
+    this-one 224 3 talk
+    matthew 153 -200 face
+    matthew wait-turned
+    matthew 225 7 talk
+    this-one 226 3 talk
+    matthew 227 5 talk
+    this-one 228 2 talk
+    matthew 229 1 talk
+    this-one 85 0 anim-at  this-one wait-anim
+    this-one 0 200 face
+    this-one wait-turned
+    this-one 230 5 talk
+    matthew 231 0 talk
+    this-one 232 7 talk
+    this-one 233 6 talk
+    matthew 234 7 talk
+    this-one 235 3 talk
+    matthew 236 4 talk
+    this-one 237 7 talk
+    10 frames wait
+    this-one 87 0 anim-at  this-one wait-anim
+    153 actor 249472 132352 walk-to  153 actor wait-stop
+    153 actor 2048 -256 turn-to
+    this-one wait-turned
+    153 actor 10 0 anim
+    153 actor anim-hold
+    this-one wait-anim
+    153 actor 11 0 anim
+    153 actor anim-hold
+    this-one wait-anim
+    153 actor 11 0 anim
+    153 actor anim-hold
+    this-one wait-anim
+    153 actor 11 0 anim
+    153 actor anim-hold
+    this-one wait-anim
+    153 actor 12 0 anim
+    153 actor anim-hold
+    this-one wait-anim
+    mel 0 0 0 set-pos
+    153 actor 0 0 0 set-pos
+    102 actor 0 0 0 set-pos
+    end-script
+    ;
+
 : L-80104DE4
     matthew 448 6 talk
     8 actor 449 0 talk

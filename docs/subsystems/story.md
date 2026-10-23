@@ -93,6 +93,10 @@ played (its content area: `script-area`).
 src: event_thread_kill). While an event that gave the player control back runs, the areas' frame hooks and ○ / □
 run (src: player_has_control).
 
+The converter also takes the scripts an area's minigame start queues (src: area_minigame_start's
+`minigame_script = &D_X`) and the arrival scripts the overlays' C warps with (src: func_80019F3C's last
+argument), in the destination area's overlay.
+
 A few scripts' own actor is given by the C that starts them (src: `M2C_FIELD(&D_X, s32 *, 4) = ...->id`: the
 counters' orders - the food, the drink): the converter finds them and writes `the-prop @ as-this-one`; the rules
 set `the-prop` before starting them.

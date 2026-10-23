@@ -449,6 +449,12 @@ def route_addresses(exe, src_dir, root, exe_img):
 PROP_SCRIPTS = set()
 
 
+def minigame_scripts(c):
+    """the scripts an overlay's area_minigame_start queues (src: minigame_script = &D_X, or by a local)"""
+    m = re.search(r'\nvoid area_minigame_start\(void\) \{\n(.*?)\n\}\n', c, re.S)
+    return set(int(x, 16) for x in re.findall(r'\w+ = &D_([0-9A-F]{8})', m.group(1))) if m else set()
+
+
 def find_prop_scripts(scope, c):
     for x in re.findall(r'M2C_FIELD\(&D_([0-9A-F]{8}), s32 \*, 4\) = \(s32\) [^;]*->id;', c):
         PROP_SCRIPTS.add((scope, int(x, 16)))
@@ -504,7 +510,7 @@ def main():
         area = d[3:]
         c = open(os.path.join(root, 'src', d, d + '.c')).read()
         find_prop_scripts(d, c)
-        addrs = set(EV.started_scripts(c)) | {x for ar, x in check_targets if ar == int(area) and x >= OVL_BASE} | \
+        addrs = minigame_scripts(c) | set(EV.started_scripts(c)) | {x for ar, x in check_targets if ar == int(area) and x >= OVL_BASE} | \
             {x for x, h in homes.items() if h == area}
         if not addrs:
             continue
@@ -542,6 +548,12 @@ def main():
         for i in s.insns.values():
             if i.is_op and i.op == 0x12A and i.args[5]:
                 arrivals.setdefault(i.args[0], set()).add(i.args[5] & 0xFFFFFFFF)
+    # and those the overlays' C warps with (src: func_80019F3C(area, scene, x, z, heading, &script))
+    for d in sorted(os.listdir(os.path.join(root, 'src'))):
+        cp = os.path.join(root, 'src', d, d + '.c')
+        if d.startswith('ovl') and os.path.exists(cp):
+            for ar, x in re.findall(r'func_80019F3C\((0x[0-9A-Fa-f]+|\d+), [^;]*?&D_([0-9A-F]{8})\)', open(cp).read()):
+                arrivals.setdefault(int(ar, 0), set()).add(int(x, 16))
     by_scope = {s.scope: s for s, _, _ in sources}
     for area, targets in sorted(arrivals.items()):
         scope = 'ovl%03d' % area

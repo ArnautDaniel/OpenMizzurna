@@ -23,10 +23,12 @@ variable line   variable speaker   variable line-gesture
 : talk-shot ( -- )
     area @ the-town = if  outdoor-look-y outdoor-dist outdoor-eye-y 0 0 0 outdoor-yaw
     else  indoor-look-y indoor-dist indoor-eye-y 0 0 0 indoor-yaw  then  camera-set ;
+$80000000 constant in-their-place   \ a gesture flag: they speak where they are, not turning (src: func_8003FBFC)
+: stays-put? ( -- flag )  this-one seated?  line-gesture @ in-their-place and 0<> or ;   \ (on a stool, in a bed)
 : one-liner-event ( -- )   \ (an event: the template's ops)
     speaker @ as-this-one
     matthew seated? if  this-one line @ 0 talk exit  then   \ src: Matthew on a stool: the line alone (0x80096230)
-    talk-shot  this-one seated? if  this-one camera-at  this-one line @ 0 talk exit  then   \ (0x80096298)
+    talk-shot  stays-put? if  this-one camera-at  this-one line @ 0 talk exit  then   \ (0x80096298)
     matthew 0 1 anim  this-one camera-at  this-one matthew 0 face  this-one line @ line-gesture @ talk ;
 : one-liner ( msg slot line-gesture -- )  line-gesture !  speaker !  line !  ['] one-liner-event start-event ;
 65535 constant no-gesture

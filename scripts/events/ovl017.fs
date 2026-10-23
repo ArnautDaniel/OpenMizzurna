@@ -4,6 +4,70 @@
 IN: events.ovl017
 USING: events events.main ;
 
+\ $80102874
+: entry-80102874
+    winona as-this-one
+    -512 -2738 -588 364287 -2400 147058 2352 camera-set
+    matthew 364645 -2400 146887 set-pos
+    matthew 2352 0 turn-to
+    this-one 1 7 talk
+    363559 -2400 144832 128 camera-move
+    wait-camera-move
+    4 object-anim
+    20 frames wait
+    this-one 2 1 talk
+    matthew 3 7 talk
+    this-one 4 2 talk
+    matthew 5 3 talk
+    this-one 6 7 talk
+    matthew 7 4 talk
+    this-one 8 2 talk
+    matthew 9 7 talk
+    11 picture-show
+    33 3 say-mode-wait
+    picture-hide
+    5 picture-show
+    34 3 say-mode-wait
+    picture-hide
+    5 object-anim
+    20 frames wait
+    364287 -2400 147058 128 camera-move
+    wait-camera-move
+    this-one 10 7 talk
+    winona 363331 146782 walk-to
+    winona wait-stop
+    winona 63 2 through-door
+    winona 365790 -2400 144581 set-pos
+    winona 2725 0 turn-to
+    winona 84 1 anim
+    end-script
+    ;
+
+\ $80102A00
+: entry-80102A00
+    -588 -714 -690 365664 -2400 145090 2186 camera-set
+    matthew 365392 -2400 144579 set-pos
+    matthew 15 0 face
+    matthew 11 1 talk
+    winona 12 7 talk
+    matthew 13 4 talk
+    winona 14 2 talk
+    matthew 15 7 talk
+    winona 16 7 talk
+    matthew 19 3 talk
+    winona 20 2 talk
+    matthew 21 7 talk
+    winona 22 6 talk
+    matthew 23 2 talk
+    winona 24 4 talk
+    winona 25 7 talk
+    matthew 26 7 talk
+    winona 27 7 talk
+    matthew 28 3 talk
+    winona 1 ride
+    end-script
+    ;
+
 \ $80102B4C
 : entry-80102B4C
     29 say-wait-close

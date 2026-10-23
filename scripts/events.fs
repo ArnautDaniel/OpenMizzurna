@@ -103,7 +103,8 @@ variable main-words
 12 ovl constant ovl012  13 ovl constant ovl013  16 ovl constant ovl016  19 ovl constant ovl019
 21 ovl constant ovl021  24 ovl constant ovl024  26 ovl constant ovl026  27 ovl constant ovl027
 28 ovl constant ovl028  4 ovl constant ovl004   29 ovl constant ovl029  30 ovl constant ovl030
-31 ovl constant ovl031
+31 ovl constant ovl031  8 ovl constant ovl008   10 ovl constant ovl010  11 ovl constant ovl011
+17 ovl constant ovl017  18 ovl constant ovl018  23 ovl constant ovl023  32 ovl constant ovl032
 begin-structure native-entry   \ a list of the natives written so far
   field: next-native
   field: native-scope
@@ -224,7 +225,6 @@ variable loaded-pack
 \ ---- actor commands ( actor args -- ): until the townsfolk and Matthew take them ----
 : run ( a x1 -- )  2 act-unbuilt ;   \ cmd $0B
 : face-point ( a x1 x2 x3 -- )  4 act-unbuilt ;   \ cmd $0D
-: anim-at ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $13
 : talk-pose ( a x1 -- )  2 act-unbuilt ;   \ cmd $14
 : restore-state ( a -- )  1 act-unbuilt ;   \ cmd $16
 : anim-step ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $18
@@ -421,6 +421,7 @@ $39 constant to-diner-stool   $44 constant to-club-stool   $45 constant takes-cl
 : anim ( a id loop -- )  -1 swap anim-then ;   \ cmd $03 (src: actor_anim): play it (looping or not)
 : anim-once ( a id -- )  false anim ;               \ cmd $05: once, from its start
 : anim-then-loop ( a id next -- )  false anim-then ;   \ cmd $06: once, then the next
+: anim-at ( a id next -- )  false anim-then ;          \ cmd $13: once, then the next (src: actor_anim's next)
 : anim-hold ( a -- )   \ cmd $07: at the motion's end the figure stays where it moved
     dup matthew = if  figure-of send figure-hold exit  then
     dup person? if  the-townsfolk send person-hold exit  then

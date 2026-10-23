@@ -1060,7 +1060,8 @@ defer L-80099064
     end-script
     ;
 
-: L-800979B4
+\ $800979B4
+: sub-800979B4
     this-one 249696 133904 walk-to  this-one wait-stop
     this-one 3 0 through-door
     this-one 249536 133440 walk-to  this-one wait-stop
@@ -1076,7 +1077,7 @@ defer L-80099064
 : L-800979D4
     L-80097980
     L-80097994
-    L-800979B4
+    sub-800979B4
     goto L-800978D8
     ;
 
@@ -1334,7 +1335,7 @@ defer L-80099064
     this-one 107 360 attach
     this-one wait-follow
     L-80097A34
-    L-800979B4
+    sub-800979B4
     this-one 250240 132192 walk-to  this-one wait-stop
     this-one 249398 840 133667 set-pos
     this-one arrive
@@ -2024,7 +2025,8 @@ defer L-80099064
     end-script
     ;
 
-: L-800978B8
+\ $800978B8
+: sub-800978B8
     this-one 251216 132880 walk-to  this-one wait-stop
     this-one 6 3 through-door
     this-one 249536 133440 walk-to  this-one wait-stop
@@ -2044,7 +2046,7 @@ defer L-80099064
 \ $800847F0
 : route-800847F0
     hudson as-this-one
-    L-800978B8
+    sub-800978B8
     L-800978D8
     L-80084654
     this-one arrive
@@ -3221,7 +3223,7 @@ defer L-80099064
 \ $800870B4
 : route-800870B4
     mel as-this-one
-    L-800978B8
+    sub-800978B8
     L-800978F0
     L-80097968
     L-80096D88
@@ -3718,7 +3720,8 @@ defer L-80099064
     end-script
     ;
 
-: L-8009788C
+\ $8009788C
+: sub-8009788C
     this-one 251328 133360 walk-to  this-one wait-stop
     this-one 6 1 through-door
     this-one 30 walk-forward
@@ -3732,7 +3735,7 @@ defer L-80099064
     morgan as-this-one
     L-80087DA4
     L-80097874
-    L-8009788C
+    sub-8009788C
     morgan arrive
     end-script
     ;
@@ -3748,7 +3751,7 @@ defer L-80099064
 \ $80087EF0
 : route-80087EF0
     morgan as-this-one
-    L-800978B8
+    sub-800978B8
     L-800978D8
     L-80087E0C
     this-one arrive
@@ -3833,7 +3836,7 @@ defer L-80099064
     L-80097994
     this-one 250496 135312 walk-to  this-one wait-stop
     100 frames wait
-    L-800979B4
+    sub-800979B4
     L-800978D8
     goto L-80087E0C
     ;
@@ -3934,8 +3937,8 @@ defer L-80099064
     morgan 26 360 attach
     this-one wait-follow
     L-80097A34
-    L-800979B4
-    L-8009788C
+    sub-800979B4
+    sub-8009788C
     this-one arrive
     end-script
     ;

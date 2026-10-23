@@ -56,6 +56,9 @@ car commands: `docs/subsystems/traffic.md`), and the
 doors: `through-door` / `through-door-back` put them out of a door (`docs/subsystems/doors.md`) in the
 stepping-out motion ($3F / $40) and the thread waits for it.
 Everyone's motions play, seen or not: a route waits on them wherever its person is.
+`person-away` puts someone between stops, out of sight until their next (src: travelling = 1: the hospital's
+attack). Motions: `anim-once` ($05), `anim-then-loop` ($06), `anim-at` ($13) play one once then the next; a
+`wait-anim` ends when the first has played (src: actor_anim's next).
 Turning (src: actor_turn_by / _to_heading / _to_actor, actor_update's turn): `turn-to`, `turn-by` (degrees),
 `face` turn them a speed a game frame toward the heading, its sign the way (`person-turning`); `wait-turned`
 waits on `person-turned?`.

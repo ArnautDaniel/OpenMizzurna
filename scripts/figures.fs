@@ -50,7 +50,8 @@ end-structure
     p looping @ if  p at f@  p clip @ motion-frames s>f f-  p at f!  false exit  then
     p done @ if  p clip @ motion-frames 1- s>f p at f!  false exit  then
     true p done !  p clip @ motion-frames 1- s>f p at f!
-    p next-anim @ 0< 0= if  p next-anim @ -1 true p play  then
+    p next-anim @ 0< 0= if  p next-anim @ -1 true p play  true p done !  then   \ (done: the first has played -
+                                                         \  src: actor_anim's next, the wait_anim it ends)
     true ;
 
 \ ---- the original's game frames: the figures moved a step each (15 a second indoors, ~30 in the town) ----

@@ -1204,6 +1204,33 @@ USING: events events.main ;
     end-script
     ;
 
+\ $8010780C
+: entry-8010780C
+    153 actor 5 actor-model
+    153 actor 29 2 set-floor
+    10 actor as-this-one
+    10 actor 102069 -1200 350249 set-pos
+    10 actor 3072 0 turn-to
+    matthew 101829 -1200 350249 set-pos
+    matthew 1024 0 turn-to
+    153 actor 102653 -1200 350539 set-pos
+    -512 -2492 -976 101829 -1200 350249 1888 camera-set
+    matthew 96 0 talk
+    this-one 97 0 talk
+    matthew 98 0 talk
+    10 actor 101931 349952 walk-to
+    this-one wait-stop
+    10 actor 153 -256 face
+    153 actor 23 4 through-door
+    153 actor as-this-one
+    matthew 99 0 talk
+    this-one 100 0 talk
+    matthew 101 0 talk
+    this-one 102 0 talk
+    153 actor 0 0 0 set-pos
+    end-script
+    ;
+
 \ the words the main executable's scripts go to here, by address
 ' arrive-80105D80 $80105D80 2 overlay-word!
 ' arrive-80106AD4 $80106AD4 2 overlay-word!

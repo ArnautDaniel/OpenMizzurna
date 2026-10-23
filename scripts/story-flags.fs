@@ -22,6 +22,16 @@ create story-block  story-bytes allot
 : story-c@ ( offset -- n )  story-block + c@ ;
 : story-c! ( n offset -- )  story-block + c! ;
 
+\ the session's words before the story block (src: D_800F68B0, 0x78 bytes: not saved with the story) - the
+\ items shown to each character, the phone's last calls, a few pending scenes
+$78 constant session-bytes
+create session-block  session-bytes allot   session-block session-bytes erase
+: session@ ( offset -- n )  session-block + sl@ ;
+: session! ( n offset -- )  session-block + l! ;
+$060 constant hospital-walk-off-seen   \ (src: D_800F6910: Morgan's "hold on a moment" at the hospital, the prologue)
+$064 constant pending-scenes           \ (src: D_800F6914: bit 0 leaving the hospital with Morgan, bit 2 the 31st's
+                                       \  23:50 scene done, bits 6.. the phone's last calls)
+
 \ ---- the names ('?': a likely reading, not settled) ----
 $004 constant got-barbaras-cigarettes                       \ (a counter) ovl001 act action 13: "..." -> +=1, item 0x14
 $008  0 story-bit constant took-lighter                       \ ovl001 act action 15: "..." -> toggled, item 9

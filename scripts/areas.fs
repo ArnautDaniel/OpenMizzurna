@@ -81,6 +81,9 @@ objects-still
     {: o :}  #moving-objects 0 do  moving-objects i moving-object * +  dup mo-object @ o = if  unloop exit  then  drop  loop
     #moving-objects 0 do  moving-objects i moving-object * +  dup mo-object @ 0< if  unloop exit  then  drop  loop
     moving-objects ;   \ (all taken: the first)
+: object-still? ( entry -- flag )   \ the list's entry's object never animated yet (src: func_8001A1C8)
+    area-anim drop {: o :}
+    #moving-objects 0 do  moving-objects i moving-object * + mo-object @ o = if  false unloop exit  then  loop  true ;
 : play-object ( object motion-id again? -- )   \ src: func_80020198
     {: o id loops :}  o slot-of {: s :}  o s mo-object !  id prop-motion s mo-motion !
     loops s mo-again !  0e s mo-frame f!  true s mo-playing ! ;

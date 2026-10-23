@@ -53,6 +53,13 @@ rows' alone; arriving (meeting Lorraine on the 25th, Mel and Lorraine arguing), 
 from the 28th 19:00), the robbery on the 27th, who says what by their stops, the farm workers, Lorraine's twelve
 conversations in turn, then her line. Seen: the meeting on the 25th plays through, Mel walking off after it. Sitting at the counter and ordering:
 `docs/subsystems/counter.md`.
+Area 2's, with 29's and 30's (`scripts/rules/area002.fs`, Gruber Hospital; `tests/library/test_area002.fs`): kept
+inside before the prologue ends (the way out puts him back, the off-limits door says so), after it the double
+doors swing open and the way out leads to the town (with Morgan, or the attack's aftermath, waiting outside);
+closing at 21:55 (upstairs 19:55) by room; the attack on Isabella and its aftermath; Barbara's introduction and
+invitation, her door and her cigarettes; the Epoch's analysis; Cohen's room, his lodge key and the envelope;
+Isabella's room; the wounded guard; who says what; the hospital talks of Samuel, the nurse, Barbara, James,
+Lidds, Cohen and Morgan; the C its events call. To come: the bulletin board's recap, the evening windows.
 Area 12's (`scripts/rules/area012.fs`, Club Wolves; `tests/library/test_area012.fs`): who's there by the hour
 (the bouncer 21:58 - 23:25, the fan 21:28 - 23:55, Loretta after her call), the nightly timetable (the bouncer on
 and off, the fan in and out), Isabella's show at 22:30 (or her cancelling it) and its end at 23:00, James's first

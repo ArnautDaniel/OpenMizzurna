@@ -136,6 +136,99 @@ USING: events events.main ;
     end-script
     ;
 
+\ $80103704
+: entry-80103704
+    -368 -2006 -534 383942 -240 150482 1807 camera-set
+    lidds as-this-one
+    matthew 383752 1 150242 set-pos
+    winona 383600 1 149834 set-pos
+    matthew 20 0 face
+    winona 20 0 face
+    lidds 73 74 1 anim-then
+    lidds 42 0 talk
+    matthew 43 7 talk
+    lidds 76 73 0 anim-then
+    this-one wait-anim
+    lidds 76 73 0 anim-then
+    this-one wait-anim
+    lidds 74 1 anim
+    lidds 44 0 talk
+    winona 45 1 talk
+    lidds 46 0 talk
+    winona 47 7 talk
+    lidds 48 0 talk
+    matthew 49 3 talk
+    lidds -45 -64 turn-by
+    events.main:sub-80096D74
+    lidds 50 5 talk
+    winona 51 7 talk
+    lidds 45 64 turn-by
+    events.main:sub-80096D34
+    end-script
+    ;
+
+\ $80103888
+: entry-80103888
+    -432 -2102 -1142 385890 -240 148480 2048 camera-set
+    matthew 385890 -240 148520 set-pos
+    matthew 2048 0 turn-to
+    -45 -64 camera-turn
+    matthew 32 34 0 anim-then
+    matthew wait-anim
+    matthew 51 55 0 anim-then
+    matthew wait-anim
+    45 64 camera-turn
+    wait-camera-turn
+    end-script
+    ;
+
+\ $8010390C
+: entry-8010390C
+    -656 -2774 -1814 383687 -240 150627 2260 camera-set
+    lidds as-this-one
+    winona 16 1 set-floor
+    matthew 16 1 set-floor
+    matthew 383752 1 150242 set-pos
+    winona 383600 1 149834 set-pos
+    matthew 20 0 face
+    winona 20 0 face
+    this-one 60 64 turn-by
+    events.main:sub-80096D74
+    this-one 61 7 talk
+    winona 62 7 talk
+    this-one 63 7 talk
+    winona 64 1 talk
+    this-one 65 7 talk
+    winona 66 4 talk
+    this-one 67 7 talk
+    matthew 68 0 talk
+    lidds -60 -64 turn-by
+    events.main:sub-80096D34
+    matthew 383391 148831 walk-to
+    matthew wait-stop
+    matthew 59 2 through-door
+    11 screen-effect
+    wait-effect
+    0 set-scene
+    -548 -2990 -440 382209 -240 148726 1197 camera-set
+    matthew 382447 -240 148610 set-pos
+    winona 381981 -240 148163 set-pos
+    matthew winona face-each-other
+    10 screen-effect
+    wait-effect
+    winona as-this-one
+    this-one 69 7 talk
+    matthew 70 7 talk
+    this-one 71 7 talk
+    matthew 72 7 talk
+    this-one 73 7 talk
+    winona unride
+    winona 382149 146660 walk-to
+    winona wait-stop
+    winona 0 0 0 set-pos
+    end-script
+    ;
+
 \ $80103B2C
 : entry-80103B2C
     110 actor as-this-one

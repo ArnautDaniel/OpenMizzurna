@@ -4,6 +4,53 @@
 IN: events.ovl019
 USING: events events.main ;
 
+\ $801034A0
+: entry-801034A0
+    11 screen-effect
+    wait-effect
+    32 scene-reset
+    0 set-scene
+    matthew 32 3 set-floor
+    matthew 312261 -2300 306044 set-pos
+    matthew 2048 0 turn-to
+    ovl019 $80102234 native
+    map-sync
+    2 frames wait
+    12 screen-effect
+    5 5 effect-level
+    1 frames wait
+    8 8 effect-level
+    1 frames wait
+    3 3 effect-level
+    1 frames wait
+    0 0 effect-level
+    6 frames wait
+    4 4 effect-level
+    1 frames wait
+    6 6 effect-level
+    1 frames wait
+    3 3 effect-level
+    1 frames wait
+    0 0 effect-level
+    2 frames wait
+    4 4 effect-level
+    1 frames wait
+    8 8 effect-level
+    1 frames wait
+    13 screen-effect
+    matthew 308726 305651 300 wait-near
+    ovl019 $80102234 native
+    matthew 4101 1 anim
+    8 16 effect-level
+    12 screen-effect
+    wait-effect
+    matthew 202 0 talk
+    16 0 effect-level
+    12 screen-effect
+    wait-effect
+    end-script
+    ;
+
 \ $8010369C
 : entry-8010369C
     matthew 4116 0 anim

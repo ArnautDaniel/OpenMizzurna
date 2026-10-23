@@ -264,6 +264,7 @@ behaviour townsfolk
   on seat-take ( slot bar seat -- )  take-seat ;
   on seat-sit ( slot -- )  sit ;
   on seat-leave ( slot -- )  leave-seat ;
+  on person-away ( slot -- )  person-of {: p :}  true p travelling !  0 p walking !  -1 p person-area ! ;
   on person-unlink ( slot -- )  person-of 0 swap riding ! ;
   on person-idle ( slot -- )  dup person-of {: p :}  0 p walking !  0 p forward !  0 -1 true show ;
   on person-forward ( slot speed motion -- )  rot person-of {: v m p :}  v p forward !  m p forward-motion ! ;
