@@ -18,5 +18,13 @@ heights, and its projection - 500 indoors, 400 in the town, on a 240-high screen
 
 ## Status
 
-**Built**: following, fixed shots. **To come**: the events' tweens (`camera-move`, `camera-turn`,
-`camera-height-to`, `camera-dist-to` and their waits), the town's and the car's follow.
+## The events' moves (src: camera_tween_update, nav_step)
+
+Each of the original's frames (15 a second while an event runs): the pivot travels toward a point by its speed
+(across by the heading to it; up and down by the pitch against x alone, as the original), the heading steps
+toward its goal the shorter way (step 0: at once), the eye height and distance step to theirs.
+`camera-move-to`, `camera-turn-to`, `camera-height-to`, `camera-dist-to`, `camera-face`, `camera-pivot`;
+facts `camera-moving?` ... for the events' waits.
+
+**Built**: following, fixed shots, the moves (seen: the opening's slow pan along the bed). **To come**:
+`camera-face` between two figures (the townsfolk), the town's and the car's follow.

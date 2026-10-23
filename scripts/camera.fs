@@ -43,11 +43,54 @@ create history #history 4 * cells allot   variable newest
 : draw-camera ( -- )  target@ yaw @ dist @ eye-y @ look-y @ projection @ camera ;
 ' draw-camera on-draw
 
+\ ---- the events' moves (src: camera_tween_update, nav_step), a step each of the original's frames - 15 a
+\ second while an event runs ----
+15e fconstant tween-frames   fvariable due
+4096 constant full-turn   2048 constant half-turn
+variable moving   create goal 3 cells allot   variable move-speed
+variable turning   variable turn-goal   variable turn-step
+variable lifting   variable height-goal   variable height-step
+variable pulling   variable dist-goal   variable dist-step
+: camera-yaw ( -- yaw )  yaw @ ;
+: camera-moving? ( -- flag )  moving @ ;              \ (facts: the events' waits)
+: camera-turning? ( -- flag )  turning @ ;
+: camera-height-moving? ( -- flag )  lifting @ ;
+: camera-dist-moving? ( -- flag )  pulling @ ;
+: goal@ ( -- x y z )  goal @  goal cell+ @  goal 2 cells + @ ;
+: move-step ( -- )   \ toward the goal by the speed (across; up and down by the pitch to it)
+    goal@ target@ {: gx gy gz x y z :}  gx x - gy y - gz z - {: dx dy dz :}  move-speed @ {: v :}
+    dx abs v <  dz abs v < and  dy abs v < and if  goal@ target!  false moving !  exit  then
+    dx s>f dz s>f fatan2 {: F: dir :}
+    x  dir fsin v s>f f* f>s +   z  dir fcos v s>f f* f>s +   {: nx nz :}
+    dy abs v >= if  y  dy s>f dx s>f fatan2 fsin v s>f f* f>s +  else  y  then   \ (src: the pitch against x alone)
+    nx swap nz target! ;
+: turn-step ( -- )   \ toward the heading (past it: on it)
+    turn-step @ 0= if  turn-goal @ yaw !  false turning !  exit  then
+    turn-goal @ yaw @ - full-turn mod  dup half-turn > if  full-turn -  then   ( the shorter way )
+    dup abs turn-step @ abs <= if  drop turn-goal @ yaw !  false turning !
+    else  0< if  turn-step @ abs negate  else  turn-step @ abs  then yaw +!  then ;
+: tween ( v goal step -- v' done? )   \ toward goal by step (past it: on it)
+    {: v g st :}  v g < if  v st + dup g >=  else  v st - dup g <=  then  if  drop g true  else  false  then ;
+: tween-frame ( -- )
+    moving @ if  move-step  then
+    turning @ if  turn-step  then
+    lifting @ if  eye-y @ height-goal @ height-step @ tween if  false lifting !  then  eye-y !  then
+    pulling @ if  dist @ dist-goal @ dist-step @ tween if  false pulling !  then  dist !  then ;
+: tweens ( -- )
+    moving @ turning @ or lifting @ or pulling @ or 0= if  0e due f!  exit  then
+    due f@  tween-frames dt f* f+  begin  fdup 1e f>= while  tween-frame  1e f-  repeat  due f! ;
+
 state: camera-state end-state
 behaviour the-camera
   on spawned ( -- )  self subscribe tick  self subscribe area-entered  self subscribe scene-shown
     indoor-projection projection !  true following ! ;
-  on tick ( -- )  following @ if  follow  then ;
+  on tick ( -- )  following @ if  follow  then  tweens ;
+  on camera-move-to ( x y z speed -- )  move-speed !  goal 2 cells + !  goal cell+ !  goal !  true moving ! ;
+  on camera-turn-to ( yaw step -- )  turn-step !  full-turn 1- and turn-goal !  true turning ! ;
+  on camera-height-to ( eye-y step -- )  height-step !  height-goal !  true lifting ! ;
+  on camera-dist-to ( dist step -- )  dist-step !  dist-goal !  true pulling ! ;
+  on camera-face ( yaw -- )  yaw ! ;
+  on camera-pivot ( x y z -- )  target! ;
   on area-entered ( area scene -- )  2drop  reset ;
   on scene-shown ( scene -- )  drop  reset ;   \ src: set_scene_state's camera_reset
   on camera-place ( look-y dist eye-y x y z yaw -- )

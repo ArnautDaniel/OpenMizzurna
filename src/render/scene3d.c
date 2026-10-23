@@ -45,6 +45,7 @@ struct Model3D {
     float (*node_world)[16];   /* each node's rest transform in the model */
     float (*node_local)[16];   /* and on its parent (its translation and rest turn) */
     int *parent;               /* -1: a root */
+    float *part_scale;         /* each part's place scale (its extras: 2^scale) - a motion's root move is in it */
     int nnodes;
 };
 
@@ -320,7 +321,13 @@ Model3D *model3d_load(const char *path) {
     m->node_world = calloc(data->nodes_count + 1, sizeof(*m->node_world));
     m->node_local = calloc(data->nodes_count + 1, sizeof(*m->node_local));
     m->parent = calloc(data->nodes_count + 1, sizeof(int));
+    m->part_scale = calloc(data->nodes_count + 1, sizeof(float));
     for (i = 0; i < data->nodes_count; i++) {
+        read_extras(data, &data->nodes[i].extras, extras, sizeof(extras));
+        m->part_scale[i] = 1.0f;
+        if (strstr(extras, "\"scale\":") != NULL) {
+            m->part_scale[i] = ldexpf(1.0f, atoi(strstr(extras, "\"scale\":") + 8));
+        }
         cgltf_node_transform_world(&data->nodes[i], m->node_world[i]);
         cgltf_node_transform_local(&data->nodes[i], m->node_local[i]);
         m->parent[i] = data->nodes[i].parent ? (int)(data->nodes[i].parent - data->nodes) : -1;
@@ -399,6 +406,7 @@ void model3d_free(Model3D *m) {
     free(m->node_world);
     free(m->node_local);
     free(m->parent);
+    free(m->part_scale);
     free(m);
 }
 
@@ -476,10 +484,10 @@ void scene3d_draw_posed(Model3D *m, const float pos[3], float yaw, const short (
             memcpy(r + 12, local + 12, sizeof(float) * 3);
             memcpy(local, r, sizeof(local));
         }
-        if (m->parent[i] < 0 && root_move != NULL) {   /* the root moves by the frame (model units, y up) */
-            local[12] += root_move[0] / 256.0f;
-            local[13] += root_move[1] / 256.0f;
-            local[14] -= root_move[2] / 256.0f;
+        if (m->parent[i] < 0 && root_move != NULL) {   /* the root moves by the frame (in its part's scale, y up) */
+            local[12] += root_move[0] * m->part_scale[i] / 256.0f;
+            local[13] += root_move[1] * m->part_scale[i] / 256.0f;
+            local[14] -= root_move[2] * m->part_scale[i] / 256.0f;
         }
         if (m->parent[i] >= 0 && m->parent[i] < i) {
             mat_mul(d->node[i], d->node[m->parent[i]], local);

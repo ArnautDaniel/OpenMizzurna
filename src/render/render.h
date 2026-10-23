@@ -31,6 +31,12 @@ void render_rect(float x, float y, float w, float h, uint32_t rgba);
 void render_image(GpuTexture t, float x, float y, float w, float h, uint32_t rgba);
 void render_image_uv(GpuTexture t, float x, float y, float w, float h, float u0, float v0, float u1, float v1,
                      uint32_t rgba);
+/* how the 2D drawn from now on meets the picture (until render_end): RENDER_BLEND_ALPHA as usual, or the
+ * PlayStation's add and subtract (the screen's effects: fades to white and to black) */
+enum { RENDER_BLEND_ALPHA, RENDER_BLEND_ADD, RENDER_BLEND_SUBTRACT };
+void render_blend(int mode);
+/* a four-cornered shape, a colour a corner (corners as the PlayStation's G4: 0 1 / 2 3) */
+void render_quad4(const float xy[8], const uint32_t rgba[4]);
 void render_text(float x, float y, float scale, uint32_t rgba, const char *s, int n);
 float render_text_width(float scale, int chars);
 float render_line_height(float scale);

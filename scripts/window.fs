@@ -4,10 +4,9 @@
 \ Its state is the window's own (variables: it is the only window), read by its drawing; others read only the
 \ facts window-up? and window-answer.
 IN: window
-USING: engine actors messages keys clock ;
+USING: engine actors messages keys clock screen effects ;
 
 \ ---- the original's screen (320 x 240, the origin at its centre) and the box ----
-320 constant screen-w   240 constant screen-h
 -95 constant box-x      40 constant box-y        \ src: msg_init, func_80035BAC(w, -0x5F, 0x28, 0xF0, 0x30)
 240 constant box-w      3 constant box-lines     \ (48 pixels: three 16-pixel lines)
 -79 constant choice-x                            \ src: msg_choice (the text right of the cursor)
@@ -94,9 +93,6 @@ variable wanted
     count-down ;
 
 \ ---- drawing: the original's screen, scaled to the window ----
-: scale ( -- n )  screen-size screen-h / swap screen-w / min 1 max ;
-: >screen ( x y -- x' y' )   \ the original's point to the window's pixels
-    scale * screen-size nip 2/ +  swap  scale * screen-size drop 2/ +  swap ;
 : band ( -- )  band-color pen-color  -160 band-top >screen  screen-w scale *  band-bottom band-top - scale *  draw-rect ;
 : line-y ( k -- y )   \ the box's k-th line, scrolled
     font-line * box-y +  scrolled f@ f>s - ;
@@ -123,6 +119,7 @@ variable wanted
 : draw-window ( -- )
     window-up? if  band draw-lines draw-arrow draw-cursor  then ;
 ' draw-window on-draw
+' draw-effect-over on-draw   \ (the screen's effects over the window; its +256 ones under it: effects.fs)
 
 \ ---- the actor ----
 state: window-state end-state

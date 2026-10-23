@@ -25,6 +25,7 @@ typedef struct Vertex2D {
 
 typedef struct Batch {
     uint32_t texture;
+    int blend;          /* RENDER_BLEND_* */
     int first, count;   /* vertices */
 } Batch;
 
@@ -36,6 +37,7 @@ static struct {
     int nverts;
     Batch batches[4096];
     int nbatches;
+    int blend;   /* for the quads to come */
     int w, h;
     uint8_t *last_frame;   /* for render_screenshot: read back at render_end when asked */
     int want_shot;
@@ -184,6 +186,7 @@ void render_begin(int window_w, int window_h, float r, float g, float b) {
     R.h = window_h;
     R.nverts = 0;
     R.nbatches = 0;
+    R.blend = RENDER_BLEND_ALPHA;
     glViewport(0, 0, window_w, window_h);
     glClearNamedFramebufferfv(0, GL_COLOR, 0, clear);
     glClearNamedFramebufferfi(0, GL_DEPTH_STENCIL, 0, 1.0f, 0);
@@ -191,6 +194,16 @@ void render_begin(int window_w, int window_h, float r, float g, float b) {
 
 static uint32_t swap_rgba(uint32_t rgba) {   /* 0xRRGGBBAA to the bytes R G B A in memory */
     return (rgba >> 24) | (rgba >> 8 & 0xFF00) | (rgba << 8 & 0xFF0000) | (rgba << 24);
+}
+
+static int new_batch(uint32_t texture) {   /* (the last batch, or a new one when the texture or blend differs) */
+    if (R.nbatches == 0 || R.batches[R.nbatches - 1].texture != texture || R.batches[R.nbatches - 1].blend != R.blend) {
+        if (R.nbatches == (int)(sizeof(R.batches) / sizeof(R.batches[0]))) {
+            return 0;
+        }
+        R.batches[R.nbatches++] = (Batch){texture, R.blend, R.nverts, 0};
+    }
+    return 1;
 }
 
 static void quad(uint32_t texture, float x, float y, float w, float h, float u0, float v0, float u1, float v1,
@@ -201,11 +214,8 @@ static void quad(uint32_t texture, float x, float y, float w, float h, float u0,
     if (R.nverts + 6 > 6 * MAX_QUADS) {
         return;
     }
-    if (R.nbatches == 0 || R.batches[R.nbatches - 1].texture != texture) {
-        if (R.nbatches == (int)(sizeof(R.batches) / sizeof(R.batches[0]))) {
-            return;
-        }
-        R.batches[R.nbatches++] = (Batch){texture, R.nverts, 0};
+    if (!new_batch(texture)) {
+        return;
     }
     v = R.verts + R.nverts;
     v[0] = (Vertex2D){x, y, u0, v0, c};
@@ -229,6 +239,24 @@ void render_image(GpuTexture t, float x, float y, float w, float h, uint32_t rgb
 void render_image_uv(GpuTexture t, float x, float y, float w, float h, float u0, float v0, float u1, float v1,
                      uint32_t rgba) {
     quad(t.id, x, y, w, h, u0, v0, u1, v1, rgba);
+}
+
+void render_blend(int mode) { R.blend = mode; }
+
+void render_quad4(const float xy[8], const uint32_t rgba[4]) {
+    Vertex2D *v, c[4];
+    int k;
+
+    if (R.nverts + 6 > 6 * MAX_QUADS || !new_batch(R.white.id)) {
+        return;
+    }
+    for (k = 0; k < 4; k++) {
+        c[k] = (Vertex2D){xy[k * 2], xy[k * 2 + 1], 0.5f, 0.5f, swap_rgba(rgba[k])};
+    }
+    v = R.verts + R.nverts;   /* (corners as the PlayStation's: 0 1 2 then 1 3 2) */
+    v[0] = c[0], v[1] = c[1], v[2] = c[2], v[3] = c[1], v[4] = c[3], v[5] = c[2];
+    R.nverts += 6;
+    R.batches[R.nbatches - 1].count += 6;
 }
 
 void render_text(float x, float y, float scale, uint32_t rgba, const char *s, int n) {
@@ -268,9 +296,24 @@ void render_end(void) {
     glNamedBufferSubData(R.vbo, 0, (GLsizeiptr)(sizeof(Vertex2D) * (size_t)R.nverts), R.verts);
     glBindVertexArray(R.vao);
     for (i = 0; i < R.nbatches; i++) {
+        switch (R.batches[i].blend) {   /* (the PlayStation's: the screen plus or minus the colour) */
+        case RENDER_BLEND_ADD:
+            glBlendEquation(GL_FUNC_ADD);
+            glBlendFunc(GL_ONE, GL_ONE);
+            break;
+        case RENDER_BLEND_SUBTRACT:
+            glBlendEquation(GL_FUNC_REVERSE_SUBTRACT);
+            glBlendFunc(GL_ONE, GL_ONE);
+            break;
+        default:
+            glBlendEquation(GL_FUNC_ADD);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            break;
+        }
         glBindTextureUnit(0, R.batches[i].texture);
         glDrawArrays(GL_TRIANGLES, R.batches[i].first, R.batches[i].count);
     }
+    glBlendEquation(GL_FUNC_ADD);
     if (R.want_shot) {   /* (read back now: after the swap the back buffer is undefined) */
         free(R.last_frame);
         R.last_frame = malloc((size_t)R.w * R.h * 4);

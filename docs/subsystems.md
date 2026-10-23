@@ -28,6 +28,7 @@ phase-1 port's files (`../port/src/game/`), which name the decomp's functions; t
 | Matthew ([page](subsystems/matthew.md), placed) | walking and running, collision, looking and acting, his state | `player.c`, `player_misc.c`, `cecheck.c` |
 | Townsfolk | each person's daily schedule, where they are, what they do; talking to them | `timetable.c`, `handlers_chars.c`, `char_talk.c`, `walker.c`, `sreg.c` |
 | Camera ([page](subsystems/camera.md), built) | following Matthew, the events' shots | `camera.c` |
+| Effects ([page](subsystems/effects.md), built) | fades, wipes, the iris, the flash | `effect.c` |
 | Doors | locks, knocking, who answers | `door.c` (SCKNOCK.C) |
 | Car | driving, fuel, the roads; the boat | `ovl027.c` (`car_update`, `boat_update`), `hud.c` (fuel) |
 | Traffic | the other cars on the roads | `carline.c` |

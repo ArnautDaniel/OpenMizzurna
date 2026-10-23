@@ -49,3 +49,13 @@ message camera-fixed ( -- )              \ stay where it is
 message figure-anim ( id next loop -- )  \ play motion id (looping or not); then `next` (-1: hold its last frame)
 message figure-hold ( -- )               \ at the motion's end, the figure keeps where it moved (src: anim_hold)
 message player-control ( flag -- )       \ broadcast: Matthew is the player's to move, or not (src: player_control_on / off)
+
+\ ---- the screen's effects (docs/subsystems/effects.md) ----
+message screen-effect ( n -- )           \ start effect n (the executable's table; +256: under the window)
+message effect-level ( from to -- )      \ the iris: from one level to another (0 shut .. 16 open)
+message camera-move-to ( x y z speed -- )   \ the pivot travels there, speed units a frame (src: camera_move_to)
+message camera-turn-to ( yaw step -- )       \ the heading steps there (step 0: at once)
+message camera-height-to ( eye-y step -- )
+message camera-dist-to ( dist step -- )
+message camera-face ( yaw -- )               \ heading set now
+message camera-pivot ( x y z -- )            \ pivot set now (src: camera_at)

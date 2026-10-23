@@ -17,6 +17,12 @@ static const ExeTable kTables[] = {
     {"area-motion-count", 0x800806B4, AREA_TABLE, "an area's own character motions: how many"},
     {"area-height", 0x80080824, 34 * 8,
      "an area's records of 4 s16: [1] the height of its origin (the metadata has x and z; src: area_meta_origin3)"},
+    {"screen-effects", 0x80094AC4, 16 * 8,
+     "the screen's effects, 8 bytes each: kind (1 fade, 2 / 3 wipe, 4 iris, 5 tint), start level (s8), step a "
+     "frame (s8), frames, blend (0x40 subtract, 0x20 add), colours a and b, polygons (src: screen_effect)"},
+    {"effect-fade-levels", 0x80094B44, 33, "a fade's level 0..32 as a grey (src: screen_effect_update)"},
+    {"effect-iris-sines", 0x80094B68, 16 * 4, "the iris's 16 segments: s32 sines, 0x10000 = 1"},
+    {"effect-tint-levels", 0x80094BA7, 5, "the tint's levels from -1 (its start) to 3"},
     {"music", 0x800814DC, MUSIC_TRACKS * MUSIC_ENTRY,
      "the background music: per track its sequence's CD.BIN entry, then 0 or 1, and its volume (src: music_play)"},
 };

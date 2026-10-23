@@ -5,7 +5,7 @@
 \ Each op does its work through its subsystem's messages; an op whose subsystem isn't built yet is a stub
 \ that takes its arguments and notes it (`unbuilt`).
 IN: events
-USING: engine actors messages clock window matthew ;
+USING: engine actors messages clock window matthew effects camera ;
 
 \ ---- the cast: actor slots (decomp/include/actor.h); the others by number (`160 actor`) ----
 0 constant matthew    1 constant morgan    2 constant nozz       3 constant cohen     5 constant samuel
@@ -55,6 +55,9 @@ variable control-given    \ an event gave Matthew back to the player (the rest n
     ['] run-event forth:spawn  i thread-task slot !   \ (a task: the actors' spawn is another)
     1 events-running +!  no-control hold  false broadcast player-control ;
 : events-reset ( -- )  thread-task #threads cells erase  0 events-running !  false control-given ! ;
+: events-stop ( -- )   \ every running event ended now (a tool: the console, tests)
+    #threads 0 do  i thread-task slot @ ?dup if  forth:kill  then  loop
+    events-reset  no-control release  true broadcast player-control ;
 
 \ control flow: `goto word` leaves this word for that one; `end-script` ends this word (the event, at the
 \ outermost)
@@ -220,17 +223,11 @@ variable loaded-pack
 \ ---- the other ops: until their subsystems are built ----
 : wait-stop ( a -- )  1 s" wait-stop" unbuilt  settle ;   \ op $10D
 : wait-turned ( a -- )  1 s" wait-turned" unbuilt  settle ;   \ op $112
-: camera-at ( a -- )  1 s" camera-at" unbuilt ;   \ op $113
 : sound ( n -- )  1 s" sound" unbuilt ;   \ op $114
 : sequence-play ( n n -- )  2 s" sequence-play" unbuilt ;   \ op $115
 : sequence-stop ( n -- )  1 s" sequence-stop" unbuilt ;   \ op $116
 : wait-near ( a n n n -- )  4 s" wait-near" unbuilt  settle ;   \ op $117
-: camera-move ( n n n n -- )  4 s" camera-move" unbuilt ;   \ op $119
 : scene-reset ( n -- )  1 s" scene-reset" unbuilt ;   \ op $11A
-: camera-face ( a a -- )  2 s" camera-face" unbuilt ;   \ op $11B
-: camera-turn ( n n -- )  2 s" camera-turn" unbuilt ;   \ op $11C
-: screen-effect ( n -- )  1 s" screen-effect" unbuilt ;   \ op $11D
-: wait-effect ( -- )  0 s" wait-effect" unbuilt ;   \ op $121
 : picture-show ( n -- )  1 s" picture-show" unbuilt ;   \ op $123
 : picture-hide ( -- )  0 s" picture-hide" unbuilt ;   \ op $124
 : door-reveal-room ( n -- )  1 s" door-reveal-room" unbuilt ;   \ op $126
@@ -241,25 +238,16 @@ variable loaded-pack
 : door-animate ( w1 -- )  1 s" door-animate" unbuilt ;   \ op $139
 : door-animate-alt ( w1 -- )  1 s" door-animate-alt" unbuilt ;   \ op $13A
 : through-door ( a w1 w2 -- )  3 s" through-door" unbuilt ;   \ op $13B
-: camera-angle ( n n -- )  2 s" camera-angle" unbuilt ;   \ op $142
 : music ( n -- )  1 s" music" unbuilt ;   \ op $144
 : minigame ( n -- )  1 s" minigame" unbuilt ;   \ op $145
 : elevator-doors ( n n -- )  2 s" elevator-doors" unbuilt ;   \ op $148
 : wait-minigame ( -- )  0 s" wait-minigame" unbuilt ;   \ op $149
-: wait-camera-turn ( -- )  0 s" wait-camera-turn" unbuilt ;   \ op $14B
-: wait-camera-move ( -- )  0 s" wait-camera-move" unbuilt ;   \ op $14D
-: camera-height-to ( n n -- )  2 s" camera-height-to" unbuilt ;   \ op $14E
-: wait-camera-height ( -- )  0 s" wait-camera-height" unbuilt ;   \ op $14F
-: camera-heading ( a -- )  1 s" camera-heading" unbuilt ;   \ op $150
-: camera-dist-to ( n n -- )  2 s" camera-dist-to" unbuilt ;   \ op $154
 : rumble ( n n -- )  2 s" rumble" unbuilt ;   \ op $155
 : object-anim ( n -- )  1 s" object-anim" unbuilt ;   \ op $156
 : actor-model ( a n -- )  2 s" actor-model" unbuilt ;   \ op $159
 : sprite-count+ ( -- )  0 s" sprite-count+" unbuilt ;   \ op $15D
 : sprite-count-close ( -- )  0 s" sprite-count-close" unbuilt ;   \ op $15E
 : through-door-back ( a w1 w2 -- )  3 s" through-door-back" unbuilt ;   \ op $15F
-: wait-camera-dist ( -- )  0 s" wait-camera-dist" unbuilt ;   \ op $160
-: effect-level ( n n -- )  2 s" effect-level" unbuilt ;   \ op $161
 : face-each-other ( a a -- )  2 s" face-each-other" unbuilt ;   \ op $162
 : map-reveal ( n -- )  1 s" map-reveal" unbuilt ;   \ op $165
 : ambient-start ( n -- )  1 s" ambient-start" unbuilt ;   \ op $166
@@ -301,3 +289,31 @@ variable loaded-pack
 : wait-anim ( a -- )   \ $103: until its motion has played (src: the VM's wait_anim)
     settle  figure-of 0< if  exit  then
     begin  yield  anim-done? until ;
+
+\ ---- the screen's effects (docs/subsystems/effects.md) ----
+: the-effects ( -- id )  s" effects" actor-named ;
+: screen-effect ( n -- )  the-effects send screen-effect ;                \ $11D
+: effect-level ( from to -- )  the-effects send effect-level ;           \ $161
+: wait-effect ( -- )   \ $121: until it has run its frames, and two more (src: the VM's wait_effect)
+    settle  begin  yield  effect-running? 0= until  2 frames wait ;
+
+\ ---- the camera's moves (src: camera_move_to, camera_turn_to ...: docs/subsystems/camera.md) ----
+: camera-move ( x y z speed -- )  the-camera send camera-move-to ;                   \ $119
+: camera-angle ( yaw step -- )  the-camera send camera-turn-to ;                      \ $142
+: camera-turn ( degrees step -- )   \ $11C: turned by so many degrees (step 0: at once)
+    swap 4096 * 360 / camera-yaw +  swap camera-angle ;
+: camera-height-to ( eye-y step -- )  the-camera send camera-height-to ;              \ $14E
+: camera-dist-to ( dist step -- )  the-camera send camera-dist-to ;                   \ $154
+: until-still ( xt -- )  settle  begin  yield  dup execute 0= until  drop  1 frames wait ;
+: wait-camera-move ( -- )  ['] camera-moving? until-still ;                          \ $14D
+: wait-camera-turn ( -- )  ['] camera-turning? until-still ;                         \ $14B
+: wait-camera-height ( -- )  ['] camera-height-moving? until-still ;                 \ $14F
+: wait-camera-dist ( -- )  ['] camera-dist-moving? until-still ;                     \ $160
+: figure-place@ ( a -- x y z yaw true | false )   \ where a figure is (Matthew's so far)
+    figure-of 0< if  false  else  matthew-now true  then ;
+: camera-at ( a -- )   \ $113: the pivot where the figure stands
+    figure-place@ if  drop the-camera send camera-pivot  then ;
+: camera-heading ( a -- )   \ $150: the camera faces as the figure does
+    figure-place@ if  >r 2drop drop r> the-camera send camera-face  then ;
+: camera-face ( a b -- )   \ $11B: heading from one figure toward the other
+    2 s" camera-face" unbuilt ;

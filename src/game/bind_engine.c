@@ -156,6 +156,20 @@ PRIM(p_draw_rect) {   /* ( x y w h -- ) */
     Cell h = POP(), wd = POP(), y = POP(), x = POP();
     render_rect((float)x, (float)y, (float)wd, (float)h, gEngine.pen);
 }
+PRIM(p_pen_blend) { render_blend((int)POP()); }   /* ( mode -- ) 0 as usual, 1 add, 2 subtract */
+PRIM(p_draw_quad) {   /* ( x0 y0 x1 y1 x2 y2 x3 y3 c0 c1 c2 c3 -- ) corners 0 1 / 2 3, a colour each */
+    uint32_t c[4];
+    float xy[8];
+    int k;
+
+    for (k = 3; k >= 0; k--) {
+        c[k] = (uint32_t)POP();
+    }
+    for (k = 7; k >= 0; k--) {
+        xy[k] = (float)POP();
+    }
+    render_quad4(xy, c);
+}
 PRIM(p_screen_size) { PUSH(gEngine.width); PUSH(gEngine.height); }
 PRIM(p_char_size) {
     PUSH((Cell)render_text_width((float)gEngine.pen_scale, 1));
@@ -212,7 +226,7 @@ void bind_engine(Forth *f) {
         {"key:", p_key_name}, {"key-down?", p_key_down}, {"key-pressed?", p_key_pressed}, {"key-hold", p_key_hold},
         {"on-tick", p_on_tick}, {"off-tick", p_off_tick}, {"on-draw", p_on_draw}, {"off-draw", p_off_draw},
         {"ticks", p_ticks}, {"dt", p_dt}, {"seconds", p_seconds}, {"step-blend", p_step_blend}, {"pen-color", p_pen_color}, {"pen-scale", p_pen_scale}, {"draw-text", p_draw_text},
-        {"draw-rect", p_draw_rect}, {"screen-size", p_screen_size}, {"char-size", p_char_size}, {"hud", p_hud},
+        {"draw-rect", p_draw_rect}, {"pen-blend", p_pen_blend}, {"draw-quad", p_draw_quad}, {"screen-size", p_screen_size}, {"char-size", p_char_size}, {"hud", p_hud},
         {"clear-color", p_clear_color}, {"screenshot", p_screenshot},
         {"screenshot-pending?", p_screenshot_pending}, {"console!", p_console_store}, {"exe-table", p_exe_table}, {"library-file", p_library_file},
     };
