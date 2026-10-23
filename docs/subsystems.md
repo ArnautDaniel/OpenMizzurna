@@ -22,7 +22,7 @@ phase-1 port's files (`../port/src/game/`), which name the decomp's functions; t
 
 | Subsystem | Owns | Original |
 |---|---|---|
-| Clock | the date and time (12/25 to 12/28), whether time runs, the hour's events | `clock.c`, `cevcon.c` (time windows) |
+| Clock ([page](subsystems/clock.md), built) | the date and time (12/25 to 12/31), whether time runs, minutes passing | `clock.c`, `field.c` |
 | Story | story flags, the event scripts (bytecode converted to Forth once), event packs, chapters | `cevent.c`, `cnrev.c`, `boot.c` |
 | Areas | the area being played, its scene, going from area to area | `area.c`, `field.c`, `session.c` |
 | Matthew | walking and running, collision, looking and acting, his state | `player.c`, `player_misc.c`, `cecheck.c` |
@@ -47,7 +47,7 @@ phase-1 port's files (`../port/src/game/`), which name the decomp's functions; t
 ## Order of work
 
 1. **Engine basics** (done: the window, the renderer's 2D, the Forth system, the kernel, the console).
-2. **The library**: the disc picker and import, starting with what the first subsystems need (the
+2. **The library** (done: every known format converted, `library.md`): the disc picker and import, starting with what the first subsystems need (the
    executable's tables, CD.BIN's containers, textures as PNG, text as UTF-8).
 3. Then subsystem by subsystem, each with its C services: clock and story first (they drive everything),
    areas and Matthew (walking in his room), the window and text, townsfolk, then the rest.
