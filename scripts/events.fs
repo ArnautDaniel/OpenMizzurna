@@ -256,8 +256,6 @@ variable loaded-pack
 : sound ( n -- )  1 s" sound" unbuilt ;   \ op $114
 : sequence-play ( n n -- )  2 s" sequence-play" unbuilt ;   \ op $115
 : sequence-stop ( n -- )  1 s" sequence-stop" unbuilt ;   \ op $116
-: wait-near ( a n n n -- )  4 s" wait-near" unbuilt  settle ;   \ op $117
-: scene-reset ( n -- )  1 s" scene-reset" unbuilt ;   \ op $11A
 : picture-show ( n -- )  1 s" picture-show" unbuilt ;   \ op $123
 : picture-hide ( -- )  0 s" picture-hide" unbuilt ;   \ op $124
 : cd-picture ( n -- )  1 s" cd-picture" unbuilt ;   \ op $12B
@@ -266,11 +264,17 @@ variable loaded-pack
 64 constant #minigames
 create minigame-scripts  #minigames cells allot   minigame-scripts #minigames cells erase
 : minigame-script! ( xt n -- )  cells minigame-scripts + ! ;
+: minigame-xt ( n -- xt | 0 )  dup #minigames u< if  cells minigame-scripts + @  else  drop 0  then ;
+variable minigame-thread   -1 minigame-thread !   \ the minigame running: its script's thread, and the script
+variable minigame-running
 : minigame ( n -- )   \ op $145 (src: minigame_start): a script's, else a minigame - to come
-    dup #minigames u< if  dup cells minigame-scripts + @ ?dup if  nip start-event exit  then  then
+    dup minigame-xt ?dup if  nip dup minigame-running !  launch-event minigame-thread !  exit  then
     1 s" minigame" unbuilt ;
+: minigame-running? ( -- flag )   \ (its thread still that script's)
+    minigame-thread @ dup event-alive? 0= if  drop false exit  then  thread-xt slot @ minigame-running @ = ;
 : elevator-doors ( n n -- )  2 s" elevator-doors" unbuilt ;   \ op $148
-: wait-minigame ( -- )  0 s" wait-minigame" unbuilt ;   \ op $149
+: wait-minigame ( -- )   \ op $149: until the minigame's over
+    settle  begin  minigame-running? while  yield  repeat ;
 : rumble ( n n -- )  2 s" rumble" unbuilt ;   \ op $155
 : sprite-count+ ( -- )  0 s" sprite-count+" unbuilt ;   \ op $15D
 : sprite-count-close ( -- )  0 s" sprite-count-close" unbuilt ;   \ op $15E
@@ -329,8 +333,11 @@ create minigame-scripts  #minigames cells allot   minigame-scripts #minigames ce
     a matthew = if  h v a figure-of send figure-turning exit  then
     a person? if  a h v the-townsfolk send person-turning  else  a h v 3 act-unbuilt  then ;
 : turn-to ( a heading speed -- )  turn-figure ;   \ cmd $11 (src: actor_turn_to_heading)
-: set-floor ( a area floor -- )   \ cmd $12
-    nip  over person? if  the-townsfolk send person-floor  else  2 act-unbuilt  then ;
+: set-floor ( a area floor -- )   \ cmd $12 (src: actor_set_floor: Matthew's, and one going along with him too)
+    nip {: a f :}
+    a matthew = if  f s" matthew" actor-named send figure-floor
+        following? if  companion @ f the-townsfolk send person-floor  then  exit  then
+    a person? if  a f the-townsfolk send person-floor  else  a f 2 act-unbuilt  then ;
 : arrive ( a -- )   \ cmd $1E
     dup scheduled? if  the-townsfolk send person-arrive  else  1 act-unbuilt  then ;
 : goto-stop ( a stop -- )   \ cmd $5D
@@ -496,6 +503,15 @@ $3F constant stepping-out-1   $40 constant stepping-out-0   \ (by the side's way
     yield  s" camera" actor-named send camera-reset
     scr if  ar scr $FFFFFFFF and arrival-script ?dup if  start-event  then  else  fade-in screen-effect  then
     end-thread ;
+
+\ the area changes under a running scene - Matthew where he is, the scene going on (src: func_80018B44)
+: scene-reset ( area -- )   \ op $11A
+    {: ar :}  ar 0 s" areas" actor-named send enter-area  yield  ar event-area ! ;
+: near? ( a x z dist -- flag )
+    {: a x z d :}  a where-is 0= if  true exit  then  drop {: ax az :}
+    ax x - s>f fdup f*  az z - s>f fdup f* f+ fsqrt  d s>f f<= ;
+: wait-near ( a x z dist -- )   \ op $117: until they're that near the point
+    settle  {: a x z d :}  begin  a x z d near? 0= while  yield  repeat ;
 
 \ ---- the camera's moves (src: camera_move_to, camera_turn_to ...: docs/subsystems/camera.md) ----
 : camera-move ( x y z speed -- )  the-camera send camera-move-to ;                   \ $119

@@ -136,6 +136,24 @@ USING: events events.main ;
     end-script
     ;
 
+\ $80103428
+: entry-80103428
+    matthew 106496 218986 400 wait-near
+    157 actor 124 1 anim
+    end-script
+    ;
+
+\ $8010344C
+: entry-8010344C
+    11 screen-effect
+    wait-effect
+    157 actor 0 0 0 set-pos
+    257 screen-effect
+    12 say-wait-close
+    1 screen-effect
+    end-script
+    ;
+
 \ $801034A0
 : entry-801034A0
     153 actor 1 actor-model
@@ -197,6 +215,32 @@ USING: events events.main ;
     11 screen-effect
     wait-effect
     27 -1 278610 98873 3456 0 warp
+    ;
+
+: L-80103770
+    ovl008 $80102FA4 native
+    end-script
+    ;
+
+\ $8010377C
+: entry-8010377C
+    11 screen-effect
+    wait-effect
+    153 actor 0 102 actor 1 fight
+    153 actor 0 0 anim
+    102 actor 0 0 anim
+    153 actor 111301 0 218491 set-pos
+    153 actor -3568 0 turn-to
+    102 actor 110761 0 219211 set-pos
+    102 actor -3568 0 turn-to
+    -638 -3386 -608 111248 -200 219063 2636 camera-set
+    13 music
+    map-sync
+    10 screen-effect
+    wait-effect
+    35 0 choice
+    1 result= if  goto L-80103770  then
+    end-script
     ;
 
 \ the words the main executable's scripts go to here, by address

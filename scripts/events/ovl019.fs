@@ -4,6 +4,73 @@
 IN: events.ovl019
 USING: events events.main ;
 
+: L-8010317C
+    112 actor 19 1 set-floor
+    112 actor 308962 0 304862 set-pos
+    matthew 19 1 set-floor
+    matthew 311382 0 304862 set-pos
+    -554 -3054 -1172 311322 0 305332 2840 camera-set
+    112 actor 306262 304862 5 60 walk-to-ex
+    matthew 306262 304862 5 50 walk-to-ex
+    10 screen-effect
+    wait-effect
+    112 actor wait-stop
+    112 actor 71 0 through-door
+    matthew wait-stop
+    71 door-animate
+    75 frames wait
+    11 screen-effect
+    wait-effect
+    end-script
+    ;
+
+\ $80103260
+: entry-80103260
+    112 actor 19 2 set-floor
+    112 actor 307563 -1200 305116 set-pos
+    112 actor 3072 0 turn-to
+    matthew 307290 -1200 305150 set-pos
+    matthew 2048 0 turn-to
+    -650 -500 -884 307290 -1200 305150 2048 camera-set
+    10 screen-effect
+    wait-effect
+    matthew 17 18 anim-then-loop
+    20 frames wait
+    1408 -96 camera-angle
+    9 frames wait
+    255 3 rumble
+    256 3 rumble
+    7 frames wait
+    14 music
+    112 actor 311127 304717 5 70 walk-to-ex
+    20 frames wait
+    matthew 311127 304717 5 42 walk-to-ex
+    -394 -2894 -660 308017 -1200 304820 1024 camera-set
+    112 actor wait-stop
+    112 actor 73 1 through-door
+    matthew wait-stop
+    73 door-animate
+    events.main:sub-80096CF0
+    0 set-scene
+    112 actor 310937 -320 302497 set-pos
+    112 actor 0 0 turn-to
+    -572 -82 -4438 311386 -1200 303305 1024 camera-set
+    matthew 311728 303762 5 40 walk-to-ex
+    112 actor 6 0 anim
+    112 actor anim-hold
+    112 actor wait-anim
+    112 actor 7 0 anim
+    112 actor anim-hold
+    112 actor wait-anim
+    112 actor 8 0 anim
+    112 actor anim-hold
+    11 screen-effect
+    wait-effect
+    31 scene-reset
+    0 set-scene
+    goto L-8010317C
+    ;
+
 \ $801034A0
 : entry-801034A0
     11 screen-effect

@@ -56,6 +56,15 @@ In the town the walls are the obstacles of the tile he steps into (off the map: 
 ground's under him: the highest of the tile's terrain polygons there (src: point_blocked, func_8001C264; where
 there is none he keeps his height). The town's tiles stream around the camera as he walks.
 
+## Floors and crawling
+
+A scene's `set-floor` on him (`figure-floor ( floor )`, src: actor_set_floor) sets his floor - the one his walls
+and height are read from - and puts him at its height; one going along with him goes to it too. Crawling
+(`figure-crawl ( flag )`, src: ovl019's duct crawl): while a scene runs the pad drives him tank-like - up ahead
+0x28 a frame, down back 0x1E, left / right turn 0x80 - and a move that would put a wall at his place or one or two
+of his lengths (0x78) ahead is undone, turn and all; motions 0x1006 moving, 0x1005 still. Fact:
+`matthew-crawling?`.
+
 ## To come
 
 Looking and acting (○: the zones and the areas' rules), doors, the floors' zones and heights, the car with the pad by the original's speeds and turning, the

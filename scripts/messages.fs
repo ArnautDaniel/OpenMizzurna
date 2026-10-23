@@ -49,12 +49,15 @@ message figure-turn ( rx ry rz -- )      \ turned so (4096 a turn)
 message camera-place ( look-y dist eye-y x y z yaw -- )   \ a fixed shot (src: the events' camera_set)
 message camera-follow ( -- )             \ behind Matthew again, the scene's way
 message camera-fixed ( -- )              \ stay where it is
+message camera-behind ( look-y dist eye-y -- ) \ low behind Matthew, turning as he turns (src: ovl019's duct crawl)
 message camera-reset ( -- )              \ behind Matthew now, where he stands (src: camera_reset)
 message figure-anim ( id next loop -- )  \ play motion id (looping or not); then `next` (-1: hold its last frame)
 message figure-hold ( -- )               \ at the motion's end, the figure keeps where it moved (src: anim_hold)
 message figure-on-foot ( flag -- )         \ (to Matthew) the pad walks him, or not (on a stool: src pad_set_field_mode)
 message figure-pushes ( crate -- )         \ (to Matthew) he pushes that crate as he walks (-1: lets go)
 message figure-perch ( n -- )              \ he's on his feet (0), on a crate (1), on a stool (2) (src: talk_state)
+message figure-crawl ( flag -- )        \ the pad drives him crawling, tank-like, while a scene runs (src: ovl019's duct)
+message figure-floor ( floor -- )        \ his floor now, its height under him (src: actor_set_floor)
 message figure-walk ( x z speed motion -- )   \ (to Matthew) a scene walks him there, speed a game frame
 message figure-forward ( speed motion -- )     \ straight on, until idle (-1: the motion as it is)
 message figure-idle ( -- )                     \ stop walking, stand

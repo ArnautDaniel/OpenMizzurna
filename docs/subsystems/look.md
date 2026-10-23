@@ -57,6 +57,13 @@ rows' alone; arriving (meeting Lorraine on the 25th, Mel and Lorraine arguing), 
 from the 28th 19:00), the robbery on the 27th, who says what by their stops, the farm workers, Lorraine's twelve
 conversations in turn, then her line. Seen: the meeting on the 25th plays through, Mel walking off after it. Sitting at the counter and ordering:
 `docs/subsystems/counter.md`.
+Area 19's (`scripts/rules/area019.fs`, the apartment building - 31 and 32 its ground floor and its air duct;
+`tests/library/test_area019.fs`): the crate, the photo on the shelf (□, two scenes, then a scene ○ starts), the
+doors (○: the keyhole when it's time, or in when open; □: knocking at two), the mailboxes, the duct cover's
+lines, the duct itself (the crawl, minigame 41: the pad drives him), the way out of the far room (the chase,
+minigame 22, out to the town), two rooms shown by the zones he walks into, a room's two sets of things by the
+story, who says what, two talk hooks. (To come: the stalker in the town after the chase, minigame 24; the
+events' lock.)
 Area 17's (`scripts/rules/area017.fs`, the school's main building; `tests/library/test_area017.fs`): with a
 companion along (off her schedule) she leads the way up on her own thread - Matthew stays the player's - and waits
 at the locker; ○ there opens it (items taken and given), the desk after it, the way out not without her, closing

@@ -150,6 +150,32 @@ variable turning-to   variable turn-target   variable turn-speed
     ahead @ if  yaw ahead @ along  then
     turning-to @ if  yaw turn-target @ turn-speed @ heading-step  if  0 turning-to !  then  s>f body-turn  then ;
 
+\ ---- crawling (src: ovl019's duct crawl, the area's minigame update): the pad drives him, tank-like, while a
+\ scene runs - ahead 0x28 a frame, back 0x1E, turning 0x80; a move that would put a wall within three of his
+\ lengths (0x78 each) ahead is undone ----
+variable crawling
+40e fconstant crawl-ahead   -30e fconstant crawl-back   128e fconstant crawl-turn   120 constant crawl-length
+$1006 constant crawl-motion   $1005 constant crawl-still-motion
+: clear-ahead? ( -- flag )   \ his place and two lengths on, the way he faces, all open
+    self body-yaw 2e f* pi f* 4096e f/ {: F: a :}  self body-pos fswap fdrop {: F: x F: z :}
+    3 0 do
+        x a fsin i crawl-length * s>f f* f+ f>s  z a fcos i crawl-length * s>f f* f+ f>s  open? 0= if  false unloop exit  then
+    loop  true ;
+: crawl-step ( F: d -- )   \ ahead (or back) that far a frame, the way he faces
+    self body-yaw 2e f* pi f* 4096e f/ {: F: d F: a :}  self body-pos {: F: x F: y F: z :}
+    x a fsin d f* frames f* f+  y  z a fcos d f* frames f* f+  self body-area self body-floor body-place ;
+variable crawl-shown
+: crawl ( -- )
+    self body? 0= if  exit  then
+    self body-pos  self body-yaw {: F: x F: y F: z F: h :}  crawl-still-motion crawl-shown !
+    pad-up key-down? if  crawl-ahead crawl-step  crawl-motion crawl-shown !  then
+    pad-down key-down? if  crawl-back crawl-step  crawl-motion crawl-shown !  then
+    pad-right key-down? if  crawl-turn frames f* turn-by  crawl-motion crawl-shown !  then
+    pad-left key-down? if  crawl-turn fnegate frames f* turn-by  crawl-motion crawl-shown !  then
+    clear-ahead? 0= if   \ (blocked: where he was, as he faced)
+        x y z self body-area self body-floor body-place  h body-turn  crawl-still-motion crawl-shown !  then
+    crawl-shown @ show ;
+
 : control ( -- )
     controlled @ 0= self body? 0= or  window-up? or  on-foot @ 0= or if  exit  then   \ (src: field_update: not while ui_busy)
     steer pace stand walk ;
@@ -159,11 +185,15 @@ PRIVATE>
 behaviour the-player
   on spawned ( -- )  figure-path model figure !  self subscribe tick  self subscribe player-control ;
   on figure-place ( x y z -- )  0 heading-there !  0 ahead !  place ;
-  on tick ( -- )  control  scene-moves  moving advance if  moving hold-move @ if  keep-move  then  then ;
+  on tick ( -- )  crawling @ if  crawl  then  control  scene-moves  moving advance if  moving hold-move @ if  keep-move  then  then ;
   on player-control ( flag -- )  controlled ! ;
   on figure-on-foot ( flag -- )  on-foot ! ;
   on figure-pushes ( crate -- )  pushing ! ;   \ (-1: none)
   on figure-perch ( n -- )  perch ! ;
+  on figure-crawl ( flag -- )  crawling ! ;
+  on figure-floor ( floor -- )   \ src: actor_set_floor: his floor, and its height under him
+    floor !  self body? 0= if  exit  then  self body-pos {: F: x F: y F: z :}
+    x  area @ floor @ floor-height s>f  z  area @ floor @ body-place ;
   on figure-anim ( id next loop -- )  moving play ;
   on figure-hold ( -- )  true moving hold-move ! ;
   on figure-walk ( x z speed motion -- )
@@ -188,6 +218,7 @@ end-behaviour
 : matthew-was ( -- x y z )  was-x @ was-y @ was-z @ ;   \ where he stood before his last step (src: player_restore_pos's)
 : matthew-walking? ( -- flag )  heading-there @ 0<> ;   \ (facts: the events' wait-stop, wait-turned)
 : matthew-perch ( -- n )  perch @ ;   \ 0 on his feet, 1 on a crate, 2 on a stool
+: matthew-crawling? ( -- flag )  crawling @ 0<> ;
 : matthew-pushing? ( -- flag )  pushing @ 0< 0= ;
 : matthew-on-foot? ( -- flag )  on-foot @ 0<> ;
 : matthew-turned? ( -- flag )  turning-to @ 0= ;

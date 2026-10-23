@@ -99,6 +99,10 @@ argument), in the destination area's overlay.
 
 The minigames that are a script alone (src: area_minigame_start setting minigame_script) are registered by
 number (`minigame-script!`); the `minigame` op starts that script, the others are to come.
+`wait-minigame` (op $149) waits for that script's end (`minigame-running?`). An area can register a word of its
+own (area 19's chase: its scene, then the main executable's minigame 23). `scene-reset` (op $11A, src:
+func_80018B44) changes the area under a running scene, Matthew where he is; `wait-near` (op $117) waits until
+someone is within a distance of a point.
 
 The minigame scripts include those an area picks from a table (src: `minigame_script = *(... + &D_T)`: the old
 man's lessons): the converter reads the table's words that point into the overlay.

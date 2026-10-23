@@ -22,6 +22,20 @@ USING: events events.main ;
     27 -1 590706 132226 -1034 0 warp
     ;
 
+\ $80103A08
+: entry-80103A08
+    matthew as-this-one
+    148 actor 5132 5129 1 anim-then
+    matthew 5128 0 anim
+    this-one wait-anim
+    matthew 5129 0 anim
+    this-one wait-anim
+    matthew 5130 0 anim
+    this-one wait-anim
+    148 actor 0 0 0 set-pos
+    end-script
+    ;
+
 : L-80103A78
     this-one 173 4 talk
     this-one 174 6 talk

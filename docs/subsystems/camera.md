@@ -26,5 +26,8 @@ toward its goal the shorter way (step 0: at once), the eye height and distance s
 `camera-move-to`, `camera-turn-to`, `camera-height-to`, `camera-dist-to`, `camera-face`, `camera-pivot`;
 facts `camera-moving?` ... for the events' waits.
 
+Low behind him (`camera-behind ( look-y dist eye-y )`, src: ovl019's crawl): at his place, turning as he turns,
+until a scene places the camera or he is the player's again.
+
 **Built**: following, fixed shots, the moves (seen: the opening's slow pan along the bed). **To come**:
 `camera-face` between two figures (the townsfolk), the town's and the car's follow.

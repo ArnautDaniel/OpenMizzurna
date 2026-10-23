@@ -40,6 +40,10 @@ create history #history 4 * cells allot   variable newest
     lag entry  dup @ over cell+ @ rot 2 cells + dup @ swap cell+ @   ( x y z yaw )
     yaw !  target! ;
 
+\ behind him, low, turning as he turns (src: ovl019's duct crawl: its own heights and distance)
+variable low-behind
+: keep-behind ( -- )  matthew-there? 0= if  exit  then  matthew-now yaw !  target! ;
+
 : draw-camera ( -- )  target@ yaw @ dist @ eye-y @ look-y @ projection @ camera ;
 ' draw-camera on-draw
 
@@ -86,6 +90,7 @@ behaviour follow-camera
     self subscribe player-control
     indoor-projection projection !  true following ! ;
   on tick ( -- )   \ (src: field_update: no following while a window is up - ui_busy)
+    low-behind @ if  keep-behind  then
     following @ window-up? 0= and if  reset-due @ if  camera-reset  false reset-due !  then  follow  then  tweens ;
   on camera-move-to ( x y z speed -- )  move-speed !  goal 2 cells + !  goal cell+ !  goal !  true moving ! ;
   on camera-turn-to ( yaw step -- )  turn-step !  full-turn 1- and turn-goal !  true turning ! ;
@@ -96,11 +101,12 @@ behaviour follow-camera
   on area-entered ( area scene -- )  2drop  camera-reset ;
   on scene-shown ( scene -- )  drop  camera-reset ;   \ src: set_scene_state's camera_reset
   on camera-place ( look-y dist eye-y x y z yaw -- )   \ (src: camera_set writes the camera; following is control's)
-    yaw !  target!  eye-y !  dist !  look-y ! ;
+    false low-behind !  yaw !  target!  eye-y !  dist !  look-y ! ;
   on player-control ( flag -- )   \ src: player_control_on / off: camera_follow_set (behind him again - once
-    dup following @ 0= and if  true reset-due !  then  following ! ;   \ no window is up)
+    dup if  false low-behind !  then  dup following @ 0= and if  true reset-due !  then  following ! ;   \ no window is up)
   on camera-follow ( -- )  following @ 0= if  camera-reset  then  true following ! ;   \ src: camera_follow_set
   on camera-fixed ( -- )  false following ! ;
+  on camera-behind ( look-y dist eye-y -- )  eye-y !  dist !  look-y !  false following !  true low-behind ! ;
   on camera-reset ( -- )  camera-reset ;
 end-behaviour
 
