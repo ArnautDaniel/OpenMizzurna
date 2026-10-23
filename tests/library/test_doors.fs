@@ -30,4 +30,12 @@ testing shut in the evening (12/26 20:00: 17:25 - 22:59 before the 29th): he sta
 T{ in-town  26 20 0 at-time  344846 284920 512 matthew-at  1 steps  press-circle  200 steps  area @  window-up?
    -> the-town true }T
 
+testing a door's opening: area 1's animation entry 6 is door 15's (its object 11, the props' motion 0, 61 frames);
+testing played once it runs at the area's 15 frames a second and stays on its last frame
+T{ events-stop  1 3 s" areas" actor-named send enter-area  deliver  6 area-anim -> 11 0 }T
+: door-11 ( -- object playing? frame-near-15? )
+    11 slot-of {: s :}  s mo-object @  s mo-playing @  s mo-frame f@ f>s 14 17 within ;
+T{ 6 s" areas" actor-named send play-area-anim  deliver  30 steps  door-11 -> 11 true true }T
+T{ 100 steps  door-11 drop -> 11 false }T
+
 test-summary

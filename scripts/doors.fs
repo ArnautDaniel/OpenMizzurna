@@ -40,6 +40,8 @@ create the-way  way-out allot
     r far-side side-room @ room = if  r far-side exit  then  0 ;
 : other ( row side -- side' )  over near-side = if  far-side  else  near-side  then ;
 PRIVATE>
+: door-spot ( n room -- spot | -1 )   \ the door's spot on that room's side (its opening: the area's animation entry)
+    swap door-of swap side-for ?dup if  side-spot @  else  -1  then ;
 : door-way ( n room flip -- way | 0 )   \ flip: coming the other way (src: op $15F)
     {: n room flip :}  n door-of {: r :}  r room side-for {: s :}
     s 0= if  0 exit  then

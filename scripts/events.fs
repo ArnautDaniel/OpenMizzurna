@@ -265,15 +265,12 @@ variable loaded-pack
 : scene-reset ( n -- )  1 s" scene-reset" unbuilt ;   \ op $11A
 : picture-show ( n -- )  1 s" picture-show" unbuilt ;   \ op $123
 : picture-hide ( -- )  0 s" picture-hide" unbuilt ;   \ op $124
-: door-reveal-room ( n -- )  1 s" door-reveal-room" unbuilt ;   \ op $126
-: door-anim ( n -- )  1 s" door-anim" unbuilt ;   \ op $127
 : cd-picture ( n -- )  1 s" cd-picture" unbuilt ;   \ op $12B
 : music ( n -- )  1 s" music" unbuilt ;   \ op $144
 : minigame ( n -- )  1 s" minigame" unbuilt ;   \ op $145
 : elevator-doors ( n n -- )  2 s" elevator-doors" unbuilt ;   \ op $148
 : wait-minigame ( -- )  0 s" wait-minigame" unbuilt ;   \ op $149
 : rumble ( n n -- )  2 s" rumble" unbuilt ;   \ op $155
-: object-anim ( n -- )  1 s" object-anim" unbuilt ;   \ op $156
 : actor-model ( a n -- )  2 s" actor-model" unbuilt ;   \ op $159
 : sprite-count+ ( -- )  0 s" sprite-count+" unbuilt ;   \ op $15D
 : sprite-count-close ( -- )  0 s" sprite-count-close" unbuilt ;   \ op $15E
@@ -393,8 +390,14 @@ $42 constant into-car       $4B constant at-car-door       \ ($4B: nothing for t
 $3F constant stepping-out-1   $40 constant stepping-out-0   \ (by the side's way)
 -470 constant behind-look-y   -812 constant behind-dist   -1802 constant behind-eye-y   -693 constant behind-yaw
 : my-room ( -- room )  area @ the-town = if  town-room  else  scene @  then ;
-: matthew-through ( door -- way | 0 )   \ (where he went)
+: object-anim ( entry -- )  s" areas" actor-named send play-area-anim ;   \ op $156 (the town's own: to come)
+: door-anim ( door -- )   \ op $127: the door opening on Matthew's side
+    {: n :}  n door-of door-area @ area @ <> if  exit  then
+    n my-room door-spot  dup 0< if  drop  else  object-anim  then ;
+: door-reveal-room ( door -- )  1 s" door-reveal-room" unbuilt ;   \ op $126 (the room beyond's objects: to come)
+: matthew-through ( door -- way | 0 )   \ (where he went; the door opens on his side)
     {: n :}  n door-of door-area @  area @ <>  area @ the-town <> and if  0 exit  then
+    n door-anim
     n my-room false door-way {: w :}  w 0= if  0 exit  then
     w out-x @ 0 w out-z @  matthew figure-of send figure-place
     0 w out-heading @ 0  matthew figure-of send figure-turn

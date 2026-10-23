@@ -63,6 +63,17 @@ void scene3d_draw_posed(Model3D *m, const float pos[3], float yaw, const short (
 #include "render.h"
 void scene3d_quad(GpuTexture t, const float corner[4][3], float shade, int blend);
 
+/* a model with some of its objects moved this frame (the areas' animated props: doors ...): each pose an object
+ * (its node), its place from where it rests (side, height, forward - along its rest heading; model units, height
+ * downward) and its turn added to its rest turn (the game's) */
+typedef struct Scene3DObjectPose {
+    int object;
+    float place[3];
+    short turn[3];
+} Scene3DObjectPose;
+void scene3d_draw_objects(Model3D *m, const float pos[3], float yaw, const unsigned char *shown, int nshown,
+                          const Scene3DObjectPose *poses, int nposes);
+
 /* draw what was asked this frame (render_end calls it, before the 2D) */
 void scene3d_flush(int w, int h);
 

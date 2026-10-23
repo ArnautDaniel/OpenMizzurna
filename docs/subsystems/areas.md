@@ -25,6 +25,15 @@ origin stands on floor 1; src: func_80020738).
 Object visibility as the original: object i shows in the shell when i is below the shell's count, and in
 the objects' group by the same index (src: object_show).
 
+## The objects' animations
+
+An area's animated props - a door swinging, a fan - play the common props' motions (`cdbin/033_4/0/<n>.motion.txt`:
+a frame's place, side height forward along the object's rest heading, and its turn added to its rest turn; src:
+model.c func_8001DE24, func_8001E0F8, func_8001DFB4). The area's list (its metadata's table 3: six bytes an entry,
+the object and the motion) names them: `play-area-anim ( entry )` (src: func_8001A150; the events' `object-anim`,
+the doors' `door-anim`) plays one once - at 15 frames a second - and its object stays on the last frame; one held
+plays again. Engine: `pose-object` (for the next `draw-model-shown`), `motion-turn`.
+
 ## Floors (`scripts/floors.fs`)
 
 Each floor has an obstacle list and a zone list (`NNN_4` part 2: parts 0 / 1 floor 1; other floors by area,

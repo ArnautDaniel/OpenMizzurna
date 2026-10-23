@@ -12,7 +12,8 @@ create origin 3 cells allot   \ x y z (world units)
 
 \ ---- an area's data: the metadata (NNN_4 part 0), read where it lies ----
 \ its first words: s16 offsets of its tables (src: area_meta_set ...)
-0 constant header-table   1 constant shown-table   2 constant camera-table   5 constant light-table
+0 constant header-table   1 constant shown-table   2 constant camera-table   3 constant anim-table
+5 constant light-table
 6 constant reverb-table
 create path 32 allot
 : area-path ( area addr len -- addr len )   \ "cdbin/NNN_4/<rest>"
@@ -56,10 +57,46 @@ create shell-shown 256 allot   create models-shown 256 allot
     objects 0 ?do
         scene @ i shown? if  i shell-objects < if  1 shell-shown i + c!  then  1 models-shown i + c!  then
     loop ;
+\ ---- the objects' animations (src: model.c func_8001DE24, func_80020198; the area's list: its table 3, six bytes
+\ an entry {u16 object, u16 motion, u16 -}): a door swinging, a fan turning. A motion played once leaves its object
+\ in its last frame (a door stays open); one held plays again from its start ----
+6 constant anim-entry   32 constant #moving-objects
+15e fconstant object-frames   \ its frames a second (the areas ran at 15)
+begin-structure moving-object
+  field: mo-object   field: mo-motion   field: mo-playing   field: mo-again   ffield: mo-frame
+end-structure
+create moving-objects  #moving-objects moving-object * allot
+: objects-still ( -- )  moving-objects #moving-objects moving-object * erase
+    #moving-objects 0 do  -1 moving-objects i moving-object * + mo-object !  loop ;
+objects-still
+: area-anim ( entry -- object motion )   \ the area's list's entry
+    anim-entry * anim-table table + {: e :}  e w@  e 2 + w@ ;
+: prop-motion ( id -- motion )   \ the common props' motions (033_4 part 0)
+    $clear  s" cdbin/033_4/0/" $+  n>str $+  s" .motion.txt" $+  $@ motion ;
+: slot-of ( object -- addr )   \ its slot (a free one if it has none)
+    {: o :}  #moving-objects 0 do  moving-objects i moving-object * +  dup mo-object @ o = if  unloop exit  then  drop  loop
+    #moving-objects 0 do  moving-objects i moving-object * +  dup mo-object @ 0< if  unloop exit  then  drop  loop
+    moving-objects ;   \ (all taken: the first)
+: play-object ( object motion-id again? -- )   \ src: func_80020198
+    {: o id loops :}  o slot-of {: s :}  o s mo-object !  id prop-motion s mo-motion !
+    loops s mo-again !  0e s mo-frame f!  true s mo-playing ! ;
+: step-object ( slot -- )
+    {: s :}  s mo-playing @  s mo-motion @ 0<> and 0= if  exit  then
+    s mo-frame f@ object-frames dt f* f+  s mo-frame f!
+    s mo-frame f@ f>s  s mo-motion @ motion-frames < if  exit  then
+    s mo-again @ if  0e s mo-frame f!  else  false s mo-playing !  s mo-motion @ motion-frames 1- s>f s mo-frame f!  then ;
+: objects-step ( -- )   \ a step of the game's frames (src: a frame each)
+    #moving-objects 0 do  moving-objects i moving-object * + step-object  loop ;
+: pose-slot ( slot -- )   \ its object's pose for the coming draw
+    {: s :}  s mo-object @ 0<  s mo-motion @ 0= or if  exit  then
+    s mo-motion @ s mo-frame f@ f>s {: m f :}
+    s mo-object @  m f motion-move  m f motion-turn  pose-object ;
+: pose-objects ( -- )  #moving-objects 0 do  moving-objects i moving-object * + pose-slot  loop ;
+
 : draw-area ( -- )
     area @ 0< area @ the-town = or if  exit  then
     shell @ area-origin 0 shell-shown 256 draw-model-shown
-    models @ area-origin 0 models-shown 256 draw-model-shown ;
+    pose-objects  models @ area-origin 0 models-shown 256 draw-model-shown ;
 ' draw-area on-draw
 
 : load-town ( scene -- )   \ the town: its textures; its tiles the town's own (town.fs)
@@ -71,12 +108,16 @@ create shell-shown 256 allot   create models-shown 256 allot
     dup 0 model-path model shell !  dup 1 model-path model models !
     header-table table  dup sl@ origin !  4 + sl@ origin 2 cells + !
     origin-height origin cell+ !
-    show-objects ;
+    show-objects  objects-still ;
 
 state: areas-state end-state
 behaviour areas
+  on spawned ( -- )  self subscribe tick ;
   on enter-area ( area scene -- )  2dup load  broadcast area-entered ;
   on show-scene ( scene -- )  dup scene !  show-objects  broadcast scene-shown ;
+  on play-area-anim ( entry -- )   \ src: func_8001A150: the list's entry, played once
+    area @ 0< area @ the-town = or if  drop exit  then  area-anim false play-object ;
+  on tick ( -- )  objects-step ;
 end-behaviour
 
 : spawn-areas ( -- id )  areas areas-state s" areas" spawn ;

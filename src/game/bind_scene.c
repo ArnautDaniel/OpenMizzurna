@@ -77,13 +77,32 @@ PRIM(p_ground_height) {   /* ( model x z cx cz -- y true | false ) the ground un
         PUSH(0);
     }
 }
-PRIM(p_draw_model_shown) {   /* ( model x y z yaw addr n -- ) only the parts whose byte (of n) isn't 0 */
+#define MAX_POSES 64
+static Scene3DObjectPose sPoses[MAX_POSES];   /* the objects the next draw-model-shown moves */
+static int sNPoses;
+PRIM(p_pose_object) {   /* ( object side height forward rx ry rz -- ) for the next draw-model-shown: an object moved */
+    Cell rz = POP(), ry = POP(), rx = POP(), fwd = POP(), height = POP(), side = POP(), obj = POP();
+
+    if (sNPoses < MAX_POSES) {
+        Scene3DObjectPose *p = &sPoses[sNPoses++];
+        p->object = (int)obj;
+        p->place[0] = (float)side, p->place[1] = (float)height, p->place[2] = (float)fwd;
+        p->turn[0] = (short)rx, p->turn[1] = (short)ry, p->turn[2] = (short)rz;
+    }
+}
+PRIM(p_draw_model_shown) {   /* ( model x y z yaw addr n -- ) only the parts whose byte (of n) isn't 0 (and the objects
+                              * posed since: pose-object) */
     Cell n = POP(), addr = POP(), yaw = POP(), z = POP(), y = POP(), x = POP(), m = POP();
     float pos[3] = {(float)x, (float)y, (float)z};
 
     if (m >= 1 && m <= sNModels) {
-        scene3d_draw(sModels[m - 1].m, pos, (float)yaw, (const unsigned char *)addr, (int)n);
+        if (sNPoses > 0) {
+            scene3d_draw_objects(sModels[m - 1].m, pos, (float)yaw, (const unsigned char *)addr, (int)n, sPoses, sNPoses);
+        } else {
+            scene3d_draw(sModels[m - 1].m, pos, (float)yaw, (const unsigned char *)addr, (int)n);
+        }
     }
+    sNPoses = 0;
 }
 PRIM(p_camera) {   /* ( x y z yaw dist eye-y look-y h -- ) the game's camera (scene3d.h) */
     Cell h = POP(), look_y = POP(), eye_y = POP(), dist = POP(), yaw = POP(), z = POP(), y = POP(), x = POP();
@@ -136,6 +155,17 @@ PRIM(p_motion_move) {   /* ( motion frame -- dx dy dz ) the root's move that fra
         return;
     }
     PUSH(m->move[frame][0]), PUSH(m->move[frame][1]), PUSH(m->move[frame][2]);
+}
+PRIM(p_motion_turn) {   /* ( motion frame -- rx ry rz ) a prop motion's turn that frame (a character's: its root's) */
+    Cell frame = POP();
+    Motion *m = motion_arg(POP());
+
+    if (m == NULL || frame < 0 || frame >= m->frames) {
+        PUSH(0), PUSH(0), PUSH(0);
+        return;
+    }
+    PUSH(m->turns[(size_t)frame * m->parts * 3]), PUSH(m->turns[(size_t)frame * m->parts * 3 + 1]);
+    PUSH(m->turns[(size_t)frame * m->parts * 3 + 2]);
 }
 PRIM(p_draw_figure) {   /* ( model motion frame x y z yaw -- ) a figure posed in a frame of a motion */
     Cell yaw = POP(), z = POP(), y = POP(), x = POP(), frame = POP(), mo = POP(), m = POP();
@@ -210,5 +240,7 @@ void bind_scene(Forth *f) {
     forth_prim(f, "motion", p_motion);
     forth_prim(f, "motion-frames", p_motion_frames);
     forth_prim(f, "motion-move", p_motion_move);
+    forth_prim(f, "motion-turn", p_motion_turn);
+    forth_prim(f, "pose-object", p_pose_object);
     forth_prim(f, "draw-figure", p_draw_figure);
 }

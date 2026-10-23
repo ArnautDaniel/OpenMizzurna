@@ -33,6 +33,7 @@ message window-closed ( answer -- )      \ broadcast: the window closed (the ans
 \ ---- areas (docs/subsystems/areas.md) ----
 message enter-area ( area scene -- )     \ (to the areas) play that area from that scene
 message show-scene ( scene -- )          \ (to the areas) another of the area's scenes (its objects and camera)
+message play-area-anim ( entry -- )      \ (to the areas) the area's animation list's entry: its object plays its motion once
 message area-entered ( area scene -- )   \ broadcast: the area is in
 message scene-shown ( scene -- )         \ broadcast: the scene changed
 27 constant the-town                     \ the streamed outdoors (MAP.BIN)
