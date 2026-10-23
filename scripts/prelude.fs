@@ -61,6 +61,19 @@ IN: forth
 \ a run of memory with a name: `16 cells buffer: name`
 : buffer: create allot ;
 : erase ( addr n -- )  0 fill ;
+
+\ strings made a piece at a time: `$clear  s" cdbin/" $+  12 n>str $+  $@` (one buffer: use the string before
+\ the next $clear)
+create (num) 24 allot
+: n>str ( n -- addr len )   \ a whole number's digits (in a buffer the next call reuses)
+    dup >r abs  (num) 24 + swap
+    begin  swap 1- swap  10 /mod >r  [char] 0 + over c!  r>  dup 0= until  drop
+    r> 0< if  1- [char] - over c!  then
+    (num) 24 + over - ;
+create ($) 256 allot   variable ($len)
+: $clear ( -- )  0 ($len) ! ;
+: $+ ( addr len -- )  255 ($len) @ - min  >r ($) ($len) @ + r@ move  r> ($len) +! ;
+: $@ ( -- addr len )  ($) ($len) @ ;
 : abort" ( flag "text" -- )  postpone s" postpone (abort") ; immediate   \ an error with the text when flag
 \ records (Forth 2012's structures): a name for each field's offset, and the size -
 \   begin-structure /point  ffield: p.x  ffield: p.y  end-structure     ( addr p.y f@ )

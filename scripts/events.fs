@@ -5,7 +5,7 @@
 \ Each op does its work through its subsystem's messages; an op whose subsystem isn't built yet is a stub
 \ that takes its arguments and notes it (`unbuilt`).
 IN: events
-USING: engine actors messages clock window ;
+USING: engine actors messages clock window matthew ;
 
 \ ---- the cast: actor slots (decomp/include/actor.h); the others by number (`160 actor`) ----
 0 constant matthew    1 constant morgan    2 constant nozz       3 constant cohen     5 constant samuel
@@ -162,11 +162,8 @@ variable loaded-pack
 : memory-card ( mode -- )  1 s" memory-card" unbuilt  0 result! ;
 
 \ ---- actor commands ( actor args -- ): until the townsfolk and Matthew take them ----
-: anim ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $03
-: anim-then ( a x1 x2 x3 -- )  4 act-unbuilt ;   \ cmd $04
 : anim-once ( a x1 -- )  2 act-unbuilt ;   \ cmd $05
 : anim-then-loop ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $06
-: anim-hold ( a -- )  1 act-unbuilt ;   \ cmd $07
 : walk-to ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $08
 : turn-by ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $09
 : walk-forward ( a x1 -- )  2 act-unbuilt ;   \ cmd $0A
@@ -221,7 +218,6 @@ variable loaded-pack
 : place-alt ( a -- )  1 act-unbuilt ;   \ cmd $5E
 
 \ ---- the other ops: until their subsystems are built ----
-: wait-anim ( a -- )  1 s" wait-anim" unbuilt  settle ;   \ op $103
 : wait-stop ( a -- )  1 s" wait-stop" unbuilt  settle ;   \ op $10D
 : wait-turned ( a -- )  1 s" wait-turned" unbuilt  settle ;   \ op $112
 : camera-at ( a -- )  1 s" camera-at" unbuilt ;   \ op $113
@@ -294,3 +290,14 @@ variable loaded-pack
 : camera-follow ( -- )  the-camera send camera-follow ;                           \ $10B
 : camera-fixed ( -- )  the-camera send camera-fixed ;                             \ $10C
 : set-scene ( scene -- )  s" areas" actor-named send show-scene ;                  \ $110 (src: set_scene_state)
+
+\ ---- figures in motion (Matthew's so far) ----
+: anim ( a id loop -- )   \ cmd $03 (src: actor_anim): play it (looping or not)
+    {: a id lp :}  a figure-of dup 0< if  drop a id lp 3 act-unbuilt  else  >r id -1 lp r> send figure-anim  then ;
+: anim-then ( a id next loop -- )   \ cmd $04: play it, then the next
+    {: a id nx lp :}  a figure-of dup 0< if  drop a id nx lp 4 act-unbuilt  else  >r id nx lp r> send figure-anim  then ;
+: anim-hold ( a -- )   \ cmd $07: at the motion's end the figure stays where it moved
+    dup figure-of dup 0< if  drop 1 act-unbuilt  else  nip send figure-hold  then ;
+: wait-anim ( a -- )   \ $103: until its motion has played (src: the VM's wait_anim)
+    settle  figure-of 0< if  exit  then
+    begin  yield  anim-done? until ;

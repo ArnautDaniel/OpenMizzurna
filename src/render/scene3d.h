@@ -32,6 +32,11 @@ void scene3d_camera(const float target[3], float yaw, float dist, float eye_y, f
  * node: 0 hidden), NULL all of them */
 void scene3d_draw(Model3D *m, const float pos[3], float yaw, const unsigned char *shown, int nshown);
 
+/* a figure in a frame of a motion: each node's turn (rx, ry, rz; nodes past nturns keep their rest turn) and
+ * the root's move this frame (model units: side, up, forward) */
+void scene3d_draw_posed(Model3D *m, const float pos[3], float yaw, const short (*turns)[3], int nturns,
+                        const float root_move[3]);
+
 /* draw what was asked this frame (render_end calls it, before the 2D) */
 void scene3d_flush(int w, int h);
 

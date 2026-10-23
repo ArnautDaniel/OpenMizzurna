@@ -169,6 +169,9 @@ are built, each listed here.
 | `camera` | `x y z yaw dist eye-y look-y h --` | the game's camera (render/scene3d.h): its target, heading, distance, heights, projection |
 | `texture-area` | `area --` | whose texture set the area models use |
 | `draw-model-shown` | `model x y z yaw addr n --` | only the parts whose byte (of n) isn't 0 |
+| `motion` / `motion-frames` / `motion-move` | `addr len -- motion` / `motion -- n` / `motion frame -- dx dy dz` | a character motion from the library and its frames |
+| `draw-figure` | `model motion frame x y z yaw --` | a figure posed in a motion's frame |
+| `n>str` / `$clear $+ $@` | `n -- addr len` / ... | a number's digits; a string built a piece at a time (prelude) |
 | `library-file` | `addr len -- addr n` | a library file's bytes (read once, kept); `0 0` if none |
 | `exe-table` | `addr len -- addr n` | a table of the executable by name (`s" music" exe-table`); `0 0` if none |
 

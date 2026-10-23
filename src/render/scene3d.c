@@ -43,13 +43,18 @@ struct Model3D {
     Material *materials;
     int nmaterials;
     float (*node_world)[16];   /* each node's rest transform in the model */
+    float (*node_local)[16];   /* and on its parent (its translation and rest turn) */
+    int *parent;               /* -1: a root */
     int nnodes;
 };
 
 #define MAX_SHOWN 256
+#define MAX_POSED 64
 typedef struct Draw {
     Model3D *m;
     float world[16];
+    int posed;                          /* a figure in a motion's frame: its nodes' transforms below */
+    float node[MAX_POSED][16];
     unsigned char shown[MAX_SHOWN];   /* a byte a node (0: hidden) */
     int nshown;                       /* (nodes past it are shown) */
 } Draw;
@@ -313,8 +318,12 @@ Model3D *model3d_load(const char *path) {
     }
     m->nnodes = (int)data->nodes_count;
     m->node_world = calloc(data->nodes_count + 1, sizeof(*m->node_world));
+    m->node_local = calloc(data->nodes_count + 1, sizeof(*m->node_local));
+    m->parent = calloc(data->nodes_count + 1, sizeof(int));
     for (i = 0; i < data->nodes_count; i++) {
         cgltf_node_transform_world(&data->nodes[i], m->node_world[i]);
+        cgltf_node_transform_local(&data->nodes[i], m->node_local[i]);
+        m->parent[i] = data->nodes[i].parent ? (int)(data->nodes[i].parent - data->nodes) : -1;
     }
     verts = NULL;
     for (i = 0; i < data->nodes_count; i++) {
@@ -388,6 +397,8 @@ void model3d_free(Model3D *m) {
     free(m->prims);
     free(m->materials);
     free(m->node_world);
+    free(m->node_local);
+    free(m->parent);
     free(m);
 }
 
@@ -407,24 +418,87 @@ void scene3d_camera(const float target[3], float yaw, float dist, float eye_y, f
     S.have_camera = 1;
 }
 
-void scene3d_draw(Model3D *m, const float pos[3], float yaw, const unsigned char *shown, int nshown) {
+/* a game turn (rx, ry, rz: Ry Rx Rz, as the converter: data/modelgltf.c part_rotation) in glTF's space */
+static void turn_matrix(const short t[3], float *m) {
+    double a[3], cx, sx, cy, sy, cz, sz, r[3][3];
+    static const double kFlip[3] = {1, -1, -1};
+    int i, j;
+
+    for (i = 0; i < 3; i++) {
+        a[i] = t[i] * 2.0 * M_PI / TURN;
+    }
+    cx = cos(a[0]); sx = sin(a[0]); cy = cos(a[1]); sy = sin(a[1]); cz = cos(a[2]); sz = sin(a[2]);
+    r[0][0] = cy * cz + sy * sx * sz; r[0][1] = -cy * sz + sy * sx * cz; r[0][2] = sy * cx;
+    r[1][0] = cx * sz;                r[1][1] = cx * cz;                 r[1][2] = -sx;
+    r[2][0] = -sy * cz + cy * sx * sz; r[2][1] = sy * sz + cy * sx * cz; r[2][2] = cy * cx;
+    mat_identity(m);
+    for (i = 0; i < 3; i++) {
+        for (j = 0; j < 3; j++) {
+            m[j * 4 + i] = (float)(r[i][j] * kFlip[i] * kFlip[j]);
+        }
+    }
+}
+
+static Draw *new_draw(Model3D *m, const float pos[3], float yaw) {
     Draw *d;
     float p[3], a = -yaw * 2.0f * (float)M_PI / TURN;   /* (the game's turn about its y, which points down) */
 
     if (m == NULL || S.ndraws == MAX_DRAWS) {
-        return;
+        return NULL;
     }
     d = &S.draws[S.ndraws++];
     d->m = m;
-    d->nshown = shown != NULL ? (nshown < MAX_SHOWN ? nshown : MAX_SHOWN) : 0;
-    if (d->nshown > 0) {
-        memcpy(d->shown, shown, (size_t)d->nshown);
-    }
+    d->posed = 0;
+    d->nshown = 0;
     world_point(pos, p);
     mat_identity(d->world);
     d->world[0] = cosf(a), d->world[2] = -sinf(a);
     d->world[8] = sinf(a), d->world[10] = cosf(a);
     d->world[12] = p[0], d->world[13] = p[1], d->world[14] = p[2];
+    return d;
+}
+
+void scene3d_draw_posed(Model3D *m, const float pos[3], float yaw, const short (*turns)[3], int nturns,
+                        const float root_move[3]) {
+    Draw *d = new_draw(m, pos, yaw);
+    int i;
+
+    if (d == NULL || m->nnodes > MAX_POSED) {
+        return;
+    }
+    d->posed = 1;
+    for (i = 0; i < m->nnodes; i++) {   /* (the converter writes parents before their children) */
+        float local[16], r[16];
+
+        memcpy(local, m->node_local[i], sizeof(local));
+        if (i < nturns) {   /* its turn this frame, in place of its rest turn */
+            turn_matrix(turns[i], r);
+            memcpy(r + 12, local + 12, sizeof(float) * 3);
+            memcpy(local, r, sizeof(local));
+        }
+        if (m->parent[i] < 0 && root_move != NULL) {   /* the root moves by the frame (model units, y up) */
+            local[12] += root_move[0] / 256.0f;
+            local[13] += root_move[1] / 256.0f;
+            local[14] -= root_move[2] / 256.0f;
+        }
+        if (m->parent[i] >= 0 && m->parent[i] < i) {
+            mat_mul(d->node[i], d->node[m->parent[i]], local);
+        } else {
+            memcpy(d->node[i], local, sizeof(local));
+        }
+    }
+}
+
+void scene3d_draw(Model3D *m, const float pos[3], float yaw, const unsigned char *shown, int nshown) {
+    Draw *d = new_draw(m, pos, yaw);
+
+    if (d == NULL) {
+        return;
+    }
+    d->nshown = shown != NULL ? (nshown < MAX_SHOWN ? nshown : MAX_SHOWN) : 0;
+    if (d->nshown > 0) {
+        memcpy(d->shown, shown, (size_t)d->nshown);
+    }
 }
 
 static void set_blend(int mode) {
@@ -495,7 +569,7 @@ void scene3d_flush(int w, int h) {
                     (p->node < S.draws[i].nshown && !S.draws[i].shown[p->node])) {
                     continue;
                 }
-                mat_mul(model, S.draws[i].world, m->node_world[p->node]);
+                mat_mul(model, S.draws[i].world, S.draws[i].posed ? S.draws[i].node[p->node] : m->node_world[p->node]);
                 mat_mul(mvp, vp, model);
                 glProgramUniformMatrix4fv(S.program, S.loc_mvp, 1, GL_FALSE, mvp);
                 glProgramUniformMatrix4fv(S.program, S.loc_model, 1, GL_FALSE, model);
