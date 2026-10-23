@@ -63,6 +63,14 @@ Turning (src: actor_turn_by / _to_heading / _to_actor, actor_update's turn): `tu
 `face` turn them a speed a game frame toward the heading, its sign the way (`person-turning`); `wait-turned`
 waits on `person-turned?`.
 
+## A companion
+
+Someone going along with Matthew (src: actor_ride, cmd $26 `ride`; D_800A37B0 / D_800A37B4): `person-ride ( slot
+mode )` - 1 following him on foot, 2 in his car - `person-unride`, `companion-halt` (they stay put, still along).
+Following (src: func_80037944): they face him and keep 0x100 .. 0x200 behind - pulled up to 0x1FF when further
+(walking), stepping back to 0x101 when nearer (unless that's blocked) - in his area and on his floor; the
+minute's rules leave them be. Facts: `going-along?`, `following?`. (In his car: to come.)
+
 ## Extras
 
 Anyone without a schedule - a bouncer, a fan, the gas station's attendant, the food on the counter (every slot

@@ -73,15 +73,21 @@ def main():
     for slot in range(182):
         fn = syms.get(hand[slot])
         h = info.get(fn) if fn else None
-        if not h or not h['departures'] or not h['stop_index']:
+        if not h or not h['departures']:
             continue
+        if not h['stop_index']:   # placements indexed by the stop itself (Mrs. Roland's: actor_handler_17)
+            body = re.search(r'\n\w[^\n]* %s\([^)]*\) \{\n(.*?)\n\}\n' % fn, main_c, re.S).group(1)
+            direct = re.search(r'actor_schedule_stop\(arg0\) \* 0x10\) \+ &D_([0-9A-F]{8})', body)
+            if not direct:
+                continue
+            h = dict(h, records=int(direct.group(1), 16))
         lines.append('\\ ---- slot %d: %s ----' % (slot, EF.CAST.get(slot, (h['name'] or fn).lower())))
         lines.append('%d schedule' % slot)
         for i in range(99):
             d, hh, mm, _, scr = struct.unpack_from('<4BI', e, off(h['departures']) + 8 * i)
             if d == 0:
                 break
-            k = e[off(h['stop_index']) + i]
+            k = e[off(h['stop_index']) + i] if h['stop_index'] else i
             cl = car_lines.get(h['records'])
             lines.append(stop_line(i, d, hh, mm, scr, k, struct.unpack_from('<iiHBBhBB', e, off(h['records']) + 16 * k),
                                    e[off(cl) + i] if cl else 0))

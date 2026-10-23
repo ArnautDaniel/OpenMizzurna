@@ -90,6 +90,9 @@ message person-through-door ( slot door room flip stage -- )   \ out of that doo
                                           \ stage: the area they're shown in (-1: the room's own)
 message person-attach ( slot route speed -- )   \ get in their car: it drives that route, they ride (src: cmd 0x2C)
 message person-get-in ( slot -- )         \ climb into their car (src: cmd 0x42)
+message person-ride ( slot mode -- )      \ (to the townsfolk) they go along with Matthew: 1 following on foot, 2 in his car
+message person-unride ( slot -- )          \ no longer along with him
+message companion-halt ( -- )              \ his companion stays where they are (still along: src D_800A37B4 = 0)
 message person-away ( slot -- )           \ (to the townsfolk) between stops, out of sight until their next (src: travelling = 1)
 message person-unlink ( slot -- )         \ no longer with their car: out of it where they are (src: partner = 0)
 message seat-take ( slot bar seat -- )    \ (to the townsfolk) that stool is theirs (bar: at-diner, at-club; seat -1: the first free)

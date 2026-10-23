@@ -1611,3 +1611,11 @@ end-schedule
   24 stop  31 10 3 until  0 record  27 1 in-area  305238 314163 place  0 facing  0 pose  $8008DAC0 route  end-stop
   25 stop  31 14 0 until  1 record  27 1 in-area  1 1 place  1 facing  0 pose  $8008DAF8 route  end-stop
 end-schedule
+
+\ ---- slot 17: Mrs. Roland (her handler's own rows: the placements by stop - src: actor_handler_17, D_80090D68,
+\ D_80090D10; added by hand) - her route on the 26th brings her to stop 2, which lasts ----
+17 schedule
+   0 stop  26 6 0 until  0 record  3 1 in-area  178386 423087 place  3096 facing  161 pose  $80090D60 route  end-stop
+   1 stop  26 11 0 until  1 record  3 1 in-area  178386 423087 place  3096 facing  161 pose  $80090D60 route  end-stop
+   2 stop  31 23 59 until  2 record  3 1 in-area  178386 423087 place  3096 facing  161 pose  end-stop
+end-schedule

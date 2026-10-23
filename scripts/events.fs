@@ -234,8 +234,6 @@ variable loaded-pack
 : set-y ( a x1 -- )  2 act-unbuilt ;   \ cmd $22
 : set-z ( a x1 -- )  2 act-unbuilt ;   \ cmd $23
 : lift ( a x1 x2 x3 -- )  4 act-unbuilt ;   \ cmd $24
-: ride ( a x1 -- )  2 act-unbuilt ;   \ cmd $26
-: unride ( a -- )  1 act-unbuilt ;   \ cmd $27
 : place-at-stop ( a -- )  1 act-unbuilt ;   \ cmd $2D
 : item-query ( a x1 -- )  2 act-unbuilt ;   \ cmd $2E
 : item-show ( a x1 -- )  2 act-unbuilt ;   \ cmd $2F
@@ -354,6 +352,10 @@ variable loaded-pack
 : turn-by ( a degrees speed -- )   \ cmd $09: from the way they face (src: actor_turn_by)
     {: a d v :}  a where-is 0= if  exit  then  nip nip {: h :}
     a  h d figures:degrees>heading +  figures:full-circle 1- and  v turn-figure ;
+: ride ( a mode -- )   \ cmd $26: along with Matthew (src: actor_ride)
+    over person? if  the-townsfolk send person-ride  else  2 act-unbuilt  then ;
+: unride ( a -- )   \ cmd $27 (src: actor_unride)
+    dup person? if  the-townsfolk send person-unride  else  1 act-unbuilt  then ;
 : walk-beside ( a b seat -- )   \ to a seat's side of b (src: actor_side_point, then path_to)
     {: a b k :}  b where-is 0= if  exit  then  k seat beside {: x z :}
     a x z walk-pace walk-motion walk-with ;

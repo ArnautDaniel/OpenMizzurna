@@ -3,7 +3,7 @@
 \ clock puts them: at the first stop whose time hasn't come. Those in the area Matthew is in are drawn, in their
 \ stop's motion. Facts: stop-of, the stop's place; the townsfolk actor keeps them as the time moves.
 IN: townsfolk
-USING: engine actors messages clock areas figures doors traffic ;
+USING: engine actors messages clock areas floors figures doors traffic matthew ;
 
 182 constant #slots
 enum: placed  standing partnered at-diner at-club ;   \ how a stop puts them (src: func_80027944)
@@ -103,6 +103,12 @@ $7202F constant club-approach-x   $46C77 constant club-approach-z
 : free-seat ( bar -- seat | -1 )   \ the first free in the order they're taken (src: seat_*_pick_free)
     {: b :}  b at-club = if  s" club-seat-order"  else  s" diner-seat-order"  then {: a n :}
     b #stools 0 do  a n i exe-u8  b over seat-taken? 0= if  unloop exit  then  drop  loop  -1 ;
+\ ---- a companion: someone going along with Matthew (src: actor_ride, D_800A37B0 / D_800A37B4) ----
+variable companion   -1 companion !   \ who (-1: no one)
+variable companion-mode                \ 0 stopped where they are, 1 following him on foot, 2 in his car
+1 constant along-on-foot   2 constant along-in-the-car
+: going-along? ( slot -- flag )  companion @ = ;          \ (src: ACTOR_F_RIDING)
+: following? ( -- flag )  companion @ 0< 0=  companion-mode @ 0<> and ;   \ (src: D_800A37B4 with D_800A37B0)
 : person-anim-done? ( slot -- flag )  person-of moving {: m :}  m done @  m anim @ 0< or ;
 
 <PRIVATE   \ (their workings: the messages are their face)
@@ -192,7 +198,7 @@ $3F constant through-door-1   $40 constant through-door-0   \ the motions of ste
 variable controlled
 : minute ( t -- )
     {: t :}  #slots 0 do
-        i scheduled? if
+        i scheduled?  i going-along? 0= and if   \ (one going along with Matthew keeps with him)
             i person-of {: p :}
             p travelling @ if
                 p at-stop @ 1+ p #stops @ < if
@@ -225,7 +231,28 @@ variable controlled
 : turn-a-step ( slot -- )
     person-of {: p :}  p heading-now @ p turn-target @ p turn-speed @ heading-step  if  0 p turning !  then
     p heading-now ! ;
+: shows ( slot id -- )   \ that motion, looping, unless it plays already
+    {: s id :}  s person-of moving anim @ id = if  exit  then  s id -1 true show ;
+$200 constant too-far   $1FF constant kept-at   $100 constant too-near   $101 constant stepped-to
+$40000 constant too-far-squared   $FFFF constant near-squared
+0 constant standing-by   1 constant catching-up   2 constant stepping-back
+: behind-him ( heading distance -- x z )   \ that far behind Matthew, along the heading toward him
+    {: h d :}  matthew-now drop {: mx my mz :}  h s>f 2e f* pi f* 4096e f/ {: F: a :}
+    mx s>f a fsin d s>f f* f- f>s  mz s>f a fcos d s>f f* f- f>s ;
+: follow ( -- )   \ src: func_80037944: facing him, kept 0x100 .. 0x200 behind: pulled up, or stepping back
+    companion @ {: s :}  s person-of {: p :}  matthew-now drop {: mx my mz :}
+    area @ p person-area !  floor @ p on-floor !
+    mx p px @ -  mz p pz @ -  {: dx dz :}  dx dz heading-to {: h :}  h p heading-now !
+    dx dx * dz dz * + {: d2 :}
+    dx too-far >  dz too-far > or  d2 too-far-squared > or if
+        h kept-at behind-him  p pz !  p px !  s catching-up shows
+    else  dx too-near <  dz too-near < and  d2 near-squared <= and if
+        p px @ p pz @ {: ox oz :}  h stepped-to behind-him  p pz !  p px !
+        p px @ p pz @ floor @ blocked? if  ox p px !  oz p pz !  s standing-by shows  else  s stepping-back shows  then
+    else  s standing-by shows  then  then
+    area @ floor @ floor-height p py ! ;
 : animate ( -- )   \ walking and motions for everyone (the routes wait on them, seen or not)
+    companion-mode @ along-on-foot =  companion @ 0< 0= and  matthew-there? and if  follow  then
     #slots 0 do
         i scheduled?  i extra? i person-of person-area @ 0< 0= and  or if
             i walking? i riding? 0= and if  i walk-step  then   \ (riding: their walk waits for the car)
@@ -264,6 +291,9 @@ behaviour townsfolk
   on seat-take ( slot bar seat -- )  take-seat ;
   on seat-sit ( slot -- )  sit ;
   on seat-leave ( slot -- )  leave-seat ;
+  on person-ride ( slot mode -- )  companion-mode !  companion ! ;   \ src: actor_ride (cmd 0x26)
+  on person-unride ( slot -- )  going-along? if  -1 companion !  0 companion-mode !  then ;   \ src: actor_unride
+  on companion-halt ( -- )  0 companion-mode ! ;   \ they stay where they are (src: D_800A37B4 = 0)
   on person-away ( slot -- )  person-of {: p :}  true p travelling !  0 p walking !  -1 p person-area ! ;
   on person-unlink ( slot -- )  person-of 0 swap riding ! ;
   on person-idle ( slot -- )  dup person-of {: p :}  0 p walking !  0 p forward !  0 -1 true show ;
