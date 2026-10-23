@@ -52,8 +52,8 @@ rows' alone; arriving (meeting Lorraine on the 25th, Mel and Lorraine arguing), 
 from the 28th 19:00), the robbery on the 27th, who says what by their stops, the farm workers, Lorraine's twelve
 conversations in turn, then her line. Seen: the meeting on the 25th plays through, Mel walking off after it.
 **To come**: talking to the townsfolk (○ on a figure), the hints (prompts), the town's per-tile rows, the
-other areas' rules; in area 21 sitting at the counter and ordering (the order menu), the townsfolk on its
-stools, Matthew walking in scenes; in area 0 the computer's case files and minigames 29, 30 and 36.
+other areas' rules; in area 21 sitting at the counter and ordering (the order menu), Matthew's sitting
+after the meeting; in area 0 the computer's case files and minigames 29, 30 and 36.
 
 ## The town
 

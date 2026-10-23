@@ -56,8 +56,20 @@ car commands: `docs/subsystems/traffic.md`), and the
 doors: `through-door` / `through-door-back` put them out of a door (`docs/subsystems/doors.md`) in the
 stepping-out motion ($3F / $40) and the thread waits for it.
 Everyone's motions play, seen or not: a route waits on them wherever its person is.
+Turning (src: actor_turn_by / _to_heading / _to_actor, actor_update's turn): `turn-to`, `turn-by` (degrees),
+`face` turn them a speed a game frame toward the heading, its sign the way (`person-turning`); `wait-turned`
+waits on `person-turned?`.
+
+## The stools (src: SREG.C seat_*)
+
+The diner's counter has 9 stools, Club Wolves' bar 6 (`diner-seats`, `club-seats`: their places; x 0x502D0,
+z 0x4182A + it facing the counter, or x 0x720C1 + it, z 0x46C49 facing the bar). The townsfolk keep who sits on
+which (`sitter`, `seat-taken?`, `seated?`, `seat-of`; Matthew's too). A stop "at the diner" / "at Club Wolves"
+puts one on the first free in the game's order (`diner-seat-order`, `club-seat-order`) unless they sit already;
+the routes take one (`take-diner-seat`, `take-club-seat`: $3A, $45), walk to its front (`act-command` $39, $44:
+`seat-approach`), sit (`sit-diner-seat`, $3B, $46: seated motion $77) and leave it ($48, $49) - messages
+`seat-take`, `seat-sit`, `seat-leave`. A jump in time frees them all.
 
 ## To come
 
-Talking to them: built in part (`docs/subsystems/talk.md`). Riding is built (`docs/subsystems/traffic.md`). Seats (the diner, Club Wolves),
-turning in place (`turn-by`, `wait-turned`), the streamed models' variants, a door opening as they pass (the doors).
+Talking to them: built in part (`docs/subsystems/talk.md`). Riding is built (`docs/subsystems/traffic.md`). The streamed models' variants, a door opening as they pass (the doors).

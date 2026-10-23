@@ -49,6 +49,10 @@ message camera-fixed ( -- )              \ stay where it is
 message camera-reset ( -- )              \ behind Matthew now, where he stands (src: camera_reset)
 message figure-anim ( id next loop -- )  \ play motion id (looping or not); then `next` (-1: hold its last frame)
 message figure-hold ( -- )               \ at the motion's end, the figure keeps where it moved (src: anim_hold)
+message figure-walk ( x z speed motion -- )   \ (to Matthew) a scene walks him there, speed a game frame
+message figure-forward ( speed motion -- )     \ straight on, until idle (-1: the motion as it is)
+message figure-idle ( -- )                     \ stop walking, stand
+message figure-turning ( target speed -- )     \ turn toward the heading, speed a game frame (sign: the way; 0 at once)
 message player-control ( flag -- )       \ broadcast: Matthew is the player's to move, or not (src: player_control_on / off)
 
 \ ---- the screen's effects (docs/subsystems/effects.md) ----
@@ -66,6 +70,7 @@ message give-item ( item -- )            \ Matthew has it now (src: item_add)
 message take-item ( item -- )            \ and no longer (src: item_remove)
 message items-reset ( -- )               \ a new game's: the phone, the waist bag, the watch (src: items_init)
 message person-turn ( slot heading -- )  \ (to the townsfolk) the person faces so, until their next stop
+message person-turning ( slot target speed -- )   \ turns toward the heading, speed a game frame (its sign the way; 0: at once)
 \ (to the townsfolk: what the events and routes do to a person; slot first)
 message person-place ( slot x z -- )      \ stand there (height and area kept: src set_pos keeps y)
 message person-floor ( slot floor -- )    \ on that floor (its height)
@@ -81,6 +86,9 @@ message person-through-door ( slot door room flip -- )   \ out of that door into
 message person-attach ( slot route speed -- )   \ get in their car: it drives that route, they ride (src: cmd 0x2C)
 message person-get-in ( slot -- )         \ climb into their car (src: cmd 0x42)
 message person-unlink ( slot -- )         \ no longer with their car: out of it where they are (src: partner = 0)
+message seat-take ( slot bar seat -- )    \ (to the townsfolk) that stool is theirs (bar: at-diner, at-club; seat -1: the first free)
+message seat-sit ( slot -- )               \ the person sits on their stool
+message seat-leave ( slot -- )             \ their stool is free again
 message person-departs ( slot route -- )  \ broadcast: they left their stop (route: its address, 0 none)
 message person-stopped ( slot -- )        \ broadcast: they no longer walk a route (put at a stop)
 

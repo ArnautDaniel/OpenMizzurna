@@ -32,6 +32,8 @@ begin-structure person
   field: riding         \ the car they ride in (0: none)
   field: forward        \ going straight ahead, units a frame (0: not; src: move_speed)
   field: forward-motion \ in this motion (-1: whatever plays; src: move_anim)
+  field: seat-bar   field: seat-no   \ the stool they have (bar: at-diner or at-club; 0: none - src: talk_state 2, seat)
+  field: turning   field: turn-target   field: turn-speed   \ turning toward a heading, a speed a frame (src: turn_target)
   playing +field moving \ the motion they hold
 end-structure
 create people  #slots person * allot   people #slots person * erase
@@ -65,6 +67,36 @@ PRIVATE>
     person-of {: p :}  p person-area @ area @ =  p person-area @ 0< 0= and  p riding @ 0= and ;
 : walking? ( slot -- flag )  person-of walking @ 0<> ;
 : riding? ( slot -- flag )  person-of riding @ 0<> ;
+: person-turned? ( slot -- flag )  person-of turning @ 0= ;
+: seated? ( slot -- flag )  person-of seat-bar @ 0<> ;
+: seat-of ( slot -- bar seat )  person-of dup seat-bar @ swap seat-no @ ;
+
+\ ---- the stools: the diner's counter, Club Wolves' bar (src: SREG.C seat_*) - who sits on which ----
+9 constant #diner-seats   6 constant #club-seats
+create diner-sitters  #diner-seats cells allot   create club-sitters  #club-seats cells allot
+: no-sitters ( -- )   \ (-1: free)
+    diner-sitters #diner-seats cells -1 fill  club-sitters #club-seats cells -1 fill ;
+no-sitters
+: sitters ( bar -- addr )  at-club = if  club-sitters  else  diner-sitters  then ;
+: #stools ( bar -- n )  at-club = if  #club-seats  else  #diner-seats  then ;
+: sitter ( bar seat -- slot | -1 )  cells swap sitters + @ ;
+: seat-taken? ( bar seat -- flag )  sitter 0< 0= ;
+21 constant the-diner   12 constant the-club   1 constant stools-floor   $77 constant seated-motion
+$502D0 constant diner-stools-x   $FF0 negate constant diner-stools-y   $4182A constant diner-stools-z   3072 constant facing-counter
+$720C1 constant club-stools-x    0 constant club-stools-y   $46C49 constant club-stools-z   2048 constant facing-bar
+: diner-spot ( seat -- x y z heading )  {: n :}  diner-stools-x diner-stools-y  s" diner-seats" n exe-s16 diner-stools-z +
+    facing-counter ;
+: club-spot ( seat -- x y z heading )  {: n :}  s" club-seats" n exe-s16 club-stools-x +  club-stools-y club-stools-z  facing-bar ;
+: seat-spot ( bar seat -- x y z heading )   \ src: seat_diner_place, seat_club_place
+    swap at-club = if  club-spot  else  diner-spot  then ;
+$7202F constant club-approach-x   $46C77 constant club-approach-z
+: seat-approach ( bar seat -- x z )   \ where one walks to before sitting (src: actor commands 0x39, 0x44)
+    {: b n :}  b at-club = if  n 400 * club-approach-x +  club-approach-z
+    else  diner-stools-x  s" diner-seat-approach" n exe-s32  then ;
+: seat-area ( bar -- area )  at-club = if  the-club  else  the-diner  then ;
+: free-seat ( bar -- seat | -1 )   \ the first free in the order they're taken (src: seat_*_pick_free)
+    {: b :}  b at-club = if  s" club-seat-order"  else  s" diner-seat-order"  then {: a n :}
+    b #stools 0 do  a n i exe-u8  b over seat-taken? 0= if  unloop exit  then  drop  loop  -1 ;
 : person-anim-done? ( slot -- flag )  person-of moving {: m :}  m done @  m anim @ 0< or ;
 
 <PRIVATE   \ (their workings: the messages are their face)
@@ -97,12 +129,25 @@ $1645 constant getting-in      \ the motion of climbing in (the town's own)
     r stop-car @ {: line :}
     line 0= if  c to-traffic send car-stop  exit  then
     line 0< if  c to-traffic send car-hide  else  c line to-traffic send car-park  then ;
+: take-seat ( slot bar seat -- )   \ src: seat_*_take (-1: the first free)
+    {: s b n :}  n 0< if  b free-seat to n  then  n 0< if  exit  then
+    s person-of {: p :}  b p seat-bar !  n p seat-no !  s  b sitters n cells + ! ;
+: leave-seat ( slot -- )   \ src: seat_*_leave
+    person-of {: p :}  p seat-bar @ 0= if  exit  then
+    -1  p seat-bar @ sitters p seat-no @ cells + !  0 p seat-bar ! ;
+: sit ( slot -- )   \ on their stool (src: seat_*_place: there, facing the counter, seated)
+    {: s :}  s person-of {: p :}  p seat-bar @ 0= if  exit  then
+    p seat-bar @ p seat-no @ seat-spot  p heading-now !  p pz !  p py !  p px !
+    p seat-bar @ seat-area p person-area !  stools-floor p on-floor !
+    s seated-motion -1 true show ;
 : place-at-stop ( slot -- )   \ src: actor_apply_placement (cmd 0x2D)
     {: s :}  s person-of {: p :}  s current-row {: r :}
     0 p walking !  0 p travelling !  0 p riding !
-    r stop-placed @ partnered = if  s r ride-on  exit  then
+    r stop-placed @ partnered = if  s leave-seat  s r ride-on  exit  then
     s r park-car
-    r stop-placed @ standing <> if  -1 p person-area !  exit  then   \ (seats: to come)
+    r stop-placed @ at-diner =  r stop-placed @ at-club = or if   \ (already on one: they stay)
+        s seated? 0= if  s r stop-placed @ -1 take-seat  then  s sit  exit  then
+    s leave-seat
     r stop-area @ p person-area !  r stop-floor @ p on-floor !
     r stop-x @ p px !  r stop-z @ p pz !  r stop-area @ r stop-floor @ floor-height p py !
     r stop-heading @ p heading-now !
@@ -153,7 +198,7 @@ variable controlled
         then
     loop ;
 : settle-all ( t -- )   \ a jump in time: each to the stop for it (src: time_skip's finishing and catching up)
-    {: t :}  #slots 0 do
+    {: t :}  no-sitters  #slots 0 do  0 i person-of seat-bar !  loop  #slots 0 do
         i scheduled? if  i  i person-of t stop-for  goto-stop  then
     loop ;
 
@@ -171,11 +216,15 @@ variable controlled
     p forward-motion @ 0< 0=  p moving anim @ p forward-motion @ <> and if  s p forward-motion @ -1 true show  then
     p heading-now @ s>f 2e f* pi f* 4096e f/ {: F: a :}  p forward @ s>f game-frames f* {: F: v :}
     p px @ s>f  a fsin v f* f+ f>s p px !   p pz @ s>f  a fcos v f* f+ f>s p pz ! ;
+: turn-a-step ( slot -- )
+    person-of {: p :}  p heading-now @ p turn-target @ p turn-speed @ heading-step  if  0 p turning !  then
+    p heading-now ! ;
 : animate ( -- )   \ walking and motions for everyone (the routes wait on them, seen or not)
     #slots 0 do
         i scheduled? if
             i walking? i riding? 0= and if  i walk-step  then   \ (riding: their walk waits for the car)
             i person-of forward @ if  i step-forward  then
+            i person-of turning @ if  i turn-a-step  then
             i person-of moving advance drop
         then
     loop ;
@@ -191,13 +240,19 @@ behaviour townsfolk
   on time-set ( t -- )  settle-all ;
   on minute-passed ( t -- )  controlled @ if  minute  else  drop  then ;
   on player-control ( flag -- )  controlled ! ;
-  on person-turn ( slot heading -- )  swap person-of heading-now ! ;
+  on person-turn ( slot heading -- )  swap person-of  0 over turning !  heading-now ! ;
+  on person-turning ( slot target speed -- )
+    rot person-of {: t v p :}  v 0= if  t p heading-now !  0 p turning !  exit  then
+    t full-circle 1- and p turn-target !  v p turn-speed !  true p turning ! ;
   on person-place ( slot x z -- )  rot person-of {: x z p :}  x p px !  z p pz ! ;
   on person-floor ( slot floor -- )
     swap person-of {: f p :}  f p on-floor !  p person-area @ f floor-height p py ! ;
   on person-walk ( slot x z speed motion -- )
     {: s x z v m :}  s person-of {: p :}  x p goal-x !  z p goal-z !  v p stride !  m p stride-motion !
     true p walking !  s m -1 true show ;
+  on seat-take ( slot bar seat -- )  take-seat ;
+  on seat-sit ( slot -- )  sit ;
+  on seat-leave ( slot -- )  leave-seat ;
   on person-unlink ( slot -- )  person-of 0 swap riding ! ;
   on person-idle ( slot -- )  dup person-of {: p :}  0 p walking !  0 p forward !  0 -1 true show ;
   on person-forward ( slot speed motion -- )  rot person-of {: v m p :}  v p forward !  m p forward-motion ! ;

@@ -57,3 +57,13 @@ end-structure
 15e fconstant indoor-game-frames   30e fconstant town-game-frames
 : game-frames ( F: -- n )   \ how many of them this step covers
     area @ the-town = if  town-game-frames  else  indoor-game-frames  then  dt f* ;
+
+\ ---- turning at a speed (src: actor_turn_by / _to_heading / _to_actor and actor_update's turn: the heading moves
+\ the speed a game frame - its sign the way - until it passes the target, then stands on it) ----
+4096 constant full-circle
+: heading-step ( heading target speed -- heading' arrived? )   \ a step of this update's game frames
+    {: h t v :}  v 0< if  h t -  else  t h -  then  full-circle 1- and {: left :}   \ (how far, going that way)
+    v abs s>f game-frames f* f>s {: step :}
+    step left >= if  t true exit  then
+    v 0< if  h step -  else  h step +  then  full-circle 1- and  false ;
+: degrees>heading ( degrees -- d )  full-circle * 360 / ;   \ (the scripts' turn-by counts degrees)

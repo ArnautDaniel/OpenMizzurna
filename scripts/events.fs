@@ -215,7 +215,6 @@ variable loaded-pack
 \ ---- actor commands ( actor args -- ): until the townsfolk and Matthew take them ----
 : anim-once ( a x1 -- )  2 act-unbuilt ;   \ cmd $05
 : anim-then-loop ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $06
-: turn-by ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $09
 : run ( a x1 -- )  2 act-unbuilt ;   \ cmd $0B
 : face-point ( a x1 x2 x3 -- )  4 act-unbuilt ;   \ cmd $0D
 : anim-at ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $13
@@ -236,14 +235,9 @@ variable loaded-pack
 : act ( a -- )  1 act-unbuilt ;   \ cmd $36
 : partner-command ( a x1 -- )  2 act-unbuilt ;   \ cmd $37
 : move-by ( a x1 x2 x3 -- )  4 act-unbuilt ;   \ cmd $38
-: take-diner-seat ( a x1 -- )  2 act-unbuilt ;   \ cmd $3A
-: sit-diner-seat ( a -- )  1 act-unbuilt ;   \ cmd $3B
 : ignore-a ( a x1 -- )  2 act-unbuilt ;   \ cmd $3C
 : ignore-b ( a x1 -- )  2 act-unbuilt ;   \ cmd $3D
 : set-stop ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $43
-: sit-club-seat ( a -- )  1 act-unbuilt ;   \ cmd $46
-: leave-diner-seat ( a -- )  1 act-unbuilt ;   \ cmd $48
-: leave-club-seat ( a -- )  1 act-unbuilt ;   \ cmd $49
 : examine ( a -- )  1 act-unbuilt ;   \ cmd $4A
 : reset ( a -- )  1 act-unbuilt ;   \ cmd $4D
 : kill-thread ( a -- )  1 act-unbuilt ;   \ cmd $4E
@@ -257,7 +251,6 @@ variable loaded-pack
 : place-alt ( a -- )  1 act-unbuilt ;   \ cmd $5E
 
 \ ---- the other ops: until their subsystems are built ----
-: wait-turned ( a -- )  1 s" wait-turned" unbuilt  settle ;   \ op $112
 : sound ( n -- )  1 s" sound" unbuilt ;   \ op $114
 : sequence-play ( n n -- )  2 s" sequence-play" unbuilt ;   \ op $115
 : sequence-stop ( n -- )  1 s" sequence-stop" unbuilt ;   \ op $116
@@ -308,27 +301,40 @@ variable loaded-pack
 30 constant walk-pace   80 constant run-pace     \ units a frame (src: actor_command_default's walk_to, path_to)
 1 constant walk-motion   5 constant run-motion
 : walk-with ( a x z speed motion -- )
-    {: a x z v m :}  a person? if  a x z v m the-townsfolk send person-walk  else  a x z 3 act-unbuilt  then ;
+    {: a x z v m :}
+    a matthew = if  x z v m a figure-of send figure-walk exit  then
+    a person? if  a x z v m the-townsfolk send person-walk  else  a x z 3 act-unbuilt  then ;
 : walk-to ( a x z -- )  walk-pace walk-motion walk-with ;                    \ cmd $08
 : run-to ( a x z -- )  run-pace run-motion walk-with ;                       \ cmd $47
 : walk-to-ex ( a x z motion speed -- )  $FFFF and swap walk-with ;           \ cmd $0F
 : go-forward ( a speed motion -- )   \ straight on along their heading until idle
-    {: a v m :}  a person? if  a v m the-townsfolk send person-forward  else  a v m 3 act-unbuilt  then ;
+    {: a v m :}
+    a matthew = if  v m a figure-of send figure-forward exit  then
+    a person? if  a v m the-townsfolk send person-forward  else  a v m 3 act-unbuilt  then ;
 : walk-forward ( a speed -- )  walk-motion go-forward ;                     \ cmd $0A
 : move-forward ( a motion speed -- )  swap go-forward ;                     \ cmd $10
 : idle ( a -- )   \ cmd $0C
+    dup matthew = if  figure-of send figure-idle exit  then
     dup person? if  the-townsfolk send person-idle  else  1 act-unbuilt  then ;
-: turn-to ( a heading speed -- )   \ cmd $11 (at once: the turning speed - to come)
-    drop  over person? if  the-townsfolk send person-turn  else  2 act-unbuilt  then ;
+: turn-figure ( a heading speed -- )   \ toward the heading at the speed a game frame (0: at once)
+    {: a h v :}
+    a matthew = if  h v a figure-of send figure-turning exit  then
+    a person? if  a h v the-townsfolk send person-turning  else  a h v 3 act-unbuilt  then ;
+: turn-to ( a heading speed -- )  turn-figure ;   \ cmd $11 (src: actor_turn_to_heading)
 : set-floor ( a area floor -- )   \ cmd $12
     nip  over person? if  the-townsfolk send person-floor  else  2 act-unbuilt  then ;
 : arrive ( a -- )   \ cmd $1E
     dup person? if  the-townsfolk send person-arrive  else  1 act-unbuilt  then ;
 : goto-stop ( a stop -- )   \ cmd $5D
     over person? if  the-townsfolk send person-goto-stop  else  2 act-unbuilt  then ;
+: moving? ( a -- flag )  dup matthew = if  drop matthew-walking?  else  walking?  then ;
 : wait-stop ( a -- )   \ $10D: until they stop walking (src: the VM's wait_move)
-    settle  dup person? 0= if  drop exit  then
-    begin  yield  dup walking? 0= until  drop ;
+    settle  dup matthew = over person? or 0= if  drop exit  then
+    begin  yield  dup moving? 0= until  drop ;
+: turned? ( a -- flag )  dup matthew = if  drop matthew-turned?  else  person-turned?  then ;
+: wait-turned ( a -- )   \ op $112: until they face the way they turn to (src: the VM's wait_turn)
+    settle  dup matthew = over person? or 0= if  drop exit  then
+    begin  yield  dup turned? until  drop ;
 
 \ ---- riding (docs/subsystems/traffic.md) ----
 : xz-heading ( x y z heading -- x z heading )  {: x y z h :}  x z h ;
@@ -337,6 +343,9 @@ variable loaded-pack
     dup person? if  person-now xz-heading true exit  then
     dup car? if  car-now xz-heading true exit  then
     drop false ;
+: turn-by ( a degrees speed -- )   \ cmd $09: from the way they face (src: actor_turn_by)
+    {: a d v :}  a where-is 0= if  exit  then  nip nip {: h :}
+    a  h d figures:degrees>heading +  figures:full-circle 1- and  v turn-figure ;
 : walk-beside ( a b seat -- )   \ to a seat's side of b (src: actor_side_point, then path_to)
     {: a b k :}  b where-is 0= if  exit  then  k seat beside {: x z :}
     a x z walk-pace walk-motion walk-with ;
@@ -358,7 +367,34 @@ $42 constant into-car       $4B constant at-car-door       \ ($4B: nothing for t
     c into-car = if  drop the-townsfolk send person-get-in  exit  then
     c at-car-door = if  drop drop  exit  then
     c act-unbuilt-command ;
+\ ---- the stools (src: actor commands 0x39 - 0x3B, 0x44 - 0x46, 0x48, 0x49: SREG.C) ----
+: seats-of? ( a -- flag )  dup matthew = swap person? or ;
+: take-seat ( a bar seat -- )  {: a b n :}  a seats-of? if  a b n the-townsfolk send seat-take  settle  then ;
+: take-diner-seat ( a seat -- )  at-diner swap take-seat ;   \ cmd $3A (-1: the first free)
+: take-club-seat ( a seat -- )  at-club swap take-seat ;     \ cmd $45
+: matthew-sits ( -- )   \ Matthew on the stool he took (his own body)
+    matthew seat-of {: b n :}  b 0= if  exit  then
+    b n seat-spot {: x y z h :}  x y z matthew figure-of send figure-place  0 h 0 matthew figure-of send figure-turn
+    seated-motion -1 true matthew figure-of send figure-anim ;
+: sit-seat ( a -- )   \ on the stool they took (a person's: the townsfolk place them)
+    dup matthew = if  drop matthew-sits exit  then
+    dup person? if  the-townsfolk send seat-sit  else  1 act-unbuilt  then ;
+: sit-diner-seat ( a -- )  sit-seat ;   \ cmd $3B
+: sit-club-seat ( a -- )  sit-seat ;    \ cmd $46
+: leave-seat ( a -- )  dup seats-of? if  the-townsfolk send seat-leave  settle  else  1 act-unbuilt  then ;
+: leave-diner-seat ( a -- )  leave-seat ;   \ cmd $48
+: leave-club-seat ( a -- )  leave-seat ;    \ cmd $49
+30 constant to-stool-pace
+: go-seat ( a -- )   \ to their stool's front (src: cmds 0x39, 0x44: path_to at 30)
+    {: a :}  a seat-of {: b n :}  b 0= if  exit  then
+    a  b n seat-approach  to-stool-pace walk-motion walk-with ;
+$39 constant to-diner-stool   $44 constant to-club-stool   $45 constant takes-club-stool
+: seat-command? ( cmd -- flag )  dup to-diner-stool =  over to-club-stool = or  swap takes-club-stool = or ;
+: seat-command ( actor args.. n cmd -- )
+    takes-club-stool = if  drop take-club-seat exit  then
+    drop go-seat ;
 : act-command ( actor args.. n cmd -- )   \ a person's riding commands; the rest still to come
+    dup seat-command? if  seat-command exit  then
     over 2 + pick person? if  riding-command  else  act-unbuilt-command  then ;
 
 \ ---- the camera and the scene ----
@@ -459,10 +495,8 @@ $3F constant stepping-out-1   $40 constant stepping-out-0   \ (by the side's way
 
 : heading-to ( x z x' z' -- heading )   \ from the first point toward the second (4096 a turn)
     rot - s>f  swap - s>f fswap fatan2 4096e f* 2e pi f* f/ f>s  4095 and ;
-: face ( a target speed -- )   \ cmd $0E: the figure turns to face another (at once: the turning speed - to come)
-    drop {: a t :}
+: face ( a target speed -- )   \ cmd $0E: the figure turns to face another (src: actor_turn_to_actor)
+    {: a t v :}
     a figure-place@ 0= if  exit  then  drop nip {: ax az :}
     t figure-place@ 0= if  exit  then  drop nip {: tx tz :}
-    ax az tx tz heading-to {: h :}
-    a matthew = if  0 h 0 s" matthew" actor-named send figure-turn
-    else  a h s" townsfolk" actor-named send person-turn  then ;
+    a  ax az tx tz heading-to  v turn-figure ;

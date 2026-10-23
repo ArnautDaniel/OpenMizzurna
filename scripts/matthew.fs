@@ -115,6 +115,26 @@ variable was-x   variable was-y   variable was-z   \ where he stood before his l
     then
     probe 2dup open? if  step-to
     else  2drop  0e speed f!  then ;
+\ ---- moved by a scene (src: actor_nav_step, actor_update's move_anim and turn - the events' walk-to, walk-forward,
+\ turn-to): toward a point at a speed a game frame, or straight on until idle; and turning at a speed ----
+variable heading-there   variable there-x   variable there-z   variable there-stride
+variable ahead   variable ahead-motion
+variable turning-to   variable turn-target   variable turn-speed
+: yaw ( -- heading )  self body-yaw f>s full-circle 1- and ;
+: along ( heading speed -- )   \ a step of the speed that way
+    {: h v :}  h s>f 2e f* pi f* 4096e f/ {: F: a :}  v s>f frames f* {: F: d :}
+    self body-pos fswap fdrop  {: F: x F: z :}  x a fsin d f* f+ f>s  z a fcos d f* f+ f>s  step-to ;
+: go-there ( -- )
+    there-x @ there-z @  self body-pos fswap fdrop f>s f>s swap  {: x z mx mz :}
+    x mx -  z mz -  {: dx dz :}
+    dx abs s>f there-stride @ s>f frames f* f<  dz abs s>f there-stride @ s>f frames f* f< and if
+        x z step-to  0 heading-there !  stand-motion -1 true moving play  exit  then
+    dx s>f dz s>f fatan2 4096e f* 2e pi f* f/ f>s {: h :}  h s>f body-turn  h there-stride @ along ;
+: scene-moves ( -- )
+    heading-there @ if  go-there  then
+    ahead @ if  yaw ahead @ along  then
+    turning-to @ if  yaw turn-target @ turn-speed @ heading-step  if  0 turning-to !  then  s>f body-turn  then ;
+
 : control ( -- )
     controlled @ 0= self body? 0= or  window-up? or if  exit  then   \ (src: field_update: not while ui_busy)
     steer pace stand walk ;
@@ -123,11 +143,19 @@ PRIVATE>
 
 behaviour the-player
   on spawned ( -- )  figure-path model figure !  self subscribe tick  self subscribe player-control ;
-  on figure-place ( x y z -- )  place ;
-  on tick ( -- )  control  moving advance if  moving hold-move @ if  keep-move  then  then ;
+  on figure-place ( x y z -- )  0 heading-there !  0 ahead !  place ;
+  on tick ( -- )  control  scene-moves  moving advance if  moving hold-move @ if  keep-move  then  then ;
   on player-control ( flag -- )  controlled ! ;
   on figure-anim ( id next loop -- )  moving play ;
   on figure-hold ( -- )  true moving hold-move ! ;
+  on figure-walk ( x z speed motion -- )
+    {: x z v m :}  x there-x !  z there-z !  v there-stride !  true heading-there !  m -1 true moving play ;
+  on figure-forward ( speed motion -- )   \ (-1: the motion as it is)
+    {: v m :}  v ahead !  m ahead-motion !  m 0< 0= if  m -1 true moving play  then ;
+  on figure-idle ( -- )  0 heading-there !  0 ahead !  stand-motion -1 true moving play ;
+  on figure-turning ( target speed -- )
+    {: t v :}  v 0= if  t s>f body-turn  0 turning-to !  exit  then
+    t full-circle 1- and turn-target !  v turn-speed !  true turning-to ! ;
   on figure-turn ( rx ry rz -- )  drop nip s>f body-turn ;   \ (his heading: the turn about the vertical)
   on area-entered ( area scene -- )  drop  self body? if  body-area!  else  drop  then ;
 end-behaviour
@@ -137,6 +165,8 @@ end-behaviour
 : matthew-now ( -- x y z yaw )   \ where he stands and his heading, in whole units (a fact: his body)
     matthew-actor {: id :}  id body-pos 3f>s  id body-yaw f>s ;
 : matthew-was ( -- x y z )  was-x @ was-y @ was-z @ ;   \ where he stood before his last step (src: player_restore_pos's)
+: matthew-walking? ( -- flag )  heading-there @ 0<> ;   \ (facts: the events' wait-stop, wait-turned)
+: matthew-turned? ( -- flag )  turning-to @ 0= ;
 : anim-done? ( -- flag )  moving done @  moving anim @ 0< or ;   \ (a fact: the events' wait-anim)
 : draw-matthew ( -- )
     matthew-there? if

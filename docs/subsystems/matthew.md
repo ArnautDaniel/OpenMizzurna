@@ -10,7 +10,13 @@ The player (src: `player.c`, `player_misc.c`): his body in the world, his figure
 - His body is a kernel body (`body-place`): the events place and turn him (`figure-place`, `figure-turn`
   from `set-pos` / `set-rot`). A height of 0 means "on his floor" (the scripts' `set_pos` gives 0 and the
   original's floor holds the figure; heights they give otherwise, `set-y`, are the world's).
-- Facts: `matthew-there?`, `matthew-now ( -- x y z yaw )`.
+- A scene walks him too (src: actor_nav_step, move_anim): `walk-to` / `run-to` toward a point at a pace a game
+  frame in its motion (`figure-walk`; standing at the end), `walk-forward` straight on until `idle`
+  (`figure-forward`, `figure-idle`); `turn-to`, `turn-by`, `face` turn him a speed a game frame, its sign the
+  way (`figure-turning`; 0 at once). `wait-stop` / `wait-turned` wait on the facts `matthew-walking?` /
+  `matthew-turned?`. On a stool: `take-diner-seat` takes it (the townsfolk keep the stools), `sit-diner-seat`
+  puts him on it.
+- Facts: `matthew-there?`, `matthew-now ( -- x y z yaw )`, `matthew-was ( -- x y z )` (before his last step).
 
 ## Motions (`scripts/figures.fs`)
 
