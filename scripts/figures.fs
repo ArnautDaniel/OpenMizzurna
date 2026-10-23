@@ -47,3 +47,8 @@ end-structure
     true p done !  p clip @ motion-frames 1- s>f p at f!
     p next-anim @ 0< 0= if  p next-anim @ -1 true p play  then
     true ;
+
+\ ---- the original's game frames: the figures moved a step each (15 a second indoors, ~30 in the town) ----
+15e fconstant indoor-game-frames   30e fconstant town-game-frames
+: game-frames ( F: -- n )   \ how many of them this step covers
+    area @ the-town = if  town-game-frames  else  indoor-game-frames  then  dt f* ;

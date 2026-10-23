@@ -26,7 +26,8 @@ phase-1 port's files (`../port/src/game/`), which name the decomp's functions; t
 | Story ([page](subsystems/story.md), the events built) | story flags, the event scripts (bytecode converted to Forth once), event packs, chapters | `cevent.c`, `cnrev.c`, `boot.c` |
 | Areas ([page](subsystems/areas.md), drawn) | the area being played, its scene, going from area to area | `area.c`, `field.c`, `session.c` |
 | Matthew ([page](subsystems/matthew.md), placed) | walking and running, collision, looking and acting, his state | `player.c`, `player_misc.c`, `cecheck.c` |
-| Townsfolk ([page](subsystems/townsfolk.md), placed by the clock) | each person's daily schedule, where they are, what they do; talking to them | `timetable.c`, `handlers_chars.c`, `char_talk.c`, `walker.c`, `sreg.c` |
+| Townsfolk ([page](subsystems/townsfolk.md), placed by the clock, walking their routes) | each person's daily schedule, where they are, what they do; talking to them | `timetable.c`, `handlers_chars.c`, `char_talk.c`, `walker.c`, `sreg.c` |
+| Doors ([page](subsystems/doors.md), people through them) | the doors between rooms and out to the town; going through, opening, knocking | `door.c` |
 | Camera ([page](subsystems/camera.md), built) | following Matthew, the events' shots | `camera.c` |
 | Effects ([page](subsystems/effects.md), built) | fades, wipes, the iris, the flash | `effect.c` |
 | Look ([page](subsystems/look.md), area 1) | ○ and □: the tables' rows, the areas' rules | `cecheck.c`, the overlays |

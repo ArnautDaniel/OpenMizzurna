@@ -19,20 +19,24 @@ USING: engine actors messages clock window matthew townsfolk effects camera ;
 15e fconstant event-rate   \ src: CEvCon_Start sets VSync(4) while an event runs: 15 frames a second
 : frames ( n -- steps )  s>f event-rate f/ seconds ;
 
-\ ---- the events running: a thread each (src: 5 threads and the main one) ----
-8 constant #threads
+\ ---- the events running: a thread each (src: 5 threads and the main one), and the townsfolk's routes (src:
+\ each actor's own thread: Actor +0x158) ----
+8 constant #event-threads   72 constant #threads   \ (threads 8 .. 71: routes)
 create thread-task    #threads cells allot   \ its task (0: free)
 create thread-xt      #threads cells allot   \ the word it starts in
 create thread-own     #threads cells allot   \ its own actor (this-one)
 create thread-result  #threads cells allot   \ the last result an op gave (the VM's result register)
 create thread-text    #threads cells allot   \ it waits for its message to close (src: the thread's wait_msg)
-thread-task #threads cells erase
+: threads-erase ( -- )
+    thread-task #threads cells erase  thread-xt #threads cells erase  thread-own #threads cells erase
+    thread-result #threads cells erase  thread-text #threads cells erase ;
+threads-erase
 
-variable events-running   \ how many
+variable events-running   \ how many events (routes aside)
 variable control-given    \ an event gave Matthew back to the player (the rest no longer hold him)
 : slot ( i addr -- addr' )  swap cells + ;
-: thread ( -- i )   \ the running event's (-1: not an event)
-    -1  #threads 0 do  i thread-task slot @ me = if  drop i  then  loop ;
+: thread ( -- i )   \ the running thread's (-1: not an event's or a route's)
+    -1  #threads 0 do  i thread-task slot @ me = if  drop i leave  then  loop ;
 : this-one ( -- actor )  thread thread-own slot @ ;
 : as-this-one ( actor -- )  thread thread-own slot ! ;
 : result! ( n -- )  thread dup 0< if  2drop  else  thread-result slot !  then ;
@@ -42,22 +46,43 @@ variable control-given    \ an event gave Matthew back to the player (the rest n
 : hold ( reason -- )  the-clock send hold-clock ;
 : release ( reason -- )  the-clock send release-clock ;
 
-: free-thread ( -- i )  -1  #threads 0 do  i thread-task slot @ 0= if  drop i leave  then  loop ;
+: free-thread ( first last -- i )  -1 -rot swap ?do  i thread-task slot @ 0= if  drop i leave  then  loop ;
 : event-ended ( -- )
     0 thread thread-task slot !  -1 events-running +!
     events-running @ 0= if  no-control release  false control-given !  true broadcast player-control  then ;
+: thread-ended ( -- )  thread #event-threads < if  event-ended  else  0 thread thread-task slot !  then ;
 : run-event ( -- )   \ a task's body: its word, then it's over
-    thread thread-xt slot @ execute  event-ended ;
+    thread thread-xt slot @ execute  thread-ended ;
+: begin-thread ( xt actor i -- )
+    {: xt a i :}  xt i thread-xt slot !  a i thread-own slot !  0 i thread-result slot !  0 i thread-text slot !
+    ['] run-event forth:spawn  i thread-task slot ! ;   \ (a task: the actors' spawn is another)
 : start-event ( xt -- )   \ src: event_start (CEvCon_Start): a thread, Matthew no longer the player's
-    free-thread {: xt i :}
+    0 #event-threads free-thread {: xt i :}
     i 0< abort" no free event thread"
-    xt i thread-xt slot !  matthew i thread-own slot !  0 i thread-result slot !
-    ['] run-event forth:spawn  i thread-task slot !   \ (a task: the actors' spawn is another)
+    xt matthew i begin-thread
     1 events-running +!  no-control hold  false broadcast player-control ;
-: events-reset ( -- )  thread-task #threads cells erase  0 events-running !  false control-given ! ;
-: events-stop ( -- )   \ every running event ended now (a tool: the console, tests)
-    #threads 0 do  i thread-task slot @ ?dup if  forth:kill  then  loop
+: route-thread ( actor -- i | -1 )   \ the route an actor walks now
+    {: a :}  -1  #threads #event-threads do
+        i thread-task slot @ 0<>  i thread-own slot @ a = and if  drop i leave  then
+    loop ;
+: end-route ( actor -- )
+    route-thread dup 0< if  drop exit  then
+    dup thread-task slot @ forth:kill  0 swap thread-task slot ! ;
+: start-route ( xt actor -- )   \ src: event_thread_start on the actor's own thread: Matthew stays the player's
+    dup end-route  #event-threads #threads free-thread {: xt a i :}
+    i 0< abort" no free route thread"  xt a i begin-thread ;
+: events-reset ( -- )  #event-threads 0 do  0 i thread-task slot !  loop  0 events-running !  false control-given ! ;
+: events-stop ( -- )   \ every running event ended now (a tool: the console, tests); the routes go on
+    #event-threads 0 do  i thread-task slot @ ?dup if  forth:kill  then  loop
     events-reset  no-control release  true broadcast player-control ;
+
+\ the main executable's words found by address (the townsfolk's routes)
+begin-structure main-entry  field: next-main  field: main-address  field: main-xt  end-structure
+variable main-words
+: main-word! ( xt address -- )
+    here main-entry allot {: xt a e :}  main-words @ e next-main !  a e main-address !  xt e main-xt !  e main-words ! ;
+: main-word ( address -- xt | 0 )
+    {: a :}  main-words @  begin  dup while  dup main-address @ a = if  main-xt @ exit  then  next-main @  repeat ;
 
 \ control flow: `goto word` leaves this word for that one; `end-script` ends this word (the event, at the
 \ outermost)
@@ -185,21 +210,15 @@ variable loaded-pack
 \ ---- actor commands ( actor args -- ): until the townsfolk and Matthew take them ----
 : anim-once ( a x1 -- )  2 act-unbuilt ;   \ cmd $05
 : anim-then-loop ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $06
-: walk-to ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $08
 : turn-by ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $09
 : walk-forward ( a x1 -- )  2 act-unbuilt ;   \ cmd $0A
 : run ( a x1 -- )  2 act-unbuilt ;   \ cmd $0B
-: idle ( a -- )  1 act-unbuilt ;   \ cmd $0C
 : face-point ( a x1 x2 x3 -- )  4 act-unbuilt ;   \ cmd $0D
-: walk-to-ex ( a x1 x2 x3 x4 -- )  5 act-unbuilt ;   \ cmd $0F
 : move-forward ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $10
-: turn-to ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $11
-: set-floor ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $12
 : anim-at ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $13
 : talk-pose ( a x1 -- )  2 act-unbuilt ;   \ cmd $14
 : restore-state ( a -- )  1 act-unbuilt ;   \ cmd $16
 : anim-step ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $18
-: arrive ( a -- )  1 act-unbuilt ;   \ cmd $1E
 : freeze ( a -- )  1 act-unbuilt ;   \ cmd $1F
 : unfreeze ( a -- )  1 act-unbuilt ;   \ cmd $20
 : set-x ( a x1 -- )  2 act-unbuilt ;   \ cmd $21
@@ -221,7 +240,6 @@ variable loaded-pack
 : ignore-b ( a x1 -- )  2 act-unbuilt ;   \ cmd $3D
 : set-stop ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $43
 : sit-club-seat ( a -- )  1 act-unbuilt ;   \ cmd $46
-: run-to ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $47
 : leave-diner-seat ( a -- )  1 act-unbuilt ;   \ cmd $48
 : leave-club-seat ( a -- )  1 act-unbuilt ;   \ cmd $49
 : examine ( a -- )  1 act-unbuilt ;   \ cmd $4A
@@ -234,11 +252,9 @@ variable loaded-pack
 : depart-alt ( a -- )  1 act-unbuilt ;   \ cmd $56
 : ending-schedule ( a x1 -- )  2 act-unbuilt ;   \ cmd $59
 : go-to-actor ( a x1 -- )  2 act-unbuilt ;   \ cmd $5A
-: goto-stop ( a x1 -- )  2 act-unbuilt ;   \ cmd $5D
 : place-alt ( a -- )  1 act-unbuilt ;   \ cmd $5E
 
 \ ---- the other ops: until their subsystems are built ----
-: wait-stop ( a -- )  1 s" wait-stop" unbuilt  settle ;   \ op $10D
 : wait-turned ( a -- )  1 s" wait-turned" unbuilt  settle ;   \ op $112
 : sound ( n -- )  1 s" sound" unbuilt ;   \ op $114
 : sequence-play ( n n -- )  2 s" sequence-play" unbuilt ;   \ op $115
@@ -254,7 +270,6 @@ variable loaded-pack
 : wait-follow ( a -- )  1 s" wait-follow" unbuilt  settle ;   \ op $138
 : door-animate ( w1 -- )  1 s" door-animate" unbuilt ;   \ op $139
 : door-animate-alt ( w1 -- )  1 s" door-animate-alt" unbuilt ;   \ op $13A
-: through-door ( a w1 w2 -- )  3 s" through-door" unbuilt ;   \ op $13B
 : music ( n -- )  1 s" music" unbuilt ;   \ op $144
 : minigame ( n -- )  1 s" minigame" unbuilt ;   \ op $145
 : elevator-doors ( n n -- )  2 s" elevator-doors" unbuilt ;   \ op $148
@@ -264,7 +279,6 @@ variable loaded-pack
 : actor-model ( a n -- )  2 s" actor-model" unbuilt ;   \ op $159
 : sprite-count+ ( -- )  0 s" sprite-count+" unbuilt ;   \ op $15D
 : sprite-count-close ( -- )  0 s" sprite-count-close" unbuilt ;   \ op $15E
-: through-door-back ( a w1 w2 -- )  3 s" through-door-back" unbuilt ;   \ op $15F
 : face-each-other ( a a -- )  2 s" face-each-other" unbuilt ;   \ op $162
 : map-reveal ( n -- )  1 s" map-reveal" unbuilt ;   \ op $165
 : ambient-start ( n -- )  1 s" ambient-start" unbuilt ;   \ op $166
@@ -282,12 +296,40 @@ variable loaded-pack
 : say-reset ( text -- )  picture-hide  matthew 0 0 show  text-pending settle ;              \ $105
 : phone-say ( text -- )  0 picture-show  nobody phone-palette 0 show  text-pending settle ;   \ $106
 
-\ ---- figures: the actor that is a slot's body (Matthew's so far; the townsfolk's as they are built) ----
+\ ---- figures: Matthew's body, a scheduled person (the townsfolk), or not built yet ----
 : figure-of ( slot -- id )  matthew = if  s" matthew" actor-named  else  -1  then ;
+: person? ( slot -- flag )  dup matthew <> swap scheduled? and ;
+: the-townsfolk ( -- id )  s" townsfolk" actor-named ;
 : set-pos ( a x y z -- )   \ cmd $01 (src: actor_set_pos)
-    {: a x y z :}  a figure-of dup 0< if  drop  a x y z 4 act-unbuilt  else  >r x y z r> send figure-place  then ;
+    {: a x y z :}
+    a matthew = if  x y z a figure-of send figure-place exit  then
+    a person? if  a x z the-townsfolk send person-place exit  then
+    a x y z 4 act-unbuilt ;
 : set-rot ( a rx ry rz -- )   \ cmd $02
-    {: a rx ry rz :}  a figure-of dup 0< if  drop  a rx ry rz 4 act-unbuilt  else  >r rx ry rz r> send figure-turn  then ;
+    {: a rx ry rz :}
+    a matthew = if  rx ry rz a figure-of send figure-turn exit  then
+    a person? if  a ry the-townsfolk send person-turn exit  then
+    a rx ry rz 4 act-unbuilt ;
+30 constant walk-pace   80 constant run-pace     \ units a frame (src: actor_command_default's walk_to, path_to)
+1 constant walk-motion   5 constant run-motion
+: walk-with ( a x z speed motion -- )
+    {: a x z v m :}  a person? if  a x z v m the-townsfolk send person-walk  else  a x z 3 act-unbuilt  then ;
+: walk-to ( a x z -- )  walk-pace walk-motion walk-with ;                    \ cmd $08
+: run-to ( a x z -- )  run-pace run-motion walk-with ;                       \ cmd $47
+: walk-to-ex ( a x z motion speed -- )  $FFFF and swap walk-with ;           \ cmd $0F
+: idle ( a -- )   \ cmd $0C
+    dup person? if  the-townsfolk send person-idle  else  1 act-unbuilt  then ;
+: turn-to ( a heading speed -- )   \ cmd $11 (at once: the turning speed - to come)
+    drop  over person? if  the-townsfolk send person-turn  else  2 act-unbuilt  then ;
+: set-floor ( a area floor -- )   \ cmd $12
+    nip  over person? if  the-townsfolk send person-floor  else  2 act-unbuilt  then ;
+: arrive ( a -- )   \ cmd $1E
+    dup person? if  the-townsfolk send person-arrive  else  1 act-unbuilt  then ;
+: goto-stop ( a stop -- )   \ cmd $5D
+    over person? if  the-townsfolk send person-goto-stop  else  2 act-unbuilt  then ;
+: wait-stop ( a -- )   \ $10D: until they stop walking (src: the VM's wait_move)
+    settle  dup person? 0= if  drop exit  then
+    begin  yield  dup walking? 0= until  drop ;
 
 \ ---- the camera and the scene ----
 : the-camera ( -- id )  s" camera" actor-named ;
@@ -296,16 +338,29 @@ variable loaded-pack
 : camera-fixed ( -- )  the-camera send camera-fixed ;                             \ $10C
 : set-scene ( scene -- )  s" areas" actor-named send show-scene ;                  \ $110 (src: set_scene_state)
 
-\ ---- figures in motion (Matthew's so far) ----
-: anim ( a id loop -- )   \ cmd $03 (src: actor_anim): play it (looping or not)
-    {: a id lp :}  a figure-of dup 0< if  drop a id lp 3 act-unbuilt  else  >r id -1 lp r> send figure-anim  then ;
+\ ---- figures in motion ----
 : anim-then ( a id next loop -- )   \ cmd $04: play it, then the next
-    {: a id nx lp :}  a figure-of dup 0< if  drop a id nx lp 4 act-unbuilt  else  >r id nx lp r> send figure-anim  then ;
+    {: a id nx lp :}
+    a matthew = if  id nx lp a figure-of send figure-anim exit  then
+    a person? if  a id nx lp the-townsfolk send person-anim exit  then
+    a id nx lp 4 act-unbuilt ;
+: anim ( a id loop -- )  -1 swap anim-then ;   \ cmd $03 (src: actor_anim): play it (looping or not)
 : anim-hold ( a -- )   \ cmd $07: at the motion's end the figure stays where it moved
-    dup figure-of dup 0< if  drop 1 act-unbuilt  else  nip send figure-hold  then ;
+    dup matthew = if  figure-of send figure-hold exit  then
+    dup person? if  the-townsfolk send person-hold exit  then
+    1 act-unbuilt ;
+: anim-finished? ( a -- flag )  dup matthew = if  drop anim-done?  else  person-anim-done?  then ;
 : wait-anim ( a -- )   \ $103: until its motion has played (src: the VM's wait_anim)
-    settle  figure-of 0< if  exit  then
-    begin  yield  anim-done? until ;
+    settle  dup matthew = over person? or 0= if  drop exit  then
+    begin  yield  dup anim-finished? until  drop ;
+
+\ ---- doors (docs/subsystems/doors.md) ----
+: door-walk ( a door room flip -- )   \ src: func_8004535C: out at the door's far side, the thread waiting
+    {: a n room flip :}                \ while they step through
+    a person? 0= if  a n room 3 s" through-door" unbuilt  exit  then   \ (Matthew's: the doors, to come)
+    a n room flip the-townsfolk send person-through-door  a wait-anim ;
+: through-door ( a door room -- )  false door-walk ;        \ op $13B, $140
+: through-door-back ( a door room -- )  true door-walk ;    \ op $15F: coming the other way
 
 \ ---- the screen's effects (docs/subsystems/effects.md) ----
 : the-effects ( -- id )  s" effects" actor-named ;

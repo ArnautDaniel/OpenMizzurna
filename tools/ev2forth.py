@@ -403,6 +403,42 @@ def emit(src, main_src, header, text_comment):
     return out
 
 
+def route_addresses(exe, src_dir, root, exe_img):
+    """every route a schedule names (the named cast's handlers' tables and the townspeople's)"""
+    import re
+    import schedule as SC
+    e = open(exe, 'rb').read()
+    off = lambda a: a - EXE_BASE + 0x800
+    ovl = open(os.path.join(src_dir, '033_0.bin'), 'rb').read()
+    hand = struct.unpack_from('<182I', ovl, 0x80103BB8 - OVL_BASE)
+    syms = {}
+    for ln in open(os.path.join(root, 'config', 'symbols.main.txt')):
+        m = re.match(r'(\w+) = (0x[0-9A-Fa-f]+);', ln)
+        if m:
+            syms[int(m.group(2), 16)] = m.group(1)
+    info = SC.handlers(open(os.path.join(root, 'src', 'main', 'main.c')).read())
+    tables = []
+    for slot in range(182):
+        h = info.get(syms.get(hand[slot], ''))
+        if h and h['departures']:
+            tables.append((h['departures'], 99))
+    u32 = lambda a: struct.unpack_from('<I', e, off(a))[0]
+    for pn in range(36):
+        if e[off(0x8008FA64) + pn]:
+            tables.append((u32(0x8008F9D4 + 4 * pn), e[off(0x8008FA64) + pn]))
+    out = set()
+    for dep, n in tables:
+        if not dep:
+            continue
+        for i in range(n):
+            d, _, _, _, scr = struct.unpack_from('<4BI', e, off(dep) + 8 * i)
+            if d == 0:
+                break
+            if EXE_BASE <= scr < EXE_BASE + len(exe_img):
+                out.add(scr)
+    return out
+
+
 def main():
     a = sys.argv[1:]
     text_dir = a[a.index('--text') + 1] if '--text' in a else None
@@ -470,6 +506,9 @@ def main():
                    {x for _, x in check_targets if EXE_BASE <= x < EXE_BASE + len(exe_img)})
     tx = (lambda m: texts.get('033_4', m - 10000) if 10000 <= m < 15000 else None) if texts else (lambda m: None)
     main_src = Source('main', EV.Mem([(EXE_BASE, exe_img)]), {x: 'exe-%08X' % x for x in addrs})
+    routes = route_addresses(exe, src_dir, root, exe_img)   # the townsfolk's routes (schedules.fs): by address
+    for x in routes:
+        main_src.entries.setdefault(x, 'route-%08X' % x)
     walk(main_src, op_len, act_len, extra=sorted(x for x in extern if x < OVL_BASE))
     for x in extern:
         if x < OVL_BASE and x not in main_src.entries:
@@ -491,6 +530,9 @@ def main():
             if reg:
                 lines += ['', '\\ the words the main executable\'s scripts go to here, by address'] + [
                     "' %s $%08X %d overlay-word!" % (block_name(s, x), x, int(s.scope[3:])) for x in reg]
+        if s.scope == 'main':   # the routes, found by address (townsfolk.fs)
+            lines += ['', '\\ the townsfolk\'s routes, by address'] + [
+                "' %s $%08X main-word!" % (block_name(s, x), x) for x in sorted(routes) if x in s.insns]
         if s.pack_ids is not None:   # the pack's scripts by number (load-pack, goto-pack-script ...)
             flat = int(s.scope[5:8]) * 5 + int(s.scope[9])
             lines += ['', '\\ its scripts by number'] + [

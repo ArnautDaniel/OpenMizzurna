@@ -64,3 +64,15 @@ message give-item ( item -- )            \ Matthew has it now (src: item_add)
 message take-item ( item -- )            \ and no longer (src: item_remove)
 message items-reset ( -- )               \ a new game's: the phone, the waist bag, the watch (src: items_init)
 message person-turn ( slot heading -- )  \ (to the townsfolk) the person faces so, until their next stop
+\ (to the townsfolk: what the events and routes do to a person; slot first)
+message person-place ( slot x z -- )      \ stand there (height and area kept: src set_pos keeps y)
+message person-floor ( slot floor -- )    \ on that floor (its height)
+message person-walk ( slot x z speed motion -- )   \ walk there, speed units a frame, in that motion
+message person-idle ( slot -- )           \ stop walking, stand (src: cmd 0x0C)
+message person-anim ( slot id next loop -- )
+message person-hold ( slot -- )           \ at the motion's end they keep its move
+message person-arrive ( slot -- )         \ the route is done: the next stop (src: actor_arrive)
+message person-goto-stop ( slot stop -- ) \ put at that stop now (src: actor_goto_stop)
+message person-through-door ( slot door room flip -- )   \ out of that door into room (flip: the other way)
+message person-departs ( slot route -- )  \ broadcast: they left their stop (route: its address, 0 none)
+message person-stopped ( slot -- )        \ broadcast: they no longer walk a route (put at a stop)
