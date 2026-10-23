@@ -17,3 +17,7 @@ message time-set ( t -- )               \ broadcast: the time jumped to t
 
 \ why the clock is held (src: field_update's checks, each now said by its subsystem)
 enum: clock-hold  story-stopped event-running no-control menu-open text-shown ;
+
+\ ---- the story (docs/subsystems/story.md) ----
+message new-game ( -- )                 \ (to the story) start the game afresh: 12/25 09:00, the opening
+message prologue-over ( -- )            \ broadcast: the prologue ended (Matthew at the station, 12/25 10:00)

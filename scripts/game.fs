@@ -1,9 +1,9 @@
 \ game.fs - where the game starts (after prelude.fs): the actors that make up the game are spawned here, as
 \ their subsystems are built (docs/subsystems.md: the map).
 IN: game
-USING: engine actors keys messages clock ;
+USING: engine actors keys messages clock story ;
 
-spawn-clock drop
+spawn-clock drop  spawn-story drop
 
 \ until the title exists: a word on the screen
 : hello ( -- )

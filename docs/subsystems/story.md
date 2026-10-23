@@ -62,6 +62,28 @@ Quirks kept as notes in the converted files: `if_eq_id` (one use) whose id word 
 actor command; actor commands past the length table (2 uses: `act-command` with the number); one place in
 pack 051_4 that doesn't decode (as `evscript.py` reports).
 
+## The flags
+
+`scripts/story-flags.fs` (vocabulary `story-flags`): the block (`story-block`, 0x204 bytes, zeroed by
+`story-clear`), a bit by its number (`$010 2 story-bit`: offset x 8 + bit, as the original's little-endian
+words lay out), `flag? flag-set flag-clear flag-toggle`, counters by offset (`story@ story! story+!`). 113
+named so far (written from the decomp's `tools/flag_names.txt` by `tools/story_flags.py`; three shortened to
+the Forth's 31 characters): `took-lighter flag?`, `prologue-done flag-set`. The flags are facts: anyone reads
+them; whoever's part of the story it is sets them (an event's native, an area's rule).
+
+## The story actor (`scripts/story.fs`)
+
+- `new-game` (src: `game_start(0)`): the flags cleared, the events stopped, the clock to 12/25 09:00 and held
+  (`story-stopped`, and `event-running`: src `event_lock`), the area 1 overlay's events, the opening started
+  (`events.ovl001:new-game-opening`).
+- The prologue's end (src: `evfn_80047620`, the main executable's native at $80047620, called by script
+  $80096598): the clock let go and set to 12/25 10:00, `prologue-done` set, `prologue-over` broadcast. Its
+  placing everyone at their first stop and Matthew and the car at the station waits for the townsfolk and
+  Matthew.
+- **Open**: the original starts $80096598 when Select is pressed with no event running
+  (`event_threads_update`) - the only way the prologue's end is reached in the code found so far. A prologue
+  skip, or a leftover? Not wired until it's settled.
+
 ## Status
 
 **Built**: the conversion (102 files, 1942 words), the language's core (threads, time, flow, lookups), its
@@ -69,5 +91,6 @@ ops as stubs. Checked by `tests/story/test_events.fs` (frames, the goto chain, a
 opening running to its end in its 19 seconds) and `tests/story/test_all_events.fs` (every file loads; the
 lookups by number and address).
 
-**Next**: the flags (named, saved), the new game (the opening started, the clock released when the prologue
-ends: src `evfn_80047620`), the window and text ops, then each subsystem's ops as it is built.
+Also built: the flags and the story actor's new game and prologue end (`tests/story/test_story.fs`: 8).
+
+**Next**: the window and text ops; the flags in the saves (with the saves subsystem); the areas' rules.
