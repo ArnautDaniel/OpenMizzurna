@@ -57,6 +57,11 @@ rows' alone; arriving (meeting Lorraine on the 25th, Mel and Lorraine arguing), 
 from the 28th 19:00), the robbery on the 27th, who says what by their stops, the farm workers, Lorraine's twelve
 conversations in turn, then her line. Seen: the meeting on the 25th plays through, Mel walking off after it. Sitting at the counter and ordering:
 `docs/subsystems/counter.md`.
+Area 16's (`scripts/rules/area016.fs`, the school library; `tests/library/test_area016.fs`): the crate, closing
+time by room (once), a teacher by the hour, the key rack and the key (with a companion along), a poster, the doors'
+scenes by the key and the hours, a book and the newspaper archive (once each), who says what, the building's halves
+shown by where he is, three minigames that are scripts. (To come: the bios the archive waits on, two EXE functions
+not understood yet.)
 Area 13's (`scripts/rules/area013.fs`, the park; `tests/library/test_area013.fs`): the old man there by the hour,
 talking to him (a character pack's scripts), his lessons (the one reached: a minigame that's a script), who says
 what, a night scene once, the way down with or without a companion, the lights by floor and time of day. (The
