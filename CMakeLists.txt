@@ -41,7 +41,8 @@ find_package(SDL3 REQUIRED CONFIG)
 # the game's data: the disc image, CD.BIN, the formats and their conversions (the engine's, the import's and
 # the checks')
 add_library(omdata STATIC src/data/disc.c src/data/cdbin.c src/data/container.c src/data/png.c src/data/tim.c
-    src/data/text.c src/data/cdconv.c src/third_party/stb.c)
+    src/data/text.c src/data/cdconv.c src/data/exetables.c src/data/vab.c src/data/seqmidi.c src/data/xa.c
+    src/data/flacenc.c src/third_party/stb.c src/third_party/dr_flac.c)
 target_include_directories(omdata PUBLIC src/third_party)
 target_link_libraries(omdata PUBLIC m)
 add_executable(openmizzurna

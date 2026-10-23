@@ -3,10 +3,12 @@
  * subsystems are built. docs/forth.md lists them. */
 #include "engine.h"
 
+#include "../core/files.h"
 #include "../kernel/mactor.h"
 #include "../render/render.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 Engine gEngine;
@@ -132,6 +134,40 @@ PRIM(p_clear_color) {   /* ( F: r g b -- ) */
     gEngine.clear[0] = (float)forth_fpop(f);
 }
 
+/* ---- the game's data ---- */
+PRIM(p_exe_table) {   /* ( addr len -- addr n ) a table of the executable by name (data/exetables.c); 0 0 if none */
+    char name[64], path[96];
+    size_t n = 0;
+    uint8_t *d;
+    static uint8_t *loaded[64];
+    static char names[64][64];
+    static size_t sizes[64];
+    static int nloaded;
+    int i;
+
+    cstring(f, name, sizeof(name));
+    for (i = 0; i < nloaded; i++) {   /* (read once, kept: a table is a fact) */
+        if (strcmp(names[i], name) == 0) {
+            PUSH(loaded[i]);
+            PUSH(sizes[i]);
+            return;
+        }
+    }
+    snprintf(path, sizeof(path), "exe/%s.bin", name);
+    d = files_read(path, &n);
+    if (d == NULL || nloaded == 64) {
+        free(d);
+        PUSH(0);
+        PUSH(0);
+        return;
+    }
+    snprintf(names[nloaded], sizeof(names[0]), "%s", name);
+    loaded[nloaded] = d;
+    sizes[nloaded++] = n;
+    PUSH(d);
+    PUSH(n);
+}
+
 /* ---- tools ---- */
 PRIM(p_screenshot) { cstring(f, gEngine.screenshot, sizeof(gEngine.screenshot)); }   /* ( addr len -- ) */
 PRIM(p_screenshot_pending) { PUSH(gEngine.screenshot[0] ? -1 : 0); }
@@ -144,7 +180,7 @@ void bind_engine(Forth *f) {
         {"ticks", p_ticks}, {"dt", p_dt}, {"seconds", p_seconds}, {"step-blend", p_step_blend}, {"pen-color", p_pen_color}, {"pen-scale", p_pen_scale}, {"draw-text", p_draw_text},
         {"draw-rect", p_draw_rect}, {"screen-size", p_screen_size}, {"char-size", p_char_size}, {"hud", p_hud},
         {"clear-color", p_clear_color}, {"screenshot", p_screenshot},
-        {"screenshot-pending?", p_screenshot_pending}, {"console!", p_console_store},
+        {"screenshot-pending?", p_screenshot_pending}, {"console!", p_console_store}, {"exe-table", p_exe_table},
     };
     Vocab *was = f->m.current, *v = forth_vocab(f, "engine");
     size_t i;

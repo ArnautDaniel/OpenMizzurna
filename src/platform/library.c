@@ -10,6 +10,9 @@
 #include "../data/cdbin.h"
 #include "../data/cdconv.h"
 #include "../data/disc.h"
+#include "../data/exetables.h"
+#include "../data/flacenc.h"
+#include "../data/xa.h"
 #include "../render/render.h"
 #include "platform.h"
 
@@ -142,6 +145,40 @@ static int import_write(void *ctx, const char *path, const uint8_t *data, size_t
     return write_file(w->im, w->root, path, data, n);
 }
 
+/* an XA file's audio channels as FLACs (xa/<name>/<channel>.flac) and index.txt (data/xa.h) */
+#define XA_AUDIO_FILE 1   /* the file number the game's XA audio sectors carry */
+static int convert_xa(Import *im, const char *root, const char *name, const uint8_t *d, size_t n) {
+    uint32_t mask = xa_channels(d, n, XA_AUDIO_FILE);
+    char rel[128], index[4096], tag[64];
+    int c, k = snprintf(index, sizeof(index), "\\ the audio channels of %s.XA\nom-xa 1\n", name);
+
+    for (c = 0; c < 32; c++) {
+        XaStream st;
+        uint8_t *flac;
+        size_t len;
+        const char *tags[1];
+        int ok;
+
+        if (!(mask & 1u << c) || !xa_decode(&st, d, n, XA_AUDIO_FILE, c)) {
+            continue;
+        }
+        snprintf(tag, sizeof(tag), "XACHANNEL=%d", c);
+        tags[0] = tag;
+        flac = flacenc(st.pcm, st.frames, st.channels, st.rate, tags, 1, &len);
+        snprintf(rel, sizeof(rel), "xa/%s/%d.flac", name, c);
+        ok = flac != NULL && write_file(im, root, rel, flac, len);
+        k += snprintf(index + k, sizeof(index) - (size_t)k, "channel %d rate %d channels %d frames %ld sectors %d\n", c,
+                      st.rate, st.channels, st.frames, st.sectors);
+        free(flac);
+        xa_free(&st);
+        if (!ok) {
+            return 0;
+        }
+    }
+    snprintf(rel, sizeof(rel), "xa/%s/index.txt", name);
+    return write_file(im, root, rel, (const uint8_t *)index, (size_t)k);
+}
+
 /* the executable SYSTEM.CNF boots ("BOOT = cdrom:\SLPS017.83;1" -> "SLPS017.83") */
 static int boot_name(Disc *d, char *name, size_t n) {
     size_t len = 0;
@@ -221,7 +258,7 @@ static int import_disc(Import *im) {
         snprintf(im->why, sizeof(im->why), "can't write the library in %s", root);
         goto out;
     }
-    fprintf(im->manifest, "%s\ndisc %08X %s\nconvert cdbin folders 1\nconvert images png 1\nconvert text utf8 1\n",
+    fprintf(im->manifest, "%s\ndisc %08X %s\nconvert cdbin folders 1\nconvert images png 1\nconvert text utf8 1\nconvert exe-tables files 1\nconvert banks text-wav 1\nconvert sequences midi 1\nconvert xa flac 1\n",
             LIBRARY_FORMAT, crc32_of(exe, exe_n), exe_name);
 
     /* the executable: kept until the tables the game reads from it are files of their own */
@@ -229,34 +266,62 @@ static int import_disc(Import *im) {
     if (!write_file(im, root, "exe/SLPS_017.83", exe, exe_n)) {
         goto out;
     }
-    /* CD.BIN's entries, unpacked */
-    for (i = 0; i < table.n && !SDL_GetAtomicInt(&im->cancel); i++) {
-        size_t n = 0;
-        uint8_t *entry = cdbin_entry(&table, cd, cd_n, i, &n);
-        char rel[64];
+    /* the tables named so far (data/exetables.c), a file each */
+    for (i = 0; i < exetable_count(); i++) {
+        const ExeTable *t = exetable_at(i);
+        const uint8_t *bytes = exetable_bytes(t, exe, exe_n);
+        char rel[128];
 
-        if (entry == NULL) {
-            if (table.entries[i].size != 0) {
-                snprintf(im->why, sizeof(im->why), "CD.BIN's entry %d is damaged", i);
-                goto out;
-            }
-            continue;
+        snprintf(rel, sizeof(rel), "exe/%s.bin", t->name);
+        if (bytes == NULL || !write_file(im, root, rel, bytes, t->size)) {
+            goto out;
         }
-        snprintf(rel, sizeof(rel), "%03d_%d", i / CDBIN_KINDS, i % CDBIN_KINDS);
-        snprintf(im->current, sizeof(im->current), "CD.BIN %s", rel);
-        {
-            ImportWrite w = {im, root};
-            char cwhy[512] = "";
+    }
+    /* CD.BIN's entries: unpacked, the sound banks' bodies paired with their headers, converted */
+    {
+        uint8_t **entries = calloc((size_t)table.n, sizeof(uint8_t *));
+        size_t *sizes = calloc((size_t)table.n, sizeof(size_t));
+        const uint8_t **header_of = calloc((size_t)table.n, sizeof(uint8_t *));
+        int failed = 0;
 
-            if (!cdconv_entry(rel, entry, n, import_write, &w, cwhy, sizeof(cwhy))) {
+        for (i = 0; i < table.n; i++) {
+            entries[i] = cdbin_entry(&table, cd, cd_n, i, &sizes[i]);
+            if (entries[i] == NULL && table.entries[i].size != 0) {
+                snprintf(im->why, sizeof(im->why), "CD.BIN's entry %d is damaged", i);
+                failed = 1;
+            }
+        }
+        if (!failed) {
+            cdconv_pair_bodies((const uint8_t *const *)entries, sizes, table.n, CDBIN_KINDS, header_of);
+        }
+        for (i = 0; !failed && i < table.n && !SDL_GetAtomicInt(&im->cancel); i++) {
+            char rel[64], cwhy[512] = "";
+            ImportWrite w = {im, root};
+            int ok;
+
+            if (entries[i] == NULL) {
+                continue;
+            }
+            snprintf(rel, sizeof(rel), "%03d_%d", i / CDBIN_KINDS, i % CDBIN_KINDS);
+            snprintf(im->current, sizeof(im->current), "CD.BIN %s", rel);
+            ok = header_of[i] != NULL ? cdconv_body(rel, entries[i], sizes[i], header_of[i], import_write, &w, cwhy, sizeof(cwhy))
+                                      : cdconv_entry(rel, entries[i], sizes[i], import_write, &w, cwhy, sizeof(cwhy));
+            if (!ok) {
                 if (cwhy[0]) {
                     snprintf(im->why, sizeof(im->why), "%s", cwhy);
                 }
-                free(entry);
-                goto out;
+                failed = 1;
             }
         }
-        free(entry);
+        for (i = 0; i < table.n; i++) {
+            free(entries[i]);
+        }
+        free(entries);
+        free(sizes);
+        free(header_of);
+        if (failed) {
+            goto out;
+        }
     }
     /* the rest of the disc */
     for (i = 0; i < disc_count(d) && !SDL_GetAtomicInt(&im->cancel); i++) {
@@ -275,8 +340,12 @@ static int import_disc(Import *im) {
             snprintf(im->why, sizeof(im->why), "can't read %s from the disc", e->path);
             goto out;
         }
-        snprintf(rel, sizeof(rel), "%s%s", kept_as(e->path), e->path);
-        ok = write_file(im, root, rel, data, disc_file_bytes(e));
+        if (SDL_strcasecmp(e->path, "TSG.XA") == 0) {
+            ok = convert_xa(im, root, "TSG", data, disc_file_bytes(e));
+        } else {
+            snprintf(rel, sizeof(rel), "%s%s", kept_as(e->path), e->path);
+            ok = write_file(im, root, rel, data, disc_file_bytes(e));
+        }
         free(data);
         if (!ok) {
             goto out;

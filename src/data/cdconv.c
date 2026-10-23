@@ -2,6 +2,8 @@
 #include "cdconv.h"
 
 #include "container.h"
+#include "seqmidi.h"
+#include "vab.h"
 #include "text.h"
 #include "tim.h"
 
@@ -12,8 +14,8 @@
 #define INDEX_FORMAT "om-container 1"
 #define MODEL_MAGIC 0x88FA   /* a model (SPL: its parts, then a TMD) starts with this u16 */
 
-typedef enum { PART_EMPTY, PART_FOLDER, PART_IMAGE, PART_TEXT, PART_RAW } PartKind;
-static const char *kKindNames[] = {"empty", "folder", "image", "text", "raw"};
+typedef enum { PART_EMPTY, PART_FOLDER, PART_IMAGE, PART_TEXT, PART_BANK, PART_SEQUENCES, PART_RAW } PartKind;
+static const char *kKindNames[] = {"empty", "folder", "image", "text", "bank", "sequences", "raw"};
 
 static PartKind kind_of(const uint8_t *d, size_t n) {
     Tim t;
@@ -29,6 +31,12 @@ static PartKind kind_of(const uint8_t *d, size_t n) {
     }
     if (n >= 8 && (memcmp(d, "MDD", 4) == 0 || memcmp(d, "MDT", 4) == 0)) {
         return PART_TEXT;
+    }
+    if (vab_header_size(d, n) == n) {
+        return PART_BANK;
+    }
+    if (sep_sequences(d, n) > 0) {
+        return PART_SEQUENCES;
     }
     return PART_RAW;
 }
@@ -115,12 +123,159 @@ static int convert_part(const char *base, const char *what, const uint8_t *d, si
         snprintf(path, sizeof(path), "%s.txt", base);
         snprintf(file, nfile, "%s.txt", leaf);
         return write_text(path, d, n, what, write, ctx, why, nwhy);
+    case PART_BANK: {
+        size_t len;
+        char *text = vab_header_text(d, n, what, &len);
+        int ok;
+
+        snprintf(path, sizeof(path), "%s.bank.txt", base);
+        snprintf(file, nfile, "%s.bank.txt", leaf);
+        ok = text != NULL && write(ctx, path, (const uint8_t *)text, len);
+        free(text);
+        return ok;
+    }
+    case PART_SEQUENCES: {
+        int i, count = sep_sequences(d, n), ok;
+        size_t len;
+        char *index = sep_index_text(d, n, what, &len);
+
+        snprintf(path, sizeof(path), "%s.sep/index.txt", base);
+        snprintf(file, nfile, "%s.sep/", leaf);
+        ok = write(ctx, path, (const uint8_t *)index, len);
+        free(index);
+        for (i = 0; ok && i < count; i++) {
+            uint8_t *mid = sep_to_midi(d, n, i, &len);
+
+            snprintf(path, sizeof(path), "%s.sep/%d.mid", base, i);
+            ok = mid != NULL && write(ctx, path, mid, len);
+            free(mid);
+        }
+        return ok;
+    }
     case PART_RAW:
         snprintf(path, sizeof(path), "%s.%s", base, raw_extension(d, n));
         snprintf(file, nfile, "%s.%s", leaf, raw_extension(d, n));
         return write(ctx, path, d, n);
     }
     return 0;
+}
+
+/* ---- sound banks' bodies ---- */
+typedef struct Headers {
+    const uint8_t *vh[256];
+    int group[256];
+    int n;
+} Headers;
+
+static void find_headers(Headers *h, const uint8_t *d, size_t n, int group) {
+    Container c;
+    int i;
+
+    if (vab_header_size(d, n) == n && h->n < 256) {
+        h->vh[h->n] = d;
+        h->group[h->n++] = group;
+    } else if (container_parse(&c, d, n)) {
+        for (i = 0; i < c.n; i++) {
+            find_headers(h, c.parts[i].data, c.parts[i].size, group);
+        }
+    }
+}
+
+void cdconv_pair_bodies(const uint8_t *const *entries, const size_t *sizes, int n, int kinds_per_group,
+                        const uint8_t **header_of) {
+    Headers *h = calloc(1, sizeof(*h));
+    int i, k;
+
+    for (i = 0; i < n; i++) {
+        if (entries[i] != NULL) {
+            find_headers(h, entries[i], sizes[i], i / kinds_per_group);
+        }
+    }
+    for (i = 0; i < n; i++) {
+        header_of[i] = NULL;
+        if (entries[i] == NULL || kind_of(entries[i], sizes[i]) != PART_RAW) {
+            continue;
+        }
+        for (k = 0; k < h->n; k++) {
+            if (vab_body_size(h->vh[k]) == sizes[i] &&
+                (header_of[i] == NULL || h->group[k] == i / kinds_per_group)) {
+                header_of[i] = h->vh[k];
+            }
+        }
+    }
+    free(h);
+}
+
+int cdconv_body(const char *name, const uint8_t *vb, size_t n, const uint8_t *vh, CdconvWriteFn write, void *ctx,
+                char *why, size_t nwhy) {
+    char path[300], line[160];
+    char *list = malloc(64 * 1024);
+    size_t at = 0, len;
+    int i, k, ok = 1;
+
+    k = snprintf(list, 64 * 1024, "\\ the samples of a sound bank: CD.BIN entry %s\nom-samples 1\nrate %d\nsamples %d\n",
+                 name, VAB_RATE, vab_sample_count(vh));
+    for (i = 1; ok && i <= vab_sample_count(vh); i++) {
+        size_t bytes = vab_sample_bytes(vh, i);
+        long frames, loop;
+        int16_t *pcm;
+        uint8_t *wav;
+
+        if (at + bytes > n) {
+            snprintf(why, nwhy, "%s: sample %d runs past the body", name, i);
+            ok = 0;
+            break;
+        }
+        pcm = vab_decode_sample(vb + at, bytes, &frames, &loop);
+        wav = vab_wav(pcm, frames, VAB_RATE, loop, &len);
+        snprintf(path, sizeof(path), "cdbin/%s.samples/%d.wav", name, i);
+        ok = write(ctx, path, wav, len);
+        snprintf(line, sizeof(line), "sample %d bytes %zu frames %ld loop %ld\n", i, bytes, frames, loop);
+        k += snprintf(list + k, 64 * 1024 - (size_t)k, "%s", line);
+        free(pcm);
+        free(wav);
+        at += bytes;
+    }
+    if (ok) {
+        snprintf(path, sizeof(path), "cdbin/%s.samples/samples.txt", name);
+        ok = write(ctx, path, (const uint8_t *)list, (size_t)k);
+    }
+    free(list);
+    return ok;
+}
+
+int cdconv_check_body(const char *name, const uint8_t *vb, size_t n, const uint8_t *vh, CdconvReadFn read, void *ctx,
+                      char *why, size_t nwhy) {
+    char path[300];
+    size_t at = 0;
+    int i;
+
+    for (i = 1; i <= vab_sample_count(vh); i++) {
+        size_t bytes = vab_sample_bytes(vh, i), len;
+        long frames, loop, wframes, wloop;
+        int16_t *pcm, *wpcm;
+        uint8_t *wav;
+        int same;
+
+        if (at + bytes > n) {
+            snprintf(why, nwhy, "%s: sample %d runs past the body", name, i);
+            return 0;
+        }
+        pcm = vab_decode_sample(vb + at, bytes, &frames, &loop);
+        snprintf(path, sizeof(path), "cdbin/%s.samples/%d.wav", name, i);
+        wav = read(ctx, path, &len);
+        wpcm = wav != NULL ? vab_wav_read(wav, len, &wframes, &wloop) : NULL;
+        same = wpcm != NULL && wframes == frames && wloop == loop && memcmp(pcm, wpcm, sizeof(int16_t) * (size_t)frames) == 0;
+        free(pcm);
+        free(wpcm);
+        free(wav);
+        if (!same) {
+            snprintf(why, nwhy, "%s doesn't hold the sample's sound", path);
+            return 0;
+        }
+        at += bytes;
+    }
+    return 1;
 }
 
 static int pack_text(const uint8_t *block, size_t n) {
@@ -245,6 +400,33 @@ static int check_part(const char *base, const uint8_t *d, size_t n, CdconvReadFn
     case PART_TEXT:
         snprintf(path, sizeof(path), "%s.txt", base);
         return same_text(path, d, n, read, ctx, why, nwhy);
+    case PART_BANK: {
+        char err[256] = "";
+        uint8_t *text;
+
+        snprintf(path, sizeof(path), "%s.bank.txt", base);
+        text = read(ctx, path, &len);
+        got = text != NULL ? vab_header_from_text((const char *)text, len, &len, err, sizeof(err)) : NULL;
+        free(text);
+        ok = got != NULL && len == n && memcmp(got, d, n) == 0;
+        free(got);
+        if (!ok) {
+            snprintf(why, nwhy, "%s doesn't make the same header again %s", path, err);
+        }
+        return ok;
+    }
+    case PART_SEQUENCES: {
+        char err[256] = "";
+
+        snprintf(path, sizeof(path), "%s.sep", base);
+        got = sep_from_folder(path, (SepReadFn)read, ctx, &len, err, sizeof(err));
+        ok = got != NULL && len == n && memcmp(got, d, n) == 0;
+        free(got);
+        if (!ok) {
+            snprintf(why, nwhy, "%s doesn't make the same sequences again %s", path, err);
+        }
+        return ok;
+    }
     case PART_RAW:
         snprintf(path, sizeof(path), "%s.%s", base, raw_extension(d, n));
         got = read(ctx, path, &len);

@@ -88,22 +88,38 @@ and the first conversions (`src/data/cdconv.c`):
   `\\ \{ \}` escape, `\#` a `#` starting a line, `{$XXXX}` a code by number; the pad's buttons as △ ○ ✕ □ and
   the dash —. The English text uses nothing else. An event pack keeps its bytes as they are (its script becomes
   Forth at development time) and its text is also written as `N.txt` beside it.
-- Everything else as it is, named by its kind: `.vab` (sound bank header), `.sep` (sequences), `.spl` (models),
-  `.exe` (OPENING.EXE), `.bin`.
+- **Sound banks** (`src/data/vab.c`): a bank's header as `N.bank.txt` - every field named (programs, tones with
+  their key ranges, tuning, volume, pan, bend and the envelope as attack / decay / sustain / release), the bytes
+  coming back from it - and its body (another entry: an area's `NNN_2` for its `NNN_1`, the music's `058_3` for
+  the header in `033_4`; paired by size) as `M.samples/` - `<i>.wav` a sample (mono, 16-bit, 44100 Hz, its loop as
+  a `smpl` chunk) and `samples.txt`. 32 bodies. The WAVs are the samples as the game's sound chip decodes them;
+  the ADPCM itself isn't kept.
+- **Sequences** (`src/data/seqmidi.c`): a SEP as `N.sep/` - `<i>.mid` a Standard MIDI file per sequence (its
+  header's tempo and time signature as its first events; the loops' NRPN controllers as they are) and
+  `index.txt` (the version, each sequence's id, and where the original carries running status across a tempo
+  change, which a MIDI file can't). The SEP comes back byte for byte.
+- **XA music and voices** (`src/data/xa.c`, OpenHuey's FLAC encoder): TSG.XA as `xa/TSG/<channel>.flac`, one per
+  channel (7, stereo, 37.8 kHz), and `index.txt` - the same samples the XA decodes to.
+- **The executable's tables** (`src/data/exetables.c`): each table a subsystem names, as `exe/<name>.bin`; the
+  engine reads them by name (`exe-table`). The first: `music`.
+- Everything else as it is, named by its kind: `.spl` (models), `.exe` (OPENING.EXE), `.bin`.
 
 ```
 library/
   manifest.txt     openmizzurna-library 1 / disc <crc> <program> / convert <kind> <format> <version> ... / file <size> <path> ...
   exe/SLPS_017.83  the executable (until the tables the game reads from it are files of their own)
   cdbin/           CD.BIN's 565 entries: folders, PNG, text, the rest as it is (29 MB)
-  disc/            MAP.BIN, TSG.XA, FILELINK.BIN as they are
+  exe/<name>.bin   the executable's tables by name
+  xa/TSG/          TSG.XA's channels as FLAC
+  disc/            MAP.BIN, FILELINK.BIN as they are
   movies/          the five .STR as they are
 ```
 
 Checks (ctest, with the developers' disc - `OM_DEV_DISC`): `disc_check` (every file of the image the same as
 phase 1's extraction), `cdbin_check` (every CD.BIN entry unpacked the same), `library_import` then
 `library_check` (every entry against its library form: the containers and images making the same bytes again,
-the text the same characters, the rest the same bytes).
+the text the same characters, the banks' headers and the sequences the same bytes, the samples and the XA tracks
+the same sound sample for sample, the rest the same bytes).
 
-**Next**: the executable's tables by name; sound banks (VAB to WAV + text), sequences, XA music; models and
-areas; MAP.BIN's town; the movies.
+**Next**: models (with the area texture sheets cut into proper textures) and areas; MAP.BIN's town; the movies
+(a video library); the executable's tables as each subsystem names them.

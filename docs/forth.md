@@ -154,6 +154,7 @@ are built, each listed here.
 | `screenshot-pending?` | `-- flag` | |
 | `console!` | `flag --` | open or close the console |
 | `hidden?` | `-- flag` | no window (tests, screenshots) |
+| `exe-table` | `addr len -- addr n` | a table of the executable by name (`s" music" exe-table`); `0 0` if none |
 
 The pad's buttons as keys: `scripts/keys.fs` (`pad-circle`, `pad-cross`, ... the d-pad `pad-up` ...).
 
