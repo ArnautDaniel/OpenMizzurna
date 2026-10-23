@@ -66,6 +66,43 @@ USING: events events.main ;
     end-script
     ;
 
+\ $80102418
+: entry-80102418
+    matthew 90167 0 48632 set-pos
+    matthew 0 4146 0 set-rot
+    matthew 0 1 anim
+    -332 -2396 -1184 90641 156 48804 4746 camera-set
+    matthew 48 50 anim-at  matthew wait-anim
+    matthew wait-anim
+    10 frames wait
+    matthew 49 51 anim-at  matthew wait-anim
+    matthew wait-anim
+    203 204 cd-pictures
+    20 frames wait
+    5 5 say-mode-wait
+    6 5 say-mode-wait
+    20 frames wait
+    0 cd-picture
+    -1 music
+    102 1 sequence-play
+    -1118 -2468 -2768 92629 2136 48476 5122 camera-set
+    matthew 7 0 talk
+    matthew 0 1 anim
+    102 sound
+    -1568 -3224 -3866 90361 1836 47576 5866 camera-set
+    matthew 8 0 talk
+    matthew 55 0 anim
+    matthew wait-anim
+    8 picture-show
+    10 3 say-mode-wait
+    picture-hide
+    162 actor 0 0 0 set-pos
+    matthew 81 1 anim
+    matthew 9 0 talk
+    10 frames wait
+    end-script
+    ;
+
 \ $801025C8
 : entry-801025C8
     -404 -2918 -896 89464 -12 48126 2450 camera-set

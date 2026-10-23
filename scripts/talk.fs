@@ -50,6 +50,14 @@ create area-talks  33 cells allot   area-talks 33 cells erase                 \ 
 : area-talk! ( xt area -- )  cells area-talks + ! ;          \ xt ( slot -- handled? )
 : a-line-by-stop ( table key -- msg | -1 )   \ a table of (key, message) pairs ended by -1 (src: func_800429C8)
     {: t k :}  t  begin  dup @ -1 <> while  dup @ k = if  cell+ @ exit  then  2 cells +  repeat  drop -1 ;
+\ ---- things before him: what ○ and □ do with them (src: the actor's answers to cmd 0x31 / 0x32 - 6 examine,
+\ 4 take - and its CMD_EXAMINE / CMD_ACT; people: talking) ----
+create examinings  #slots cells allot   examinings #slots cells erase   \ ○: xt ( slot -- handled? )
+create takings  #slots cells allot   takings #slots cells erase           \ □: xt ( slot -- handled? )
+: examined-by! ( xt slot -- )  cells examinings + ! ;
+: taken-by! ( xt slot -- )  cells takings + ! ;
+: look-at-it ( slot -- handled? )  dup cells examinings + @ ?dup if  execute  else  drop false  then ;
+: take-it ( slot -- handled? )  dup cells takings + @ ?dup if  execute  else  drop false  then ;
 : talk-with ( slot -- )   \ src: actor_talk_start
     {: s :}
     s their-talks if  exit  then

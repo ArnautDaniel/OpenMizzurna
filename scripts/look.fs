@@ -97,15 +97,16 @@ create area-rules  #content-areas rules * allot   area-rules #content-areas rule
 
 \ ---- pressing ○ and □ ----
 81 constant look-motion   \ src: func_8003FA8C (0x51)
-: press-circle ( -- )   \ src: look_execute: a person before him (case 1: talking), else the place (case 0)
-    in-front dup 0< 0= if  talk-with exit  then  drop
+: press-circle ( -- )   \ src: look_execute: a thing before him (case 6: examined), a person (case 1: talking),
+    in-front dup 0< 0= if  dup look-at-it if  drop exit  then  talk-with exit  then  drop   \ else the place (case 0)
     look-zones zone-table  look-checks check-table
     area @ content rules-of {: r :}
     r look-check-xt @ if
         look-motion -1 false matthew-actor send figure-anim
         zone-answer @ check-answer @ r look-check-xt @ execute  r look-do-xt @ execute
     else  run-rows  then ;
-: press-square ( -- )   \ src: act_execute's case 0
+: press-square ( -- )   \ src: act_execute: a thing before him (case 4: taken), else the place (case 0)
+    in-front dup 0< 0= if  take-it if  exit  then  else  drop  then
     act-zones zone-table  act-checks check-table
     area @ content rules-of {: r :}
     r act-check-xt @ if  zone-answer @ check-answer @ r act-check-xt @ execute  r act-do-xt @ execute

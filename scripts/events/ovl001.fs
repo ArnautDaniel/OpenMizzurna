@@ -149,6 +149,15 @@ defer L-80103BB0
     end-script
     ;
 
+\ $80103880
+: entry-80103880
+    10 frames wait
+    text-hold
+    235 3 say-mode
+    40 frames wait
+    end-script
+    ;
+
 \ $801038A4
 : entry-801038A4
     -566 -1652 -782 346239 -4080 285238 594 camera-set

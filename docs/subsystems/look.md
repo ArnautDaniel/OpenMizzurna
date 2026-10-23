@@ -37,6 +37,10 @@ Facts it keeps for the rules: `zone-answer` / `check-answer` (what the tables ga
 Matthew is the player's and no event runs, before ○ and □ (it may start one: then they wait; or `take-pad`:
 the pad is its own this step - a stool's keys).
 
+Things before him: ○ on an actor that has an examining (`examined-by!`, src: the handler's CMD_EXAMINE when it
+answers cmd 0x31 with 6) runs it, else talking; □ on one with a taking (`taken-by!`, CMD_ACT, cmd 0x32's 4) runs
+it, else the place's act (talk.fs: `look-at-it`, `take-it`).
+
 ## Status
 
 **Built**: the 242 rows (`scripts/events/checks.fs`), the subsystem (`scripts/look.fs`), area 1's rules
@@ -53,6 +57,8 @@ rows' alone; arriving (meeting Lorraine on the 25th, Mel and Lorraine arguing), 
 from the 28th 19:00), the robbery on the 27th, who says what by their stops, the farm workers, Lorraine's twelve
 conversations in turn, then her line. Seen: the meeting on the 25th plays through, Mel walking off after it. Sitting at the counter and ordering:
 `docs/subsystems/counter.md`.
+Area 6's (`scripts/rules/area006.fs`, Astin Farm; `tests/library/test_area006.fs`): the two things in the room to
+take, the warning when its owner heads home, the closet and the way out, the closet's doors.
 Area 5 (`scripts/rules/area005.fs`; `tests/library/test_area005.fs`): one chain of scripts from the warp in to the
 warp out; its fights, shoot-out and flare are the minigames' (to come) - the scripts carry on past them.
 Area 4 (James's house) has no rules: the visit is one script, reached by knocking at his door
