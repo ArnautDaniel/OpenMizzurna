@@ -18,4 +18,6 @@ pushing). Areas 10, 11, 16, 19 and 24 have one each; an area keeps its crate's p
 
 ## Status
 
-Built (areas 10's, 11's, 16's, 19's and 24's; 24's place is by the floor he's on, set while it's placing). To come: the prompts, the sounds.
+Built (areas 10's, 11's, 16's, 19's and 24's; 24's place is by the floor he's on, set while it's placing), with
+the HUD's prompts while he holds it (○ $C lets go) or stands on it (□ $11 climbs down) - `crate-busy` (its area),
+`crate-act-prompt`, `crate-look-prompt`. (The original's crate has no sounds of its own.)

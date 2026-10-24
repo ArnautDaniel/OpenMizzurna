@@ -80,13 +80,14 @@ $520 negate diner-counter camera-yaw !   $1AC negate diner-counter camera-yaw-al
 $7AC negate diner-counter camera-eye-y !   $242 negate diner-counter camera-look-y !   $6D4 negate diner-counter camera-dist !
 $502D0 diner-counter camera-cross !
 rolein diner-counter barman !   $500DC diner-counter barman-cross !   1024 diner-counter barman-heading !
-' diner-order diner-counter order-xt !
+' diner-order diner-counter order-xt !   $70 diner-counter sit-sound !   0 diner-counter on-sit !   \ (src: its sit_sound; no on_sit)
 
 \ ---- the area's hooks (0x8010362C entering, 0x801036B0 each frame) ----
 variable closing-done   variable worker-told
-: lorraine-meets-him ( -- )   \ 12/25: the car outside, Mel waiting
+10 constant lorraines-page
+: lorraine-meets-him ( -- )   \ 12/25: the car outside, Mel waiting; her page in the notebook
     passing-car s" traffic" actor-named send car-stop  passing-car passing-car-route s" traffic" actor-named send car-park
-    mel s" townsfolk" actor-named send person-unlink  mel 0 1 anim   \ (and the bios: Lorraine's - to come)
+    mel s" townsfolk" actor-named send person-unlink  mel 0 1 anim  lorraines-page s" notebook" actor-named send learn-bio
     diner-lorraine-intro-seen flag-set  ['] events.ovl021:entry-80105024 start-event ;
 : arrival ( -- )   \ src: func_80103B2C (both checked, in order)
     diner-lorraine-intro-seen flag? 0=  25 11 50 14 30 between? and if  lorraine-meets-him  then
@@ -104,7 +105,9 @@ $50179 constant near-morgans-x   $42125 constant near-morgans-z   22 constant mo
     today earlier-closing-day < if  hour closing-hour >=  else  hour earlier-closing-hour >=  then ;
 : by-morgan? ( -- flag )   \ Matthew past the table Morgan sits at
     matthew-now drop nip {: x z :}  x near-morgans-x >  z near-morgans-z > and ;
-: robbery ( xt -- )  diner-robbery-seen flag-toggle  counter-off  start-event ;   \ (Morgan's talk ended: to come)
+: robbery ( xt -- )   \ src: robbery: he and Morgan off their stools
+    diner-robbery-seen flag-toggle  counter-off
+    morgan seated? if  morgan s" townsfolk" actor-named send seat-leave  then  start-event ;
 : each-frame ( -- )   \ src: func_801036B0: the counter, then func_80103C64's times
     menu-up? if  exit  then
     diner-counter counter-step  events-running @ if  exit  then

@@ -29,6 +29,8 @@ begin-structure bar-counter
   field: camera-eye-y   field: camera-look-y   field: camera-dist   field: camera-cross
   field: barman   field: barman-cross   field: barman-heading
   field: order-xt          \ ( -- done? ) ordering, a step a frame
+  field: sit-sound         \ sitting down (src: CounterDef.sit_sound)
+  field: on-sit            \ ( -- ) the bar's own as he sits (0 none; src: CounterDef.on_sit)
 end-structure
 
 \ ---- where Matthew is at it (one counter at a time: his) ----
@@ -38,8 +40,10 @@ enum: counter-mode  sitting-down 1 settling  2 on-stool  20 leaning  40 getting-
 variable the-counter   variable at-state   variable mode   variable step   variable seat   variable lean
 variable doing   variable talking-with   variable barman-at   variable walking-over
 variable sat-in   \ (the area he sat in: elsewhere since, a warp took him off his stool)
+variable counter-act-prompt   variable counter-look-prompt   \ (facts: the HUD's while he's on a stool; -1 none)
+-1 counter-act-prompt !  -1 counter-look-prompt !
 -1 constant nobody-there
-: forget-counter ( -- )  off-stool at-state !  0 mode !  0 step !  -1 seat !  no-lean lean !
+: forget-counter ( -- )  -1 counter-act-prompt !  -1 counter-look-prompt !  off-stool at-state !  0 mode !  0 step !  -1 seat !  no-lean lean !
     nobody-there talking-with !  -1 barman-at !  0 walking-over ! ;
 forget-counter
 : at-the-counter? ( -- flag )  at-state @ on-a-stool = ;
@@ -98,7 +102,8 @@ $400 constant quarter   $C00 constant three-quarters   4095 constant heading-mas
 : play-step ( -- done? )   \ his transition motion (src: counter_anim: the pad off meanwhile)
     anim-done? 0= if  false exit  then
     matthew-xz {: x z :}  x c counter-y @ z matthew-id send figure-place  true ;
-: sit-down ( -- )   \ src: counter_sit
+: sit-down ( -- )   \ src: counter_sit (and counter_at's sound)
+    c sit-sound @ s" sound" actor-named send play-sound  c on-sit @ ?dup if  execute  then
     matthew c bar @ seat @ the-folk send seat-take
     seat @ stool-along {: st :}  matthew-xz along {: al :}
     c flip? @ if  al st <=  else  al st <  then if  st sit-step -  0  else  st sit-step +  1  then {: at k :}
@@ -137,12 +142,18 @@ $400 constant quarter   $C00 constant three-quarters   4095 constant heading-mas
         2 of  barman-walks if  0 step !  then  endof
         4 of  c order-xt @ execute if  0 step !  then  endof
     endcase ;
+7 constant talk-prompt   $B constant up-prompt   \ (src: counter_lean: ○ talks to the next stool's, □ gets up)
+: no-lean-prompts ( -- )  -1 counter-act-prompt !  -1 counter-look-prompt ! ;
+: leaning-prompts ( -- )
+    up-prompt counter-act-prompt !  talking-with @ 0< if  -1  else  talk-prompt  then  counter-look-prompt ! ;
 : leaning-over ( -- )   \ src: counter_lean
+    no-lean-prompts
     step @ case
         0 of  play-step if  nobody-there talking-with !  c lean-motions side nth true pose  1 step !  then  endof
         1 of
             neighbour talking-with !
             lean @ lean-right = if  pad-right  else  pad-left  then  key-down? if
+                leaning-prompts
                 talking-with @ 0< 0= stool-circle? and if  talking-with @ talk-with exit  then
                 stool-square? if  getting-up mode !  0 step !  nobody-there talking-with !  then
                 exit

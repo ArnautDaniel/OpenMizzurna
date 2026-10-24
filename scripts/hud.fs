@@ -4,7 +4,8 @@
 \ to do; the clock top left - the date, the weekday, the time - while it runs; and in the town the corner map,
 \ seen with his heading, his mark on it. The notebook and the map hide it. It only draws.
 IN: hud
-USING: engine actors messages screen clock areas figures matthew driving look ui ring notebook map events boat ;
+USING: engine actors messages screen clock areas figures matthew driving look ui ring notebook map events boat counter
+    crate ;
 
 <PRIVATE
 : ui-picture ( var addr len -- image )   \ ui/<name>.png, loaded once
@@ -12,7 +13,7 @@ USING: engine actors messages screen clock areas figures matthew driving look ui
 : part ( image u v w h x y -- )   \ texels (u, v, w, h) at the original's (x, y), their size, opaque
     {: im u v w h x y :}  blend-ps-solid pen-blend  im u v w h  x y >screen  w scale *  h scale *  draw-image-part
     blend-usual pen-blend ;
-2 constant on-a-stool   \ (his perch)
+2 constant stool-perch   \ (his perch)
 : hud-on? ( -- flag )  has-control?  notebook-up? 0= and  map-up? 0= and ;   \ (src: D_800A3528: they hide it)
 
 \ ---- the prompts (src: prompt_draw, big: the field's place) ----
@@ -40,6 +41,8 @@ variable icon-frame   variable icon-count   fvariable due
 : the-prompts ( -- act look )
     ring-up? if  ring-act-prompt @ ring-look-prompt @ exit  then
     rowing? if  -1 boat-prompt @ exit  then   \ (src: the boathouses' ○)
+    at-the-counter? if  counter-act-prompt @ counter-look-prompt @ exit  then   \ (src: counter_lean's)
+    crate-busy @ area @ = if  crate-act-prompt @ crate-look-prompt @ exit  then   \ (src: crate_area_update's)
     act-prompt @ look-prompt @ ;
 : draw-prompts ( -- )  the-prompts {: a l :}  a act-x 0 prompt-frame  l look-x frame-w prompt-frame ;
 
@@ -102,7 +105,7 @@ fvariable sin-a   fvariable cos-a
     $FFFFFFFF pen-color  draw-prompts
     ui-busy? if  exit  then   \ (src: field_update: the clock and the map with the field running)
     clock-running? if  draw-clock  then
-    area @ the-town =  matthew-there? and  matthew-perch on-a-stool <> and if  draw-corner  then ;
+    area @ the-town =  matthew-there? and  matthew-perch stool-perch <> and if  draw-corner  then ;
 ' draw-hud on-draw
 PRIVATE>
 

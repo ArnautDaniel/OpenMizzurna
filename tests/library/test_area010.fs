@@ -28,6 +28,8 @@ T{ pad-up true key-hold  20 steps  pad-up false key-hold  where-the-crate-is $72
 T{ pad-circle press  300 steps  the-crate holding?  matthew-pushing?  matthew-perch -> false false 0 }T
 testing □ climbs it: on top (his perch 1, his feet still); □ climbs down
 T{ before-the-crate  pad-square press  300 steps  the-crate on-the-crate?  matthew-perch  matthew-on-foot? -> true 1 false }T
+testing on top: □'s prompt to climb down (src: crate_area_update's 0x11)
+T{ crate-busy @ area @ =  crate-act-prompt @ -> true $11 }T
 T{ pad-square press  300 steps  the-crate on-the-crate?  matthew-perch  matthew-on-foot? -> false 0 true }T
 
 testing the window: before its time, a peep; once known, the scene inside (a minigame that's a script), once

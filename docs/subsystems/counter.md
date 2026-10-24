@@ -1,6 +1,6 @@
 # The counter
 
-Sitting at a bar's counter: the diner's (area 21) and Club Wolves' (area 12, to come) - the overlays' copies of
+Sitting at a bar's counter: the diner's (area 21), Club Wolves' (area 12) and the lake hut's (area 9) - the overlays' copies of
 the same code (src: ovl021 `func_801022B8` .. `func_801037A8`; the phase-1 port reads them as one,
 `port/src/game/counter.c` with a `CounterDef` each). `scripts/counter.fs`: a structure of a bar's settings
 (`bar-counter`) and the steps; an area's frame hook calls `counter-step ( settings -- )`.
@@ -23,7 +23,7 @@ the same code (src: ovl021 `func_801022B8` .. `func_801037A8`; the phase-1 port 
 
 The diner's order (`rules/area021.fs`): Lorraine asks ("Welcome! What can I get you?", later "How about
 another?"), the menu (`docs/subsystems/list-menu.md`: the six and today's special), her line for it, she brings
-it (the food or the drink: their props to come), ○ talks to her, □ eats or drinks, she clears it away. No money
+it (the food or the drink: the order's prop), ○ talks to her, □ eats or drinks, she clears it away. No money
 or time passes (the overlay's own).
 
 Club Wolves' (`rules/area012.fs`): the stools along x, the approach mirrored (`flip?`), leaning right looks at
@@ -35,4 +35,7 @@ The lake hut's (`rules/area009.fs`): four stools along z, the counterman, a list
 
 ## Status
 
-The diner's, Club Wolves' and the lake hut's built. To come: the button prompts (hints), the props on the counter, the sounds.
+The diner's, Club Wolves' and the lake hut's built, with: sitting down's sound (each bar's: $70, $6D, $6E); the
+bar's own as he sits (`on-sit`: the club's food and drink, the hut's drink to the counter); leaning, held, the
+HUD's prompts - □ ($B) gets up, ○ (7) talks to the next stool's when someone's there (`counter-act-prompt`,
+`counter-look-prompt`).

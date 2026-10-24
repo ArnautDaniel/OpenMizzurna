@@ -17,6 +17,8 @@ enum: crate-states  placing standing-by held on-top ;
 : forget-crate ( c -- )  placing swap crate-state ! ;   \ (entering the area: placed again)
 : on-the-crate? ( c -- flag )  crate-state @ on-top = ;
 : holding? ( c -- flag )  crate-state @ held = ;
+variable crate-busy   variable crate-act-prompt   variable crate-look-prompt   \ (facts: the HUD's prompts while
+-1 crate-busy !  -1 crate-act-prompt !  -1 crate-look-prompt !                 \  he holds it or stands on it: its area)
 
 <PRIVATE
 $B5 constant reaching   $B6 constant holding   $B8 constant letting-go   $B9 constant let-go
@@ -37,12 +39,13 @@ variable crate-circle-was   variable crate-square-was
 : place-it ( c -- )   \ in its place, square on
     {: c :}  c crate-slot @ c crate-home-x @ c crate-home-y @ c crate-home-z @ set-pos
     c crate-slot @ c crate-area @ c crate-floor @ set-floor  c crate-slot @ 0 0 0 set-rot  standing-by c crate-state ! ;
+$C constant let-go-prompt   $11 constant climb-down-prompt   \ (src: crate_area_update: func_8004850C / func_80048500)
 : holding-it ( c -- )   \ src: crate_grab_update, the pushing state: ○ lets go
     {: c :}  take-pad
     c crate-stage @ case
         0 of  anim-done? if   \ (hold of it: his feet his again, pushing)
             holding pose  c crate-slot @ him send figure-pushes  true him send figure-on-foot  1 c crate-stage !  then  endof
-        1 of  circle? if
+        1 of  let-go-prompt crate-look-prompt !  circle? if
             false him send figure-on-foot  letting-go pose  -1 him send figure-pushes  2 c crate-stage !  then  endof
         2 of  anim-done? if  let-go pose  3 c crate-stage !  then  endof
         3 of  anim-done? if  c done-with  then  endof
@@ -53,7 +56,7 @@ variable crate-circle-was   variable crate-square-was
         0 of  anim-done? if   \ on top: square over it
             c crate-slot @ person-now drop {: x y z :}  matthew-now drop {: mx my mz :}
             x my z him send figure-place  matthew-now nip nip nip c crate-heading !  1 c crate-stage !  then  endof
-        1 of
+        1 of  climb-down-prompt crate-act-prompt !
             circle? if  press-circle exit  then
             square? if  0 c crate-heading @ 0 him send figure-turn  climbing-down hold-pose  on-his-feet perch!
                 2 c crate-stage !  then  endof
@@ -62,6 +65,7 @@ variable crate-circle-was   variable crate-square-was
 PRIVATE>
 
 : crate-step ( c -- )   \ the area's frame hook steps it
+    -1 crate-act-prompt !  -1 crate-look-prompt !  dup crate-state @ held < if  -1  else  area @  then crate-busy !
     dup crate-state @ case
         placing of  place-it  endof
         held of  holding-it  endof

@@ -109,7 +109,11 @@ $940 negate club-counter camera-yaw !   $940 negate club-counter camera-yaw-alt 
 $4B0 negate club-counter camera-eye-y !   $242 negate club-counter camera-look-y !   $6D4 negate club-counter camera-dist !
 $46C49 club-counter camera-cross !
 wolf club-counter barman !   $46A55 club-counter barman-cross !   0 club-counter barman-heading !
-' bar-order club-counter order-xt !
+' bar-order club-counter order-xt !   $6D club-counter sit-sound !   \ (src: its sit_sound)
+$720C1 constant counter-middle-x   $46C49 constant counter-middle-z
+: props-to-the-counter ( -- )   \ src: sit_extras: the food and the drink to the counter's middle
+    the-food counter-middle-x 0 counter-middle-z set-pos  the-drink counter-middle-x 0 counter-middle-z set-pos ;
+' props-to-the-counter club-counter on-sit !
 
 \ ---- the area's hooks (0x80103B94 entering, 0x80104D34 a scene, 0x80103FE8 each frame) ----
 : entered ( -- )

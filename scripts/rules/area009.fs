@@ -50,7 +50,10 @@ $538 negate lake-counter camera-yaw !   $538 negate lake-counter camera-yaw-alt 
 $4B2 negate lake-counter camera-eye-y !   $200 negate lake-counter camera-look-y !   $632 negate lake-counter camera-dist !
 $5130B lake-counter camera-cross !
 counterman lake-counter barman !   $51117 lake-counter barman-cross !   1024 lake-counter barman-heading !
-' lake-order lake-counter order-xt !
+' lake-order lake-counter order-xt !   $6E lake-counter sit-sound !   \ (src: its sit_sound)
+$5111C constant drink-at-x   $6B1F3 constant drink-at-z
+: drink-to-the-counter ( -- )  the-drink drink-at-x 0 drink-at-z set-pos ;   \ src: place_waiter
+' drink-to-the-counter lake-counter on-sit !
 
 \ ---- the area's hooks (0x80102234 entering, 0x80102418 a scene, 0x801023F8 each frame) ----
 : entered ( -- )

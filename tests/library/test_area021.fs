@@ -61,6 +61,8 @@ testing the counter: □ before a free stool, facing it, sits him down (the pad'
     deliver  2 steps ;
 T{ 25 13 0 at-time  diner-lorraine-intro-seen flag-set  in-diner  events-stop  at-the-stools
    pad-square press  60 steps  at-the-counter?  matthew seat-of  matthew-on-foot? -> true at-diner stool-4 false }T
+testing sitting down sounds the diner's own (src: its sit_sound)
+T{ sound:last-sound @ -> $70 }T
 testing □ waves Lorraine over: she comes to his stool
 T{ pad-square 10 held  200 steps  barman-here -> stool-4 }T
 testing □ again orders: her welcome, then the menu; ○ picks the pancakes, she brings them; □ eats
@@ -69,7 +71,9 @@ T{ pad-square 3 held  until-the-menu  menu-up? -> true }T
 T{ pad-down press  pad-down press  pad-circle press  400 answering  menu-up? -> false }T
 T{ pad-square 3 held  600 answering  events-running @  orders @ -> 0 1 }T
 testing leaning toward the next stool, □ gets him up: on his feet, the stool free
-T{ pad-left 20 held  pad-left true key-hold  20 steps  pad-square press  pad-left false key-hold  100 steps
+testing leaning, held: □'s prompt to get up (none for ○ with the next stool free)
+T{ pad-left 20 held  pad-left true key-hold  20 steps  counter-act-prompt @  counter-look-prompt @ -> $B -1 }T
+T{ pad-square press  pad-left false key-hold  100 steps
    at-the-counter?  at-diner stool-4 seat-taken?  matthew-on-foot? -> false false true }T
 
 test-summary
