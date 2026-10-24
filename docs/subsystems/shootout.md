@@ -49,8 +49,9 @@ area 5 and area 26; `decomp/docs/research/minigames/README.md` §8). `scripts/sh
 - **Drawn:**
   - the targets (for now, squares in the button's colour);
   - the shots left as bullets at (−140, 40);
-  - Matthew's bar at (−140, 80), out of 100;
-  - the foe's bar at (18, −80), out of its pool's full health.
+  - Matthew's bar at (−140, 80), out of 100, his name above;
+  - the foe's bar at (18, −80), out of its pool's full health, its name above (the plan's: area 5 the dog and
+    the gunman, area 26 the bear).
 
   The bars and the game over are `screen.fs`'s `health-bar` and `draw-game-over`, shared with the fight.
 

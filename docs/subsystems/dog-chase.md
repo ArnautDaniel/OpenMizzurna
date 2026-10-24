@@ -35,7 +35,7 @@ Running from the junkyard's dog to the yard's far side (area 8's minigame 26; sr
 - **Out of health.** He falls (0x6C; effect 9), then game over (effect 2). ○ or Start fades out (effect 3) and
   it begins again from the start.
 - **The camera** is fixed over him: yaw 0, distance −0xDE2, eye −0xA00, look −0x200.
-- **Drawn:** his health bar at (−140, −80), out of 120.
+- **Drawn:** his health bar at (−140, −80), out of 120, his name above it.
 
 ## Status
 

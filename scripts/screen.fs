@@ -17,12 +17,32 @@ USING: engine ;
     {: im x y w h :}  blend-ps-solid pen-blend  im x y >screen  w scale *  h scale *  draw-image  blend-usual pen-blend ;
 
 \ ---- what the minigames draw alike ----
-\ a health bar (src: hp_bar_draw): its frame `full` + 3 across, 8 high, at x and y + 8; the health filled in it
-$302030E0 constant bar-back   $E0B040FF constant bar-fill
-: health-bar ( x y health full -- )
-    {: x y v full :}  scale {: k :}
-    bar-back pen-color  x y 8 + >screen  full 3 + k *  8 k *  draw-rect
-    v 0> if  bar-fill pen-color  x 2 + y 9 + >screen  v k *  6 k *  draw-rect  then ;
+: channel ( rgba shift -- n )  rshift $FF and ;
+: blend-channel ( a b shift t n -- c )   \ (from a's channel to b's, t of n of the way)
+    {: a b sh t n :}  a sh channel  b sh channel over -  t * n /  + ;
+: bar-shade ( top bottom t n -- rgba )   \ a colour t of n of the way down from top to bottom (alpha opaque)
+    {: a b t n :}  a b 24 t n blend-channel 24 lshift  a b 16 t n blend-channel 16 lshift or
+    a b 8 t n blend-channel 8 lshift or  $FF or ;
+: shaded ( x y w h top bottom -- )   \ a rectangle shaded top to bottom (src: a POLY_G4's two colours)
+    {: x y w h top bot :}  scale {: k :}
+    h 0 ?do  top bot i h bar-shade pen-color  x y i + >screen  w k *  k  draw-rect  loop ;
+\ a health bar (src: hp_bar_draw): its frame `full` + 3 across from y + 8 to y + 15, the health from x + 2 to
+\ x + health + 1 and y + 9 to y + 14, each shaded down; the name above (ui/fight-names.png, 80 x 8 each, ten down;
+\ -1 none)
+$A0A0A0FF constant bar-back-top   $202020FF constant bar-back-bottom
+$40E040FF constant bar-fill-top   $204020FF constant bar-fill-bottom
+80 constant bar-name-w   8 constant bar-name-h   -1 constant no-name
+0 constant matthew-name   2 constant wolf-name   8 constant bear-name   9 constant gang-name
+: draw-bar-name ( x y name -- )
+    {: x y n :}  n 0< if  exit  then
+    s" ui/fight-names.png" image {: im :}  $FFFFFFFF pen-color  blend-ps-solid pen-blend
+    im  0 n bar-name-h *  bar-name-w bar-name-h  x y >screen  bar-name-w scale *  bar-name-h scale *  draw-image-part
+    blend-usual pen-blend ;
+: health-bar ( x y health full name -- )
+    {: x y v full n :}
+    x y n draw-bar-name
+    x y 8 +  full 3 +  7  bar-back-top bar-back-bottom shaded
+    v 0> if  x 2 +  y 9 +  v 1-  5  bar-fill-top bar-fill-bottom shaded  then ;
 \ the face buttons' icons (the UI's: ui/button-*.png, 16 x 16) - the targets, the keypad, the phone
 16 constant button-size
 : button-icon ( addr len -- image )  $clear  s" ui/button-" $+  $+  s" .png" $+  $@ image ;

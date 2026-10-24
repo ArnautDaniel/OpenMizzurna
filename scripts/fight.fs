@@ -211,9 +211,16 @@ variable held   variable pressed   \ (the pad of the fighter acting now)
 \ ---- a move-frame of the fight ----
 : blocked-now? ( f o -- flag )
     {: f o :}  f fx @ f fz @ f floor-of blocked?  if  true exit  then
+    f fx @ f fz @ solid-billboard? if  true exit  then
     f fx @ o fx @ - s>f fdup f*  f fz @ o fz @ - s>f fdup f* f+ fsqrt too-close s>f f< ;
+\ style 7's own motions for five of the moves' (src: fight_update)
+create own-motions  $74 , $536 ,  $8E , $53A ,  $8F , $53B ,  $6F , $538 ,  $70 , $539 ,
+5 constant #own-motions
+: own-motion-of ( id -- id' )
+    #own-motions 0 do  own-motions i 2* cells + @ over = if  drop own-motions i 2* 1+ cells + @  leave  then  loop ;
+: fighter-motion ( f -- id )  dup move @ move-motion  swap style @ styles-own-motions = if  own-motion-of  then ;
 : show-fighter ( f -- )   \ where it is, its heading, its move's motion (started when it changes)
-    {: f :}  f move @ move-motion {: id :}
+    {: f :}  f fighter-motion {: id :}
     f slot @ 0= if
         f fx @ 0 f fz @ s" matthew" actor-named send figure-place  0 f heading @ 0 s" matthew" actor-named send figure-turn
     else
@@ -253,11 +260,17 @@ $A constant fight-music   $D constant own-music   \ (rows of the music table)
         0 fighter# style @ styles-own-motions = if  own-music  else  fight-music  then  music-row  then
     true fighting !
     s" camera" actor-named send camera-fixed  fight-opens s" effects" actor-named send screen-effect ;
-: it's-over ( -- )
-    0 fighter# style @ style-never-wins = 0= if
-        fight-winner @ fighter# human? 0= if   \ lost to the AI: game over
-            1 lost !  -1 music-row  exit  then  then
-    false fighting ! ;   \ (the camera the scene's again: it's an event's)
+$100 constant apart-after   \ (src: actor_place_apart(a, b, 0x100, 3))
+: put-apart ( -- )   \ the second 0x100 from the first on the line between them, facing each other
+    angle {: a :}  0 fighter# {: f :}  1 fighter# {: o :}
+    a s>f 2e f* pi f* 4096e f/ {: F: r :}
+    f fx @ s>f r fsin apart-after s>f f* f- f>s o fx !  f fz @ s>f r fcos apart-after s>f f* f- f>s o fz !
+    a o heading !  a 2048 + 4095 and f heading !  f show-fighter  o show-fighter ;
+: it's-over ( -- )   \ by the winner's style (src: fight_update)
+    fight-winner @ fighter# {: w :}
+    w human? if  put-apart  false fighting ! exit  then
+    w style @ style-never-wins = if  false fighting ! exit  then
+    1 lost !  -1 music-row ;   \ lost to the AI: game over (the camera the scene's again after: it's an event's)
 : fight-frame ( -- )
     read-pad  aim  0 fighter-frame  1 fighter-frame  0 fighter# show-fighter  1 fighter# show-fighter
     fight-winner @ no-winner <> if  it's-over  then ;
@@ -273,10 +286,13 @@ $A constant fight-music   $D constant own-music   \ (rows of the music table)
 
 \ ---- drawing: the health bars, the game over ----
 140 negate constant bar-1-x   18 constant bar-2-x   80 negate constant bars-y
+: name-of ( f -- name )   \ its style's (none when two play)
+    1 fighter# style @ player-2 = if  drop no-name exit  then  style @ {: st :}  s" fight-icons" st exe-u8 ;
 : draw-fight ( -- )
     fighting? 0= if  exit  then
     lost @ if  draw-game-over exit  then
-    bar-1-x bars-y 0 fighter# shown @ full-health health-bar  bar-2-x bars-y 1 fighter# shown @ full-health health-bar ;
+    bar-1-x bars-y 0 fighter# shown @ full-health 0 fighter# name-of health-bar
+    bar-2-x bars-y 1 fighter# shown @ full-health 1 fighter# name-of health-bar ;
 ' draw-fight on-draw
 
 : start ( a style b style -- )

@@ -5,7 +5,7 @@
 \ meeting at the waterfall at its time, the last evening's places and scenes, who says what. The cabin's
 \ shoot-out is a minigame to come.
 IN: rules.area026
-USING: engine actors messages keys clock story-flags items townsfolk events look talk areas matthew shootout ;
+USING: engine actors messages keys clock story-flags items townsfolk events look talk areas matthew screen shootout ;
 
 26 constant this-area
 10 constant the-deputy   9 constant the-bear   24 constant the-gun   59 constant the-marker   58 constant the-other
@@ -433,7 +433,7 @@ create the-shootout  3 plan-bytes allot   the-shootout 3 plan-bytes erase
     the-shootout {: p :}  s" shootout-26" p plan-table-len ! p plan-table !  3 p plan-rounds !
     his-x p plan-him-x !  his-z p plan-him-z !  gun-down p plan-stance !  gun-fired p plan-shot-motion !
     gun-up p plan-aimed-motion !  bear-x p plan-foe-x !  bear-z p plan-foe-z !  bear-heading p plan-foe-heading !
-    bear-stance p plan-foe-stance !  bear-hit p plan-foe-hit !  bear-health p plan-full-0 !  0 p plan-full-1 !
+    bear-stance p plan-foe-stance !  bear-hit p plan-foe-hit !  bear-health p plan-full-0 !  0 p plan-full-1 !  bear-name p plan-name-0 !  no-name p plan-name-1 !
     ['] bear-shot p plan-won !  $6D p plan-shot-sound !  $71 p plan-hit-sound !
     p 0 bear-pool a-hit first-swipe ['] events.ovl026:entry-80106454 ['] events.ovl026:entry-80106484 ['] events.ovl026:entry-801064A4 round!
     p 1 bear-pool a-hit second-swipe ['] events.ovl026:entry-80106464 ['] events.ovl026:entry-80106494 ['] events.ovl026:entry-801064A4 round!

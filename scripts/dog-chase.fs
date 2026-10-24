@@ -142,7 +142,7 @@ variable confirm-was
 : draw-chase ( -- )
     chasing? 0= if  exit  then
     him @ game-over < 0= if  draw-game-over exit  then
-    bar-x bar-y shown @ full-health health-bar ;
+    bar-x bar-y shown @ full-health matthew-name health-bar ;
 ' draw-chase on-draw
 PRIVATE>
 

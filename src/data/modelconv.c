@@ -505,6 +505,9 @@ static const SkyPiece kUiPieces[] = {
     {"prompt-frames", 4, 0x300, 0, 0x300, 0xFD, 0, 0xB8, 96, 24},
     {"prompt-icons", 4, 0x300, 0, 0x300, 0xFE, 0, 0, 256, 96},
     {"clock", 4, 0x2C0, 0, 0x2D0, 0xFD, 0, 0x80, 256, 0x50},
+    /* the fight's (src: hp_bar_draw, ovl033_func_80101FBC): the fighters' names over their health bars, 80 x 8
+     * each, ten down (the executable's `fight-icons` gives a style's; the other minigames name theirs) */
+    {"fight-names", 4, 0x300, 0, 0x300, 0xFB, 0, 0x60, 80, 80},
 };
 
 #define MAP_ICONS 22

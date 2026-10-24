@@ -27,14 +27,18 @@ A fistfight between two figures (src: fight.c `fight_start` / `fight_update`, th
   damage in a row) makes it defend, far apart it dashes in, winning it presses on.
 - An attack on its frame, in reach, the other not kind 1: damage, the other's reaction move and push back; 120
   health; at 0 a knock-out, and when the fallen one is down for good the other wins. A move's motion ending
-  gives the move after it. Neither may come within 0xE0 of the other nor into a wall.
-- Won by the pad: over (the camera the scene's again). Won by the AI: game over ("GAME OVER"), ○ or Start fades out and the fight begins
+  gives the move after it. Neither may come within 0xE0 of the other nor into a wall or a solid billboard.
+- Style 7 has its own motions for five of the moves' ($74, $8E, $8F, $6F, $70 → $536, $53A, $53B, $538, $539).
+- Won by the pad: over, the second put 0x100 from the first on the line between them, the two facing each
+  other (the camera the scene's again). Won by style 8: over. Won by the AI: game over ("GAME OVER"), ○ or Start fades out and the fight begins
   again from where they stood, full health (style 8 never wins).
-- Drawn: two health bars, the original's places (−140, −80) and (18, −80), 120 pixels for 120.
+- Drawn: two health bars (screen.fs's `health-bar`), the original's places (−140, −80) and (18, −80), 120 pixels
+  for 120, each with its fighter's name above (the executable's `fight-icons` by style, of
+  `ui/fight-names.png`; none when two play).
 
 ## Status
 
-Built: the moves, the pad, the AI, the hits, the knock-out, the game over and retry, the camera, the bars
-(`tests/library/test_fight.fs`). Its sounds - by the area and the move: a hit's and its voice, a miss, a fall; its music, off on a loss -
-are sound.md's. To come: the rumble, the bars' name icons and the game over's
-picture, style 7's own motions, the two put apart after a win (src: `actor_place_apart`), billboards as walls.
+Built: the moves, the pad, the AI, the hits, the knock-out, the game over and retry, the camera, the bars and
+their names, style 7's motions, the two put apart after a win, the walls and billboards
+(`tests/library/test_fight.fs`). Its sounds - by the area and the move: a hit's and its voice, a miss, a fall;
+its music, off on a loss - are sound.md's; its rumble rumble.md's.

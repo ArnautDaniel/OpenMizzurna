@@ -22,6 +22,7 @@ begin-structure shootout-plan
   field: plan-foe-x   field: plan-foe-z   field: plan-foe-heading     \ where the first foe stands
   field: plan-foe-stance   field: plan-foe-hit                        \ the foes' stance, hit (-1 none)
   field: plan-full-0   field: plan-full-1                             \ the foes' full health (by pool)
+  field: plan-name-0   field: plan-name-1                             \ and their names over the bars (-1 none)
   field: plan-shot-sound   field: plan-hit-sound                        \ a shot's, a target hit's (-1 none)
   field: plan-won                                                     \ when it's won (an xt; 0 none)
 end-structure
@@ -227,13 +228,14 @@ $FFF0A0FF constant burst-ink   $C8A040FF constant bullet-ink
     bullet-ink pen-color  shots @ 0 ?do
         bullets-x i bullet-pitch * + bullets-y >screen  bullet-w scale *  bullet-h scale *  draw-rect  loop ;
 : foe-full ( pool -- n )  if  plan @ plan-full-1 @  else  plan @ plan-full-0 @  then ;
+: foe-name ( pool -- n )  if  plan @ plan-name-1 @  else  plan @ plan-name-0 @  then ;
 : draw-shootout ( -- )
     shooting? 0= if  exit  then
     stage @ game-over = if  draw-game-over exit  then
     stage @ aiming = if  draw-targets  draw-bullets  then
     stage @ lost-scene = stage @ final-scene = or if  exit  then
-    his-bar-x his-bar-y health-shown @ full-health health-bar
-    this-round round-pool @ {: k :}  foe-bar-x foe-bar-y  k cells pools-shown + @  k foe-full  health-bar ;
+    his-bar-x his-bar-y health-shown @ full-health matthew-name health-bar
+    this-round round-pool @ {: k :}  foe-bar-x foe-bar-y  k cells pools-shown + @  k foe-full  k foe-name  health-bar ;
 ' draw-shootout on-draw
 
 : start ( plan -- )  plan !  true shootout-going !  0e due f!  set-up ;
