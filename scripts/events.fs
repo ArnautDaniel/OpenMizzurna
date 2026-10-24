@@ -236,8 +236,10 @@ variable loaded-pack
 
 
 
-: item-query ( a x1 -- )  2 act-unbuilt ;   \ cmd $2E
-: item-show ( a x1 -- )  2 act-unbuilt ;   \ cmd $2F
+defer answer-item ( a item -- answer )   \ (showing.fs)
+defer shown-item ( a answer -- )
+: item-query ( a item -- )  answer-item result! ;   \ cmd $2E: what they'd answer to the item
+: item-show ( a answer -- )  shown-item ;          \ cmd $2F: shown it
 : act ( a -- )  1 act-unbuilt ;   \ cmd $36
 
 

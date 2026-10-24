@@ -3,7 +3,7 @@
 \ clock puts them: at the first stop whose time hasn't come. Those in the area Matthew is in are drawn, in their
 \ stop's motion. Facts: stop-of, the stop's place; the townsfolk actor keeps them as the time moves.
 IN: townsfolk
-USING: engine actors messages clock areas floors figures doors traffic matthew ;
+USING: engine actors messages clock areas floors figures doors traffic matthew ui ;
 
 182 constant #slots
 enum: placed  standing partnered at-diner at-club ;   \ how a stop puts them (src: func_80027944)
@@ -314,7 +314,7 @@ behaviour townsfolk
   on spawned ( -- )  self subscribe tick  self subscribe time-set  self subscribe minute-passed
     self subscribe car-arrived
     self subscribe player-control ;
-  on tick ( -- )  animate ;
+  on tick ( -- )  ui-busy? 0= if  animate  then ;   \ (src: cobj.c: no moving while ui_busy)
   on time-set ( t -- )  settle-all ;
   on minute-passed ( t -- )  controlled @ if  minute  else  drop  then ;
   on player-control ( flag -- )  controlled ! ;

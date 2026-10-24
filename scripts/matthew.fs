@@ -2,7 +2,7 @@
 \ (models/073_1.gltf: kind 0's model, CD.BIN 073_1, drawn in the area's textures). Walking, looking and acting
 \ come next; for now the events place and turn him.
 IN: matthew
-USING: engine actors messages keys areas floors figures window ;
+USING: engine actors messages keys areas floors figures window ui ;
 
 
 variable floor   1 floor !   \ his floor (src: a loaded game resumes on area 1's floor 1)
@@ -187,7 +187,8 @@ PRIVATE>
 behaviour the-player
   on spawned ( -- )  figure-path model figure !  self subscribe tick  self subscribe player-control ;
   on figure-place ( x y z -- )  0 heading-there !  0 ahead !  place ;
-  on tick ( -- )  crawling @ if  crawl  then  control  scene-moves
+  on tick ( -- )  ui-busy? if  exit  then   \ (src: field_update: no player_update while ui_busy)
+    crawling @ if  crawl  then  control  scene-moves
     moving  unseen @  self body? 0= or if  advance  else  self body-pos 3f>s nip  advance-heard  then
     if  moving hold-move @ if  keep-move  then  then ;
   on player-control ( flag -- )  controlled ! ;

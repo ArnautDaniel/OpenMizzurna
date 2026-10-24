@@ -4,7 +4,7 @@
 \ the Epoch's analysis, Cohen's room, Isabella's, the wounded guard; the look and act rows' extras (the doors,
 \ Barbara's door and her cigarettes); who says what, and the characters' hospital talks.
 IN: rules.area002
-USING: engine actors messages clock story-flags items townsfolk floors events look talk areas matthew ;
+USING: engine actors messages clock story-flags items townsfolk floors events look talk areas matthew showing ;
 
 2 constant this-area   29 constant upstairs   30 constant the-other-wing   \ (29, 30: their geometry, area 2's rules)
 10 constant the-guard   107 constant the-nurse   94 constant patient-94   176 constant patient-176
@@ -415,3 +415,12 @@ this-area ovl $801045EC ' cohen-to-his-bed native:   this-area ovl $801045CC ' t
 ' events.ovl002:entry-8010780C 35 minigame-script!   \ (src: area_minigame_start's 35)
 this-area ' entered ' scene-hook area-hooks!
 this-area ' each-frame area-frame!
+
+\ ---- shown an item (src: actor_handler_168): the tape of "Eternal", once ----
+7 constant eternal-tape   $64 constant hears-the-tape
+$020 18 story-bit constant tape-heard-168   \ (src: +0x20 bit 18, toggled)
+:noname ( slot item -- answer )  nip eternal-tape =  tape-heard-168 flag? 0= and if  hears-the-tape  else  0  then ;
+visitor-168 item-answer!
+:noname ( slot answer -- )
+    nip hears-the-tape = if  tape-heard-168 flag-toggle  ['] events.ovl002:entry-80105318 start-event  then ;
+visitor-168 item-shown!

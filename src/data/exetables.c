@@ -94,6 +94,13 @@ static const ExeTable kTables[] = {
      "the sound of a door of the third kind, by the content area (u8; 0 none - src: func_80041D24)"},
     /* the characters' talk (src: handlers_chars.c, char_talk.c) */
     {"character-packs", 0x80013134, 24, "a character's event pack of conversations (u8, by character: src npc_talk)"},
+    /* the item ring and showing items (src: ring.c, cevcon.c func_80042D0C / func_80042D78, items.c item_react) */
+    {"ring-items", 0x80095B48, 23 * 6,
+     "the ring's items in order: u8 the item, u8 its picture, u16 its name (063_3; its description the next), "
+     "u16 flags (1 | 4 a key item, 2 the entry that opens the key items)"},
+    {"item-reactions", 0x800966A8, 23 * 4, "the items a character reacts to (u32 a bit an item, by character)"},
+    {"reaction-packs", 0x80012A3C, 23, "a character's event pack of reactions to items (u8, by character)"},
+    {"robert-locker-stops", 0x80092198, 3 * 4, "where Robert goes for the locker, 12/26 .. 12/28 (s32 a stop)"},
     {"lines-morgan", 0x80088DFC, STOPS * 2, "morgan's line by the stop they walk from (s16 message, 0 none)"},
     {"lines-hudson", 0x80084D30, STOPS * 2, "hudson's line by the stop they walk from (s16 message, 0 none)"},
     {"lines-dennis", 0x80083D90, STOPS * 2, "dennis's line by the stop they walk from (s16 message, 0 none)"},

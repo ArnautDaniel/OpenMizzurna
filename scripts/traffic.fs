@@ -3,7 +3,7 @@
 \ along each road's bends, easing their speed and turning toward the way ahead; a car parking takes a free lane
 \ at its parking node. Facts: car-now, car-driving?, car-carrying?, partner-of, beside.
 IN: traffic
-USING: engine actors messages areas figures ;
+USING: engine actors messages areas figures ui ;
 
 26 constant first-car   35 constant #cars
 181 constant #car-routes
@@ -179,7 +179,7 @@ PRIVATE>
 state: traffic-state end-state
 behaviour traffic-runner
   on spawned ( -- )  traffic-reset  self subscribe tick ;
-  on tick ( -- )  traffic-step ;
+  on tick ( -- )  ui-busy? 0= if  traffic-step  then ;   \ (src: carline.c: none while ui_busy)
   on car-park ( car route -- )  swap car-of {: n c :}  false c driving !  false c carrying !  c n 0 start ;
   on car-hide ( car -- )  car-of {: c :}  false c driving !  false c carrying !  false c shown !  0 c x !  0 c z ! ;
   on car-drive ( car route speed -- )  rot car-of -rot start ;

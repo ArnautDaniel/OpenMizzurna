@@ -433,6 +433,72 @@ static void piece_image(Job *j, const VramContext *v, const SkyPiece *p, const c
     free(image);
 }
 
+/* the item ring's pictures (src: ring.c: CD.BIN 034_4, a bare TMD of a flat card an item, each its own corner of
+ * the UI's textures): items/<k>.png, the card's texture rectangle cut out */
+#define ITEM_CARDS_ENTRY (34 * CDBIN_KINDS + 4)
+#define TMD_OBJECTS_AT 12
+#define TMD_OBJECT 28
+static void item_pictures(Job *j, const VramContext *v, const uint8_t *const *entries, const size_t *sizes, int n) {
+    const uint8_t *d = ITEM_CARDS_ENTRY < n ? entries[ITEM_CARDS_ENTRY] : NULL;
+    size_t size = ITEM_CARDS_ENTRY < n ? sizes[ITEM_CARDS_ENTRY] : 0;
+    uint8_t *image;
+    uint32_t count, o;
+
+    if (d == NULL || size < TMD_OBJECTS_AT || d[0] != 0x41) {
+        return;
+    }
+    count = (uint32_t)(d[8] | d[9] << 8 | d[10] << 16 | (uint32_t)d[11] << 24);
+    image = malloc((size_t)PAGE_TEXELS * PAGE_TEXELS * 4);
+    for (o = 0; o < count && !j->failed && TMD_OBJECTS_AT + (o + 1) * TMD_OBJECT <= size; o++) {
+        const uint8_t *ob = d + TMD_OBJECTS_AT + o * TMD_OBJECT;
+        uint32_t at = TMD_OBJECTS_AT + (uint32_t)(ob[16] | ob[17] << 8 | ob[18] << 16 | (uint32_t)ob[19] << 24);
+        const uint8_t *pk, *w;
+        int u0, v0, u1, v1, y, iw, ih;
+        uint16_t palette, page;
+        char path[64];
+
+        if (at + 4 + 7 * 4 > size) {
+            continue;
+        }
+        pk = d + at;
+        w = pk + 4;   /* a textured quad: u v palette, u v page, u v, u v (then the colour) */
+        u0 = w[0], v0 = w[1], palette = (uint16_t)(w[2] | w[3] << 8);
+        page = (uint16_t)(w[6] | w[7] << 8);
+        u1 = w[12], v1 = w[13];
+        iw = u1 - u0 + 1, ih = v1 - v0 + 1;
+        if (iw <= 0 || ih <= 0 || u0 + iw > PAGE_TEXELS || v0 + ih > PAGE_TEXELS) {
+            continue;
+        }
+        vram_page_rgba(v, page, palette, j->page);
+        for (y = 0; y < ih; y++) {
+            memcpy(image + (size_t)y * iw * 4, j->page + ((size_t)(v0 + y) * PAGE_TEXELS + (size_t)u0) * 4, (size_t)iw * 4);
+        }
+        snprintf(path, sizeof(path), "items/%u.png", o);
+        image_file(j, path, image, iw, ih);
+    }
+    free(image);
+}
+
+/* the item ring's 2D pieces (src: ring.c func_8003D6E0, func_8003EA28: the UI's textures, palettes $3F6D / $3F70):
+ * its titles (the tools, the key items) and its hint (✕ EXIT), as ui/<name>.png */
+static const SkyPiece kUiPieces[] = {
+    {"ring-tools", 4, 0x2C0, 0, 0x2D0, 0xFD, 0xB0, 0x90, 48, 16},       /* "TOOL" */
+    {"ring-items", 4, 0x2C0, 0, 0x2D0, 0xFD, 0xB0, 0x80, 48, 16},       /* "ITEM": the key items */
+    {"exit", 4, 0x2C0, 0, 0x2D0, 0xFD, 0xB0, 0xA0, 40, 16},             /* "EXIT" */
+    {"button-cross", 4, 0x300, 0, 0x300, 0xFD, 0x80, 0xB0, 16, 16},
+};
+
+static void ui_images(Job *j, const VramContext *v) {
+    size_t i;
+
+    for (i = 0; i < sizeof(kUiPieces) / sizeof(kUiPieces[0]) && !j->failed; i++) {
+        char path[64];
+
+        snprintf(path, sizeof(path), "ui/%s.png", kUiPieces[i].name);
+        piece_image(j, v, &kUiPieces[i], path);
+    }
+}
+
 static void sky_images(Job *j, const VramContext *v) {
     uint8_t *image = malloc((size_t)PAGE_TEXELS * PAGE_TEXELS * 4);
     size_t i;
@@ -685,6 +751,8 @@ static int run(Job *j, const uint8_t *const *entries, const size_t *sizes, int n
             }
             lamps_set(v, 0);
             sky_images(j, v);   /* (the sky's: the common images, as in the town) */
+            item_pictures(j, v, entries, sizes, n);
+            ui_images(j, v);
             area_sprites(j, v, entries, sizes, n, TOWN_AREA, "town/sprites.txt", "town/sprites");
         }
         for (i = 0; i < ms.n && !j->failed; i++) {

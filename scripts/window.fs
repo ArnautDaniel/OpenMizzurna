@@ -119,6 +119,7 @@ variable wanted
 : draw-window ( -- )
     window-up? if  band draw-lines draw-arrow draw-cursor  then ;
 ' draw-window on-draw
+: on-top ( -- )  ['] draw-window dup off-draw on-draw ;   \ (drawn last: over any screen opened since)
 ' draw-effect-over on-draw   \ (the screen's effects over the window; its +256 ones under it: effects.fs)
 
 \ ---- the actor ----
@@ -127,11 +128,11 @@ behaviour message-window
   on spawned ( -- )  self subscribe tick ;
   on tick ( -- )  window-step ;
   on window-say ( bank id speaker palette secs -- )
-    >r open  r> s>f time-left f!  0 choices !
+    >r open  on-top  r> s>f time-left f!  0 choices !
     time-left f@ f0> 0= if  text-shown clock-id send hold-clock  then ;
   on window-ask ( bank id kind -- )   \ src: msg_choice: kind 1 / 2 that many answers more, below no question;
                                       \ else a question and two answers below it
-    >r nobody 0 open  0e time-left f!  choice-x left !  0 cursor !
+    >r nobody 0 open  on-top  0e time-left f!  choice-x left !  0 cursor !
     r@ 1 = r@ 2 = or if  r@ 1+ choices !  0 first-choice !  else  2 choices !  1 first-choice !  then  r> drop
     text-shown clock-id send hold-clock ;
   on window-shut ( -- )  shut ;

@@ -5,7 +5,7 @@
 \ frame of the original's), facing along the edge - half way round at once at a node - in its motion; there it
 \ stands and is done. A step at the original's rate (30 a second in the town).
 IN: walkers
-USING: engine actors messages areas figures townsfolk ;
+USING: engine actors messages areas figures townsfolk ui ;
 
 <PRIVATE
 32 constant node-bytes   8 constant height-at   10 constant routes-at   16 constant neighbours-at   24 constant lengths-at
@@ -79,7 +79,7 @@ PRIVATE>
 state: walkers-state end-state
 behaviour footpaths
   on spawned ( -- )  self subscribe tick  self subscribe area-entered ;
-  on tick ( -- )  walk ;
+  on tick ( -- )  ui-busy? 0= if  walk  then ;
   on walker-start ( slot node dest speed motion -- )  begin-walk ;
   on walker-stop ( slot -- )  end-walk ;
   on area-entered ( area scene -- )  2drop  clear-walkers ;

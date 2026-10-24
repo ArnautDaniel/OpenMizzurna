@@ -12,6 +12,29 @@ USING: events events.main ;
     end-script
     ;
 
+\ $801048EC
+: entry-801048EC
+    samuel as-this-one
+    matthew 5 0 face
+    matthew 10483 0 talk
+    matthew 59 60 1 anim-then
+    30 frames wait
+    matthew 61 0 anim
+    matthew wait-anim
+    this-one 10484 0 talk
+    matthew 10485 1 talk
+    this-one 10486 0 talk
+    matthew 10487 7 talk
+    this-one 10488 0 talk
+    matthew 10489 7 talk
+    this-one 10490 0 talk
+    matthew 10491 1 talk
+    this-one 10492 0 talk
+    matthew 10493 6 talk
+    this-one 10494 0 talk
+    end-script
+    ;
+
 \ $80104978
 : entry-80104978
     257 1 call-pack-script

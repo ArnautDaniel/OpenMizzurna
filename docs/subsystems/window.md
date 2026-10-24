@@ -37,6 +37,9 @@ The events' text ops (`events.fs`: `say`, `say-by`, `talk`, `caption-for`, `phon
 thread's `wait_msg`, checked before its other waits). Text ids: < 10000 the area's, < 15000 the common text,
 else the loaded pack's.
 
+The window is drawn over everything: as a message opens it moves to the end of the drawing (over a screen opened
+since, such as the item ring's).
+
 ## Status
 
 **Built**: the window, its drawing, the events' text ops. Checked by `tests/window/test_window.fs` (11) and the

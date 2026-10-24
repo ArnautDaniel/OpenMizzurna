@@ -2,7 +2,7 @@
 \ doors - whether Matthew may go in now (their hours, the story) and the script that takes him in.
 IN: rules.area027
 USING: engine actors messages clock story-flags townsfolk areas look talk matthew knock events events.ovl027 tail
-    walkers driving ;
+    walkers driving showing ;
 
 27 constant this-area
 
@@ -201,3 +201,14 @@ variable stalker-due   variable stalking
     dup the-stalker = if  drop 25 minigame  true exit  then  talks-here ;
 ' talks-to this-area area-talk!
 this-area ' entered-town 0 area-hooks!
+
+\ ---- the deputy shown the sheriff's badge: his scene (src: area_minigame_start's 27; showing.fs) ----
+' entry-8010A240 27 minigame-script!
+
+\ ---- the photo shop's clerk shown the pocket camera, once he has met him (src: actor_handler_158) ----
+158 constant photo-clerk   10 constant pocket-camera   $64 constant takes-the-film
+$1BC 1 story-bit constant met-the-clerk   \ (src: +0x1BC bit 1: set at his first talk, func_80105FF8)
+:noname ( slot item -- answer )
+    over busy? if  2drop 0 exit  then
+    nip pocket-camera =  met-the-clerk flag? and if  takes-the-film  else  0  then ;  photo-clerk item-answer!
+:noname ( slot answer -- )  nip takes-the-film = if  ['] entry-8010BC6C start-event  then ;  photo-clerk item-shown!

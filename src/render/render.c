@@ -271,6 +271,23 @@ void render_quad4(const float xy[8], const uint32_t rgba[4]) {
     R.batches[R.nbatches - 1].count += 6;
 }
 
+void render_image_quad(GpuTexture t, const float xy[8], uint32_t rgba) {
+    static const float uv[8] = {0, 0, 1, 0, 0, 1, 1, 1};
+    Vertex2D *v, c[4];
+    int k;
+
+    if (R.nverts + 6 > 6 * MAX_QUADS || !new_batch(t.id)) {
+        return;
+    }
+    for (k = 0; k < 4; k++) {
+        c[k] = (Vertex2D){xy[k * 2], xy[k * 2 + 1], uv[k * 2], uv[k * 2 + 1], swap_rgba(rgba)};
+    }
+    v = R.verts + R.nverts;   /* (as render_quad4's) */
+    v[0] = c[0], v[1] = c[1], v[2] = c[2], v[3] = c[1], v[4] = c[3], v[5] = c[2];
+    R.nverts += 6;
+    R.batches[R.nbatches - 1].count += 6;
+}
+
 void render_text(float x, float y, float scale, uint32_t rgba, const char *s, int n) {
     float fw = (float)(FONT_COUNT * GLYPH_W), left = x;
     int i;

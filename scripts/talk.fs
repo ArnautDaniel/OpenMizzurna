@@ -55,9 +55,10 @@ variable talking-pack   variable talking-n
 : pack-talk-event ( -- )  talking-pack @ talking-n @ call-pack-script ;
 : npc-talk-as-matthew ( slot n -- )   \ src: npc_talk(0, slot << 16 | n): Matthew's pack, the person's talk
     {: s n :}  s matthew 0 face  s idle  matthew pack-of talking-pack !  n talking-n !  ['] pack-talk-event start-event ;
-: npc-talk ( slot n -- )
-    {: s n :}  s matthew 0 face  s idle   \ (src: actor_turn_to_actor, actor_anim 0)
-    s pack-of talking-pack !  n talking-n !  ['] pack-talk-event start-event ;
+: pack-talk ( slot pack n -- )   \ script n of a pack, the person's talk (src: event_start_talk)
+    {: s p n :}  s matthew 0 face  s idle   \ (src: actor_turn_to_actor, actor_anim 0)
+    p talking-pack !  n talking-n !  ['] pack-talk-event start-event ;
+: npc-talk ( slot n -- )  over pack-of swap pack-talk ;
 : default-line! ( xt slot -- )  cells default-lines + ! ;   \ xt ( slot -- )
 : area-talk! ( xt area -- )  cells area-talks + ! ;          \ xt ( slot -- handled? )
 : a-line-by-stop ( table key -- msg | -1 )   \ a table of (key, message) pairs ended by -1 (src: func_800429C8)

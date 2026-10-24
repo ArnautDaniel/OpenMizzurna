@@ -37,6 +37,7 @@ phase-1 port's files (`../port/src/game/`), which name the decomp's functions; t
 | Effects ([page](subsystems/effects.md), built) | fades, wipes, the iris, the flash | `effect.c` |
 | Look ([page](subsystems/look.md), area 1) | ○ and □: the tables' rows, the areas' rules | `cecheck.c`, the overlays |
 | Items ([page](subsystems/items.md), the list) | what Matthew carries | `items.c` |
+| Item ring ([page](subsystems/ring.md), built) | the ring of his items; showing one to someone; the screens' standing still (`ui.fs`) | `ring.c`, `cui.c`, `cevcon.c` |
 | Talk ([page](subsystems/talk.md), Nozz) | ○ on a person: their story talks, the area's lines, their own | `char_talk.c`, the handlers |
 | Doors | locks, knocking, who answers | `door.c` (SCKNOCK.C) |
 | Car ([page](subsystems/driving.md), driving built) | driving, fuel, the roads; the boat | `ovl027.c` (`car_update`, `boat_update`), `hud.c` (fuel) |
@@ -46,7 +47,6 @@ phase-1 port's files (`../port/src/game/`), which name the decomp's functions; t
 | List menu ([page](subsystems/list-menu.md), built) | the board of labels to pick from: the diner's, the bar's orders | `cui.c` |
 | Crate ([page](subsystems/crate.md), built) | a crate to push or climb, the perch the rows go by | `player_misc.c`, `player.c` |
 | Counter ([page](subsystems/counter.md), the diner) | sitting at a bar's counter: leaning, calling the barman, ordering | `counter.c`, the overlays |
-| Items | the inventory and the item ring | `items.c`, `ring.c`, `cui.c` |
 | Phone | dialling, calls, who calls when | `ftel.c` |
 | Notebook | the people and numbers Matthew knows | `fhbook.c` |
 | Map | the town map, places known | `mapscreen.c` |

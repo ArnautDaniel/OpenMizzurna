@@ -3,7 +3,7 @@
 \ (counter.fs), the boat, a scene there once, who says what, the C its events call.
 IN: rules.area009
 USING: engine actors messages clock story-flags items townsfolk events look talk areas matthew window list-menu
-    counter ;
+    counter showing ;
 
 9 constant this-area
 97 constant counterman   64 constant the-drink   22 constant item-22
@@ -101,3 +101,16 @@ this-area ovl $80103934 ' on-the-counter native:
 
 this-area ' entered ' scene-hook area-hooks!
 this-area ' each-frame area-frame!
+
+\ ---- shown an item (src: actor_handler_97): the ring with the initial, once its time has come ----
+23 constant the-ring-item   $64 constant knows-the-ring
+$00B 0 story-bit constant ring-not-yet      \ (src: story byte +0x0B bit 0)
+$01C 31 story-bit constant ring-time-come   \ (src: +0x1C bit 31)
+$008 24 story-bit constant ring-shown-97    \ (src: +0x08 bit 24, toggled)
+:noname ( slot item -- answer )
+    over busy? if  2drop 0 exit  then
+    nip the-ring-item =  ring-not-yet flag? 0= and  ring-time-come flag? and if  knows-the-ring  else  0  then ;
+counterman item-answer!
+:noname ( slot answer -- )
+    nip knows-the-ring = if  ring-shown-97 flag-toggle  ['] events.ovl009:entry-801040D4 start-event  then ;
+counterman item-shown!

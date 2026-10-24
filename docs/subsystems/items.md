@@ -13,4 +13,4 @@ its text).
 
 ## Status
 
-**Built**: the list (`scripts/items.fs`). **To come**: the item ring (the screen), using items.
+**Built**: the list (`scripts/items.fs`); the item ring and using items (`docs/subsystems/ring.md`).

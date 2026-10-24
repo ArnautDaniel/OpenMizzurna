@@ -2,7 +2,7 @@
 \ overlay; decomp/docs/areas/area01.md). What ○ and □ do here beyond the tables' rows, the area's and the
 \ scene's hooks, and the C its events call.
 IN: rules.area001
-USING: engine actors messages clock story-flags items townsfolk floors events look talk areas ;
+USING: engine actors messages clock story-flags items townsfolk floors events look talk areas showing ;
 
 1 constant this-area
 $008 9 story-bit constant letter-waiting   \ (not named yet: lets the letter be found - src: D_800F6930 & 0x200)
@@ -150,3 +150,9 @@ create nozz-leaving    \ and leaving it (src: D_80103E58)
 
 ' look-check ' look-do ' act-check ' act-do  this-area content area-rules!
 this-area ' entered ' scene-hook area-hooks!
+
+\ ---- shown an item (src: actor_handler_180): the tape of "Eternal", its scene ----
+180 constant person-180   7 constant eternal-tape   $64 constant hears-the-tape
+:noname ( slot item -- answer )  nip eternal-tape = if  hears-the-tape  else  0  then ;  person-180 item-answer!
+:noname ( slot answer -- )  nip hears-the-tape = if  ['] events.ovl001:entry-801053BC start-event  then ;
+person-180 item-shown!

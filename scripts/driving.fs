@@ -8,7 +8,7 @@
 \ him out at the first free door. The fuel gauge and the speed are shown. A step at the original's rate (30 a
 \ second in the town).
 IN: driving
-USING: engine actors messages keys screen areas figures floors matthew traffic talk look events events.main sound rumble ;
+USING: engine actors messages keys screen areas figures floors matthew traffic talk look events events.main sound rumble ui ;
 
 variable at-the-wheel   \ src: g_driving
 120 constant full-tank
@@ -137,6 +137,7 @@ variable needle   full-tank needle !
 PRIVATE>
 
 : fill-up ( -- )  full-tank fuel ! ;
+: nearly-still? ( -- flag )  speed @ abs still-enough <= ;   \ (a fact: slow enough to step out, or for the ring)
 : his-car-now ( -- x z heading )  cx @ cz @ ch @ 4095 and ;   \ (a fact: where he has it)
 : put-in-his-car ( -- )  into-his-car ;   \ (the chase's: src func_8004175C)
 : step-out ( -- )  driving? if  free-door 0 max get-out  then ;   \ (src: car_exit from the C: at a free door, else the first)   \ src: fuel_set(120): the gas station
@@ -144,7 +145,7 @@ PRIVATE>
 state: driving-state end-state
 behaviour drivers
   on spawned ( -- )  self subscribe tick  self subscribe area-entered ;
-  on tick ( -- )  drive-tick ;
+  on tick ( -- )  ui-busy? 0= if  drive-tick  then ;   \ (src: field_update: no player_update while ui_busy)
   on drive-hold ( flag -- )  held !  0e due f! ;
   on car-bumped ( -- )  velocity f@ 16e f/ velocity f! ;
   on car-nudge ( dx dz -- )  cz +!  cx +!  show-car ;

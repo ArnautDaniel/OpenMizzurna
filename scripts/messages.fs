@@ -164,3 +164,9 @@ message car-arrived ( car -- )           \ broadcast: a car with riders reached 
 
 \ ---- the day's light and the weather (docs/subsystems/daylight.md) ----
 message set-weather ( weather hold -- )  \ (to the daylight) clear, overcast or snowing; hold: it stays (src: func_80025384)
+
+\ ---- the screens over the field: the item ring, and those to come (docs/subsystems/ring.md) ----
+message ui-lock ( -- )                   \ (to the ui) a screen is up: the world stands still (src: ui_lock)
+message ui-unlock ( -- )                 \ (to the ui) that screen is gone (src: ui_unlock)
+message ring-chosen ( item shown-to -- ) \ broadcast: the ring closed on an item (-1 none); shown-to: the person it
+                                         \ was shown to (-1: chosen for use)

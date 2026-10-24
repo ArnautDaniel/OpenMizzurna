@@ -4,7 +4,7 @@
 \ distance; an event puts it where it wants (fixed). Its state is its own (variables: the only camera), drawn
 \ each frame through the engine's `camera`.
 IN: camera
-USING: engine actors messages areas matthew window ;
+USING: engine actors messages areas matthew window ui ;
 
 500 constant indoor-projection   400 constant town-projection   \ src: GsSetProjection(g_on_overworld ? 400 : 500)
 \ the town's profile (src: camera_reset / camera_follow on the overworld)
@@ -91,7 +91,7 @@ behaviour follow-camera
     indoor-projection projection !  true following ! ;
   on tick ( -- )   \ (src: field_update: no following while a window is up - ui_busy)
     low-behind @ if  keep-behind  then
-    following @ window-up? 0= and if  reset-due @ if  camera-reset  false reset-due !  then  follow  then  tweens ;
+    following @ window-up? 0= and  ui-busy? 0= and if  reset-due @ if  camera-reset  false reset-due !  then  follow  then  tweens ;
   on camera-move-to ( x y z speed -- )  move-speed !  goal 2 cells + !  goal cell+ !  goal !  true moving ! ;
   on camera-turn-to ( yaw step -- )  turn-step !  full-turn 1- and turn-goal !  true turning ! ;
   on camera-height-to ( eye-y step -- )  height-step !  height-goal !  true lifting ! ;

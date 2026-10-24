@@ -292,6 +292,19 @@ PRIM(p_draw_image) {   /* ( image x y w h -- ) in window pixels, tinted by the p
         render_image(sImages[i - 1].t, (float)x, (float)y, (float)wd, (float)h, gEngine.pen);
     }
 }
+PRIM(p_draw_image_quad) {   /* ( image x0 y0 x1 y1 x2 y2 x3 y3 -- ) on four corners (0 1 / 2 3), in window pixels, tinted */
+    float xy[8];
+    int k;
+    Cell i;
+
+    for (k = 7; k >= 0; k--) {
+        xy[k] = (float)POP();
+    }
+    i = POP();
+    if (i >= 1 && i <= sNImages && sImages[i - 1].t.id != 0) {
+        render_image_quad(sImages[i - 1].t, xy, gEngine.pen);
+    }
+}
 PRIM(p_draw_billboard) {   /* ( image x z bottom top half yaw grey blend -- ) an upright picture in the world, turned to
                              * face the heading yaw (4096 a turn); grey 128: as it is; blend as scene3d_quad's */
     Cell blend = POP(), grey = POP(), yaw = POP(), half = POP(), top = POP(), bottom = POP(), z = POP(), x = POP(),
@@ -345,7 +358,7 @@ void bind_engine(Forth *f) {
         {"on-tick", p_on_tick}, {"off-tick", p_off_tick}, {"on-draw", p_on_draw}, {"off-draw", p_off_draw},
         {"ticks", p_ticks}, {"dt", p_dt}, {"seconds", p_seconds}, {"step-blend", p_step_blend}, {"pen-color", p_pen_color}, {"pen-scale", p_pen_scale}, {"draw-text", p_draw_text},
         {"draw-rect", p_draw_rect}, {"pen-blend", p_pen_blend}, {"draw-quad", p_draw_quad}, {"screen-size", p_screen_size}, {"char-size", p_char_size}, {"hud", p_hud},
-        {"clear-color", p_clear_color}, {"random", p_random}, {"image", p_image}, {"image-size", p_image_size}, {"draw-image", p_draw_image}, {"behind", p_behind}, {"pad-rumble", p_pad_rumble}, {"draw-billboard", p_draw_billboard}, {"draw-ground-quad", p_draw_ground_quad}, {"screenshot", p_screenshot},
+        {"clear-color", p_clear_color}, {"random", p_random}, {"image", p_image}, {"image-size", p_image_size}, {"draw-image", p_draw_image}, {"draw-image-quad", p_draw_image_quad}, {"behind", p_behind}, {"pad-rumble", p_pad_rumble}, {"draw-billboard", p_draw_billboard}, {"draw-ground-quad", p_draw_ground_quad}, {"screenshot", p_screenshot},
         {"screenshot-pending?", p_screenshot_pending}, {"console!", p_console_store}, {"exe-table", p_exe_table}, {"library-file", p_library_file}, {"exe-u8", p_exe_u8}, {"exe-s8", p_exe_s8}, {"exe-s16", p_exe_s16}, {"exe-s32", p_exe_s32},
     };
     Vocab *was = f->m.current, *v = forth_vocab(f, "engine");

@@ -42,6 +42,8 @@ void render_behind(int behind);
 void render_blend(int mode);
 /* a four-cornered shape, a colour a corner (corners as the PlayStation's G4: 0 1 / 2 3) */
 void render_quad4(const float xy[8], const uint32_t rgba[4]);
+/* a picture on four corners (0 1 / 2 3: its top left, top right, bottom left, bottom right), tinted */
+void render_image_quad(GpuTexture t, const float xy[8], uint32_t rgba);
 void render_text(float x, float y, float scale, uint32_t rgba, const char *s, int n);
 float render_text_width(float scale, int chars);
 float render_line_height(float scale);
