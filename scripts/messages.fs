@@ -38,6 +38,7 @@ message enter-area ( area scene -- )     \ (to the areas) play that area from th
 message show-scene ( scene -- )          \ (to the areas) another of the area's scenes (its objects and camera)
 message play-area-anim ( entry -- )      \ (to the areas) the area's animation list's entry: its object plays its motion once
 message object-shown ( object flag -- )   \ (to the areas) one of the area's objects shown or hidden (until the next scene)
+message object-motion ( object id next -- ) \ (to the areas) an object's motion (the common props'), then the next looping (-1: held)
 message area-entered ( area scene -- )   \ broadcast: the area is in
 message scene-shown ( scene -- )         \ broadcast: the scene changed
 27 constant the-town                     \ the streamed outdoors (MAP.BIN)
@@ -193,4 +194,6 @@ message fuel-set ( n -- )
 message person-restore ( slot stop kind -- )   \ (to the townsfolk) at that stop, showing that kind (src: actor_load)
 
 \ ---- the title (docs/subsystems/title.md) ----
+message computer-open ( places opener -- )   \ (to the map) the police computer: the map in its other palette, those
+                                         \ places' case files; opener ( place -- event | -1 ) plays one (src: ovl000 FPolice.C)
 message title-boot ( mode -- )           \ (to the title) start it: 0 the logo, 1 / 2 an ending's movie and card

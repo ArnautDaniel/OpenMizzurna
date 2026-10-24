@@ -208,7 +208,7 @@ enum: look-action  nothing-here  barbaras-door  2 the-cigarettes  the-board-of-n
             $1C 14 story-bit flag? 0=  barbara-in-her-room? and  lidds-by-barbara? and  today 28 = and if
                 ['] events.ovl002:entry-80104FD0  else  ['] events.ovl002:entry-80106888  then start-event  endof
         the-board-of-news of  ['] events.ovl002:entry-80106900 start-event  endof
-        the-bulletin of  0 s" the bulletin board" unbuilt  endof   \ (src: evfn_80047BD8 - the recap: to come)
+        the-bulletin of  main-exe $80047BD8 native  endof   \ (src: evfn_80047BD8: the recap - story.fs)
         the-other-door of  ['] events.ovl002:entry-8010671C start-event  endof
         the-front-door of  ['] events.ovl002:entry-801065B4 start-event  endof
         cohen-in-bed of  cohen talk-with  endof

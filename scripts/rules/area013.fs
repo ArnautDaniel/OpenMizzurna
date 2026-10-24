@@ -3,7 +3,7 @@
 \ minigame that's a script by the lesson reached), who says what, a scene at night once, the way down with or
 \ without a companion, the lights by floor and the time of day.
 IN: rules.area013
-USING: engine actors messages clock story-flags townsfolk events look talk areas matthew ;
+USING: engine actors messages clock story-flags townsfolk events look talk areas matthew driving ;
 
 13 constant this-area
 171 constant the-old-man   86 constant person-86   69 constant person-69   117 constant person-117
@@ -90,9 +90,10 @@ create person-119-lines  6 , 96 ,  14 , 96 ,  22 , 96 ,  30 , 96 ,  38 , 96 ,  4
         ['] events.ovl013:entry-80102DCC start-event  winona-night-talk-seen flag-set  then ;
 : the-way-down ( -- )   \ 0x80102620: with a companion along, or alone
     following? if  ['] events.ovl013:entry-80102A80  else  ['] events.ovl013:entry-801036A0  then  start-event ;
-variable lesson   3 constant last-lesson   20 constant fuel-for-a-lesson
-: lesson-learned ( -- )   \ 0x8010274C: the next lesson (up to the last), and fuel (the car's fuel: to come)
-    lesson @ last-lesson < if  1 lesson +!  then  0 s" fuel for a lesson" unbuilt ;
+variable lesson   3 constant last-lesson   20 constant fuel-for-a-lesson   120 constant most-fuel
+: lesson-learned ( -- )   \ 0x8010274C: the next lesson (up to the last), and fuel (src: fuel_set: 120 at most)
+    lesson @ last-lesson < if  1 lesson +!  then
+    fuel @ fuel-for-a-lesson + most-fuel min s" driving" actor-named send fuel-set ;
 create lessons  ' events.ovl013:entry-80103938 , ' events.ovl013:entry-80103A64 ,
                 ' events.ovl013:entry-80103B54 , ' events.ovl013:entry-80103C74 ,   \ src: D_80103D24
 : the-lesson ( -- )  lesson @ cells lessons + @ execute ;   \ minigame 39: the lesson reached (a script)

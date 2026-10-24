@@ -25,7 +25,14 @@ The town map screen (src: `mapscreen.c`). `scripts/map.fs`, the actor `map`.
 
 ## Status
 
-**Built:** the screen, the places, the hand, the names, his arrow.
+**Built:** the screen, the places, the hand, the names, his arrow; the police computer.
 
-**To come:** ovl000's own map (the station's: the other palette and the other known set, D_800A34EC) with
-that area's rules.
+## The police computer
+
+The station's computer (src: ovl000 FPolice.C) is the same screen (`computer-open ( places opener )`):
+- the map in its other palette (`ui/map-other.png`);
+- the places of the case files it holds by the story (area 0's `listed-files`, src func_80103F3C), and no arrow;
+- the hint □ CHECK at (0, 80).
+
+□ on a place plays its file (area 0's `file-of`, src func_80103994: some by story bits; a few files mark
+themselves read). While the file plays the list waits: only the places are drawn. ✕ closes it.

@@ -67,7 +67,7 @@ create shell-shown 256 allot   create models-shown 256 allot
 6 constant anim-entry   32 constant #moving-objects
 15e fconstant object-frames   \ its frames a second (the areas ran at 15)
 begin-structure moving-object
-  field: mo-object   field: mo-motion   field: mo-playing   field: mo-again   ffield: mo-frame
+  field: mo-object   field: mo-motion   field: mo-playing   field: mo-again   ffield: mo-frame   field: mo-next
 end-structure
 create moving-objects  #moving-objects moving-object * allot
 : objects-still ( -- )  moving-objects #moving-objects moving-object * erase
@@ -86,12 +86,16 @@ objects-still
     #moving-objects 0 do  moving-objects i moving-object * + mo-object @ o = if  false unloop exit  then  loop  true ;
 : play-object ( object motion-id again? -- )   \ src: func_80020198
     {: o id loops :}  o slot-of {: s :}  o s mo-object !  id prop-motion s mo-motion !
-    loops s mo-again !  0e s mo-frame f!  true s mo-playing ! ;
+    loops s mo-again !  0e s mo-frame f!  true s mo-playing !  -1 s mo-next ! ;
+: play-object-then ( object motion-id next -- )   \ src: func_800201EC: once, then the next held looping
+    {: o id nx :}  o id false play-object  nx o slot-of mo-next ! ;
 : step-object ( slot -- )
     {: s :}  s mo-playing @  s mo-motion @ 0<> and 0= if  exit  then
     s mo-frame f@ object-frames dt f* f+  s mo-frame f!
     s mo-frame f@ f>s  s mo-motion @ motion-frames < if  exit  then
-    s mo-again @ if  0e s mo-frame f!  else  false s mo-playing !  s mo-motion @ motion-frames 1- s>f s mo-frame f!  then ;
+    s mo-again @ if  0e s mo-frame f!  exit  then
+    s mo-next @ 0< 0= if  s mo-next @ prop-motion s mo-motion !  -1 s mo-next !  true s mo-again !  0e s mo-frame f!  exit  then
+    false s mo-playing !  s mo-motion @ motion-frames 1- s>f s mo-frame f! ;
 : objects-step ( -- )   \ a step of the game's frames (src: a frame each)
     #moving-objects 0 do  moving-objects i moving-object * + step-object  loop ;
 : pose-slot ( slot -- )   \ its object's pose for the coming draw
@@ -125,6 +129,8 @@ behaviour areas
   on play-area-anim ( entry -- )   \ src: func_8001A150: the list's entry, played once
     area @ 0< area @ the-town = or if  drop exit  then  area-anim false play-object ;
   on tick ( -- )  objects-step ;
+  on object-motion ( object id next -- )   \ one of the area's objects: a motion, then the next looping (-1: held)
+    rot {: id nx o :}  nx 0< if  o id false play-object  else  o id nx play-object-then  then ;
   on object-shown ( object flag -- )   \ src: object_show / object_hide (the area's hooks: day and night lights)
     {: o f :}  o 256 u< 0= if  exit  then  f 0<> 1 and {: b :}
     b models-shown o + c!  o shell-objects < if  b shell-shown o + c!  then ;

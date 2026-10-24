@@ -181,7 +181,7 @@ variable held   variable pressed   \ (the pad of the fighter acting now)
     {: f o i :}  f move @ {: m :}
     f move-frame @ m hit-frame <> if  exit  then
     apart m reach <  o move @ move-kind not-hittable <> and 0= if  sound-base missed-sound + sfx exit  then
-    m hit-sound sfx  m voice-sound sfx  f o i lands ;   \ (the pad's rumble: to come)
+    m hit-sound sfx  m voice-sound sfx  f o i lands ;
 
 \ ---- a move's own motion (src: move_effects) ----
 : out-of-the-dash ( f -- )   \ forward and punch: a lunge; back and punch: a punch

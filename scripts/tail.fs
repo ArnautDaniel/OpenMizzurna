@@ -154,12 +154,12 @@ variable robber-talks   \ src: D_8010CA31
 
 \ ---- drawing: the digits entered (src: 16 x 16 icons at x -32 + 16 i, y 60) ----
 -32 constant digits-x   60 constant digits-y   16 constant digit-pitch   16 constant digit-size
-: digit-ink ( d -- rgba )  case  0 of  triangle-ink  endof  1 of  circle-ink  endof  2 of  cross-ink  endof
-    drop square-ink 0  endcase ;
+: digit-icon ( d -- image )  case  0 of  triangle-icon  endof  1 of  circle-icon  endof  2 of  cross-icon  endof
+    drop square-icon 0  endcase ;
 : draw-keypad ( -- )
-    stage @ keypad = 0= if  exit  then  scale {: k :}
-    #entered @ 0 ?do  i cells entered + @ digit-ink pen-color
-        digits-x i digit-pitch * + digits-y >screen  digit-size k *  digit-size k *  draw-rect  loop ;
+    stage @ keypad = 0= if  exit  then  $FFFFFFFF pen-color
+    #entered @ 0 ?do  i cells entered + @ digit-icon
+        digits-x i digit-pitch * + digits-y digit-size digit-size sprite  loop ;
 ' draw-keypad on-draw
 
 : pace ( -- )   \ src: state -2: by his door, between the first two points

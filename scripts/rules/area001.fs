@@ -139,12 +139,17 @@ create nozz-leaving    \ and leaving it (src: D_80103E58)
 : prologue-done? ( -- n )  prologue-done flag? 1 and ;   \ 0x801032B0 (its answer the result)
 : sleep-hours ( hours -- )   \ 0x801033D0: the clock on an hour at a time, no further than 12/31 23:49
     60 *  clock-time +  31 23 49 date>time min  clock-time - time-skip ;
-: object-6-on ( -- )  1 s" object animation" unbuilt ;   \ 0x80103450 (the area's animated objects: to come)
+6 constant his-notebook   2 constant opening-it   26 constant writing-in-it   3 constant closing-it
+\ (the notebook he takes out and writes in: object 6 - src ovl001 func_80103450 / func_801034A0)
+: notebook-out ( -- )   \ 0x801032C8: shown, opened, then written in
+    his-notebook true s" areas" actor-named send object-shown  his-notebook opening-it writing-in-it s" areas" actor-named send object-motion ;
+: notebook-closed ( -- )  his-notebook closing-it -1 s" areas" actor-named send object-motion ;   \ 0x801032E8
+: notebook-away ( -- )  his-notebook false s" areas" actor-named send object-shown ;   \ 0x80103308
 1 constant item-1   \ (not named yet)
 1 ovl $80103204 ' nozz-greets native:
 1 ovl $80103328 ' room-or-shop native:
 1 ovl $801032B0 ' prologue-done? native:
-1 ovl $801032C8 ' object-6-on native:   1 ovl $801032E8 ' object-6-on native:   1 ovl $80103308 ' object-6-on native:
+1 ovl $801032C8 ' notebook-out native:   1 ovl $801032E8 ' notebook-closed native:   1 ovl $80103308 ' notebook-away native:
 : give-item-1 ( -- )  item-1 s" items" actor-named send give-item ;
 1 ovl $80103370 ' give-item-1 native:
 : sleep-an-hour ( -- )  1 sleep-hours ;   : sleep-five-hours ( -- )  5 sleep-hours ;

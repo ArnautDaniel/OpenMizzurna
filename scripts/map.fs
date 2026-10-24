@@ -2,19 +2,24 @@
 \ the world standing still (ui.fs): the town's picture, its places marked (a dot, a line to an icon; some only
 \ once the map knows them: story-flags.fs's map-known), Matthew's arrow (his car's while he drives) pulsing red.
 \ The hand moves with the d-pad (faster with △ or ○ held), L1 and R1 jump it to the place before and after; over
-\ a place its name shows. ✕ closes. Its state is its own; others read map-up?.
+\ a place its name shows. ✕ closes. The police computer is the same screen (src: ovl000's FPolice.C): the
+\ map in its other palette, the places of the case files it holds; □ on one plays its file (the list waits).
+\ Its state is its own; others read map-up?.
 IN: map
-USING: engine actors messages keys screen ui story-flags figures matthew driving ;
+USING: engine actors messages keys screen ui story-flags figures matthew driving events ;
 
 variable map-open
 : map-up? ( -- flag )  map-open @ 0<> ;
+variable computer   \ (the police computer's: src D_800A34F0)
+variable computer-places   variable file-opener   variable file-playing   -1 file-playing !
 
 <PRIVATE
 22 constant #places
 $1F constant icon-bits   $40 constant only-once-known
 1000 34 5 * + 3 + constant place-names   \ (the text of CD.BIN 034_3: a place each)
 : place-flags ( i -- n )  s" map-places" rot exe-u8 ;
-: shown? ( i -- flag )   \ src: map_known
+: shown? ( i -- flag )   \ src: map_known (the computer: its own places alone)
+    computer @ if  1 swap lshift computer-places @ and 0<> exit  then
     dup place-flags only-once-known and 0= if  drop true exit  then
     1 swap lshift map-known @ and 0<> ;
 : dot-x ( i -- x )  s" map-dots" rot 2* exe-s16 ;
@@ -58,17 +63,25 @@ $6F constant first-red   6 constant red-step   $10 constant faintest   $7F const
     driving? if  his-car-now exit  then  matthew-now {: x y z h :}  x z h ;
 
 \ ---- opening, a frame, closing ----
-variable cross-was   variable l1-was   variable r1-was
+variable cross-was   variable l1-was   variable r1-was   variable square-was
 : edge ( flag var -- pressed? )  {: f v :}  f v @ 0= and  f v ! ;
 : open-map ( -- )
+    false computer !  -1 file-playing !
     true map-open !  0 hand-x !  0 hand-y !  0 chosen !  first-red red !  false fading !
     s" ui" actor-named send ui-lock  0e due f!
     pad-cross key-down? cross-was !  pad-l1 key-down? l1-was !  pad-r1 key-down? r1-was ! ;
-: close-map ( -- )  false map-open !  s" ui" actor-named send ui-unlock ;
+: close-map ( -- )  false map-open !  false computer !  s" ui" actor-named send ui-unlock ;
+: open-computer ( places opener -- )   \ src: ovl000 func_80103B6C
+    file-opener !  computer-places !  open-map  true computer !  pad-square key-down? square-was ! ;
+: playing-file? ( -- flag )   \ a case file's scene on: the list waits
+    file-playing @ dup 0< if  drop false exit  then  event-alive? dup 0= if  -1 file-playing !  then ;
 : map-step ( -- )
-    pad-cross key-down? cross-was edge  pad-l1 key-down? l1-was edge  pad-r1 key-down? r1-was edge  {: x l r :}
+    pad-cross key-down? cross-was edge  pad-l1 key-down? l1-was edge  pad-r1 key-down? r1-was edge
+    pad-square key-down? square-was edge  {: x l r q :}
     map-up? 0= if  exit  then
+    playing-file? if  exit  then
     x if  close-map exit  then
+    computer @  q and if  under-hand dup 0< 0= if  file-opener @ execute file-playing !  exit  then  drop  then
     steps-due 0 ?do  move-hand  pulse  loop
     r if  1 jump  else  l if  -1 jump  then  then ;
 
@@ -79,7 +92,7 @@ $F03030FF constant line-color
 96 constant hint-x   80 constant hint-y   16 constant button-w   40 constant hint-w
 -8 constant bar-x   64 constant bar-y   160 constant bar-w   16 constant bar-h   66 constant name-y   $20202080 constant bar-color
 24 constant hand-w
-variable map-image   variable dot-image   variable hand-image   variable exit-image   variable cross-image
+variable map-image   variable other-map-image   variable dot-image   variable hand-image   variable exit-image   variable cross-image
 create icon-images #places cells allot   icon-images #places cells erase
 : ui-image ( var addr len -- image )
     {: v a n :}  v @ ?dup if  exit  then  $clear  s" ui/" $+  a n $+  s" .png" $+  $@ image  dup v ! ;
@@ -110,6 +123,14 @@ create icon-images #places cells allot   icon-images #places cells erase
     px s 8e f* c 6e f* f+ f>s +  py c 8e f* s 6e f* f- f>s +  >screen
     {: x0 y0 x1 y1 x2 y2 :}  red @ 24 lshift $202000 or $FF or {: ink :}
     x0 y0 x1 y1 x2 y2 x2 y2 ink ink ink ink draw-quad ;
+\ the computer's hint: □ CHECK (src: police_sprites, at (0, 80): the label from the HUD's sheet)
+0 constant check-x   80 constant check-y   $38 constant check-u   $40 constant check-v   56 constant check-w
+variable square-image   variable sheet-image
+: draw-check ( -- )
+    $FFFFFFFF pen-color  square-image s" button-square" ui-image  check-x check-y button-w button-w sprite
+    sheet-image s" clock" ui-image {: im :}  blend-ps-solid pen-blend
+    im check-u check-v check-w button-w  check-x button-w + check-y >screen  check-w scale *  button-w scale *  draw-image-part
+    blend-usual pen-blend ;
 : draw-name ( -- )
     under-hand dup 0< if  drop exit  then  {: i :}
     bar-color pen-color  bar-x bar-y >screen  bar-w scale *  bar-h scale *  draw-rect
@@ -118,10 +139,11 @@ create icon-images #places cells allot   icon-images #places cells erase
 : draw-map ( -- )
     map-up? 0= if  exit  then
     $FFFFFFFF pen-color
-    map-image s" map" ui-image  map-x map-y map-w map-h sprite
+    computer @ if  other-map-image s" map-other" ui-image  else  map-image s" map" ui-image  then  map-x map-y map-w map-h sprite
+    playing-file? if  draw-places exit  then   \ (a file's scene: the places only - src func_80103CBC)
     cross-image s" button-cross" ui-image  hint-x hint-y button-w button-w sprite
     exit-image s" exit" ui-image  hint-x button-w + hint-y hint-w button-w sprite
-    draw-places  draw-arrow
+    draw-places  computer @ if  draw-check  else  draw-arrow  then
     $FFFFFFFF pen-color  hand-image s" hand" ui-image  hand-x @ hand-y @ hand-w icon-size sprite
     draw-name ;
 ' draw-map on-draw
@@ -133,6 +155,7 @@ behaviour the-map
   on tick ( -- )  map-step ;
   on ring-chosen ( item who -- )   \ src: ui_update's choice 2
     0< swap 2 = and  map-up? 0= and if  open-map  then ;
+  on computer-open ( places opener -- )  map-up? if  2drop exit  then  open-computer ;
 end-behaviour
 
 : spawn-map ( -- id )  the-map map-state s" map" spawn ;

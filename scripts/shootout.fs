@@ -207,17 +207,17 @@ create was-down circle 1+ cells allot   variable pressed   \ (the buttons presse
     watch-pad  steps-due 0 ?do  shooting? 0= if  leave  then  shootout-frame  loop ;
 
 \ ---- drawing: the targets, the bullets, the bars (src: qte_draw_targets, shootout_ammo_draw, hp_bar_draw) ----
-$FFF0A0FF constant burst-ink   $202020FF constant mark-ink   $C8A040FF constant bullet-ink
+$FFF0A0FF constant burst-ink   $C8A040FF constant bullet-ink
 8 constant target-half   16 constant bullet-pitch   -140 constant bullets-x   40 constant bullets-y
 6 constant bullet-w   24 constant bullet-h
 -140 constant his-bar-x   80 constant his-bar-y   18 constant foe-bar-x   -80 constant foe-bar-y
-: button-ink ( b -- rgba )  case  triangle of  triangle-ink  endof  square of  square-ink  endof
-    cross of  cross-ink  endof  circle-ink swap  endcase ;
+: button-picture ( b -- image )  case  triangle of  triangle-icon  endof  square of  square-icon  endof
+    cross of  cross-icon  endof  circle-icon swap  endcase ;
 : square-at ( px py half ink -- )   \ (window pixels; half in the original's)
     pen-color  scale * {: px py h :}  px h - py h - h 2* h 2* draw-rect ;
 : target-at ( t px py -- )   \ its button; or, hit, its burst
     {: t px py :}
-    t up @ if  px py target-half t button @ button-ink square-at  px py target-half 2/ mark-ink square-at  exit  then
+    t up @ if  t button @ button-picture px py icon-at  exit  then
     px py target-half t burst @ 2* + burst-ink square-at ;
 : draw-target ( t -- )
     {: t :}  t up @  t burst @ burst-frames < or 0= if  exit  then

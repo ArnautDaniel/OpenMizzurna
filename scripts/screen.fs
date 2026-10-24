@@ -23,8 +23,14 @@ $302030E0 constant bar-back   $E0B040FF constant bar-fill
     {: x y v full :}  scale {: k :}
     bar-back pen-color  x y 8 + >screen  full 3 + k *  8 k *  draw-rect
     v 0> if  bar-fill pen-color  x 2 + y 9 + >screen  v k *  6 k *  draw-rect  then ;
-\ the face buttons' colours (the targets, the keypad: their icons to come)
-$40C080FF constant triangle-ink   $E080C0FF constant square-ink   $6080E0FF constant cross-ink   $E05050FF constant circle-ink
+\ the face buttons' icons (the UI's: ui/button-*.png, 16 x 16) - the targets, the keypad, the phone
+16 constant button-size
+: button-icon ( addr len -- image )  $clear  s" ui/button-" $+  $+  s" .png" $+  $@ image ;
+: triangle-icon ( -- image )  s" triangle" button-icon ;   : square-icon ( -- image )  s" square" button-icon ;
+: cross-icon ( -- image )  s" cross" button-icon ;         : circle-icon ( -- image )  s" circle" button-icon ;
+: icon-at ( image px py -- )   \ centred on a point in window pixels, opaque
+    {: im px py :}  button-size scale * {: w :}  $FFFFFFFF pen-color  blend-ps-solid pen-blend
+    im  px w 2/ -  py w 2/ -  w w draw-image  blend-usual pen-blend ;
 \ the game over (src: gameover_panel_draw: the screen black, the banner, "CONTINUE" below; ui/game-over*.png)
 $000000FF constant game-over-backdrop
 -128 constant banner-x   -56 constant banner-y   256 constant banner-w   64 constant banner-h

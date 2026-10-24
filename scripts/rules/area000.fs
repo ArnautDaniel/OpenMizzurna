@@ -125,7 +125,7 @@ $020 1 story-bit constant minigame-30-begun   \ (src: +0x20 bit 1)
 $1F8 constant minigame-30-a   $1FC constant minigame-30-b   $200 0 story-bit constant minigame-30-c
 : minigame-30? ( -- flag )   \ src: func_80102584: once its three conditions are met
     minigame-30-begun flag? 0=  minigame-30-a story@ 0<> and  minigame-30-b story@ 0<> and  minigame-30-c flag? and ;
-: each-frame ( -- )   \ (the computer's own screens: to come)
+: each-frame ( -- )   \ (the computer's screens: the map's - map.fs)
     minigame-30? if  minigame-30-begun flag-set  30 minigame exit  then
     at-zone drop counter-zone = if
         matthew-was matthew-actor send figure-place  ['] events.ovl000:entry-80107DC8 start-event exit  then
@@ -224,7 +224,39 @@ create mel-cell-stops  41 , 49 ,   create rolein-cell-stops  28 , 30 ,   \ src: 
     $01C story@ $C0000000 and $40000000 =  dennis-at-stop-10? 0= and if
         $01C story@ $80000000 or $01C story!  29 minigame exit  then
     $080 story@ 0= if  ['] events.ovl000:entry-80105088  else  ['] events.ovl000:entry-801079C0  then  start-event ;
-: the-computer-opens ( -- )  0 s" the police computer" unbuilt ;   \ 0x80103FEC (its case files: to come)
+\ ---- the computer (src: ovl000 FPolice.C): the map's other face, the case files it holds by the story ----
+$324862 constant the-files-always   $80080 constant after-the-hunt   $400 constant after-the-cells   8 constant after-the-check
+$020 3 story-bit constant the-hunt-told   $00A 0 story-bit constant checked-once   \ (src: +0x20 bit 3, the word at +0x0A)
+: listed-files ( -- places )   \ src: func_80103F3C
+    the-files-always
+    the-hunt-told flag? if  after-the-hunt or  then
+    cell-confrontation2-seen flag? if  after-the-cells or  then
+    checked-once flag? if  after-the-check or  then ;
+$1F8 constant first-file-read   $1FC constant second-file-read   $200 constant last-file-read
+$164 0 story-bit constant journey-talk-done   $020 5 story-bit constant the-second-told
+$018 27 story-bit constant photo-asked   $018 22 story-bit constant letter-read
+: either ( flag xt-then xt-else -- xt )  rot if  drop  else  nip  then ;
+: file-of ( place -- xt | 0 )   \ src: func_80103994
+    case
+        1 of  journey-talk-done flag? ['] events.ovl000:entry-801082AC ['] events.ovl000:entry-80108278 either  endof
+        2 of  the-hunt-told flag? ['] events.ovl000:entry-80108308 ['] events.ovl000:entry-801082E0 either  endof
+        3 of  1 first-file-read story!  ['] events.ovl000:entry-80108324  endof
+        5 of  the-second-told flag? ['] events.ovl000:entry-80108380 ['] events.ovl000:entry-80108358 either  endof
+        6 of  ['] events.ovl000:entry-80108560  endof
+        7 of  ['] events.ovl000:entry-801083B4  endof
+        10 of  1 second-file-read story!  ['] events.ovl000:entry-801083DC  endof
+        11 of  ['] events.ovl000:entry-80108410  endof
+        14 of  ['] events.ovl000:entry-80108444  endof
+        16 of  photo-asked flag? ['] events.ovl000:entry-80108494 ['] events.ovl000:entry-8010846C either  endof
+        17 of  ['] events.ovl000:entry-801084A4  endof
+        19 of  ['] events.ovl000:entry-801084CC  endof
+        20 of  letter-read flag? ['] events.ovl000:entry-80108510 ['] events.ovl000:entry-801084F4 either  endof
+        21 of  last-file-read story@ 1 or last-file-read story!  ['] events.ovl000:entry-8010852C  endof
+        0 swap
+    endcase ;
+: open-file ( place -- event | -1 )  file-of ?dup if  launch-event  else  -1  then ;
+: the-computer-opens ( -- )   \ 0x80103FEC
+    listed-files ['] open-file s" map" actor-named send computer-open ;
 : shove-it ( -- )   \ 0x8010388C: once
     station-shove-it-seen flag? if  exit  then  station-shove-it-seen flag-set  ['] events.ovl000:entry-801062C0 start-event ;
 : isabella-held ( -- )   \ 0x801037B8
