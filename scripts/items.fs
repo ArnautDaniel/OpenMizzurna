@@ -17,6 +17,7 @@ create held max-items allot   variable #held
         held i + c@ over = if  drop  -1 #held +!  held #held @ + c@ held i + c!  unloop exit  then
     loop  drop ;
 : reset ( -- )  0 #held !  cell-phone add  waist-bag add  watch add ;
+: items-mask ( -- mask )  0  #held @ 0 ?do  1 held i + c@ lshift or  loop ;   \ (a fact: src items_mask)
 reset
 
 state: items-state end-state
@@ -24,6 +25,8 @@ behaviour carrying
   on give-item ( item -- )  add ;
   on take-item ( item -- )  remove ;
   on items-reset ( -- )  reset ;
+  on items-set ( mask -- )   \ src: items_from_mask: the three first, then the rest by number
+    reset  32 0 do  dup 1 i lshift and if  i add  then  loop  drop ;
 end-behaviour
 
 : spawn-items ( -- id )  carrying items-state s" items" spawn ;

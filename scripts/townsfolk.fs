@@ -361,6 +361,10 @@ behaviour townsfolk
   on person-hold ( slot -- )  person-of moving true swap hold-move ! ;
   on person-arrive ( slot -- )  arrive ;
   on person-goto-stop ( slot stop -- )  goto-stop ;
+  on person-restore ( slot stop kind -- )   \ src: actor_load: at the stop, placed; the kind it showed
+    {: s st k :}  s scheduled? 0= if  exit  then   \ (the others: as their areas place them)
+    s person-of {: p :}  st p at-stop !  0 p travelling !  s place-at-stop
+    k s = if  0  else  k  then  p shown-kind ! ;   \ (a slot is its own kind)
   on person-set-stop ( slot stop travelling -- )  rot person-of {: st tr p :}  st p at-stop !  tr 0<> p travelling ! ;
   on person-depart ( slot -- )  depart ;
   on person-through-door ( slot door room flip stage -- )  through-door ;

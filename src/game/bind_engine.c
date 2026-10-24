@@ -8,6 +8,9 @@
 #include "../render/render.h"
 #include "../render/scene3d.h"
 #include "../data/png.h"
+#include "../platform/library.h"
+
+#include <SDL3/SDL.h>
 
 #include <math.h>
 #include <stdio.h>
@@ -308,6 +311,45 @@ PRIM(p_draw_image_quad_part) {   /* ( image u v w h x0 y0 x1 y1 x2 y2 x3 y3 -- )
                              gEngine.pen);
     }
 }
+/* the player's own files (saves): <home>/saves/<name> */
+#define SAVES_DIR "saves/"
+static void save_path(Forth *f, char *buf, size_t size) {   /* ( name len -- ) */
+    Cell n = POP();
+    const char *s = (const char *)POP();
+    snprintf(buf, size, "%s%s%.*s", library_home(), SAVES_DIR, (int)n, s);
+}
+PRIM(p_save_file) {   /* ( addr len name len -- flag ) written whole (the folder made) */
+    char path[1200], dir[1100];
+    Cell len, addr;
+    FILE *fp;
+    int ok = 0;
+
+    save_path(f, path, sizeof(path));
+    len = POP(), addr = POP();
+    snprintf(dir, sizeof(dir), "%s%s", library_home(), SAVES_DIR);
+    SDL_CreateDirectory(dir);
+    fp = fopen(path, "wb");
+    if (fp != NULL) {
+        ok = fwrite((const void *)addr, 1, (size_t)len, fp) == (size_t)len;
+        ok = fclose(fp) == 0 && ok;
+    }
+    PUSH(ok ? -1 : 0);
+}
+PRIM(p_load_file) {   /* ( addr max name len -- n | -1 ) up to max bytes read; -1: no such file */
+    char path[1200];
+    Cell max, addr;
+    FILE *fp;
+
+    save_path(f, path, sizeof(path));
+    max = POP(), addr = POP();
+    fp = fopen(path, "rb");
+    if (fp == NULL) {
+        PUSH(-1);
+        return;
+    }
+    PUSH((Cell)fread((void *)addr, 1, (size_t)max, fp));
+    fclose(fp);
+}
 PRIM(p_clip) {   /* ( x y w h -- ) the 2D from now on only within this window rectangle (w 0: everywhere) */
     Cell ch = POP(), cw = POP(), y = POP();
     render_clip((int)POP(), (int)y, (int)cw, (int)ch);
@@ -388,7 +430,7 @@ void bind_engine(Forth *f) {
         {"on-tick", p_on_tick}, {"off-tick", p_off_tick}, {"on-draw", p_on_draw}, {"off-draw", p_off_draw},
         {"ticks", p_ticks}, {"dt", p_dt}, {"seconds", p_seconds}, {"step-blend", p_step_blend}, {"pen-color", p_pen_color}, {"pen-scale", p_pen_scale}, {"draw-text", p_draw_text},
         {"draw-rect", p_draw_rect}, {"pen-blend", p_pen_blend}, {"draw-quad", p_draw_quad}, {"screen-size", p_screen_size}, {"char-size", p_char_size}, {"hud", p_hud},
-        {"clear-color", p_clear_color}, {"random", p_random}, {"image", p_image}, {"image-size", p_image_size}, {"draw-image", p_draw_image}, {"draw-image-quad", p_draw_image_quad}, {"draw-image-part", p_draw_image_part}, {"clip-2d", p_clip}, {"draw-image-quad-part", p_draw_image_quad_part}, {"behind", p_behind}, {"pad-rumble", p_pad_rumble}, {"draw-billboard", p_draw_billboard}, {"draw-ground-quad", p_draw_ground_quad}, {"screenshot", p_screenshot},
+        {"clear-color", p_clear_color}, {"random", p_random}, {"image", p_image}, {"image-size", p_image_size}, {"draw-image", p_draw_image}, {"draw-image-quad", p_draw_image_quad}, {"draw-image-part", p_draw_image_part}, {"clip-2d", p_clip}, {"save-file", p_save_file}, {"load-file", p_load_file}, {"draw-image-quad-part", p_draw_image_quad_part}, {"behind", p_behind}, {"pad-rumble", p_pad_rumble}, {"draw-billboard", p_draw_billboard}, {"draw-ground-quad", p_draw_ground_quad}, {"screenshot", p_screenshot},
         {"screenshot-pending?", p_screenshot_pending}, {"console!", p_console_store}, {"exe-table", p_exe_table}, {"library-file", p_library_file}, {"exe-u8", p_exe_u8}, {"exe-s8", p_exe_s8}, {"exe-s16", p_exe_s16}, {"exe-s32", p_exe_s32},
     };
     Vocab *was = f->m.current, *v = forth_vocab(f, "engine");

@@ -17,6 +17,7 @@ for this game. Names are case-insensitive.
 - **Tasks**: every running piece of Forth has its own stacks. `' word spawn` starts one (it gives
   an id); the engine runs each ready task a little every tick. Inside a task, `yield` gives way
   until the next step and `n wait` for n steps - game code writes the time in seconds: `0.5e seconds wait`. `id kill` stops one, `.tasks` lists them.
+  `tasks-paused!` ( flag ) stops the scheduler: no task runs and their waits don't count (the game paused).
   `spawn-held` starts one the engine leaves alone: `id resume` gives it its turn (whoever drives
   it decides when; it answers whether the task is still alive). `xt restart` makes the running
   task start over in another word at once, its stacks emptied (the event scripts' "go to").
@@ -185,6 +186,7 @@ are built, each listed here.
 | `draw-image-part` | `image u v w h x y w' h' --` | part of it (its texels u, v, w, h) into a rectangle (the HUD's sheets) |
 | `draw-image-quad-part` | `image u v w h x0 y0 x1 y1 x2 y2 x3 y3 --` | part of it on four corners (the corner map, turned) |
 | `clip-2d` | `x y w h --` | the 2D from now on only within that window rectangle (w 0: everywhere; the corner map's window) |
+| `save-file` / `load-file` | `addr len name len -- flag` / `addr max name len -- n` | the player's own files, `<home>/saves/<name>` (load: -1 none) |
 | `behind` | `flag --` | the 2D from now on behind the 3D (the sky) or over it |
 | `records` / `#records` / `record` | `path len word len -- table` / `table -- n` / `table i -- addr` | a library text's lines that start with the word: each line's numbers a row (a cell each) |
 | `draw-billboard` | `image x z bottom top half yaw grey blend --` | an upright picture in the world facing the heading yaw (grey 128: as it is; blend: 0 solid, 1 half ...) |

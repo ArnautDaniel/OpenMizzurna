@@ -149,6 +149,7 @@ struct Forth {
     Task *tasks;            /* spawned tasks */
     int next_task_id;
     long frame;             /* advanced by forth_run_tasks */
+    int tasks_paused;       /* the scheduler stands still (frames don't count): the game paused */
     int depth;              /* nested forth_execute calls (yield may only leave the outermost) */
     int task_depth;         /* the depth a task runs at */
     int yielded;

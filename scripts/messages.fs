@@ -183,3 +183,10 @@ message show-big-picture ( left right -- )   \ (to the pictures) the big one abo
 \ ---- the notebook (docs/subsystems/notebook.md) ----
 message learn-bio ( bit -- )             \ (to the notebook) a person's page known (src: g_bio_known |= )
 message learn-number ( bit -- )          \ (to the notebook) a phone number known (src: g_phone_known |= )
+message know ( bios numbers -- )         \ (to the notebook) who and what he knows, as a save had them
+
+\ ---- a save loaded (docs/subsystems/saves.md) ----
+message items-set ( mask -- )            \ (to the items) the list from a save's mask (src: items_from_mask)
+message his-car-at ( x z heading -- )    \ (to the driving) his car there (src: save_apply)
+message fuel-set ( n -- )
+message person-restore ( slot stop kind -- )   \ (to the townsfolk) at that stop, showing that kind (src: actor_load)

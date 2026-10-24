@@ -150,6 +150,9 @@ behaviour drivers
   on drive-hold ( flag -- )  held !  0e due f! ;
   on car-bumped ( -- )  velocity f@ 16e f/ velocity f! ;
   on car-nudge ( dx dz -- )  cz +!  cx +!  show-car ;
+  on his-car-at ( x z heading -- )   \ (parked there: Matthew elsewhere)
+    ch !  cz !  cx !  cx @ cz @ ground-under cy !  his-car cx @ cy @ cz @ ch @ 4095 and s" traffic" actor-named send car-place ;
+  on fuel-set ( n -- )  fuel ! ;
   on area-entered ( area scene -- )  2drop  false held !
     driving? if  false at-the-wheel !  false s" camera" actor-named send camera-driving  s" sound" actor-named send engine-stop  then ;
 end-behaviour

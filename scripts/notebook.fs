@@ -130,6 +130,7 @@ behaviour the-notebook
     0< swap 1 = and  notebook-up? 0= and if  open-book  then ;
   on learn-bio ( bit -- )  1 swap lshift bios-known @ or bios-known ! ;
   on learn-number ( bit -- )  1 swap lshift numbers-known @ or numbers-known ! ;
+  on know ( bios numbers -- )  numbers-known !  bios-known ! ;
 end-behaviour
 
 : spawn-notebook ( -- id )  the-notebook notebook-state s" notebook" spawn ;

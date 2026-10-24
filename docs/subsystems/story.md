@@ -152,6 +152,7 @@ Built on the townsfolk's, Matthew's, the walkers' and traffic's messages:
 - **Pictures and items.** `picture-show` / `picture-hide` and `cd-picture(s)` are the pictures'
   (`docs/subsystems/pictures.md`). An event's end hides the small picture, and the big one it showed.
   `item-query` / `item-show` are showing.fs's answers (`docs/subsystems/ring.md`).
-- **Still stubs:** `prompt`, `memory-card`, the hospital's `elevator-doors`, `gesture`, `talk-pose`,
+- **Saving.** `memory-card` is the save dialog (`docs/subsystems/saves.md`).
+- **Still stubs:** `prompt`, the hospital's `elevator-doors`, `gesture`, `talk-pose`,
   `anim-step`, `examine`, `act`, `kill-thread`, `depart-alt`, `go-to-actor`, `place-alt`, and
   `door-reveal-room`.

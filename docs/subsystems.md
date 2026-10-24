@@ -52,6 +52,8 @@ phase-1 port's files (`../port/src/game/`), which name the decomp's functions; t
 | Notebook ([page](subsystems/notebook.md), built) | the people and numbers Matthew knows | `fhbook.c` |
 | Map ([page](subsystems/map.md), built) | the town map: the places known, his arrow, the names | `mapscreen.c` |
 | HUD ([page](subsystems/hud.md), built) | the prompts, the clock, the corner map (the boat's fuel to come) | `hud.c`, `hudprim.c`, `cecheck.c` |
+| Saves ([page](subsystems/saves.md), built) | the save file, the save point's dialog, continuing | `cmcard.c`, `boot.c` |
+| Pause ([page](subsystems/pause.md), built) | Start: the pause, the prologue's skip | `pad_map.c`, `cui.c` |
 | Weather | snow, the sky, the day's light | `snow.c`, `sky.c`, `clock.c` |
 | Sound ([page](subsystems/sound.md), built) | effects, held loops, the background music and ambience, XA, footsteps, the areas' own sounds | `sound.c`, `ambience.c` |
 | Fight ([page](subsystems/fight.md), built) | a fistfight: the pad or the AI each side, the hits, the game over | `fight.c` |
@@ -63,9 +65,7 @@ phase-1 port's files (`../port/src/game/`), which name the decomp's functions; t
 | Car chase ([page](subsystems/car-chase.md), built) | after the bike in his car: the knocks, the crash, the clock | `ovl027.c` (states 20–26) |
 | Rumble ([page](subsystems/rumble.md), built) | the pads' motors | `frame.c` (pad motors) |
 | Minigames | the bar counters | `fight.c`, `qte.c`, `shootout.c`, `counter.c`, `ovl0xx.c` |
-| Saves | saving and loading the story | `cmcard.c`, `cnrev.c` (story_save) |
 | Title | the logo, the title and its menu, the movies, the endings | `opening.c` |
-| Pause | the pause | `cui.c` |
 
 ## Order of work
 

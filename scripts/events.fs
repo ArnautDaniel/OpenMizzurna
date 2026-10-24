@@ -231,7 +231,7 @@ variable loaded-pack
 : fight ( a style b style -- )   \ op $169: until it's won (src: wait_fight; the result its winner)
     s" fight" actor-named send fight-start  settle  yield
     begin  fighting? while  yield  repeat  fight-winner @ result! ;
-: memory-card ( mode -- )  1 s" memory-card" unbuilt  0 result! ;
+defer memory-card ( slot -- )   \ op $152 (saves.fs: the save dialog; its result 0 saved, 1 not)
 
 \ ---- actor commands ( actor args -- ): until the townsfolk and Matthew take them ----
 
