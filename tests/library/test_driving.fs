@@ -2,7 +2,7 @@
 \ to drive; ✕ speeds it up and on, burning fuel; left / right steer it while it moves; □ brakes; ○ near still gets
 \ him out at a door; with an empty tank it goes no faster than 120
 USING: tester engine actors messages clock areas keys matthew townsfolk events window story-flags traffic talk
-    floors billboards town.private driving driving.private ;
+    floors billboards town.private driving driving.private sound ;
 
 : steps ( n -- )  0 ?do  1 tick-tasks  actors-frame  loop ;
 : settled ( -- )  10 0 do  deliver  loop  events-stop  deliver ;
@@ -24,6 +24,8 @@ prologue-done flag-set
 testing ○ at the car: his scene, then at the wheel - unseen, in the car
 T{ by-the-car  car-reach?  get-in  started? -> true true true }T
 T{ played-out  driving?  matthew-perch -> true perch-in-car }T
+testing the engine: its tones held while he drives
+T{ sound.private:engine-voices @ 0< -> false }T
 testing ✕: it speeds up and moves on
 T{ car-z-now  pad-cross 30 press-for  speed @ 0>  car-z-now rot <> -> true true }T
 testing burning fuel: a unit each 201 frames of ✕

@@ -360,6 +360,7 @@ void bind_engine(Forth *f) {
     bind_scene(f);  /* (the 3D: bind_scene.c) */
     bind_roads(f);  /* (the roads: roads.c) */
     bind_records(f);   /* (records.c) */
+    bind_audio(f);   /* (bind_audio.c: the sound) */
     bind_snow(f);      /* (snow.c) */
     forth_set_current(f, was);
     gEngine.pen = 0xFFFFFFFF;

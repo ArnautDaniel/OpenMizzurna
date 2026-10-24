@@ -86,6 +86,9 @@ static const ExeTable kTables[] = {
     {"fight-ko-steps", 0x80092C4C, 20, "knocked out: the moves a frame (s8)"},
     {"fight-special-steps", 0x80092C60, 16, "the special move 6's moves a frame (s8)"},
     {"fight-icons", 0x80092C70, 9, "a style's name icon over its health bar (u8)"},
+    {"area-sounds", 0x80081458, 34 * 4,
+     "an area's sounds: s16 how many effect sequences its set holds, s16 its ambience (a row of `music`) "
+     "(src: area_sep_open, func_800225AC)"},
     {"music", 0x800814DC, MUSIC_TRACKS * MUSIC_ENTRY,
      "the background music: per track its sequence's CD.BIN entry, then 0 or 1, and its volume (src: music_play)"},
 };

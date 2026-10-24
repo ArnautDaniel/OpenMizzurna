@@ -7,7 +7,7 @@
 \ and from the start again for ○ or Start. The camera follows the round's own path round the foe; a step at the
 \ original's rate (15 a second indoors). An area describes its shoot-out in a plan.
 IN: shootout
-USING: engine actors messages keys screen areas figures matthew townsfolk events ;
+USING: engine actors messages keys screen areas figures matthew townsfolk events sound ;
 
 \ ---- facts ----
 variable shootout-going   \ a shoot-out is on (src: D_800A3578 / D_800A3570)
@@ -22,6 +22,7 @@ begin-structure shootout-plan
   field: plan-foe-x   field: plan-foe-z   field: plan-foe-heading     \ where the first foe stands
   field: plan-foe-stance   field: plan-foe-hit                        \ the foes' stance, hit (-1 none)
   field: plan-full-0   field: plan-full-1                             \ the foes' full health (by pool)
+  field: plan-shot-sound   field: plan-hit-sound                        \ a shot's, a target hit's (-1 none)
   field: plan-won                                                     \ when it's won (an xt; 0 none)
 end-structure
 begin-structure shootout-round
@@ -167,13 +168,13 @@ create was-down circle 1+ cells allot   variable pressed   \ (the buttons presse
         round @ 1+ plan @ plan-rounds @ = if  final-scene stage !  true him-shown  then
         this-round round-won @ play-scene  then ;
 : missed ( -- )  missed-scene stage !  this-round round-missed @ play-scene ;
-: fire ( -- )   \ a shot spent (his shot's motion; the sound, the flash and the pad's rumble: to come)
-    -1 shots +!  plan @ plan-shot-motion @ dup 0< if  drop exit  then
+: fire ( -- )   \ a shot spent: its sound, his shot's motion (the flash and the pad's rumble: to come)
+    -1 shots +!  plan @ plan-shot-sound @ sfx?  plan @ plan-shot-motion @ dup 0< if  drop exit  then
     plan @ plan-aimed-motion @ false him send figure-anim ;
 : aim-frame ( -- )
     row-frame  path-frame  aim-camera  foe-faces
     shots @ if  shot  else  0  then {: b :}
-    targets-shown? if  b if  b hit-target? drop  then
+    targets-shown? if  b if  b hit-target? if  plan @ plan-hit-sound @ sfx?  then  then
     else  window @ 1 = if  targets-left if  missed  else  hit  then  then  then
     shots @  pressed @ 0<> and if  fire  then  0 pressed ! ;
 : next-round ( -- )   \ its scene over
@@ -186,7 +187,7 @@ create was-down circle 1+ cells allot   variable pressed   \ (the buttons presse
     false shootout-going !  true him-shown  true him send figure-on-foot
     plan @ plan-won @ ?dup if  execute  then ;
 : lost ( -- )  lost-scene stage !  true him-shown  this-round round-lost @ play-scene ;
-4 constant game-over-effect
+4 constant game-over-effect   $A constant retry-music   \ (src: the music table's row again on a retry)
 : try-again? ( -- flag )  shot circle =  pad-start key-down? or ;
 : shootout-frame ( -- )
     stage @ case
@@ -195,7 +196,7 @@ create was-down circle 1+ cells allot   variable pressed   \ (the buttons presse
         missed-scene of  scene-over? if  back-to-it  then  endof
         final-scene of  scene-over? if  won-it  then  endof
         lost-scene of  scene-over? if  game-over stage !  game-over-effect s" effects" actor-named send screen-effect  then  endof
-        game-over of  try-again? if  set-up  then  0 pressed !  endof   \ (src: music 0xA again: to come)
+        game-over of  try-again? if  retry-music music-row  set-up  then  0 pressed !  endof
     endcase
     stage @ aiming =  health @ 0 <= and if  1 health !  lost  then
     health @ health-shown @ < if  -1 health-shown +!  then

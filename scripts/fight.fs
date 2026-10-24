@@ -6,7 +6,7 @@
 \ wins. A loss to the AI is game over, the fight again from the start for ○ or Start. They face each other, the
 \ camera between them; a step at the original's rate (15 a second indoors, 30 in the town).
 IN: fight
-USING: engine actors messages keys screen areas floors figures matthew townsfolk ;
+USING: engine actors messages keys screen areas floors figures matthew townsfolk sound ;
 
 \ ---- facts ----
 variable fighting      \ a fight is on (src: fight_active)
@@ -150,6 +150,12 @@ variable held   variable pressed
         drop  f th easy-mood  0
     endcase ;
 
+\ ---- the sounds (src: fight_snd_base by area, then by the move: fight_snd_hit, fight_snd_voice) ----
+4 constant missed-sound   7 constant fall-sound   8 constant fall-frame
+: sound-base ( -- id )  s" fight-sound-base" area @ exe-u8 ;
+: hit-sound ( m -- id )  {: m :}  s" fight-hit-sounds" m exe-u8 sound-base + ;
+: voice-sound ( m -- id )  {: m :}  s" fight-voices" m exe-u8 sound-base + ;
+
 \ ---- an attack's move-frame (src: attack_resolve) ----
 : lands ( f o i -- )
     {: f o i :}  f move @ {: m :}
@@ -160,13 +166,16 @@ variable held   variable pressed
 : attack ( f o i -- )
     {: f o i :}  f move @ {: m :}
     f move-frame @ m hit-frame <> if  exit  then
-    apart m reach <  o move @ move-kind not-hittable <> and if  f o i lands  then ;   \ (the sounds: to come)
+    apart m reach <  o move @ move-kind not-hittable <> and 0= if  sound-base missed-sound + sfx exit  then
+    m hit-sound sfx  m voice-sound sfx  f o i lands ;   \ (the pad's rumble: to come)
 
 \ ---- a move's own motion (src: move_effects) ----
 : out-of-the-dash ( f -- )   \ forward and punch: a lunge; back and punch: a punch
     {: f :}  f fighters - fighter / {: i :}
     held @ i forward-key punch-key or = if  f lunge start-move  f lunge-units step  then
     held @ i back-key punch-key or = if  f dash-back-punch start-move  then ;
+: falls ( frame -- )   \ hitting the ground (src: move_effects: frame 8; outdoors the next sound)
+    fall-frame = if  sound-base fall-sound +  area @ the-town = 1 and +  sfx  then ;
 : own-motion ( f o -- )
     {: f o :}  f move-frame @ {: fr :}
     f move @ case
@@ -179,8 +188,8 @@ variable held   variable pressed
         special-6 of  f s" fight-special-steps" fr special-steps step-of step  endof
         knocked-out of  fr 6 < if  ko-push f pushed !  then  f s" fight-ko-steps" fr ko-steps step-of step  endof
         down-for-good of  fight-winner @ no-winner = if  f fighters - fighter / other fight-winner !  then  endof
-        19 of  f s" fight-down-steps" fr down-steps step-of step  endof
-        20 of  f s" fight-down-steps" fr down-steps step-of step  endof
+        19 of  f s" fight-down-steps" fr down-steps step-of step  fr falls  endof
+        20 of  f s" fight-down-steps" fr down-steps step-of step  fr falls  endof
         dash-in of  f dash-units step  f the-player? if  f out-of-the-dash  then  endof
         dash-back of  f dash-units negate step  endof
     endcase ;
@@ -217,17 +226,21 @@ variable held   variable pressed
     0 fighter# fx @ 1 fighter# fx @ + 2/  0  0 fighter# fz @ 1 fighter# fz @ + 2/  a 1024 -
     s" camera" actor-named send camera-place ;
 3 constant fade-out   10 constant fight-opens   \ (src: screen_effect 3 on retrying, 0xA as it begins)
+$A constant fight-music   $D constant own-music   \ (rows of the music table)
 : fresh ( f -- )   \ full health, ready, where it began
     {: f :}  full-health f health !  full-health f shown !  0 f combo !  0 f tap !  0 f pushed !  0 f mood !
     ready-move f move !  0 f move-frame !  -1 f last-motion !  f start-x @ f fx !  f start-z @ f fz ! ;
 : begin-fight ( -- )   \ (again from the start after a loss)
     0 fighter# fresh  1 fighter# fresh
-    0 ko !  0 streak !  no-winner fight-winner !  0 lost !  true fighting !  0e due f!  keys-now keys-were !
+    0 ko !  0 streak !  no-winner fight-winner !  0 lost !  0e due f!  keys-now keys-were !
+    fighting?  0 fighter# style @ styles-own-motions <> or if   \ src: fight_begin's music (again on a retry)
+        0 fighter# style @ styles-own-motions = if  own-music  else  fight-music  then  music-row  then
+    true fighting !
     s" camera" actor-named send camera-fixed  fight-opens s" effects" actor-named send screen-effect ;
 : it's-over ( -- )
     0 fighter# style @ style-never-wins = 0= if
         fight-winner @ fighter# human? 0= if   \ lost to the AI: game over
-            1 lost !  exit  then  then
+            1 lost !  -1 music-row  exit  then  then
     false fighting ! ;   \ (the camera the scene's again: it's an event's)
 : fight-frame ( -- )
     read-pad  aim  0 fighter-frame  1 fighter-frame  0 fighter# show-fighter  1 fighter# show-fighter

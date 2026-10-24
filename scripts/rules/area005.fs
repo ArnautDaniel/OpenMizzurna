@@ -15,7 +15,7 @@ create the-shootout  4 plan-bytes allot   the-shootout 4 plan-bytes erase
     the-shootout {: p :}  s" shootout-5" p plan-table-len ! p plan-table !  4 p plan-rounds !
     his-x p plan-him-x !  his-z p plan-him-z !  -1 p plan-stance !  -1 p plan-shot-motion !  -1 p plan-aimed-motion !
     wolf-x p plan-foe-x !  wolf-z p plan-foe-z !  wolf-heading p plan-foe-heading !  gun-stance p plan-foe-stance !
-    -1 p plan-foe-hit !  wolf-health p plan-full-0 !  gunman-health p plan-full-1 !  0 p plan-won !
+    -1 p plan-foe-hit !  wolf-health p plan-full-0 !  gunman-health p plan-full-1 !  0 p plan-won !  $71 p plan-shot-sound !  -1 p plan-hit-sound !
     p 0 wolf-pool wolf-hit grazed ['] events.ovl005:entry-80105264 ['] events.ovl005:entry-80105D80 ['] events.ovl005:entry-80106274 round!
     p 1 wolf-pool wolf-hit shot-hard ['] events.ovl005:entry-8010543C ['] events.ovl005:entry-8010602C ['] events.ovl005:entry-80106300 round!
     p 2 gunman-pool gunman-hit grazed ['] events.ovl005:entry-80105614 ['] events.ovl005:entry-80106144 ['] events.ovl005:entry-8010638C round!

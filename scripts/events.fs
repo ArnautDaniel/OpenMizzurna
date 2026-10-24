@@ -255,13 +255,13 @@ variable loaded-pack
 : place-alt ( a -- )  1 act-unbuilt ;   \ cmd $5E
 
 \ ---- the other ops: until their subsystems are built ----
-: sound ( n -- )  1 s" sound" unbuilt ;   \ op $114
-: sequence-play ( n n -- )  2 s" sequence-play" unbuilt ;   \ op $115
-: sequence-stop ( n -- )  1 s" sequence-stop" unbuilt ;   \ op $116
+: sound ( n -- )  s" sound" actor-named send play-sound ;   \ op $114 (src: sound_play)
+: sequence-play ( id loop? -- )  0<> s" sound" actor-named send play-sequence ;   \ op $115 (src: seq_play)
+: sequence-stop ( id -- )  s" sound" actor-named send stop-sequence ;   \ op $116
 : picture-show ( n -- )  1 s" picture-show" unbuilt ;   \ op $123
 : picture-hide ( -- )  0 s" picture-hide" unbuilt ;   \ op $124
 : cd-picture ( n -- )  1 s" cd-picture" unbuilt ;   \ op $12B
-: music ( n -- )  1 s" music" unbuilt ;   \ op $144
+: music ( row -- )  s" sound" actor-named send play-music ;   \ op $144 (src: music_play)
 \ the minigames that are a script alone (src: an area's area_minigame_start setting minigame_script), by number
 64 constant #minigames
 create minigame-scripts  #minigames cells allot   minigame-scripts #minigames cells erase
@@ -292,13 +292,13 @@ variable minigame-busy   \ a code minigame not over yet (src: minigame_id still 
 : sprite-count-close ( -- )  0 s" sprite-count-close" unbuilt ;   \ op $15E
 : face-each-other ( a a -- )  2 s" face-each-other" unbuilt ;   \ op $162
 : map-reveal ( n -- )  1 s" map-reveal" unbuilt ;   \ op $165
-: ambient-start ( n -- )  1 s" ambient-start" unbuilt ;   \ op $166
-: ambient-stop ( n -- )  1 s" ambient-stop" unbuilt ;   \ op $167
+: ambient-start ( id -- )  s" sound" actor-named send loop-sound ;   \ op $166 (src: ambient_start)
+: ambient-stop ( id -- )  s" sound" actor-named send stop-loop ;   \ op $167
 : wait-attached ( a -- )  1 s" wait-attached" unbuilt  settle ;   \ op $16E
 : set-357c ( n -- )  1 s" set-357c" unbuilt ;   \ op $170
 : map-sync ( -- )  0 s" map-sync" unbuilt ;   \ op $172
-: xa-play ( n -- )  1 s" xa-play" unbuilt ;   \ op $173
-: xa-stop ( -- )  0 s" xa-stop" unbuilt ;   \ op $174
+: xa-play ( n -- )  s" sound" actor-named send play-stream ;   \ op $173 (src: xa_play)
+: xa-stop ( -- )  s" sound" actor-named send stop-stream ;   \ op $174
 : door-sound ( n -- )  1 s" door-sound" unbuilt ;   \ op $176
 : wait-attached-to ( a a -- )  2 s" wait-attached-to" unbuilt  settle ;   \ op $178
 : cd-pictures ( n n -- )  2 s" cd-pictures" unbuilt ;   \ op $179

@@ -6,7 +6,7 @@
 \ chase has 2700 frames: when they're up, or Matthew gets out of his car, they've got away. A step at the
 \ original's rate (30 a second in the town).
 IN: car-chase
-USING: engine actors messages keys screen clock areas figures matthew townsfolk traffic driving events events.ovl027 ;
+USING: engine actors messages keys screen clock areas figures matthew townsfolk traffic driving events events.ovl027 sound ;
 
 variable chase-left   \ src: carchase_timer: frames before they get away (0: no chase)
 : chase-on? ( -- flag )  chase-left @ 0<> ;
@@ -24,6 +24,7 @@ $600 negate constant chase-eye-y   $2000 negate constant chase-dist   -600 const
 30 constant crash-frames   $85 constant bike-slide   $100 constant rider-slide-turn   128 constant rider-slide
 128 constant car-slide   $126 negate constant crash-look-y   $110 negate constant crash-eye-y   $700 negate constant crash-dist
 $40 constant crash-turn
+$6E constant knock-sound   $69 constant crash-sound
 $1660 constant rider-falls   $1666 constant rider-shaken   $1655 constant rider-riding
 11 constant fade-out
 $21 constant rider-after   $16 constant rider-got-away
@@ -68,12 +69,12 @@ fvariable due
     mel rider-riding -1 true the-townsfolk send person-anim
     sweep-frames timer !  true car-held  sweeping stage ! ;
 : knocked ( -- )   \ src: state 23's bump
-    s" driving" actor-named send car-bumped  -1 knocks +!   \ (the sounds and the pad's rumble: to come)
-    knocks @ if
+    s" driving" actor-named send car-bumped  -1 knocks +!   \ (the pad's rumble: to come)
+    knocks @ if  knock-sound sfx
         shaken-frames timer !  the-bike bike-shaken s" traffic" actor-named send car-speed
         mel rider-shaken rider-riding false the-townsfolk send person-anim  exit  then
     mel rider-falls -1 false the-townsfolk send person-anim  true car-held  crash-frames timer !
-    the-bike s" traffic" actor-named send car-stop  crashing stage ! ;   \ (the music stops: to come)
+    the-bike s" traffic" actor-named send car-stop  crashing stage !  crash-sound sfx  -1 music-row ;
 : chase-step ( -- )
     on-the-bike  chase-camera
     timer @ if  -1 timer +!  timer @ 0= if  the-bike bike-speed s" traffic" actor-named send car-speed  then  exit  then

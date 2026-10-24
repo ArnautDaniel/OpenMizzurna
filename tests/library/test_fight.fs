@@ -3,7 +3,7 @@
 \ knock-out wins it for Matthew (the events' fight op answers the winner); a loss to the AI is game over, and ○
 \ fights again from the start
 USING: tester engine actors messages clock areas keys matthew townsfolk events window story-flags talk fight
-    fight.private ;
+    fight.private sound ;
 
 : steps ( n -- )  0 ?do  1 tick-tasks  actors-frame  loop ;
 : settled ( -- )  10 0 do  deliver  loop  events-stop  deliver ;
@@ -28,6 +28,8 @@ T{ in-the-hideout  ' still-fight start-event  2 steps
    fighting?  him health @  the-other health @ -> true 120 120 }T
 testing ○ near enough: a jab lands (5)
 T{ pad-circle press  20 steps  the-other health @ -> 115 }T
+testing its sounds: the jab's voice last (the area's first fight sound on); the music the fight's
+T{ last-sound @  jab voice-sound  =  background-row -> true fight-music }T
 testing a knock-out: Matthew wins, the fight's over
 T{ 1 the-other health !  1 the-other shown !  ready-move the-other move !  matthew-now drop nip  the-other fz ! the-other fx !
    punch-until-won  fighting?  fight-winner @ -> false 0 }T

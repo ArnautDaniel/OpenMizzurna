@@ -8,7 +8,7 @@
 \ him out at the first free door. The fuel gauge and the speed are shown. A step at the original's rate (30 a
 \ second in the town).
 IN: driving
-USING: engine actors messages keys screen areas figures floors matthew traffic talk look events events.main ;
+USING: engine actors messages keys screen areas figures floors matthew traffic talk look events events.main sound ;
 
 variable at-the-wheel   \ src: g_driving
 120 constant full-tank
@@ -22,6 +22,9 @@ variable fuel   full-tank fuel !   \ src: g_fuel (a new game starts full; the ga
 0.1e fconstant coasting   -0.4e fconstant backing-still   60e fconstant units-per
 201 constant frames-a-unit   9 constant still-enough
 8 constant steer-step   4 constant steer-ease   800 constant steer-turnover   5 constant steer-slow   12 constant steer-fast
+\ its sounds (src: func_80109A10 the engine's two tones; engine_sound's key; car_scrape, the crash)
+$66 constant engine-sound   2 constant engine-tones   10 constant key-per-speed   $29 constant idle-key
+$69 constant crash-sound   $3D constant loud-enough
 $20 constant probe-step   $200 constant probe-limit   $32 constant swerve   300 constant car-half
 \ getting in (src: func_8004175C: beside the driver's door, facing across the car)
 $1D6 negate constant door-side   $64 negate constant door-forward   $400 constant across
@@ -56,17 +59,18 @@ fvariable due
 : probe ( h -- blocked? )  cx @ cz @ rot speed @ along 2dup wall? -rot solid-billboard? or ;   \ src: car_probe
 : hits? ( x z -- flag )   \ src: car_tile_hit: its box's two corners
     {: x z :}  x car-half - z car-half - wall?  x car-half + z car-half + wall? or ;
+: scrape ( -- )  speed @ loud-enough >= if  crash-sound sfx  then ;   \ (the pad's rumble: to come)
 : swerve-way ( -- h )   \ the heading it moves on: ahead, or the first free one each side (it steers that way)
     ch @ {: h :}  speed @ 0> 0=  h probe 0= or if  h exit  then
     probe-limit probe-step do
-        h i + probe 0= if  swerve ch +!  h i + unloop exit  then
-        h i - probe 0= if  swerve negate ch +!  h i - unloop exit  then
+        h i + probe 0= if  scrape  swerve ch +!  h i + unloop exit  then
+        h i - probe 0= if  scrape  swerve negate ch +!  h i - unloop exit  then
     probe-step +loop  h ;
 : ground-under ( x z -- y )  ground-at 0= if  cy @  then ;   \ (the town's ground; off it, as it was)
 : move-car ( -- )
     swerve-way {: h :}  cx @ cz @ {: x z :}
     x z h speed @ along {: nx nz :}  x z h speed @ 2/ along {: hx hz :}
-    nx nz hits?  hx hz hits? or if  0e velocity f!  0 speed ! exit  then   \ (the sound and the rumble: to come)
+    nx nz hits?  hx hz hits? or if  scrape  0e velocity f!  0 speed ! exit  then   \ (the rumble: to come)
     nx cx !  nz cz !  nx nz ground-under cy ! ;
 : show-car ( -- )
     his-car cx @ cy @ cz @ ch @ 4095 and s" traffic" actor-named send car-place
@@ -81,12 +85,13 @@ fvariable due
     x 0 z s" matthew" actor-named send figure-place  0 ch @ 4095 and 0 s" matthew" actor-named send figure-turn
     true s" matthew" actor-named send figure-shown  true s" matthew" actor-named send figure-on-foot
     0 s" matthew" actor-named send figure-perch  0 -1 true s" matthew" actor-named send figure-anim
-    broadcast left-the-car ;
+    s" sound" actor-named send engine-stop  broadcast left-the-car ;
 : wheel-frame ( -- )
     steer-wheel  pedals  speed-now speed !
     speed @ if  steer @ ch +!  then
     speed @ abs still-enough <=  pad-circle key-down? and if  free-door dup 0< if  drop  else  get-out exit  then  then
-    move-car  show-car ;
+    move-car  show-car
+    speed @ abs key-per-speed / idle-key + s" sound" actor-named send engine-pitch ;
 : steps-due ( -- n )  due f@ motion-rate dt f* f+  fdup f>s  dup s>f f-  due f! ;
 : drive-tick ( -- )
     driving? 0= if  exit  then  steps-due  held @ if  drop show-car exit  then
@@ -109,7 +114,8 @@ fvariable due
     his-car car-now ch !  cz !  cy !  cx !  0e velocity f!  0 steer !  0 burned !  0e due f!
     true at-the-wheel !  true s" camera" actor-named send camera-driving
     false s" matthew" actor-named send figure-shown  false s" matthew" actor-named send figure-on-foot
-    perch-in-car s" matthew" actor-named send figure-perch  show-car ;
+    perch-in-car s" matthew" actor-named send figure-perch  show-car
+    engine-sound engine-tones s" sound" actor-named send engine-start ;
 main-exe $8004301C ' at-the-wheel! native:
 
 \ ---- drawing: the fuel gauge and the speed (src: fuel_gauge_draw; their pictures to come) ----
@@ -139,7 +145,8 @@ behaviour drivers
   on drive-hold ( flag -- )  held !  0e due f! ;
   on car-bumped ( -- )  velocity f@ 16e f/ velocity f! ;
   on car-nudge ( dx dz -- )  cz +!  cx +!  show-car ;
-  on area-entered ( area scene -- )  2drop  false held !  driving? if  false at-the-wheel !  false s" camera" actor-named send camera-driving  then ;
+  on area-entered ( area scene -- )  2drop  false held !
+    driving? if  false at-the-wheel !  false s" camera" actor-named send camera-driving  s" sound" actor-named send engine-stop  then ;
 end-behaviour
 
 : spawn-driving ( -- id )  drivers driving-state s" driving" spawn ;

@@ -3,7 +3,7 @@
 \ standing, the dog comes and bites (30); out of health, game over and ○ from the start; at the yard's far side
 \ he's got away: its end, out to the town
 USING: tester engine actors messages clock areas keys matthew townsfolk events window story-flags talk
-    dog-chase dog-chase.private rules.area008 ;
+    dog-chase dog-chase.private rules.area008 sound ;
 
 : steps ( n -- )  0 ?do  1 tick-tasks  actors-frame  loop ;
 : settled ( -- )  10 0 do  deliver  loop  events-stop  deliver ;
@@ -25,7 +25,7 @@ T{ events-stop  this-area 0 s" areas" actor-named send enter-area  deliver  2 st
 testing the d-pad: right runs him that way, facing it
 T{ his-x @  pad-right 20 press-for  his-x @ <  facing-goal @ -> true 1024 }T
 testing left standing: the dog comes and bites
-T{ until-bitten  health @  dog @ -> 90 backing-off }T
+T{ until-bitten  health @  dog @  last-sound @ -> 90 backing-off bite-sound }T
 testing out of health: down, game over; ○ from the start, full health
 T{ 1 health !  free him !  his-x @ dog-x !  his-z @ 50 + dog-z !  charging dog !  down until-him  game-over until-him  him @ -> game-over }T
 T{ pad-circle 2 press-for  free until-him  health @  his-x @ -> 120 his-start-x }T

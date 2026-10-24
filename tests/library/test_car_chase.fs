@@ -2,7 +2,7 @@
 \ bike sets off and the camera sweeps; the chase - each knock slows his car, shakes the bike; the third brings it
 \ down, the crash, it's over - won: on to the station. Its time up, or out of the car, they've got away
 USING: tester engine actors messages clock areas keys matthew townsfolk events window story-flags traffic
-    driving driving.private car-chase car-chase.private ;
+    driving driving.private car-chase car-chase.private sound ;
 
 : steps ( n -- )  0 ?do  1 tick-tasks  actors-frame  loop ;
 : settled ( -- )  10 0 do  deliver  loop  events-stop  deliver ;
@@ -25,7 +25,7 @@ T{ played-out  2 steps  driving?  stage @  the-bike car-driving? -> true sweepin
 testing the sweep over: the chase, three knocks to go
 T{ chasing until-stage  stage @  knocks @ -> chasing 3 }T
 testing a knock: his car slowed, the bike shaken a while
-T{ to-the-bike  2 steps  knocks @  timer @ 0> -> 2 true }T
+T{ to-the-bike  2 steps  knocks @  timer @ 0>  last-sound @ -> 2 true knock-sound }T
 testing the third: the crash, the rider down, over
 T{ 0 timer !  1 knocks !  to-the-bike  2 steps  stage @ -> crashing }T
 T{ off until-stage  stage @  minigame-running? -> off false }T

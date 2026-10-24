@@ -16,6 +16,7 @@
  * drawing at the display's rate (vsync), blending the last two steps. */
 #include "forth/forth.h"
 #include "game/engine.h"
+#include "audio/audio.h"
 #include "kernel/mactor.h"
 #include "platform/library.h"
 #include "platform/platform.h"
@@ -159,6 +160,7 @@ int main(int argc, char **argv) {
         return 1;
     }
     e->hidden = opt.hidden;
+    au_init(!opt.hidden);   /* (headless: the sound's state without a device - tests run the mixer themselves) */
     platform_size(&e->width, &e->height);
     if (!start_scripts(e)) {
         fprintf(stderr, "openmizzurna: the scripts didn't load (see above); the console is open\n");
@@ -223,6 +225,7 @@ int main(int argc, char **argv) {
     }
 
 done:
+    au_quit();
     forth_free(e->forth);
     render_shutdown();
     platform_close();
