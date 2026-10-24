@@ -1,7 +1,8 @@
 \ area027.fs - the town's rules (src: ovl027.c, the town's overlay; decomp/docs/areas/area27.md): the buildings'
 \ doors - whether Matthew may go in now (their hours, the story) and the script that takes him in.
 IN: rules.area027
-USING: engine actors messages clock story-flags townsfolk areas look talk matthew knock events events.ovl027 tail ;
+USING: engine actors messages clock story-flags townsfolk areas look talk matthew knock events events.ovl027 tail
+    walkers ;
 
 27 constant this-area
 
@@ -150,5 +151,30 @@ variable lookout-mode   \ src: D_8010CA2C: 1 the lookout by his door
     the-lookout <>  lookout-mode @ 0= or if  false exit  then
     mel stop-of mel-still-around <  tail-started? 0= and if  s" tail" actor-named send tail-start
     else  ['] entry-8010B470 start-event  then  true ;
-' talks-here this-area area-talk!
-this-area ' entered 0 area-hooks!
+
+\ ---- the stalker (112): minigame 23's warp to the town, then round his loop on the footpaths (minigame 24: nodes 0
+\ -> 3 -> 9 -> 0, running) until he's talked to - caught (minigame 25) ----
+112 constant the-stalker   100 constant stalker-speed   5 constant he-runs
+$01C 28 story-bit constant stalker-caught   \ (src: +0x1C bit 28, toggled)
+variable stalker-due   variable stalking
+: stalker-arrives ( -- )  1 stalker-due !  events.main:exe-800969EC ;   \ minigame 23 (src: D_800A34B8)
+' stalker-arrives 23 minigame-script!
+: leg ( from dest -- )   \ src: states 30 - 32: the next leg once he's done the last
+    stalking @ 0= if  2drop exit  then
+    the-stalker -rot stalker-speed he-runs s" walkers" actor-named send walker-start
+    yield  begin  the-stalker walker-active?  stalking @ and while  yield  repeat ;
+: rounds ( -- )  begin  stalking @ while  0 3 leg  3 9 leg  9 0 leg  repeat ;
+: stalk ( -- )  true stalking !  ['] rounds the-stalker start-route ;   \ minigame 24
+' stalk 24 minigame-code!
+: caught ( -- )   \ minigame 25 (src: actor_handler_112 in the town)
+    false stalking !  the-stalker end-route  the-stalker s" walkers" actor-named send walker-stop
+    stalker-caught flag-toggle  ['] entry-8010A178 start-event ;
+' caught 25 minigame-code!
+
+: entered-town ( -- )
+    entered  false stalking !  the-stalker end-route
+    stalker-due @ if  0 stalker-due !  24 minigame  then ;
+: talks-to ( slot -- handled? )
+    dup the-stalker = if  drop 25 minigame  true exit  then  talks-here ;
+' talks-to this-area area-talk!
+this-area ' entered-town 0 area-hooks!

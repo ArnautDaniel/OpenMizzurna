@@ -57,6 +57,7 @@ phase-1 port's files (`../port/src/game/`), which name the decomp's functions; t
 | Shoot-out ([page](subsystems/shootout.md), built) | button targets on a foe: the rounds, the camera's path, the game over | `qte.c`, `shootout.c`, the overlays |
 | Tail ([page](subsystems/tail.md), built) | tailing the lookout to his door, unseen; the door's keypad | `ovl027.c` (`func_801025E0`) |
 | Dog chase ([page](subsystems/dog-chase.md), built) | running from the junkyard's dog to the far side | `ovl008.c` (`dog_update`) |
+| Walkers ([page](subsystems/walkers.md), built) | figures along the town's footpaths: the stalker's loop | `walker.c`, `carline.c` |
 | Minigames | the bar counters, chases | `fight.c`, `qte.c`, `shootout.c`, `counter.c`, `ovl0xx.c` |
 | Saves | saving and loading the story | `cmcard.c`, `cnrev.c` (story_save) |
 | Title | the logo, the title and its menu, the movies, the endings | `opening.c` |

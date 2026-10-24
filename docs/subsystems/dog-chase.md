@@ -31,7 +31,7 @@ Running from the junkyard's dog to the yard's far side (area 8's minigame 26; sr
   - 30 off his health, and the flash (effect 14);
   - he staggers for 17 frames (motion 0x772);
   - the dog backs off for 17 frames (0x773), turns away (0x400) and waits 8;
-  - he's pushed to 0x100 from it.
+  - the dog is put 0x100 from him, facing him.
 - **Out of health.** He falls (0x6C; effect 9), then game over (effect 2). ○ or Start fades out (effect 3) and
   it begins again from the start.
 - **The camera** is fixed over him: yaw 0, distance −0xDE2, eye −0xA00, look −0x200.

@@ -269,8 +269,14 @@ create minigame-scripts  #minigames cells allot   minigame-scripts #minigames ce
 : minigame-xt ( n -- xt | 0 )  dup #minigames u< if  cells minigame-scripts + @  else  drop 0  then ;
 variable minigame-thread   -1 minigame-thread !   \ the minigame running: its script's thread, and the script
 variable minigame-running
-: minigame ( n -- )   \ op $145 (src: minigame_start): a script's, else a minigame - to come
+\ the minigames that are an area's code and no script of their own (src: area_minigame_start setting a state):
+\ their word, run at once
+create minigame-codes  #minigames cells allot   minigame-codes #minigames cells erase
+: minigame-code! ( xt n -- )  cells minigame-codes + ! ;
+: minigame-code ( n -- xt | 0 )  dup #minigames u< if  cells minigame-codes + @  else  drop 0  then ;
+: minigame ( n -- )   \ op $145 (src: minigame_start): a script's, an area's code, else to come
     dup minigame-xt ?dup if  nip dup minigame-running !  launch-event minigame-thread !  exit  then
+    dup minigame-code ?dup if  nip execute exit  then
     1 s" minigame" unbuilt ;
 : minigame-running? ( -- flag )   \ (its thread still that script's)
     minigame-thread @ dup event-alive? 0= if  drop false exit  then  thread-xt slot @ minigame-running @ = ;

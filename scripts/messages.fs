@@ -54,6 +54,9 @@ message tail-pace ( -- )                   \ (to the tail) the lookout paces by 
 message tail-start ( -- )                  \ tailing him begins (src: minigame 2)
 message dog-chase-start ( -- )             \ (to the dog chase) from the start (src: minigame 26's dog_reset)
 message dog-chase-stop ( -- )              \ he's got away: it's over
+message walker-start ( slot node dest speed motion -- )   \ (to the walkers) along the town's footpaths from that node to the
+                                          \ destination (one of the first 24), speed a frame, in that motion (src: walker_start)
+message walker-stop ( slot -- )            \ stop walking there, stand (src: walker_remove)
 message shootout-start ( plan -- )         \ a shoot-out by an area's plan (shootout.fs; src: shootout_begin)
 message camera-behind ( look-y dist eye-y -- ) \ low behind Matthew, turning as he turns (src: ovl019's duct crawl)
 message camera-reset ( -- )              \ behind Matthew now, where he stands (src: camera_reset)

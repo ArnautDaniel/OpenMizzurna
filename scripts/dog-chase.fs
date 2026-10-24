@@ -52,7 +52,8 @@ fvariable due
     bite-flash effect  bite-damage negate health +!
     health @ 0 <= if  down him !  falling effect  else  staggered him !  then
     backing-off dog !  hurt-frames wait !  0 dog-speed !
-    his-x @ his-z @  angle-to-him  apart-after-bite apart - 0 max  along  his-z !  his-x ! ;   \ src: actor_place_apart
+    angle-to-him {: a :}  a dog-heading !   \ src: actor_place_apart: it's put that far from him, facing him
+    his-x @ his-z @ a apart-after-bite negate along  dog-z !  dog-x ! ;
 : lined-up? ( a step -- flag )  {: a s :}  dog-heading @ a s toward a = ;
 : wait-and-turn ( a -- )   \ src: state 0
     {: a :}  50 dog-speed !  dog-ready dog-motion !

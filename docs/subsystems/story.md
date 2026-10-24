@@ -93,14 +93,16 @@ played (its content area: `script-area`).
 src: event_thread_kill). While an event that gave the player control back runs, the areas' frame hooks and ○ / □
 run (src: player_has_control).
 
-The converter also takes the scripts an area's minigame start queues (src: area_minigame_start's
-`minigame_script = &D_X`) and the arrival scripts the overlays' C warps with (src: func_80019F3C's last
+The converter also takes the scripts an area's minigames queue (src: `minigame_script = &D_X` anywhere in the
+overlay, and the scripts it runs on threads of its own) and the arrival scripts the overlays' C warps with (src: func_80019F3C's last
 argument), in the destination area's overlay.
 
 The minigames that are a script alone (src: area_minigame_start setting minigame_script) are registered by
-number (`minigame-script!`); the `minigame` op starts that script, the others are to come.
+number (`minigame-script!`), and the `minigame` op starts that script as an event. Those that are an area's
+code alone are registered with `minigame-code!` (the stalker's 24 and 25), and the op runs that word at once.
+Any others are to come.
 `wait-minigame` (op $149) waits for that script's end (`minigame-running?`). An area can register a word of its
-own (area 19's chase: its scene, then the main executable's minigame 23). `scene-reset` (op $11A, src:
+own as its script (area 19's chase: its scene, then the main executable's minigame 23; area 8's dog chase). `scene-reset` (op $11A, src:
 func_80018B44) changes the area under a running scene, Matthew where he is; `wait-near` (op $117) waits until
 someone is within a distance of a point.
 
