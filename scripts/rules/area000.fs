@@ -121,7 +121,12 @@ enum: act-action  do-nothing  4 open-the-cabinet  6 study-the-board  12 the-comp
     desk-stand-in at-the-desk $348 $20927 set-pos  desk-stand-in 0 $800 0 set-rot  desk-stand-in 0 0 set-floor
     desk-stand-in $48 1 anim ;
 : stand-in-there? ( -- flag )  desk-stand-in person-now 2drop drop at-the-desk = ;
-: each-frame ( -- )   \ (the computer's own screens and minigame 30: to come)
+$020 1 story-bit constant minigame-30-begun   \ (src: +0x20 bit 1)
+$1F8 constant minigame-30-a   $1FC constant minigame-30-b   $200 0 story-bit constant minigame-30-c
+: minigame-30? ( -- flag )   \ src: func_80102584: once its three conditions are met
+    minigame-30-begun flag? 0=  minigame-30-a story@ 0<> and  minigame-30-b story@ 0<> and  minigame-30-c flag? and ;
+: each-frame ( -- )   \ (the computer's own screens: to come)
+    minigame-30? if  minigame-30-begun flag-set  30 minigame exit  then
     at-zone drop counter-zone = if
         matthew-was matthew-actor send figure-place  ['] events.ovl000:entry-80107DC8 start-event exit  then
     scene @ upstairs =  28 11 45 11 47 between? and  upstairs-done @ 0= and  stand-in-there? and if
@@ -205,19 +210,19 @@ $2917 constant officers-line
 
 \ ---- the C its events and rows call (ovl000's evfn_*) ----
 create mel-cell-stops  41 , 49 ,   create rolein-cell-stops  28 , 30 ,   \ src: D_80102258, D_8010225C (the 29th, 30th)
-: cell-visit ( -- )   \ 0x80103498: the cell visit on the 29th or 30th (minigame 36 - to come), else a scene
+: cell-visit ( -- )   \ 0x80103498: the cell visit on the 29th or 30th (minigame 36), else a scene
     clock-time time>day {: day :}
     $020 story@ $50 and $10 <>  mel-in-a-cell? 0= or  cell-occupied flag? 0= or  day 29 30 1+ within 0= or if
         ['] events.ovl000:entry-80107B00 start-event exit  then
     $020 story@ $40 xor $020 story!  $044 story@ 1 xor $044 story!
-    0 s" minigame 36" unbuilt
+    36 minigame
     mel day 29 - cells mel-cell-stops + @ goto-stop  rolein day 29 - cells rolein-cell-stops + @ goto-stop
     day 29 = if  morgan $41 goto-stop exit  then
     clock-time time>hour dup 16 < if  drop morgan $46 goto-stop exit  then
     21 < if  morgan $49  else  morgan $4B  then  goto-stop ;
-: first-or-later ( -- )   \ 0x80103710: minigame 29 once (to come), else a scene
+: first-or-later ( -- )   \ 0x80103710: minigame 29 once, else a scene
     $01C story@ $C0000000 and $40000000 =  dennis-at-stop-10? 0= and if
-        $01C story@ $80000000 or $01C story!  0 s" minigame 29" unbuilt exit  then
+        $01C story@ $80000000 or $01C story!  29 minigame exit  then
     $080 story@ 0= if  ['] events.ovl000:entry-80105088  else  ['] events.ovl000:entry-801079C0  then  start-event ;
 : the-computer-opens ( -- )  0 s" the police computer" unbuilt ;   \ 0x80103FEC (its case files: to come)
 : shove-it ( -- )   \ 0x8010388C: once
@@ -231,3 +236,5 @@ this-area ovl $80103810 ' stand-in native:          this-area ovl $801037B8 ' is
 ' look-check ' look-do ' act-check ' act-do  this-area content area-rules!
 this-area ' entered ' scene-hook area-hooks!
 this-area ' each-frame area-frame!
+' events.ovl000:entry-801041AC 29 minigame-script!   ' events.ovl000:entry-801045B8 30 minigame-script!   \ (src: area_minigame_start)
+' events.ovl000:entry-80104708 36 minigame-script!

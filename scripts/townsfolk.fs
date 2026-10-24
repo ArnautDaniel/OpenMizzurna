@@ -80,6 +80,8 @@ PRIVATE>
     dup figure? 0= if  drop false exit  then
     person-of {: p :}  p person-area @ area @ =  p person-area @ 0< 0= and  p riding @ 0= and ;
 : walking? ( slot -- flag )  person-of walking @ 0<> ;
+: travelling? ( slot -- flag )  person-of travelling @ 0<> ;   \ between stops (src: a->travelling)
+: last-stop ( slot -- stop )  person-of at-stop @ ;          \ the stop they're at or left (src: a->stop)
 : riding? ( slot -- flag )  person-of riding @ 0<> ;
 : person-turned? ( slot -- flag )  person-of turning @ 0= ;
 : seated? ( slot -- flag )  person-of seat-bar @ 0<> ;

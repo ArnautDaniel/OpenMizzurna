@@ -7,7 +7,6 @@ USING: engine actors messages clock story-flags townsfolk events look talk areas
 
 8 constant this-area
 153 constant on-the-bus   1 constant morgans-kind
-$008 16 story-bit constant seat-searched   \ (src: +0x08 bit 16)
 : bus-visit ( -- n )  $01C story@ $60000000 and ;   \ (src: +0x1C bits 29 - 30)
 
 \ ---- this visit (src: D_80103844 the seat looked at, D_80103840 searched) ----

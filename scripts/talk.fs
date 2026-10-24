@@ -46,6 +46,16 @@ create area-talks  33 cells allot   area-talks 33 cells erase                 \ 
     cells conversations + @  begin  dup while
         dup talk-xt @ execute if  drop true exit  then  next-talk @
     repeat  drop false ;
+\ a character's conversation n of their pack (src: npc_talk, event_start_talk): they turn to him, stand, and it plays
+: character-index ( slot -- k | -1 )   \ src: char_index
+    dup 23 < if  exit  then
+    case  89 of  4  endof  90 of  9  endof  91 of  16  endof  92 of  18  endof  93 of  19  endof  -1 swap  endcase ;
+: pack-of ( slot -- pack )  character-index s" character-packs" rot exe-u8 ;
+variable talking-pack   variable talking-n
+: pack-talk-event ( -- )  talking-pack @ talking-n @ call-pack-script ;
+: npc-talk ( slot n -- )
+    {: s n :}  s matthew 0 face  s idle   \ (src: actor_turn_to_actor, actor_anim 0)
+    s pack-of talking-pack !  n talking-n !  ['] pack-talk-event start-event ;
 : default-line! ( xt slot -- )  cells default-lines + ! ;   \ xt ( slot -- )
 : area-talk! ( xt area -- )  cells area-talks + ! ;          \ xt ( slot -- handled? )
 : a-line-by-stop ( table key -- msg | -1 )   \ a table of (key, message) pairs ended by -1 (src: func_800429C8)

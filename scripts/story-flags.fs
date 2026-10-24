@@ -147,3 +147,4 @@ $008 19 story-bit constant isabella-cabin-photo-seen          \ ovl019:evfn_8010
 $164  0 story-bit constant morgan-mortal-journey-talk-done    \ func_8002F554 (Morgan's talk picker), needs +0x1C bit22: npc_talk(1, 9) pack 046_3 script9 "..."
 $164  1 story-bit constant morgan-necklace-talk-done          \ func_8002F554, needs +0x44 bit0 and +0x20 bit18: npc_talk(1, 10) "..."; required by ovl002 for the necklace sc
 $018  5 story-bit constant hideout-robbers-caught              \ ovl028 0x80102064 (the hideout's scene) -> set; the town reads it (no more lookout by his door)
+$008 16 story-bit constant seat-searched                       \ ovl008 the bus seat searched (area 8 and Mel's talk read it)

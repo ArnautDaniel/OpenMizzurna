@@ -11,7 +11,8 @@
 
 #define AREA_CODE_LOAD_ADDRESS 0x80101ED0u   /* an area's code file (its overlay) in the running program */
 
-#define AREA_TABLE (34 * 2)   /* an s16 an area */
+#define AREA_TABLE (34 * 2)
+#define STOPS 99   /* a schedule's stops at most (src: the handlers' bounds) */   /* an s16 an area */
 #define HOURS 24
 #define HOUR_RGB (HOURS * 3)       /* u8 red, green, blue tables */
 #define HOUR_XYZ (HOURS * 3 * 2)   /* s16 x, y, z tables */
@@ -91,6 +92,25 @@ static const ExeTable kTables[] = {
      "(src: area_sep_open, func_800225AC)"},
     {"door-sounds", 0x80096814, 34,
      "the sound of a door of the third kind, by the content area (u8; 0 none - src: func_80041D24)"},
+    /* the characters' talk (src: handlers_chars.c, char_talk.c) */
+    {"character-packs", 0x80013134, 24, "a character's event pack of conversations (u8, by character: src npc_talk)"},
+    {"lines-morgan", 0x80088DFC, STOPS * 2, "morgan's line by the stop they walk from (s16 message, 0 none)"},
+    {"lines-hudson", 0x80084D30, STOPS * 2, "hudson's line by the stop they walk from (s16 message, 0 none)"},
+    {"lines-dennis", 0x80083D90, STOPS * 2, "dennis's line by the stop they walk from (s16 message, 0 none)"},
+    {"lines-steve", 0x80091270, STOPS * 2, "steve's line by the stop they walk from (s16 message, 0 none)"},
+    {"lines-isabella", 0x8008509C, STOPS * 2, "isabella's line by the stop they walk from (s16 message, 0 none)"},
+    {"lines-nozz", 0x80082260, STOPS * 2, "nozz's line by the stop they walk from (s16 message, 0 none)"},
+    {"lines-barton", 0x80084418, STOPS * 2, "barton's line by the stop they walk from (s16 message, 0 none)"},
+    {"lines-robert", 0x8008FFD8, STOPS * 2, "robert's line by the stop they walk from (s16 message, 0 none)"},
+    {"lines-liz", 0x80086D04, STOPS * 2, "liz's line by the stop they walk from (s16 message, 0 none)"},
+    {"lines-cohen", 0x800831A8, STOPS * 2, "cohen's line by the stop they walk from (s16 message, 0 none)"},
+    {"lines-mel", 0x80087920, STOPS * 2, "mel's line by the stop they walk from (s16 message, 0 none)"},
+    {"lines-winona", 0x80092138, STOPS * 2, "winona's line by the stop they walk from (s16 message, 0 none)"},
+    {"lines-james", 0x800112FC, STOPS * 2, "james's line by the stop they walk from (s16 message, 0 none)"},
+    {"lines-wolf", 0x80092820, STOPS * 2, "wolf's line by the stop they walk from (s16 message, 0 none)"},
+    {"lines-lorraine", 0x800903DC, STOPS * 2, "lorraine's line by the stop they walk from (s16 message, 0 none)"},
+    {"lines-waitresses", 0x80086258, STOPS * 2, "waitresses's line by the stop they walk from (s16 message, 0 none)"},
+    {"lines-samuel", 0x80090AE8, 64 * 2, "Samuel's lines: pairs of s16 stop, message, ended by -1 (src: func_800429C8)"},
     {"music", 0x800814DC, MUSIC_TRACKS * MUSIC_ENTRY,
      "the background music: per track its sequence's CD.BIN entry, then 0 or 1, and its volume (src: music_play)"},
 };
