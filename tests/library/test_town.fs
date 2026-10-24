@@ -1,5 +1,6 @@
-\ the town on the game's data: its tiles streamed around the camera, its street lamps
-USING: tester engine actors messages clock keys areas floors daylight matthew billboards town town.private events ;
+\ the town on the game's data: its tiles streamed around the camera, its street lamps, its moving signs and the
+\ doors' animation slots (a door's town side swings its slot, once through)
+USING: tester engine actors messages clock keys areas floors daylight matthew billboards town town.private events doors ;
 
 : the-areas ( -- id )  s" areas" actor-named ;
 : at-time ( day hour minute -- )  date>time s" clock" actor-named send set-time  deliver ;
@@ -46,6 +47,13 @@ testing their light: a sixth of the first light's sum, at least 40 (src: D_800A3
 T{ 0 true s" daylight" actor-named send set-weather  deliver  26 12 0 at-time  billboard-grey -> 114 }T
 T{ 26 22 0 at-time  billboard-grey -> 40 }T
 
+testing the signs keep moving: the turning ones' turn, the swinging one's
+T{ sign-turn @  swing-x sw-now @  4 steps  swing-x sw-now @ <>  swap sign-turn @ <> -> true true }T
+testing a door's town side: its animation slot plays once through, then still
+: a-town-door ( -- n )  #doors 0 do  i town-room door-spot 0< 0= if  i unloop exit  then  loop  -1 ;
+T{ a-town-door 0< 0= -> true }T
+T{ a-town-door door-anim  deliver  a-town-door town-room door-spot slot-motion@ 0<> -> true }T
+T{ 300 steps  a-town-door town-room door-spot slot-motion@ -> 0 }T
 testing leaving the town lets its tiles go
 T{ 1 0 the-areas send enter-area  deliver  deliver  tiles-loaded -> 0 }T
 

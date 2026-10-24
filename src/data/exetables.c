@@ -157,6 +157,9 @@ static const ExeTable kTables[] = {
     {"lines-workers", 0x80086258, STOPS * 2,
      "the farm workers' lines: walking, if the stop they left has one, the one of the first five by its stop mod 5 "
      "(s16; src: func_8002D10C)"},
+    {"town-door-motions", 0x800803DC, 45 * 2,
+     "the town's animation slots: u8 the object of its tile, u8 the common props' motion (src: func_8001A190 - a "
+     "door's town side gives its slot)"},
     {"lines-robert", 0x8008FFD8, STOPS * 2, "robert's line by the stop they walk from (s16 message, 0 none)"},
     {"lines-liz", 0x80086D04, STOPS * 2, "liz's line by the stop they walk from (s16 message, 0 none)"},
     {"lines-cohen", 0x800831A8, STOPS * 2, "cohen's line by the stop they walk from (s16 message, 0 none)"},
@@ -246,6 +249,8 @@ static const AreaTable kAreaTables[] = {
     {"town-74-walking", 27, 0x8010B25C, 14 * 2, "a message by the stop (s16)"},
     {"town-87-walking", 27, 0x8010B2D4, 56 * 2, "a message by the stop (s16)"},
     {"town-123-walking", 27, 0x8010B438, 38 * 2, "a message by the stop (s16)"},
+    {"town-animated-tiles", 27, 0x8010C89C, 23 * 4,
+     "the tiles with animation slots: u8 column, row, the first slot, how many (src: ovl027 func_801075AC)"},
     {"keypad-code", 27, 0x80101ED0, 4, "the door's code: a button's bit each (0x10 triangle, 0x20 circle, 0x40 cross, 0x80 square)"},
     {"elevator-open", 2, 0x80102134, 3 * 4,
      "the hospital's elevator doors opening: per set, four of the area's animation list's entries (u8; src: "

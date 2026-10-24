@@ -36,7 +36,7 @@ not open yet or closing, the hospital's). Nozz's store: shut from midnight to 6:
 is in (the scene; the town's side in the town) he is put at the door's spot on his side, turned through it and
 stepping (motion $3F / $40, its move held) - the scripts wait for that; $13A also sets a fixed camera behind him.
 The door opens on his side: its spot is the area's animation entry for it (`door-anim`, op $127). (The next
-room's objects shown, and the town's doors' own animations: to come.)
+room's first object shown through it (`reveal-room`); in the town the door's slot swings (town.md).)
 
 **Warp** (op $12A, `events.fs`: `warp ( area scene x z heading script )`; src: func_80019F3C, func_80019D90):
 the area changes (scene -1: the town's), Matthew is put at x z facing heading (-1: as he is), the camera behind
@@ -59,8 +59,7 @@ back, they come through the door the other way and greet him: the line by who it
 facing him (`door-hold`, $53; `person-at-door`); they go back in (their parting line, through the door, to their
 stop) after 255 frames, when he's 501 away, or when they're about to leave. One knock at a time.
 
-## To come
+## Status
 
-the town's doors swinging (its own animation slots), the next room's objects shown as he steps through, the town's doors' remaining rules (Winona
-riding along, the diner's robber, Mel's first visit to the diner), the door opening as one passes (its object
-animation, when Matthew's room is on one side), the apartment building's doors (area 19's knocks), the door sounds.
+Built: the doors, the knocks, the town's doors' rules (rules/area027.fs: by the hour and the story, Winona along,
+the diner's robber, Mel's first visit), the doors opening (indoors the area's animation, in the town its slot).

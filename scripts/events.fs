@@ -540,8 +540,9 @@ $3F constant stepping-out-1   $40 constant stepping-out-0   \ (by the side's way
 -470 constant behind-look-y   -812 constant behind-dist   -1802 constant behind-eye-y   -693 constant behind-yaw
 : my-room ( -- room )  area @ the-town = if  town-room  else  scene @  then ;
 : object-anim ( entry -- )  s" areas" actor-named send play-area-anim ;   \ op $156 (the town's own: to come)
-: door-anim ( door -- )   \ op $127: the door opening on Matthew's side
-    {: n :}  n door-of door-area @ area @ <> if  exit  then
+: door-anim ( door -- )   \ op $127: the door opening on Matthew's side (the town's: its slot, the town's own)
+    {: n :}  area @ the-town = if  n town-room door-spot  dup 0< if  drop  else  s" town" actor-named send town-door-swing  then  exit  then
+    n door-of door-area @ area @ <> if  exit  then
     n my-room door-spot  dup 0< if  drop  else  object-anim  then ;
 16 constant no-reveal-scene   \ (src: not while scene 16 is shown)
 : door-reveal-room ( door -- )   \ op $126: the room beyond shown through it (src: func_8001A044: its first object)

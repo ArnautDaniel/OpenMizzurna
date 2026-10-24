@@ -33,9 +33,15 @@ func_800243F0). 32 x 24 tiles of 19980 world units; tile (col, row)'s centre is 
 - On foot (docs/subsystems/matthew.md): the tiles' obstacles and zones, the ground's height (`ground-at`); the
   townsfolk walking there follow the ground too.
 
+- The tiles' moving objects (src: ovl027 func_801075AC, func_801078E8): 45 animation slots, each an object of
+  its tile and a common props' motion (the executable's `town-door-motions`; the tiles with slots: the town
+  code's `town-animated-tiles`). A door's town side swings its slot (`town-door-swing`, from the events' door
+  ops): once through, then still. The signs that keep moving (func_801076C4): two turning $1E a frame (16, 12
+  and 20, 7), one swinging (17, 13: about x and z between ±$50, bobbing, hung at $EB0).
+  `tests/library/test_town.fs`.
+- The water's texture animation, the town's per-frame rules and people (areas.md, rules/area027.fs).
+
 ## To come
 
- the moving
-signs and the tiles' object animations, the police cordon coming down (12/25 - 12/28), the doors into the buildings (and the zones' scripts), the cars and props in his way (src: player_probe_blocked), the
-two road tiles closed on foot until 12/28 03:00, driving, the
-cars' headlights at night.
+The police cordon coming down (12/25 - 12/28), the cars and props in his way (src: player_probe_blocked), the
+two road tiles closed on foot until 12/28 03:00, the cars' headlights at night.
