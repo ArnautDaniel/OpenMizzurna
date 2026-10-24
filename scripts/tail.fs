@@ -126,11 +126,15 @@ variable robber-talks   \ src: D_8010CA31
     t looked >= if  next-point stage !  then ;
 8 constant aside-from   16 constant aside-watch   46 constant aside-back   54 constant aside-turn   62 constant aside-done
 : aside-again ( -- )  looking-aside stage ! ;
-: look-aside-step ( -- )   \ src: state 5: he turns aside, leans, watches (the lean: to come)
+$10 constant lean-step   variable leaning
+: lean-him ( d -- )  leaning +!  lookout leaning @ the-townsfolk send person-lean ;
+: look-aside-step ( -- )   \ src: state 5: he turns aside, leans ($10 a frame), watches, leans back, turns back
     timer @ {: t :}  1 timer +!
     t aside-from < if  -128 turn-him exit  then
+    t aside-from aside-watch within if  lean-step negate lean-him exit  then
     t aside-watch aside-back within if
         in-sight?  seen @ 0= and if  aside-back timer !  ['] entry-80109D38 ['] aside-again spotted  then  exit  then
+    t aside-back aside-turn within if  lean-step lean-him exit  then
     t aside-turn aside-done within if  seen @ if  next-point stage ! exit  then  128 turn-him exit  then
     t aside-done >= if  next-point stage !  then ;
 : door-step ( -- )   \ src: state 7: at his door

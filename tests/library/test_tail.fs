@@ -3,7 +3,7 @@
 \ his way back; seen in his sight's zone while he looks back; at his door, its scene, then the keypad - a wrong
 \ code tried again, the right one through the door
 USING: tester engine actors messages clock areas keys matthew townsfolk events window story-flags talk tail
-    tail.private rules.area027 ;
+    tail.private rules.area027 townsfolk.private ;
 
 : steps ( n -- )  0 ?do  1 tick-tasks  actors-frame  loop ;
 : settled ( -- )  10 0 do  deliver  loop  events-stop  deliver ;
@@ -34,6 +34,10 @@ T{ played-out  4 steps  stage @  tail-point @ -> on-his-way 2 }T
 testing looking back, Matthew in his sight's zone: seen
 T{ 0 seen !  2 tail-point !  looking-back stage !  40 timer !  579000 219000 put-him  2 steps  stage @  seen @ -> in-a-scene 1 }T
 T{ events-stop -> }T
+testing looking aside (Matthew away): he leans $10 a frame to -$80, then back to none
+: his-lean ( -- rz )  lookout person-of leaning-z @ ;
+T{ in-town  0 seen !  0 leaning !  2 tail-point !  looking-aside stage !  0 timer !  20 steps  his-lean -> -128 }T
+T{ 40 steps  his-lean -> 0 }T
 testing at his door, Matthew by it out of sight: its scene, then the keypad
 T{ 0 seen !  11 tail-point !  door stage !  577700 223000 put-him  2 steps  stage @ -> in-a-scene }T
 T{ played-out  4 steps  stage @  started? -> keypad true }T

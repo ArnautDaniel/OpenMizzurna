@@ -30,8 +30,9 @@ Tailing the lookout to his door, and the door's keypad (src: ovl027 `func_801025
 - **At a point.**
   - Look back: he turns +0x80 a frame for frames 16–31, watches for frames 32–61, then turns back. Matthew in the
     point's zone while he watches means he's seen.
-  - Look aside: he turns −0x80 a frame for frames 0–7, watches for frames 16–45, turns back for frames 54–61.
-    The lean is to come.
+  - Look aside: he turns −0x80 a frame for frames 0–7, leans −$10 a frame for frames 8–15 (his roll: townsfolk's
+    `person-lean`, the engine's `figure-roll`), watches for frames 16–45, leans back for frames 46–53, turns back
+    for frames 54–61.
 - **Seen.**
   - Seen while walking or looking back: his "who's there" scene (`entry-80109CF8`).
   - Seen while looking aside: `entry-80109D38`.
@@ -63,9 +64,5 @@ Tailing the lookout to his door, and the door's keypad (src: ovl027 `func_801025
 
 ## Status
 
-Built: pacing, the tail, being seen, the door, the keypad (`tests/library/test_tail.fs`).
-
-To come:
-- the look aside's lean;
-- the keypad's button icons;
-- (the robber's minigames are built: see below).
+Built: pacing, the tail, being seen, the look aside's lean, the door, the keypad and its button icons, the
+robber's minigames (`tests/library/test_tail.fs`).

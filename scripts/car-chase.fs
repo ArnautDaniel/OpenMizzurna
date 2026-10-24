@@ -27,6 +27,7 @@ $40 constant crash-turn
 3 constant knock-small   255 constant knock-strength   1 constant knock-large   \ (src: rumble(0xFF, 3, 1))
 $6E constant knock-sound   $69 constant crash-sound
 $1660 constant rider-falls   $1666 constant rider-shaken   $1655 constant rider-riding
+$1663 constant bike-wobbles   $1664 constant bike-falls   $1665 constant bike-down   \ (the bike's own: src actor_anim)
 11 constant fade-out
 $21 constant rider-after   $16 constant rider-got-away
 $3C02C constant car-home-x   $74 negate constant car-home-y   $21933 constant car-home-z   $30 constant car-home-heading
@@ -41,8 +42,8 @@ fvariable due
     {: x z h d :}  h s>f 2e f* pi f* 4096e f/ {: F: a :}
     x s>f a fsin d s>f f* f+ f>s  z s>f a fcos d s>f f* f+ f>s ;
 : bike ( -- x z heading )  the-bike car-now nip ;   \ (its height: the road's)
-: on-the-bike ( -- )   \ the rider on the bike, as it goes
-    bike {: x z h :}  mel x z the-townsfolk send person-place  mel h the-townsfolk send person-turn ;
+: on-the-bike ( -- )   \ the rider on the bike, as it goes (src: its place - its height too - and its way)
+    the-bike car-now {: x y z h :}  mel x y z the-townsfolk send extra-place  mel h the-townsfolk send person-turn ;
 : apart ( -- d )   \ the bike from his car
     bike drop  his-car-now drop {: bx bz cx cz :}
     bx cx - s>f fdup f*  bz cz - s>f fdup f* f+ fsqrt f>s ;
@@ -73,8 +74,10 @@ fvariable due
     s" driving" actor-named send car-bumped  -1 knocks +!  knock-small knock-strength knock-large shake
     knocks @ if  knock-sound sfx
         shaken-frames timer !  the-bike bike-shaken s" traffic" actor-named send car-speed
+        the-bike bike-wobbles -1 s" traffic" actor-named send car-anim
         mel rider-shaken rider-riding false the-townsfolk send person-anim  exit  then
     mel rider-falls -1 false the-townsfolk send person-anim  true car-held  crash-frames timer !
+    the-bike bike-falls bike-down s" traffic" actor-named send car-anim
     the-bike s" traffic" actor-named send car-stop  crashing stage !  crash-sound sfx  -1 music-row ;
 : chase-step ( -- )
     on-the-bike  chase-camera

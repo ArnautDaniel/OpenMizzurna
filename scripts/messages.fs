@@ -136,6 +136,7 @@ message person-through-door ( slot door room flip stage -- )   \ out of that doo
                                           \ stage: the area they're shown in (-1: the room's own)
 message person-attach ( slot route speed -- )   \ get in their car: it drives that route, they ride (src: cmd 0x2C)
 message person-get-in ( slot -- )         \ climb into their car (src: cmd 0x42)
+message car-anim ( car id next -- )      \ (to the traffic) a motion of its own, then the next held (-1: its last frame; id -1: none)
 message town-door-swing ( slot -- )       \ (to the town) a door's town side swings: its animation slot (src: func_8001A190)
 message person-in-car ( slot car -- )      \ (to the townsfolk) out of sight in that car, out with its riders (src: cmd 0x50)
 message person-ride ( slot mode -- )      \ (to the townsfolk) they go along with Matthew: 1 following on foot, 2 in his car
@@ -150,6 +151,7 @@ message person-back ( slot -- )            \ as kept (src: actor_restore_state)
 message person-door-free ( slot -- )       \ no longer at the door
 message person-variant ( slot kind -- )   \ (to the townsfolk) they show that kind's model (0 or their own: theirs)
 message person-away ( slot -- )           \ (to the townsfolk) between stops, out of sight until their next (src: travelling = 1)
+message person-lean ( slot rz -- )        \ (to the townsfolk) they lean so (their roll; src: rot_z)
 message person-partner ( slot car -- )    \ (to the townsfolk) that car their partner (ridden: Mel's bike) (src: func_80029B20)
 message person-unlink ( slot -- )         \ no longer with their car: out of it where they are (src: partner = 0)
 message seat-take ( slot bar seat -- )    \ (to the townsfolk) that stool is theirs (bar: at-diner, at-club; seat -1: the first free)

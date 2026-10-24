@@ -61,6 +61,7 @@ begin-structure car
   field: lane-dx   field: lane-dz
   field: switch-route   \ another route it turns onto at that route's first node (0: none; src: loop_node, cmd 0x37)
   field: x   field: y   field: z   field: heading   \ where it is
+  playing +field car-motion   \ a motion of its own (the bike's: shaken, falling - src: actor_anim on it)
 end-structure
 create cars  #cars car * allot
 : car-of ( slot -- c )  first-car - car * cars + ;
@@ -70,6 +71,7 @@ PRIVATE>
 : car-driving? ( slot -- flag )  car-of driving @ 0<> ;
 : car-carrying? ( slot -- flag )  car-of carrying @ 0<> ;
 : car-shown? ( slot -- flag )  car-of shown @ 0<> ;
+: car-motion-now ( slot -- id )  car-of car-motion anim @ ;   \ (a fact: its own motion playing; 0 / -1 none)
 
 <PRIVATE
 5 constant speed-ease          \ a frame, toward its top speed
@@ -178,7 +180,8 @@ PRIVATE>
     cars #cars car * erase
     #cars 0 do  cars i car * +  -1 over lane-node !  drop  loop ;
 : step-car ( c slot -- )  over driving @ if  drive  else  2drop  then ;
-: traffic-step ( -- )  #cars 0 do  cars i car * +  i first-car +  step-car  loop ;
+: car-motions-step ( -- )  #cars 0 do  cars i car * + car-motion advance drop  loop ;
+: traffic-step ( -- )  #cars 0 do  cars i car * +  i first-car +  step-car  loop  car-motions-step ;
 PRIVATE>
 
 \ ---- drawing them, in the town ----
@@ -187,9 +190,11 @@ create car-models  #cars cells allot   car-models #cars cells erase
 : car-model ( slot -- model )   \ its kind's model, loaded when first drawn
     dup first-car - cells car-models + {: s at :}
     at @ 0= if  s kind-model model at !  then  at @ ;
-: draw-car ( slot -- )
+: draw-car ( slot -- )   \ (posed while a motion of its own is on)
     dup car-of {: s c :}  c shown @ 0= if  exit  then
-    s car-model ?dup if  c x @  c y @  c z @  s car-now nip nip nip  draw-model  then ;
+    s car-model ?dup 0= if  exit  then  {: m :}
+    c car-motion clip @ ?dup if  m swap c car-motion frame  c x @ c y @ c z @  s car-now nip nip nip  draw-figure exit  then
+    m  c x @  c y @  c z @  s car-now nip nip nip  draw-model ;
 : draw-cars ( -- )  area @ the-town = if  #cars 0 do  i first-car + draw-car  loop  then ;
 ' draw-cars on-draw
 PRIVATE>
@@ -198,6 +203,7 @@ state: traffic-state end-state
 behaviour traffic-runner
   on spawned ( -- )  traffic-reset  self subscribe tick ;
   on tick ( -- )  ui-busy? 0= if  traffic-step  then ;   \ (src: carline.c: none while ui_busy)
+  on car-anim ( car id next -- )  rot car-of car-motion {: id nx p :}  id nx false p play ;
   on car-park ( car route -- )  swap car-of {: n c :}  false c driving !  false c carrying !  c n 0 start ;
   on car-hide ( car -- )  car-of {: c :}  false c driving !  false c carrying !  false c shown !  0 c x !  0 c z ! ;
   on car-drive ( car route speed -- )  rot car-of -rot start ;

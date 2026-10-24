@@ -25,9 +25,9 @@ T{ played-out  2 steps  driving?  stage @  the-bike car-driving? -> true sweepin
 testing the sweep over: the chase, three knocks to go
 T{ chasing until-stage  stage @  knocks @ -> chasing 3 }T
 testing a knock: his car slowed, the bike shaken a while
-T{ to-the-bike  2 steps  knocks @  timer @ 0>  last-sound @ -> 2 true knock-sound }T
+T{ to-the-bike  2 steps  knocks @  timer @ 0>  last-sound @  the-bike car-motion-now -> 2 true knock-sound bike-wobbles }T
 testing the third: the crash, the rider down, over
-T{ 0 timer !  1 knocks !  to-the-bike  2 steps  stage @ -> crashing }T
+T{ 0 timer !  1 knocks !  to-the-bike  2 steps  stage @  the-bike car-motion-now -> crashing bike-falls }T
 T{ off until-stage  stage @  minigame-running? -> off false }T
 testing won (its native after the wait): out of the car, on to the station
 T{ start-clock  won  started?  driving?  chase-on? -> true false false }T

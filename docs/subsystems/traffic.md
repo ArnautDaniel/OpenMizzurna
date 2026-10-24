@@ -39,7 +39,8 @@ it on a route, gets in and rides; at the route's end they get out beside their s
 
 `car-park ( car route )` (at the route's start, standing), `car-hide`, `car-drive ( car route speed )`,
 `car-carry ( car route speed )` (riders: at the end `car-arrived ( car )` is broadcast), `car-stop`,
-`car-switch ( car route )` (at that route's first node it turns onto it: cmd 0x37), `car-place ( car x y z heading )` (off its route, standing there: Matthew's car as he drives it, driving.md). Facts:
+`car-switch ( car route )` (at that route's first node it turns onto it: cmd 0x37), `car-place ( car x y z heading )` (off its route, standing there: Matthew's car as he drives it, driving.md), `car-anim ( car id next )`
+(a motion of its own, drawn posed: the bike's). Facts: `car-motion-now`,
 `car-now ( car -- x y z heading )`, `car-driving?`, `car-carrying?`, `car-shown?`, `partner-of ( slot -- car | 0 )`,
 `seat ( i -- side forward )`, `beside ( x z heading side forward -- x z )`.
 
