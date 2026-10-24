@@ -455,8 +455,10 @@ $1A1 constant side-from   $4BF constant side-span   $9A0 constant other-side-fro
 \ and taken at all (src: func_80041928): those, or a person here on his floor within his radius and theirs - in
 \ his car its own place left out (the car is what stands there)
 26 constant his-own-car   182 constant #actors
+variable his-ignore-a   variable his-ignore-b   -1 his-ignore-a !  -1 his-ignore-b !   \ (src: Matthew's ignore_a, _b)
 : person-there? ( x z slot -- flag )
     {: x z s :}  s person? 0= if  false exit  then  s here? 0= if  false exit  then
+    s his-ignore-a @ =  s his-ignore-b @ = or if  false exit  then
     s person-of on-floor @ floor @ <> if  false exit  then
     s person-now drop nip {: bx bz :}
     x bx - s>f fdup f*  z bz - s>f fdup f* f+ fsqrt f>s  matthew radius-of s radius-of + < ;
@@ -736,8 +738,9 @@ $3F constant stepping-out-1   $40 constant stepping-out-0   \ (by the side's way
     a s" walkers" actor-named send walker-stop  a end-route  a the-townsfolk send person-unride
     a the-townsfolk send person-door-free  a the-townsfolk send person-idle ;
 \ Matthew walks through everyone for now: whom he'd ignore doesn't matter (src: cmds $3C, $3D: his ignore_a / _b)
-: ignore-a ( a b -- )  2drop ;
-: ignore-b ( a b -- )  2drop ;
+: ignore-a ( a b -- )   \ op $133: a pays b no heed (src: ignore_a - Matthew's: not in his way; -1 none), a frame
+    swap matthew = if  his-ignore-a !  else  drop  then  1 frames wait ;
+: ignore-b ( a b -- )  swap matthew = if  his-ignore-b !  else  drop  then  1 frames wait ;   \ op $134
 
 \ ---- walking and riding (cmds $24, $37, $55, $59) ----
 : lift ( a node dest speed -- )   \ cmd $24: along the town's footpaths (src: actor_lift: a walker)

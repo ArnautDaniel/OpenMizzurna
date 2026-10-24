@@ -45,6 +45,8 @@ $46 constant a-person
     matthew-now drop nip {: x z :}  a-person x 0 z s" townsfolk" actor-named send extra-place  deliver  x z ;
 T{ put-them-on-him  2dup taken?  -rot  4 steps  matthew-now drop nip  apart-from  matthew radius-of a-person radius-of + >=
    -> true true }T
+testing one he pays no heed (the events' ignore-a) isn't in his way
+T{ put-them-on-him  2dup taken?  a-person his-ignore-a !  -rot taken?  -1 his-ignore-a ! -> true false }T
 T{ 1 0 into -> }T
 
 test-summary
