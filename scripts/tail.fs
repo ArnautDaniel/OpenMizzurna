@@ -127,7 +127,7 @@ variable robber-talks   \ src: D_8010CA31
 8 constant aside-from   16 constant aside-watch   46 constant aside-back   54 constant aside-turn   62 constant aside-done
 : aside-again ( -- )  looking-aside stage ! ;
 $10 constant lean-step   variable leaning
-: lean-him ( d -- )  leaning +!  lookout leaning @ the-townsfolk send person-lean ;
+: lean-him ( d -- )  leaning +!  lookout 0 leaning @ the-townsfolk send person-tilt ;
 : look-aside-step ( -- )   \ src: state 5: he turns aside, leans ($10 a frame), watches, leans back, turns back
     timer @ {: t :}  1 timer +!
     t aside-from < if  -128 turn-him exit  then

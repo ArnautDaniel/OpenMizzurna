@@ -198,7 +198,7 @@ are built, each listed here.
 | `random` | `n -- 0..n-1` | chance |
 | `motion` / `motion-frames` / `motion-move` | `addr len -- motion` / `motion -- n` / `motion frame -- dx dy dz` | a character motion from the library and its frames |
 | `draw-figure` | `model motion frame x y z yaw --` | a figure posed in a motion's frame |
-| `figure-roll` | `rz --` | the next `draw-figure` leans so (its root part rolled; src: an actor's rot_z) |
+| `figure-tilt` | `rx rz --` | the next `draw-figure` tilted so (its root part turned about x and z; src: an actor's rot_x, rot_z) |
 | `bank-load` ... `audio-record` | | the sound's words: docs/subsystems/sound.md |
 | `draw-ground-quad` | `image x y z half grey blend --` | a picture lying flat in the world, centred there |
 | `part-on-screen` | `model motion frame x y z yaw part -- px py true \| false` | where a part of the posed figure falls in the window, with this frame's camera |

@@ -181,16 +181,17 @@ static int pose_of(Motion *mt, Cell frame, short (*turns)[3], float move[3]) {  
     }
     return parts;
 }
-static short sRoll;   /* the next draw-figure's roll (figure-roll) */
-PRIM(p_figure_roll) { sRoll = (short)POP(); }   /* ( rz -- ) the next draw-figure leans so (src: an actor's rot_z) */
+static short sTiltX, sTiltZ;   /* the next draw-figure's tilt (figure-tilt) */
+PRIM(p_figure_tilt) { sTiltZ = (short)POP(); sTiltX = (short)POP(); }   /* ( rx rz -- ) the next draw-figure tilted so
+                                                                          * (src: an actor's rot_x, rot_z) */
 PRIM(p_draw_figure) {   /* ( model motion frame x y z yaw -- ) a figure posed in a frame of a motion */
     Cell yaw = POP(), z = POP(), y = POP(), x = POP(), frame = POP(), mo = POP(), m = POP();
     float pos[3] = {(float)x, (float)y, (float)z}, move[3];
     Motion *mt = motion_arg(mo);
-    short turns[MAX_PARTS][3], roll = sRoll;
+    short turns[MAX_PARTS][3], tilt_x = sTiltX, tilt_z = sTiltZ;
     int parts;
 
-    sRoll = 0;
+    sTiltX = sTiltZ = 0;
     if (m < 1 || m > sNModels) {
         return;
     }
@@ -200,7 +201,8 @@ PRIM(p_draw_figure) {   /* ( model motion frame x y z yaw -- ) a figure posed in
     }
     parts = pose_of(mt, frame, turns, move);
     if (parts > 0) {
-        turns[0][2] = (short)(turns[0][2] + roll);   /* (the root part: the rest hang from it) */
+        turns[0][0] = (short)(turns[0][0] + tilt_x);   /* (the root part: the rest hang from it) */
+        turns[0][2] = (short)(turns[0][2] + tilt_z);
     }
     scene3d_draw_posed(sModels[m - 1].m, pos, (float)yaw, (const short (*)[3])turns, parts, move);
 }
@@ -269,7 +271,7 @@ void bind_scene(Forth *f) {
     forth_prim(f, "texture-area", p_texture_area);
     forth_prim(f, "lamp", p_lamp);
     forth_prim(f, "texture-frame", p_texture_frame);
-    forth_prim(f, "figure-roll", p_figure_roll);
+    forth_prim(f, "figure-tilt", p_figure_tilt);
     forth_prim(f, "texture-frame@", p_texture_frame_shown);
     forth_prim(f, "light-way", p_light_way);
     forth_prim(f, "light-color", p_light_color);

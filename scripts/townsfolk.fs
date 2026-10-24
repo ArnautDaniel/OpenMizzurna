@@ -16,7 +16,7 @@ begin-structure stop-row
   field: stop-pose      \ the motion they hold there
   field: stop-placed    \ placed: stand, or with someone, or on a seat
   field: stop-variant   \ another model (0: their own)
-  field: stop-route     \ the route they walk on leaving (an event: to come)
+  field: stop-route     \ the route they walk on leaving (routes.fs walks it on person-departs)
   field: stop-car       \ where their car waits meanwhile: a car route's start (0: where it is; -1: off the roads)
 end-structure
 
@@ -27,7 +27,7 @@ begin-structure person
   field: figure         \ their model (0: not loaded yet)
   field: travelling     \ between stops, walking their route
   field: person-area   field: on-floor   field: px   field: py   field: pz   field: heading-now   \ where they are
-  field: leaning-z      \ their roll (src: rot_z: the lookout leaning to look)
+  field: tilt-x   field: leaning-z   \ their tilt (src: rot_x, rot_z: a prop on its side, the lookout leaning)
   field: kept-heading   field: kept-anim   \ (src: actor_save_state: kept to come back to)
   field: walking        \ walking to a point (src: ACTOR_F_NAV)
   field: goal-x   field: goal-z   field: stride   field: stride-motion
@@ -261,7 +261,7 @@ variable controlled
     k kind-model model  dup p figure !  k p figure-kind !  ;
 : draw-person ( slot -- )
     dup model-of {: s m :}  s person-of moving {: mv :}
-    s person-of leaning-z @ figure-roll  m  mv clip @  mv frame  s person-now  draw-figure ;
+    s person-of tilt-x @  s person-of leaning-z @ figure-tilt  m  mv clip @  mv frame  s person-now  draw-figure ;
 : draw-townsfolk ( -- )  #slots 0 do  i here? if  i draw-person  then  loop ;
 ' draw-townsfolk on-draw
 : step-forward ( slot -- )   \ src: actor_update's move_anim: straight on along their heading
@@ -332,7 +332,7 @@ behaviour townsfolk
   on minute-passed ( t -- )  controlled @ if  minute  else  drop  then ;
   on player-control ( flag -- )  controlled ! ;
   on person-turn ( slot heading -- )  swap person-of  0 over turning !  heading-now ! ;
-  on person-lean ( slot rz -- )  swap person-of leaning-z ! ;
+  on person-tilt ( slot rx rz -- )  rot person-of {: x z p :}  x p tilt-x !  z p leaning-z ! ;
   on person-turning ( slot target speed -- )
     rot person-of {: t v p :}  v 0= if  t p heading-now !  0 p turning !  exit  then
     t full-circle 1- and p turn-target !  v p turn-speed !  true p turning ! ;

@@ -39,11 +39,13 @@ enum: look-action  nothing-here  1 the-poster-room  the-poster  the-cabinet  5 t
         nothing-here swap
     endcase ;
 : once-then ( var first again -- )  {: v f a :}  v @ if  a  else  f  1 v !  then  start-event ;
+23 constant cells-page
 : the-cells-scene ( -- )   \ the cells: whom he finds there (src: case 10)
     $018 story@ $20000600 and $200 = if
         cell-confrontation1-seen flag-toggle  ['] events.ovl000:entry-80106048 start-event exit  then
-    $018 story@ $60000000 and $20000000 = if   \ (and the bio learns its entry: the bios - to come)
-        cell-confrontation2-seen flag-toggle  ['] events.ovl000:entry-80106C5C start-event exit  then
+    $018 story@ $60000000 and $20000000 = if   \ (and the notebook learns its page: src g_bio_known bit 23)
+        cell-confrontation2-seen flag-toggle  ['] events.ovl000:entry-80106C5C start-event
+        cells-page s" notebook" actor-named send learn-bio  exit  then
     ['] events.ovl000:entry-8010550C start-event ;
 : look-do ( action -- )
     case
@@ -96,8 +98,14 @@ enum: act-action  do-nothing  4 open-the-cabinet  6 study-the-board  12 the-comp
         station-shove-it-seen flag-toggle  ['] events.ovl000:entry-801062C0 start-event exit  then
     station-wolf-seen flag? 0=  $044 0 story-bit flag? and if
         station-wolf-seen flag-set  ['] events.ovl000:entry-80107288 start-event  then ;
-: entered ( -- )   \ (the prop on the desk while the map lies there, the desk officer to his place: the props - to come)
-    9 map-reveal  forget-visit  arrival ;
+\ entering (src: func_80102378): the prop on the desk until item 2's taken, on its side; the desk officer at his stop
+$68 constant desk-prop   2 constant desk-item   $3CAE8 constant prop-x   $168 negate constant prop-y   $211BC constant prop-z
+$400 constant on-its-side   8 constant the-desk-officer
+: desk-things ( -- )
+    desk-item has-item? if  desk-prop 0 0 0 set-pos  else  desk-prop prop-x prop-y prop-z set-pos  then
+    desk-prop 0 0 on-its-side set-rot  the-desk-officer place-at-stop ;
+: entered ( -- )
+    9 map-reveal  forget-visit  desk-things  arrival ;
 2 constant the-back-office   3 constant the-computer-room   1 constant the-front
 : scene-hook ( scene -- )
     case

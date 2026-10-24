@@ -183,7 +183,8 @@ variable loaded-pack
 \ ---- control and time ----
 : give-control ( -- )  true control-given !  no-control release  true broadcast player-control ;   \ src: player_control_on
 : take-control ( -- )  false control-given !  no-control hold  false broadcast player-control ;
-: time-skip ( minutes -- )   \ src: time_skip: the clock on a minute at a time (the townsfolk follow: to come)
+: time-skip ( minutes -- )   \ src: time_skip: the clock on a minute at a time (each a time-set: the townsfolk
+                                \ settle at the stop for it - townsfolk.fs's settle-all)
     0 ?do  the-clock send advance-minute  loop ;
 
 \ ---- text: the message window (docs/subsystems/window.md) ----
@@ -366,7 +367,7 @@ defer door-sound ( kind -- )   \ op $176 (door-sounds.fs)
 : set-rot ( a rx ry rz -- )   \ cmd $02
     {: a rx ry rz :}
     a matthew = if  rx ry rz a figure-of send figure-turn exit  then
-    a person? if  a ry the-townsfolk send person-turn exit  then
+    a person? if  a ry the-townsfolk send person-turn  a rx rz the-townsfolk send person-tilt exit  then
     a rx ry rz 4 act-unbuilt ;
 30 constant walk-pace   80 constant run-pace     \ units a frame (src: actor_command_default's walk_to, path_to)
 1 constant walk-motion   5 constant run-motion

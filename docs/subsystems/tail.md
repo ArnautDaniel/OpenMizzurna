@@ -31,7 +31,7 @@ Tailing the lookout to his door, and the door's keypad (src: ovl027 `func_801025
   - Look back: he turns +0x80 a frame for frames 16–31, watches for frames 32–61, then turns back. Matthew in the
     point's zone while he watches means he's seen.
   - Look aside: he turns −0x80 a frame for frames 0–7, leans −$10 a frame for frames 8–15 (his roll: townsfolk's
-    `person-lean`, the engine's `figure-roll`), watches for frames 16–45, leans back for frames 46–53, turns back
+    `person-tilt`, the engine's `figure-tilt`), watches for frames 16–45, leans back for frames 46–53, turns back
     for frames 54–61.
 - **Seen.**
   - Seen while walking or looking back: his "who's there" scene (`entry-80109CF8`).
