@@ -584,11 +584,18 @@ create resting-motions  68 , 72 , 161 , 167 ,   \ src: D_80080438 (and an area's
 $3F constant stepping-out-1   $40 constant stepping-out-0   \ (by the side's way)
 -470 constant behind-look-y   -812 constant behind-dist   -1802 constant behind-eye-y   -693 constant behind-yaw
 : my-room ( -- room )  area @ the-town = if  town-room  else  scene @  then ;
-: object-anim ( entry -- )  s" areas" actor-named send play-area-anim ;   \ op $156 (the town's own: to come)
-: door-anim ( door -- )   \ op $127: the door opening on Matthew's side (the town's: its slot, the town's own)
-    {: n :}  area @ the-town = if  n town-room door-spot  dup 0< if  drop  else  s" town" actor-named send town-door-swing  then  exit  then
+: object-anim ( entry -- )   \ op $156: the area's animation entry; in the town its slot (src: func_8001A190)
+    area @ the-town = if  s" town" actor-named send town-door-swing exit  then
+    s" areas" actor-named send play-area-anim ;
+: door-opens ( door -- )   \ the door opening on the side shown as one walks through (src: func_8004535C's: its
+    {: n :}  area @ the-town = if                                         \ room's side indoors, the town's slot)
+        n town-room door-spot  dup 0< if  drop  else  s" town" actor-named send town-door-swing  then  exit  then
     n door-of door-area @ area @ <> if  exit  then
     n my-room door-spot  dup 0< if  drop  else  object-anim  then ;
+: door-anim ( door -- )   \ op $127: indoors, the side shown's opening - else the far side's (src: cevent's door_anim)
+    {: n :}  n door-of {: d :}  d door-area @ area @ <> if  exit  then
+    d near-side side-room @ scene @ = if  d near-side side-spot @  else  d far-side side-spot @  then
+    dup 0< if  drop  else  object-anim  then ;
 16 constant no-reveal-scene   \ (src: not while scene 16 is shown)
 : door-reveal-room ( door -- )   \ op $126: the room beyond shown through it (src: func_8001A044: its first object)
     door-of {: d :}  d door-area @ area @ <>  scene @ no-reveal-scene = or if  exit  then
@@ -596,7 +603,7 @@ $3F constant stepping-out-1   $40 constant stepping-out-0   \ (by the side's way
     dup 0< if  drop exit  then  s" areas" actor-named send reveal-room ;
 : matthew-through ( door -- way | 0 )   \ (where he went; the door opens on his side)
     {: n :}  n door-of door-area @  area @ <>  area @ the-town <> and if  0 exit  then
-    n door-anim
+    n door-opens
     n my-room false door-way {: w :}  w 0= if  0 exit  then
     w out-x @ 0 w out-z @  matthew figure-of send figure-place
     0 w out-heading @ 0  matthew figure-of send figure-turn
@@ -612,7 +619,7 @@ $3F constant stepping-out-1   $40 constant stepping-out-0   \ (by the side's way
     door-of door-area @ area @ =  in-a-scene? and if  area @  else  -1  then ;   \ its town side too, is here
 : matthew-door-walk ( door room flip -- )   \ src: func_8004535C for Matthew: the same, the door opening on his side
     {: n room flip :}  n room flip door-way {: w :}  w 0= if  exit  then
-    n door-anim
+    n door-opens
     w out-x @ 0 w out-z @  matthew figure-of send figure-place
     0 w out-heading @ 0  matthew figure-of send figure-turn
     w out-way @ if  stepping-out-1  else  stepping-out-0  then  -1 false  matthew figure-of send figure-anim
@@ -621,7 +628,7 @@ $3F constant stepping-out-1   $40 constant stepping-out-0   \ (by the side's way
     {: a n room flip :}                \ while they step through
     a matthew = if  n room flip matthew-door-walk exit  then
     a person? 0= if  a n room 3 s" through-door" unbuilt  exit  then
-    n door-anim   \ (src: the door opens on the side shown, whoever walks through)
+    n door-opens   \ (src: the door opens on the side shown, whoever walks through)
     a n room flip n stage-for the-townsfolk send person-through-door  a wait-anim ;
 : through-door ( a door room -- )  false door-walk ;        \ op $13B, $140
 : through-door-back ( a door room -- )  true door-walk ;    \ op $15F: coming the other way

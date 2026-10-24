@@ -35,7 +35,9 @@ not open yet or closing, the hospital's). Nozz's store: shut from midnight to 6:
 **Matthew through a door** (`door-animate` op $139, `door-animate-alt` $13A; src: func_80045008): from the room he
 is in (the scene; the town's side in the town) he is put at the door's spot on his side, turned through it and
 stepping (motion $3F / $40, its move held) - the scripts wait for that; $13A also sets a fixed camera behind him.
-The door opens on his side: its spot is the area's animation entry for it (`door-anim`, op $127). (The next
+The door opens on the side shown (`door-opens`: indoors its room's side's animation entry, in the town its
+animation slot - src func_8004535C). Op $127 (`door-anim`) is the original's own: indoors only, the side shown's
+opening, else the far side's. (The next
 room's first object shown through it (`reveal-room`); in the town the door's slot swings (town.md).)
 
 **Warp** (op $12A, `events.fs`: `warp ( area scene x z heading script )`; src: func_80019F3C, func_80019D90):

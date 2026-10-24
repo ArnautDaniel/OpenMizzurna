@@ -52,8 +52,10 @@ T{ sign-turn @  swing-x sw-now @  4 steps  swing-x sw-now @ <>  swap sign-turn @
 testing a door's town side: its animation slot plays once through, then still
 : a-town-door ( -- n )  #doors 0 do  i town-room door-spot 0< 0= if  i unloop exit  then  loop  -1 ;
 T{ a-town-door 0< 0= -> true }T
-T{ a-town-door door-anim  deliver  a-town-door town-room door-spot slot-motion@ 0<> -> true }T
+T{ a-town-door door-opens  deliver  a-town-door town-room door-spot slot-motion@ 0<> -> true }T
 T{ 300 steps  a-town-door town-room door-spot slot-motion@ -> 0 }T
+testing the events' object op in the town: its slot (op $156)
+T{ 5 object-anim  deliver  5 slot-motion@ 0<> -> true }T
 testing leaving the town lets its tiles go
 T{ 1 0 the-areas send enter-area  deliver  deliver  tiles-loaded -> 0 }T
 
