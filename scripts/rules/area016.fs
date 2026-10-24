@@ -99,7 +99,7 @@ create liz-walking  13 , 122 ,  14 , 124 ,  20 , 127 ,  21 , 129 ,  26 , 132 ,  
     t s person-of at-stop @ a-line-by-stop  dup 0< if  drop true exit  then  s usual-gesture one-liner  true ;
 : liz-talks ( -- handled? )   \ src: func_801027CC
     lidds person-of {: p :}
-    lidds walking? 0=  p travelling @ 0= and if
+    p travelling @ 0= if
         lidds person-now drop 2drop at-the-rack-x =  winona-along? and if   \ (her scene with the key, once: minigame 11)
             key-scene @ 0= if  1 key-scene !  11 minigame  then  false exit  then
         p at-stop @ liz-stops u< if  p at-stop @ cells liz-standing + @  else  0  then

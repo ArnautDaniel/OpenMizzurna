@@ -54,7 +54,7 @@ create person-119-lines  6 , 96 ,  14 , 96 ,  22 , 96 ,  30 , 96 ,  38 , 96 ,  4
     {: s t g :}  s stop-of 0< if  false exit  then
     t s person-of at-stop @ a-line-by-stop  dup 0< if  drop false exit  then  s g one-liner  true ;
 : walking-line ( slot table -- handled? )   \ only while walking, by the stop they left (src: the original's own)
-    {: s t :}  s walking? 0= if  false exit  then
+    {: s t :}  s travelling? 0= if  false exit  then
     t s person-of at-stop @ a-line-by-stop  dup 0< if  drop false exit  then  s usual-gesture one-liner  true ;
 244 constant his-talks   2 constant meeting-him   3 constant a-lesson-offered   \ (the character pack: CD.BIN 244)
 : meets-him ( -- )  his-talks meeting-him call-pack-script ;

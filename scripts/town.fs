@@ -86,10 +86,25 @@ variable sign-turn
     c 17 =  r 13 = and if
         sign-object 0  swing-height swing-rest - bob sw-now @ -  0  swing-x sw-now @  0  swing-z sw-now @  pose-object  then ;
 create all-shown  256 allot   all-shown 256 1 fill
+\ the police cordon (src: func_80107D64): on tiles 22,9 and 22,10 its parts come down by the day and hour - part 1
+\ from the 25th 18:00 (row 9) and the 26th 18:00 (row 10), part 2 from the 27th 03:00 (9) and 18:00 (10) - and all
+\ of it from the 28th 03:00
+22 constant cordon-column   9 constant cordon-row-a   10 constant cordon-row-b   5 constant cordon-parts
+2518 constant a-first-down   2618 constant b-first-down   2703 constant a-second-down   2718 constant b-second-down
+create cordon-shown  256 allot
+: hour-mark ( -- t )  clock-time time>day 100 *  clock-time time>hour + ;   \ (src: day x 100 + hour)
+: cordon-part ( part shown? -- )  0= if  0 swap cordon-shown + c!  else  drop  then ;
+: shown-of ( col row -- addr )   \ the tile's parts shown
+    {: c r :}  c cordon-column <>  r cordon-row-a <>  r cordon-row-b <> and  or if  all-shown exit  then
+    cordon-shown 256 1 fill  hour-mark {: t :}
+    1  r cordon-row-a = if  t a-first-down <  else  t b-first-down <  then  cordon-part
+    2  r cordon-row-a = if  t a-second-down <  else  t b-second-down <  then  cordon-part
+    28 3 0 reached? if  cordon-shown cordon-parts erase  then
+    cordon-shown ;
 : draw-tile ( col row -- )
     {: c r :}  c r tile-centre {: x z :}
     c r terrains tile @ ?dup if  x 0 z 0 draw-model  then
-    c r buildings tile @ ?dup if  c r pose-slots  c r pose-signs  x 0 z 0 all-shown 256 draw-model-shown  then ;
+    c r buildings tile @ ?dup if  c r pose-slots  c r pose-signs  x 0 z 0  c r shown-of 256 draw-model-shown  then ;
 \ the ground: the highest of the loaded tile's terrain polygons under the point (src: func_8001C264)
 : town-ground ( x z -- y true | false )
     2dup tile-of 2dup on-map? 0= if  2drop 2drop false exit  then

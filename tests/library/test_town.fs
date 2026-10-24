@@ -56,6 +56,11 @@ T{ a-town-door door-opens  deliver  a-town-door town-room door-spot slot-motion@
 T{ 300 steps  a-town-door town-room door-spot slot-motion@ -> 0 }T
 testing the events' object op in the town: its slot (op $156)
 T{ 5 object-anim  deliver  5 slot-motion@ 0<> -> true }T
+testing the police cordon: whole on the 25th's noon; its first part down on tile 22,9 that evening; all from the 28th 03:00
+: part-up? ( col row part -- flag )  {: c r k :}  c r shown-of k + c@ 0<> ;
+T{ 25 12 0 at-time  22 9 1 part-up?  22 10 2 part-up?  17 13 1 part-up? -> true true true }T
+T{ 25 19 0 at-time  22 9 1 part-up?  22 10 1 part-up? -> false true }T
+T{ 28 4 0 at-time  22 9 0 part-up?  22 10 3 part-up? -> false false }T
 testing leaving the town lets its tiles go
 T{ 1 0 the-areas send enter-area  deliver  deliver  tiles-loaded -> 0 }T
 

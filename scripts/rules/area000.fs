@@ -170,10 +170,10 @@ $1C9 constant stand-in-line   7 constant usual-gesture   8 constant desk-gesture
 : line-if ( table slot -- handled? )   \ a line by their stop, if the table has one
     {: t s :}  t s their-stop a-line-by-stop  dup 0< if  drop false exit  then  s usual-gesture one-liner  true ;
 : line-or-none ( table slot -- true )   \ src: line_table: a line if there is one; nothing said otherwise
-    {: t s :}  s walking? if  true exit  then  t s line-if drop  true ;
-: standing-line ( table slot -- handled? )  dup walking? if  2drop false exit  then  line-if ;
+    {: t s :}  s travelling? if  true exit  then  t s line-if drop  true ;
+: standing-line ( table slot -- handled? )  dup travelling? if  2drop false exit  then  line-if ;
 : hudson-talks ( -- handled? )
-    hudson walking? if
+    hudson travelling? if
         hudson their-stop case  0 of  hudsons-usual  endof  1 of  hudson-leaving  endof  drop false exit  endcase
     else
         hudson their-stop hudson-stops < if  hudson their-stop cells hudson-lines + @  else  0  then
@@ -181,7 +181,7 @@ $1C9 constant stand-in-line   7 constant usual-gesture   8 constant desk-gesture
     then  hudson usual-gesture one-liner  true ;
 : talks-here ( slot -- handled? )
     case
-        morgan of  morgan walking? if  morgan-walking morgan line-if  else  morgan-standing morgan line-if  then  endof
+        morgan of  morgan travelling? if  morgan-walking morgan line-if  else  morgan-standing morgan line-if  then  endof
         winona of  winona-lines winona standing-line  endof
         hudson of  hudson-talks  endof
         nozz of  nozz-lines nozz standing-line  endof

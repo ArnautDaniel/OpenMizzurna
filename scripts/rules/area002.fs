@@ -280,12 +280,12 @@ $20D constant morgan-lets-go   $1C3 constant bartons-line   $202 constant winona
 : their-stop ( slot -- stop )  person-of at-stop @ ;
 : by-stop ( slot standing walking #stops -- handled? )   \ a line from the tables by their stop (0: none)
     {: s st wk n :}  s their-stop {: k :}  k n u< 0= if  false exit  then
-    s walking? if  wk  else  st  then  k cells + @  ?dup 0= if  false exit  then  s usual-gesture one-liner  true ;
+    s travelling? if  wk  else  st  then  k cells + @  ?dup 0= if  false exit  then  s usual-gesture one-liner  true ;
 : from-list ( slot list gesture -- handled? )   \ standing at a stop the list has
     {: s t g :}  s stop-of 0< if  false exit  then
     t s their-stop a-line-by-stop  dup 0< if  drop false exit  then  s g one-liner  true ;
 : from-lists ( slot standing walking standing-gesture -- handled? )
-    {: s st wk g :}  s walking? if  wk usual-gesture  else  st g  then {: t gg :}
+    {: s st wk g :}  s travelling? if  wk usual-gesture  else  st g  then {: t gg :}
     t s their-stop a-line-by-stop  dup 0< if  drop false exit  then  s gg one-liner  true ;
 : morgan-talks ( -- handled? )   \ src: func_8010335C: before the prologue ends, at his spot his walk-off scene once
     prologue-done flag? if  morgan morgan-lines usual-gesture from-list exit  then
@@ -308,7 +308,7 @@ $20D constant morgan-lets-go   $1C3 constant bartons-line   $202 constant winona
     false ;
 : barbara-talks ( -- handled? )
     barbara their-stop {: k :}  k barbara-stops u< if
-        barbara walking? if  barbara-walking  else  barbara-standing  then  k cells + @  else  0  then
+        barbara travelling? if  barbara-walking  else  barbara-standing  then  k cells + @  else  0  then
     ?dup 0= if  barbaras-own  then  barbara usual-gesture one-liner  true ;
 : patient-176-talks ( -- handled? )
     prologue-done flag? 0=  leaving-with-morgan? and if  ['] events.ovl002:entry-80104EE0 start-event  true exit  then
@@ -369,7 +369,7 @@ $20D constant morgan-lets-go   $1C3 constant bartons-line   $202 constant winona
     $07C story@ 1 or $07C story!  ['] events.ovl002:entry-80106174 says ;
 : cohen-talks ( -- handled? )   \ src: func_8010424C
     in-the-hospital? 0= if  false exit  then
-    $09C story@ 2 and  gave-cohen-envelope flag? 0= or  $028 story@ 0= or  cohen walking? or if  false exit  then
+    $09C story@ 2 and  gave-cohen-envelope flag? 0= or  $028 story@ 0= or  cohen travelling? or if  false exit  then
     $09C story@ 2 or $09C story!  ['] events.ovl002:entry-80106314 says ;
 : morgans-talks ( -- handled? )   \ src: func_801042DC
     in-the-hospital? 0= if  false exit  then
