@@ -40,8 +40,10 @@ jobs:
       - name: Build, test, package
         id: release
         run: |
-          version="$(date -u +%Y%m%d)-$(echo "$GITHUB_SHA" | cut -c1-7)"
+          project="$(sed -n 's/^project(openmizzurna VERSION \([0-9.]*\).*/\1/p' CMakeLists.txt)"
+          version="$project-$(date -u +%Y%m%d)-$(echo "$GITHUB_SHA" | cut -c1-7)"
           echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "project=$project" >> "$GITHUB_OUTPUT"
           tools/release-linux.sh "$version"
 
       - uses: actions/upload-artifact@v4
@@ -52,6 +54,9 @@ jobs:
             build-release-linux/openmizzurna-linux-x86_64.tar.gz
             build-release-linux/version.txt
           if-no-files-found: error
+
+    outputs:
+      project: ${{ steps.release.outputs.project }}
 
   publish:
     needs: build
@@ -70,5 +75,17 @@ jobs:
         run: |
           gh release delete latest --cleanup-tag --yes || true
           gh release create latest openmizzurna-*-linux-x86_64.tar.gz openmizzurna-linux-x86_64.tar.gz version.txt --target "$GITHUB_SHA" --prerelease \
-            --title "Latest build (Linux)" \
+            --title "Latest build (Linux, ${{ needs.build.outputs.project }})" \
             --notes "Built from ${GITHUB_SHA} on master. Unpack it and run ./openmizzurna; the first run asks for your own copy of the English disc (a .cue / .bin image) and imports it beside the program. Each start it updates itself to the newest build (OM_NO_UPDATE=1 turns that off). x86_64, glibc 2.35 or newer (Ubuntu 22.04, Debian 12, Fedora 36 and later)."
+
+      - name: The version's own release (the first build of each version number)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PROJECT: ${{ needs.build.outputs.project }}
+        run: |
+          if ! gh release view "v$PROJECT" >/dev/null 2>&1; then
+            gh release create "v$PROJECT" openmizzurna-*-linux-x86_64.tar.gz --target "$GITHUB_SHA" \
+              --title "OpenMizzurna $PROJECT (Linux)" \
+              --notes "OpenMizzurna $PROJECT, built from ${GITHUB_SHA}. Unpack it and run ./openmizzurna; the first run asks for your own copy of the English disc (a .cue / .bin image). It updates itself to the newest build on start (OM_NO_UPDATE=1 turns that off). x86_64, glibc 2.35 or newer."
+          fi
