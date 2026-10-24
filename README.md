@@ -31,6 +31,13 @@ build/forth                                          # the Forth on its own (a p
 Keys: the PlayStation pad as the keyboard (`scripts/keys.fs`): arrows / W A S D the d-pad, C circle, X cross,
 Z square, V triangle, Q / E L1 / R1, 1 / 3 L2 / R2, Return start, Tab select; a gamepad works as the pad.
 
+## Releases
+
+Every change to `master` rebuilds the Linux release: `.github/workflows/release-linux.yml` runs
+`tools/release-linux.sh` in Ubuntu 22.04 and publishes the tarball as the rolling `latest` release. It is one
+binary (SDL3 and an MPEG-2-only FFmpeg linked in) beside its `scripts/`; unpack it, run `./openmizzurna`, and give
+it your disc. The same script makes it on your own machine: `tools/release-linux.sh [version]`.
+
 ## Layout
 
 | path | what |

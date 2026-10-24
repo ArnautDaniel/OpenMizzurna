@@ -1,0 +1,71 @@
+# The Linux release, rebuilt whenever master changes (a merged pull request, a push) or by hand: built by
+# tools/release-linux.sh in Ubuntu 22.04 (its glibc the oldest the binary runs on), then published as the
+# rolling "latest" release, its download replaced each time.
+name: Linux release
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: release-linux
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: ubuntu:22.04
+    steps:
+      - name: Tools and SDL3's build dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends build-essential cmake ninja-build pkg-config curl ca-certificates \
+            xz-utils git file \
+            libasound2-dev libpulse-dev libpipewire-0.3-dev libdbus-1-dev libudev-dev libibus-1.0-dev \
+            libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev libxtst-dev \
+            libxkbcommon-dev libwayland-dev wayland-protocols libdecor-0-dev libdrm-dev libgbm-dev \
+            libgl1-mesa-dev libegl1-mesa-dev libgles2-mesa-dev
+
+      - uses: actions/checkout@v4
+
+      - name: The dependencies, kept between runs
+        uses: actions/cache@v4
+        with:
+          path: build-deps/prefix
+          key: deps-ubuntu22.04-${{ hashFiles('tools/release-linux.sh') }}
+
+      - name: Build, test, package
+        id: release
+        run: |
+          version="$(date -u +%Y%m%d)-$(echo "$GITHUB_SHA" | cut -c1-7)"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          tools/release-linux.sh "$version"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: openmizzurna-linux
+          path: build-release-linux/openmizzurna-*-linux-x86_64.tar.gz
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: openmizzurna-linux
+
+      - name: The rolling release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release delete latest --cleanup-tag --yes || true
+          gh release create latest openmizzurna-*-linux-x86_64.tar.gz --target "$GITHUB_SHA" --prerelease \
+            --title "Latest build (Linux)" \
+            --notes "Built from ${GITHUB_SHA} on master. Unpack it and run ./openmizzurna; the first run asks for your own copy of the English disc (a .cue / .bin image) and imports it beside the program. x86_64, glibc 2.35 or newer (Ubuntu 22.04, Debian 12, Fedora 36 and later)."
