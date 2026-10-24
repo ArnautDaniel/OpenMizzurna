@@ -38,6 +38,7 @@ message enter-area ( area scene -- )     \ (to the areas) play that area from th
 message show-scene ( scene -- )          \ (to the areas) another of the area's scenes (its objects and camera)
 message play-area-anim ( entry -- )      \ (to the areas) the area's animation list's entry: its object plays its motion once
 message object-shown ( object flag -- )   \ (to the areas) one of the area's objects shown or hidden (until the next scene)
+message reveal-room ( scene -- )          \ (to the areas) another room's first object shown too (seen through a door)
 message object-motion ( object id next -- ) \ (to the areas) an object's motion (the common props'), then the next looping (-1: held)
 message area-entered ( area scene -- )   \ broadcast: the area is in
 message scene-shown ( scene -- )         \ broadcast: the scene changed
@@ -191,6 +192,8 @@ message know ( bios numbers -- )         \ (to the notebook) who and what he kno
 message items-set ( mask -- )            \ (to the items) the list from a save's mask (src: items_from_mask)
 message his-car-at ( x z heading -- )    \ (to the driving) his car there (src: save_apply)
 message fuel-set ( n -- )
+message car-at-pump ( flag -- )         \ (to the driving) by a gas pump: ○ fills (the town's), not out of the car
+message car-stop-now ( -- )             \ (to the driving) its speed gone (src: g_player_speed = 0)
 message person-restore ( slot stop kind -- )   \ (to the townsfolk) at that stop, showing that kind (src: actor_load)
 
 \ ---- the title (docs/subsystems/title.md) ----

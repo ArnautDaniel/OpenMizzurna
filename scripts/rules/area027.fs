@@ -2,7 +2,7 @@
 \ doors - whether Matthew may go in now (their hours, the story) and the script that takes him in.
 IN: rules.area027
 USING: engine actors messages clock story-flags townsfolk areas look talk matthew knock events events.ovl027 tail
-    walkers driving showing ;
+    walkers driving showing ui keys ;
 
 27 constant this-area
 
@@ -37,7 +37,7 @@ variable shut-message
     events.main:sub-80096E34  matthew 62 0 anim  matthew wait-anim  shut-message @ matthew say-by-wait ;
 : refuse ( msg -- false )  shut-message !  ['] shut start-event  false ;
 
-\ ---- may he go through this door now? (src: ovl027_func_80103A70; Winona riding with him: to come) ----
+\ ---- may he go through this door now? (src: ovl027_func_80103A70) ----
 variable lookout-mode   \ src: D_8010CA2C: 1 the lookout by his door (0: the robber)
 $018 2 story-bit constant mel-overheard   16 constant mel-on-his-way   \ (src: +0x18 bit 2; Mel's stop 16)
 $010 15 story-bit constant robber-met   $0EC 1 story-bit constant robber-armed   \ (src: +0x10 bit 15, +0xEC bit 1)
@@ -51,7 +51,23 @@ $05C constant robbery-day-word   4 constant robbery-day-shift   \ (src: the day 
     robber-met flag? 0=  robber-armed flag? and  robbery-day 15 0 19 59 between? and if
         18 minigame  robber-met flag-set  0 lookout-mode !  false exit  then
     true ;
+$60000 constant watch-bits   $20000 constant watch-kept   \ (src: +0x18 bits 17, 18)
+0 constant at-the-church   300 constant watch-from   1199 constant watch-to   \ (minutes of the day: 5:00 - 19:59)
+: barton-watch? ( -- flag )   \ src: func_80042EA4: Barton at the church, the watch kept, the night
+    father-barton at-the-church at-record? 0= if  false exit  then
+    $018 story@ watch-bits and watch-kept <> if  false exit  then
+    clock-time minutes/day mod  watch-from watch-to 1+ within 0= ;
+: refuse-with ( xt -- false )  start-event  false ;   \ (src: refuse_with: her own line instead)
+0 constant winona-home   6 constant winona-at-night   15 constant winona-back-later   45 constant winona-to-hospital
+$10 constant hospital-door   $38 constant school-hall-door   $39 constant school-side-door
+: with-winona ( door -- open? )   \ Winona riding with him: only where she wants to go
+    winona last-stop {: d st :}
+    st winona-home =  st winona-at-night = or  st winona-back-later = or if  ['] events.main:exe-80096BE4 refuse-with exit  then
+    st winona-to-hospital = if  d hospital-door = if  true  else  ['] entry-8010A538 refuse-with  then  exit  then
+    d school-hall-door =  d school-side-door = or  hall-tried @ and if  true exit  then
+    ['] entry-8010A574 refuse-with ;
 : open? ( door -- flag )
+    winona going-along? if  with-winona exit  then
     case
         $00 of   \ the sheriff's department
             0 0 0 6 59 between?  0 21 45 23 59 between? or if  closed refuse  else  true  then  endof
@@ -59,8 +75,8 @@ $05C constant robbery-day-word   4 constant robbery-day-shift   \ (src: the day 
             0 0 0 6 59 between? if  closed refuse  else
             today 29 < if  0 17 25 22 59  else  0 18 20 22 59  then  between? if  closed refuse  else  true  then
             then  endof
-        $43 of   \ the gas station (src: also when func_80042EA4 - to come)
-            0 0 0 6 59 between?  0 22 0 23 59 between? or if  closed refuse  else  true  then  endof
+        $43 of   \ the gas station (src: also when func_80042EA4: Barton at the church, the night's watch)
+            0 0 0 6 59 between?  0 22 0 23 59 between? or  barton-watch? or if  closed refuse  else  true  then  endof
         $24 of   \ Mel's room
             mel mel-at-his-room at-record? 0=  mel-room-a flag? mel-room-b flag? and 0= and
             mel-room-counter story@ 0<> and if  true  else  closed refuse  then  endof
@@ -188,9 +204,93 @@ variable stalker-due   variable stalking
     stalker-caught flag-toggle  ['] entry-8010A178 start-event ;
 ' caught 25 minigame-code!
 
+\ ---- the town's people standing about (src: ovl027 func_801040B0, entering) ----
+$9E constant by-the-church-gate   $9B constant by-the-lake   $3C constant by-the-diner   $6F constant lorraine-out
+$98 constant protester-1   $62 constant protester-2   $60 constant by-the-store
+: stand ( slot x y z heading -- )
+    {: s x y z h :}  s x y z s" townsfolk" actor-named send extra-place  s h 4095 and s" townsfolk" actor-named send person-turn ;
+: away ( slot -- )  0 0 0 s" townsfolk" actor-named send extra-place ;
+$008 22 story-bit constant lorraine-free   $018 14 story-bit constant lorraine-back
+: lorraine-at-work ( -- )  lorraine-out $5839F -4082 $430B8 $F18 stand ;
+: people-about ( -- )
+    by-the-church-gate $561DA -4082 $3E3B0 0 stand   by-the-lake $73337 0 $6539A -952 stand
+    by-the-diner $58417 -4082 $42CF8 $3D4 stand
+    0 14 0 17 59 between?  lorraine-free flag?  lorraine-back flag? 0= and or if  lorraine-at-work  else  lorraine-out away  then
+    27 23 59 reached? 0= if
+        protester-1 $6BA5E -4138 $36613 $DAC stand   protester-2 $6C535 -4414 $37117 $F50 stand
+        protester-2 $58 -1 true s" townsfolk" actor-named send person-anim  then
+    clock-time time>hour 9 20 within if  by-the-store $59256 -80 $1F136 -2964 stand  else  by-the-store away  then ;
 : entered-town ( -- )
-    entered  false stalking !  the-stalker end-route
+    people-about  entered  false stalking !  the-stalker end-route
     stalker-due @ if  0 stalker-due !  24 minigame  then ;
+
+\ ---- every frame (src: ovl027_func_801044E0) ----
+variable last-minute   -1 last-minute !
+: lorraine-hours ( -- )   \ at 14:00 out by the diner, at 18:00 in again
+    clock-time dup last-minute @ = if  drop exit  then  last-minute !
+    0 14 0 14 0 between? if  by-the-diner $58417 -4082 $42CF8 $3D4 stand  then
+    0 18 0 18 0 between? if  lorraine-out away  then ;
+$020 16 story-bit constant emma-missing-a   $020 17 story-bit constant emma-missing-b
+$1A26B constant emmas-x   $D0C2 constant emmas-z   $1C21 constant emmas-reach
+: distance-to ( x z -- d )  matthew-now drop nip {: x z mx mz :}  mx x - s>f fdup f*  mz z - s>f fdup f* f+ fsqrt f>s ;
+: where-is-emma ( -- )   \ src: too far from her house while she's missing: back, and his line
+    emma-missing-a flag?  emma-missing-b flag? 0= and 0= if  exit  then
+    emmas-x emmas-z distance-to emmas-reach < if  exit  then
+    matthew-was s" matthew" actor-named send figure-place  ['] entry-8010A9BC start-event ;   \ (src: player_restore_pos)
+\ the gas pumps (src: driving: not full, nearly still, facing along, inside one of the two pumps' boxes)
+110 constant tank-full-enough   $15 constant fill-prompt
+create pumps  $6380B , $639AF , $29458 , $29908 ,   $63E7D , $6405D , $295E0 , $29AE0 ,
+: in-box? ( x z box -- flag )  {: x z b :}  x b @ b cell+ @ 1+ within  z b 2 cells + @ b 3 cells + @ 1+ within and ;
+: facing-along? ( h -- flag )  {: h :}  h 300 <  h 3797 >= or  h 1749 2348 within or ;
+: at-a-pump? ( -- flag )
+    fuel @ tank-full-enough >= if  false exit  then  nearly-still? 0= if  false exit  then
+    his-car-now {: x z h :}  h facing-along? 0= if  false exit  then
+    x z pumps in-box?  x z pumps 4 cells + in-box? or ;
+variable pump-circle-was
+: pumps-check ( -- )
+    at-a-pump? {: here :}  here s" driving" actor-named send car-at-pump
+    pad-circle key-down? dup pump-circle-was @ 0= and  swap pump-circle-was !  {: o :}
+    here 0= if  exit  then  fill-prompt look-prompt !
+    o if  s" driving" actor-named send car-stop-now  ['] entry-8010A810 start-event  then ;
+\ the diner robbery outside (src: the 27th 11:30 - 12:30, on foot near the diner, not yet)
+$50853 constant diner-x   $41C08 constant diner-z   300 constant diner-reach
+$01C 11 story-bit constant robbery-outside-seen   $01C 10 story-bit constant robbery-inside-seen
+: robbery-outside ( -- )
+    27 11 30 12 30 between? 0= if  exit  then
+    robbery-outside-seen flag?  robbery-inside-seen flag? or if  exit  then
+    diner-x diner-z distance-to diner-reach < 0= if  exit  then
+    robbery-outside-seen flag-set  ['] entry-8010A7C4 start-event ;
+\ the walk-in tiles (src: the tile he's on, the zone he's in) and Winona's drop-offs at the gas station
+100 constant tile-row-key
+0 constant robert-at-home   \ (src: func_80030A68: Robert at his record 0)
+1317 constant nozzs-side-tile   720 constant gas-station-tile   1406 constant cemetery-tile   1902 constant forest-tile
+$6C constant nozzs-side-door   $6E constant cemetery-gate   $6D constant forest-path
+1 constant nozzs-store   $54E20 constant side-door-x   $458D2 constant side-door-z
+$010 13 story-bit constant library-talk-done   $010 21 story-bit constant ride-home-done
+: tile-key ( -- key )  matthew-now drop nip tile-of tile-row-key * + ;
+: zone-now ( -- id )  at-zone nip ;
+: to-nozzs-side ( -- )  nozzs-store 1 side-door-x side-door-z 0 0 warp ;
+: winona-dropped ( -- )   \ src: at the gas station with Winona riding: her talk on the way, once each
+    winona going-along? 0= if  exit  then
+    winona last-stop {: st :}
+    library-talk-done flag? 0=  st winona-home = and if
+        winona s" townsfolk" actor-named send person-unride  library-talk-done flag-set
+        robert robert-at-home at-record? if  ['] entry-8010B8F8  else  ['] entry-8010B908  then start-event exit  then
+    ride-home-done flag? 0=  st winona-at-night =  st winona-back-later = or and if
+        winona s" townsfolk" actor-named send person-unride  ride-home-done flag-set  ['] entry-8010BB88 start-event  then ;
+: walk-ins ( -- )
+    tile-key zone-now {: k z :}
+    k nozzs-side-tile =  z 1 = and if  nozzs-side-door open? if  ['] to-nozzs-side start-event  then  exit  then
+    k gas-station-tile =  z 1 = and if  winona-dropped exit  then
+    k cemetery-tile =  z 0= and if  cemetery-gate open? if  ['] entry-8010A9C8 start-event  then  exit  then
+    k forest-tile =  z 0= and if  forest-path open? if  ['] entry-8010AA20 start-event  then  then ;
+: town-frame ( -- )
+    lorraine-hours
+    ui-busy? if  exit  then
+    where-is-emma
+    driving? if  pumps-check exit  then
+    false s" driving" actor-named send car-at-pump
+    robbery-outside  walk-ins ;
 : the-guard ( -- handled? )   \ src: func_80106E40: at the farm his scene (minigame 34); at the gate his talk
     junkyard-guard person-now 2drop drop {: x :}
     x guard-at-the-farm = if  $020 story@ $10 or $020 story!  34 minigame  true exit  then
@@ -201,6 +301,7 @@ variable stalker-due   variable stalking
     dup the-stalker = if  drop 25 minigame  true exit  then  talks-here ;
 ' talks-to this-area area-talk!
 this-area ' entered-town 0 area-hooks!
+this-area ' town-frame area-frame!
 
 \ ---- the deputy shown the sheriff's badge: his scene (src: area_minigame_start's 27; showing.fs) ----
 ' entry-8010A240 27 minigame-script!

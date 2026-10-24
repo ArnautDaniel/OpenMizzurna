@@ -1,7 +1,7 @@
 \ the last of the events' ops on the game's data (scripts/events.fs): the prompt (□'s and ○'s icons beside the
 \ box until one is pressed: ○ 1, □ 0); the hospital's elevator doors (four of its objects' motions, in its
 \ content areas only); a talk's gestures (a motion and what follows; none sitting but the seated ones; Barbara
-\ her own); a labourer off along their stop's route
+\ her own); a labourer off along their stop's route; Matthew through a door
 USING: tester engine actors messages clock areas keys matthew townsfolk events story-flags ;
 
 : steps ( n -- )  0 ?do  1 tick-tasks  actors-frame  loop ;
@@ -26,6 +26,14 @@ testing a plain one: once, its last frame held; none at all sitting (but the sea
 T{ matthew 3 gesture  deliver  matthew-anim-now -> 86 -1 }T
 T{ 2 s" matthew" actor-named send figure-perch  deliver  matthew 3 gesture  deliver  matthew-anim-now
    0 s" matthew" actor-named send figure-perch  deliver -> 86 -1 }T
+
+testing Matthew through a door (area 1's 14 into its room 3): out at its far side, stepping, the scene waiting
+variable walked
+: through ( -- )  matthew 14 3 through-door  true walked ! ;
+T{ 1 into  events-stop  false walked !  ' through start-event  2 steps  walked @  matthew-anim-now drop dup $3F = swap $40 = or
+   -> false true }T
+T{ 300 steps  walked @ -> true }T
+T{ events-stop  deliver -> }T
 
 testing the elevator doors: nothing outside the hospital
 T{ 1 1 elevator-doors  unbuilt-ops @ -> unbuilt-ops @ }T

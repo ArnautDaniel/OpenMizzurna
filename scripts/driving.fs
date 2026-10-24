@@ -29,6 +29,7 @@ $20 constant probe-step   $200 constant probe-limit   $32 constant swerve   300 
 \ getting in (src: func_8004175C: beside the driver's door, facing across the car)
 $1D6 negate constant door-side   $64 negate constant door-forward   $400 constant across
 fvariable velocity   variable steer   variable burned   variable speed   variable held   \ (the pad's not)
+variable at-a-pump   \ (the town's rules: by a gas pump, ○ fills instead - src func_801069F4)
 variable cx   variable cz   variable cy   variable ch
 fvariable due
 
@@ -92,7 +93,8 @@ fvariable due
 : wheel-frame ( -- )
     steer-wheel  pedals  speed-now speed !
     speed @ if  steer @ ch +!  then
-    speed @ abs still-enough <=  pad-circle key-down? and if  free-door dup 0< if  drop  else  get-out exit  then  then
+    speed @ abs still-enough <=  pad-circle key-down? and  at-a-pump @ 0= and if   \ (at a pump ○ fills: the town's)
+        free-door dup 0< if  drop  else  get-out exit  then  then
     move-car  show-car
     speed @ abs key-per-speed / idle-key + s" sound" actor-named send engine-pitch ;
 : steps-due ( -- n )  due f@ motion-rate dt f* f+  fdup f>s  dup s>f f-  due f! ;
@@ -174,6 +176,8 @@ behaviour drivers
   on his-car-at ( x z heading -- )   \ (parked there: Matthew elsewhere)
     ch !  cz !  cx !  cx @ cz @ ground-under cy !  his-car cx @ cy @ cz @ ch @ 4095 and s" traffic" actor-named send car-place ;
   on fuel-set ( n -- )  fuel ! ;
+  on car-at-pump ( flag -- )  at-a-pump ! ;
+  on car-stop-now ( -- )  0e velocity f!  0 speed ! ;
   on area-entered ( area scene -- )  2drop  false held !
     driving? if  false at-the-wheel !  false s" camera" actor-named send camera-driving  s" sound" actor-named send engine-stop  then ;
 end-behaviour

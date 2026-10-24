@@ -532,7 +532,11 @@ $3F constant stepping-out-1   $40 constant stepping-out-0   \ (by the side's way
 : door-anim ( door -- )   \ op $127: the door opening on Matthew's side
     {: n :}  n door-of door-area @ area @ <> if  exit  then
     n my-room door-spot  dup 0< if  drop  else  object-anim  then ;
-: door-reveal-room ( door -- )  1 s" door-reveal-room" unbuilt ;   \ op $126 (the room beyond's objects: to come)
+16 constant no-reveal-scene   \ (src: not while scene 16 is shown)
+: door-reveal-room ( door -- )   \ op $126: the room beyond shown through it (src: func_8001A044: its first object)
+    door-of {: d :}  d door-area @ area @ <>  scene @ no-reveal-scene = or if  exit  then
+    d near-side side-room @ scene @ = if  d far-side side-room @  else  d near-side side-room @  then
+    dup 0< if  drop exit  then  s" areas" actor-named send reveal-room ;
 : matthew-through ( door -- way | 0 )   \ (where he went; the door opens on his side)
     {: n :}  n door-of door-area @  area @ <>  area @ the-town <> and if  0 exit  then
     n door-anim
@@ -549,9 +553,17 @@ $3F constant stepping-out-1   $40 constant stepping-out-0   \ (by the side's way
 : in-a-scene? ( -- flag )  thread dup 0< 0= swap #event-threads < and ;   \ (an event's thread, not a route's)
 : stage-for ( door -- area | -1 )   \ a scene stages its people in the room being played: a door of this area,
     door-of door-area @ area @ =  in-a-scene? and if  area @  else  -1  then ;   \ its town side too, is here
+: matthew-door-walk ( door room flip -- )   \ src: func_8004535C for Matthew: the same, the door opening on his side
+    {: n room flip :}  n room flip door-way {: w :}  w 0= if  exit  then
+    n door-anim
+    w out-x @ 0 w out-z @  matthew figure-of send figure-place
+    0 w out-heading @ 0  matthew figure-of send figure-turn
+    w out-way @ if  stepping-out-1  else  stepping-out-0  then  -1 false  matthew figure-of send figure-anim
+    matthew figure-of send figure-hold  matthew wait-anim ;
 : door-walk ( a door room flip -- )   \ src: func_8004535C: out at the door's far side, the thread waiting
     {: a n room flip :}                \ while they step through
-    a person? 0= if  a n room 3 s" through-door" unbuilt  exit  then   \ (Matthew's: the doors, to come)
+    a matthew = if  n room flip matthew-door-walk exit  then
+    a person? 0= if  a n room 3 s" through-door" unbuilt  exit  then
     a n room flip n stage-for the-townsfolk send person-through-door  a wait-anim ;
 : through-door ( a door room -- )  false door-walk ;        \ op $13B, $140
 : through-door-back ( a door room -- )  true door-walk ;    \ op $15F: coming the other way

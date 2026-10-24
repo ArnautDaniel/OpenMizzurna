@@ -131,6 +131,8 @@ behaviour areas
   on tick ( -- )  objects-step ;
   on object-motion ( object id next -- )   \ one of the area's objects: a motion, then the next looping (-1: held)
     rot {: id nx o :}  nx 0< if  o id false play-object  else  o id nx play-object-then  then ;
+  on reveal-room ( scene -- )   \ src: func_8001A044: the first of that scene's objects shown too (seen through a door)
+    {: sc :}  objects 0 ?do  sc i shown? if  1 models-shown i + c!  i shell-objects < if  1 shell-shown i + c!  then  leave  then  loop ;
   on object-shown ( object flag -- )   \ src: object_show / object_hide (the area's hooks: day and night lights)
     {: o f :}  o 256 u< 0= if  exit  then  f 0<> 1 and {: b :}
     b models-shown o + c!  o shell-objects < if  b shell-shown o + c!  then ;

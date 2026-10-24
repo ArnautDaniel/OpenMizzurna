@@ -164,7 +164,8 @@ variable pad-taken   \ a frame hook took the pad this step (src: the pad's field
     no-prompts
     has-control? 0=  area @ 0< or  matthew-there? 0= or if  exit  then
     field-pad? 0= if  exit  then   \ (a screen up: the pad is its own)
-    matthew-perch perch-in-car = if  exit  then   \ (driving: the car has the pad)
+    matthew-perch perch-in-car = if   \ (driving: the car has the pad; the area's frame still - src: ovl027's tick)
+        area @ content rules-of on-frame @ hook  exit  then
     prompts
     events-running @ {: before :}   \ (an event that gave him back: he acts as the player - src: player_has_control)
     false pad-taken !  area @ content rules-of on-frame @ hook

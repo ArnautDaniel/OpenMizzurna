@@ -147,11 +147,20 @@ conversations of Wolf, James, Mel, the bouncer, the fan and Loretta here. To com
 Area 18's (`scripts/rules/area018.fs`, Ringwald's Gas Station; `tests/library/test_area018.fs`): ○ at the counter
 talks to Robert while he's behind it, his and Steve's lines by their stops, 22:00 - 22:59 the attendant sends
 Matthew out to the town (not from 23:00: Robert's "open 24 hours").
-**To come**: talking to the townsfolk (○ on a figure), the hints (prompts), the town's per-tile rows, the
-other areas' rules; in area 0 the computer's case files and minigames 29, 30 and 36.
 
 ## The town
 
 The town's look and act checks are a tile's (src: tile_checks: ovl027 D_8010AB44, D_8010AED4): `checks.fs`'s
 `col row look-checks town-row ...` rows, matched against the tile Matthew stands on and its zones (floors.fs); it
 has no zone tables. Its rows mostly run the town's C: the buildings' doors (docs/subsystems/doors.md).
+
+Entering it (src: ovl027 func_801040B0) its people about are placed: by the church gate, the lake, the diner;
+Lorraine out by the diner 14:00 - 17:59 (or when the story frees her); the two protesters until the 27th's end;
+one by the store 9:00 - 19:59. Every frame (src: ovl027_func_801044E0; at the wheel too):
+- Lorraine's hours: at 14:00 out by the diner, at 18:00 in again;
+- while the story has a girl missing, too far from her house he's turned back, with his line;
+- at the wheel, the gas pumps (driving.md);
+- on foot: the robbery outside the diner (the 27th 11:30 - 12:30, near it, once, unless seen inside); the
+  walk-in tiles - the store's side door, the cemetery gate and the forest path when open, and at the gas
+  station Winona's talks on the way when she's riding along (once each).
+Tested in `tests/library/test_town_frame.fs`.

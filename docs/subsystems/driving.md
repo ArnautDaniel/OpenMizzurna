@@ -33,6 +33,9 @@ Matthew driving his car (slot 26) in the town (src: ovl027 `car_update`, cevcon.
   corners (±300) at the new point and the half-step point are tested; a hit stops it where it was.
 - **Getting out.** ○ when |speed| ≤ 9 puts him at the first of the car's 6 seat points that's free, seen, on his
   feet. The car stays where it is.
+- **A gas pump** (the town's rules, `rules/area027.fs`: src func_801069F4): not full (under 110), nearly still,
+  facing along the pumps, inside one of the two pumps' boxes - ○'s prompt is the fill one, and ○ stops the car
+  and plays the fill scene instead of getting out (`car-at-pump`).
 - **Leaving the town** ends the drive.
 - **Drawn** (from the HUD's sheet, `ui/clock.png`): the fuel gauge's scale at (−144, 30) with its marker
   easing a unit a frame toward the fuel; the speed's three digits (a sixth of it, jittering from 80 up) at
@@ -42,11 +45,12 @@ Matthew driving his car (slot 26) in the town (src: ovl027 `car_update`, cevcon.
 
 ## Status
 
-Built (`tests/library/test_driving.fs`). To come:
+Built (`tests/library/test_driving.fs`, the pumps `test_town_frame.fs`). To come:
 - the road blocks (`car_road_block`: 18 tiles' zones, before 12/28 03:00);
 - other people and cars in the way;
 - the pad's rumble (its scrapes and crash sound, its engine held and pitched by the speed: sound.md);
 - a passenger getting in (`into-the-car-with`);
 - the car's lean and wheels (`func_80109430`);
-- unsticking it (`func_80106370`);
-- the boat.
+- unsticking it (`func_80106370`).
+
+The boat is boat.md's.
