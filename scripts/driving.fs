@@ -57,7 +57,20 @@ fvariable due
     {: x z h d :}  h s>f 2e f* pi f* 4096e f/ {: F: a :}
     x s>f a fsin d s>f f* f+ f>s  z s>f a fcos d s>f f* f+ f>s ;
 : wall? ( x z -- flag )  1 blocked? ;   \ (the town's floor)
-: probe ( h -- blocked? )  cx @ cz @ rot speed @ along 2dup wall? -rot solid-billboard? or ;   \ src: car_probe
+\ the road blocks (src: car_road_block): tiles (column + row x 100) the car may not be in by their zone under it
+\ (two corners): building fronts in zone 0, others in zone 1, the police cordon's in zone 0 until the 28th 03:00
+create fronts  314 , 612 , 623 , 723 , 823 , 1028 , 1202 , 1407 , 2018 , 2019 , 2023 ,   11 constant #fronts
+create zone-1-blocks  512 , 1317 , 1902 , 2008 ,   4 constant #zone-1-blocks
+: listed? ( key table n -- flag )  {: k t n :}  n 0 do  t i cells + @ k = if  true unloop exit  then  loop  false ;
+: car-zone ( x z -- id )   \ src: player_zone driving: its two corners
+    {: x z :}  x car-half - z car-half - 1 zone-at  dup 0< if  drop  x car-half + z car-half + 1 zone-at  then ;
+: road-blocked? ( x z -- flag )
+    {: x z :}  x z tile-key {: k :}  x z car-zone {: zn :}
+    k fronts #fronts listed? if  zn 0= exit  then
+    k zone-1-blocks #zone-1-blocks listed? if  zn 1 = exit  then
+    k cordoned-tile? if  zn 0=  cordon-holds? and exit  then  false ;
+: probe ( h -- blocked? )   \ src: car_probe (the road blocks by where the car is)
+    cx @ cz @ rot speed @ along 2dup wall? -rot solid-billboard? or  cx @ cz @ road-blocked? or ;
 : hits? ( x z -- flag )   \ src: car_tile_hit: its box's two corners
     {: x z :}  x car-half - z car-half - wall?  x car-half + z car-half + wall? or ;
 : scrape ( -- )   \ src: car_scrape: the pad shakes by the speed
@@ -74,7 +87,7 @@ fvariable due
 : move-car ( -- )
     swerve-way {: h :}  cx @ cz @ {: x z :}
     x z h speed @ along {: nx nz :}  x z h speed @ 2/ along {: hx hz :}
-    nx nz hits?  hx hz hits? or if  crashed  0e velocity f!  0 speed ! exit  then
+    nx nz hits?  hx hz hits? or  nx nz road-blocked? or if  crashed  0e velocity f!  0 speed ! exit  then
     nx cx !  nz cz !  nx nz ground-under cy ! ;
 : show-car ( -- )
     his-car cx @ cy @ cz @ ch @ 4095 and s" traffic" actor-named send car-place

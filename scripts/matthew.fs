@@ -107,7 +107,13 @@ $B4 constant crate-ahead            \ the crate before him as he pushes (src: pl
     frot fdup fsin speed f@ f* frames f*  fswap fcos speed f@ f* frames f*   ( F: x z dx dz )
     frot f+ f>s  f+ f>s  swap ;
 : open? ( x z -- flag )  floor @ blocked? 0= ;
-: clear? ( x z -- flag )  2dup open? -rot solid-billboard? 0= and ;   \ (and no solid billboard: src player_update's check after the move)
+: free? ( x z -- flag )  2dup open? if  in-the-way? 0=  else  2drop false  then ;   \ src: player_probe_blocked
+: cordoned? ( x z -- flag )   \ src: foot_road_block: in the town, the cordon's tiles but their zone 0
+    area @ the-town <> if  2drop false exit  then
+    2dup tile-key cordoned-tile? 0= if  2drop false exit  then
+    floor @ zone-at 0<>  cordon-holds? and ;
+: clear? ( x z -- flag )   \ (src: player_update's check after the move: no wall, billboard or cordon there)
+    2dup open? 0= if  2drop false exit  then  2dup solid-billboard? if  2drop false exit  then  cordoned? 0= ;
 variable was-x   variable was-y   variable was-z   \ where he stood before his last step (src: player_restore_pos)
 : step-to ( x z -- )   \ his new place across the floor: indoors his height kept, in the town the ground's there
     {: x z :}  self body-pos 3f>s  was-z !  dup was-y !  swap was-x ! {: y :}
@@ -122,10 +128,10 @@ variable was-x   variable was-y   variable was-z   \ where he stood before his l
 : walk ( -- )   \ src: player_update: a blocked step tries 0x30 at a time either side, easing his heading
     speed f@ f0= if  exit  then
     0  turning @ 0= speed f@ f0> and if
-        0 probe open? 0= if
+        0 probe free? 0= if
             slide-limit slide-step do
-                i probe open? if  drop i  slide-ease frames f* turn-by  leave  then
-                i negate probe open? if  drop i negate  slide-ease fnegate frames f* turn-by  leave  then
+                i probe free? if  drop i  slide-ease frames f* turn-by  leave  then
+                i negate probe free? if  drop i negate  slide-ease fnegate frames f* turn-by  leave  then
             slide-step +loop
         then
     then

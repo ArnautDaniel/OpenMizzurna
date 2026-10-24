@@ -5,7 +5,7 @@
 \ upright box, else a box turned 45 degrees. World units from the area's origin - in the town, each tile's lists
 \ (town/CC-RR/obstacles.bin, zones.bin) from the tile's centre, the tile the point is in (src: tile_lists).
 IN: floors
-USING: engine messages areas ;
+USING: engine messages clock areas ;
 
 $0FFF constant count-bits   $2000 constant in-use   $4000 constant with-ids   $8000 constant switched-off
 $0100 constant inverted
@@ -73,6 +73,14 @@ variable list-x   variable list-z
     l off-the-map = if  true exit  then  x z l region-at no-region <> ;
 defer solid-billboard? ( x z -- flag )   \ a solid billboard there (src: billboard_blocked: billboards.fs, town.fs)
 :noname ( x z -- flag )  2drop false ; is solid-billboard?
+defer in-the-way? ( x z -- flag )   \ someone or a car standing there, in his way (src: player_probe_blocked: events.fs)
+:noname ( x z -- flag )  2drop false ; is in-the-way?
+\ the police cordon (src: foot_road_block, car_road_block): two road tiles (column + row x 100) closed but in their
+\ zone 0 until the 28th 03:00
+100 constant tile-row-key   922 constant cordon-a   1022 constant cordon-b
+: tile-key ( x z -- key )  tile-of tile-row-key * + ;
+: cordoned-tile? ( key -- flag )  dup cordon-a =  swap cordon-b = or ;
+: cordon-holds? ( -- flag )  28 3 0 reached? 0= ;   \ src: before_dec28_0300
 : zones-of ( x z floor -- list | 0 )  true list-at  dup off-the-map = if  drop 0  then ;
 : zone-at ( x z floor -- id | -1 )  {: x z fl :}  x z  x z fl zones-of  region-at ;   \ src: player_zone
 : zone-hit ( x z floor -- index id | -1 -1 )  {: x z fl :}  x z  x z fl zones-of  region-hit ;

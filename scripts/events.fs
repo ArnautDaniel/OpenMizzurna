@@ -5,7 +5,7 @@
 \ Each op does its work through its subsystem's messages; an op whose subsystem isn't built yet is a stub
 \ that takes its arguments and notes it (`unbuilt`).
 IN: events
-USING: engine actors messages keys clock areas window matthew townsfolk traffic doors effects camera fight story-flags
+USING: engine actors messages keys clock areas floors window matthew townsfolk traffic doors effects camera fight story-flags
     pictures ;
 
 \ ---- the cast: actor slots (decomp/include/actor.h); the others by number (`160 actor`) ----
@@ -408,6 +408,24 @@ defer door-sound ( kind -- )   \ op $176 (door-sounds.fs)
     dup person? if  person-now xz-heading true exit  then
     dup car? if  car-now xz-heading true exit  then
     drop false ;
+\ who stands in Matthew's way (src: player_probe_blocked, actor_overlaps_point: actors 26 - 60, the town's cars and
+\ props - within his radius and theirs, theirs halved to their sides)
+26 constant first-in-the-way   61 constant past-in-the-way
+$1A1 constant side-from   $4BF constant side-span   $9A0 constant other-side-from   $4C1 constant other-side-span
+: radius-of ( slot -- r )  {: s :}  s" actor-radii" s exe-s16 ;
+: to-their-side? ( x z bx bz bh -- flag )
+    {: x z bx bz bh :}  x bx - s>f  z bz - s>f  fatan2 4096e f* 2e pi f* f/ f>s  bh - 4095 and {: a :}
+    a side-from - side-span u<  a other-side-from - other-side-span u< or ;
+: one-in-the-way? ( x z slot -- flag )
+    {: x z s :}
+    s car? if  area @ the-town <>  s car-shown? 0= or if  false exit  then  then   \ (on the roads, in the town)
+    s person? if  s here? 0= if  false exit  then  then
+    s where-is 0= if  false exit  then  {: bx bz bh :}
+    s radius-of  x z bx bz bh to-their-side? if  2/  then  {: rb :}
+    x bx - s>f fdup f*  z bz - s>f fdup f* f+ fsqrt f>s  matthew radius-of rb + < ;
+: anyone-in-the-way? ( x z -- flag )
+    {: x z :}  past-in-the-way first-in-the-way do  x z i one-in-the-way? if  true unloop exit  then  loop  false ;
+' anyone-in-the-way? is in-the-way?
 : turn-by ( a degrees speed -- )   \ cmd $09: from the way they face (src: actor_turn_by)
     {: a d v :}  a where-is 0= if  exit  then  nip nip {: h :}
     a  h d figures:degrees>heading +  figures:full-circle 1- and  v turn-figure ;

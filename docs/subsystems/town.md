@@ -41,7 +41,11 @@ func_800243F0). 32 x 24 tiles of 19980 world units; tile (col, row)'s centre is 
   `tests/library/test_town.fs`.
 - The water's texture animation, the town's per-frame rules and people (areas.md, rules/area027.fs).
 
+- What stops him (`tests/library/test_blocking.fs`): the cars and props of actors 26 - 60 on the roads (src:
+  player_probe_blocked: his radius and theirs, theirs halved to their sides - events.fs's `in-the-way?`); the
+  police cordon's two road tiles (922, 1022: column + row x 100) on foot but in their zone 0 until the 28th
+  03:00 (src: foot_road_block); the car's road blocks (driving.md).
+
 ## To come
 
-The police cordon coming down (12/25 - 12/28), the cars and props in his way (src: player_probe_blocked), the
-two road tiles closed on foot until 12/28 03:00, the cars' headlights at night.
+The cars' headlights at night.

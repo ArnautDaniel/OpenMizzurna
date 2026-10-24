@@ -67,7 +67,7 @@ of his lengths (0x78) ahead is undone, turn and all; motions 0x1006 moving, 0x10
 aims; seen again on entering an area. His perch 4: in the car (driving.md). A step that would put him on a solid
 billboard (a tree, a lamp post: `solid-billboard?`, src: player_update's billboard_blocked) is not taken.
 
-## To come
+## Elsewhere
 
-Looking and acting (○: the zones and the areas' rules), doors, the floors' zones and heights, the car with the pad by the original's speeds and turning, the
-floors' walls and zones, looking and acting.
+Looking and acting (look.md), doors (doors.md), the floors' walls, zones and heights (floors.fs), the car
+(driving.md), what else stops him - the town's cars and props, the police cordon (town.md).
