@@ -2,7 +2,7 @@
 \ overlay; decomp/docs/areas/area01.md). What ○ and □ do here beyond the tables' rows, the area's and the
 \ scene's hooks, and the C its events call.
 IN: rules.area001
-USING: engine actors messages clock story-flags items townsfolk floors events look talk areas showing ;
+USING: engine actors messages clock story-flags items townsfolk floors events look talk areas showing matthew ;
 
 1 constant this-area
 $008 9 story-bit constant letter-waiting   \ (not named yet: lets the letter be found - src: D_800F6930 & 0x200)
@@ -102,8 +102,30 @@ enum: act-action  do-nothing the-bed  3 the-shower the-books  10 take-the-key  1
 
 \ ---- the area's hooks (0x80103080 entering, 0x8010314C a scene) ----
 3 constant matthews-room   \ (the area's scene 3)
+\ ---- each frame (src: func_80102384): the front door - out to the town once the prologue's done, else he's held
+\ back; before it, not past the room's line; in scene 3 Nozz closing up at his hour, once; before the prologue's
+\ end, by the stairs, Nozz's shout once ----
+$E constant the-front-door   $45887 constant prologue-line-z
+29 constant later-closing-day   17 constant closing-hour   25 constant closing-minute
+18 constant later-closing-hour   20 constant later-closing-minute   22 constant open-till-hour   59 constant open-till-minute
+$54C24 constant shout-x0   $54F4D constant shout-x1   $4581C constant shout-z0   $4620B constant shout-z1
+variable closed-up   variable shouted
+: held-back ( -- )  matthew-was s" matthew" actor-named send figure-place ;   \ (src: player_restore_pos)
+: closing-time? ( -- flag )
+    clock-time time>day later-closing-day < if  0 closing-hour closing-minute  else  0 later-closing-hour later-closing-minute  then
+    open-till-hour open-till-minute between? ;
+: by-the-stairs? ( -- flag )
+    matthew-now drop nip {: x z :}  shout-x0 x <  x shout-x1 < and  shout-z0 z < and  z shout-z1 < and ;
+: each-frame ( -- )
+    at-zone nip the-front-door = if
+        prologue-done flag? if  ['] events.ovl001:entry-80103D0C start-event exit  then  held-back  then
+    prologue-done flag? 0=  matthew-now drop nip nip prologue-line-z <= and if  held-back  then
+    closed-up @ 0=  scene @ matthews-room = and  closing-time? and if
+        1 closed-up !  ['] events.ovl001:entry-801038A4 start-event exit  then
+    prologue-done flag? 0=  shouted @ 0= and  by-the-stairs? and if
+        1 shouted !  ['] events.ovl001:entry-80104438 start-event  then ;
 : entered ( -- )   \ src: map_reveal(13) and the area's first-time counters; its two props placed (the figures)
-    13 map-reveal  forget-firsts  0 cigarettes-asked !  0 lighter-seen ! ;
+    13 map-reveal  forget-firsts  0 cigarettes-asked !  0 lighter-seen !  0 closed-up !  0 shouted ! ;
 : scene-hook ( scene -- )   \ Morgan's morning visit before the prologue ends; after it, once, Dr. James's
     matthews-room <> if  exit  then
     prologue-done flag? 0= if  ['] events.ovl001:entry-80104514 start-event exit  then
@@ -157,6 +179,7 @@ create nozz-leaving    \ and leaving it (src: D_80103E58)
 
 ' look-check ' look-do ' act-check ' act-do  this-area content area-rules!
 this-area ' entered ' scene-hook area-hooks!
+this-area ' each-frame area-frame!
 
 \ ---- shown an item (src: actor_handler_180): the tape of "Eternal", its scene ----
 180 constant person-180   7 constant eternal-tape   $64 constant hears-the-tape

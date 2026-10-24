@@ -51,7 +51,10 @@ prompt_id): the facts `look-prompt` and `act-prompt` (−1 none), and `has-contr
 
 **Built**: the 242 rows (`scripts/events/checks.fs`), the subsystem (`scripts/look.fs`), area 1's rules
 (`scripts/rules/area001.fs`: its looks, its acts - the bed, the shower, the books, the key, the lighter, the
-letter, Barbara's cigarettes - its hooks: Morgan's morning visit, Dr. James's; the C its events call). Seen: □
+letter, Barbara's cigarettes - its hooks: Morgan's morning visit, Dr. James's; the C its events call; each frame
+- the front door out to the town once the prologue's done (else he's held back), the room's line before it, Nozz
+closing up in scene 3 at his hour once, his shout by the stairs before the prologue ends:
+`tests/library/test_area001.fs`). Seen: □
 by the bed - "I can't sleep now..."; the events' lines that wait now wait at once (src: they slept a frame).
 Area 0's (`scripts/rules/area000.fs`, the police station; `tests/library/test_area000.fs`): the map board, the
 cabinet, the poster, the cells' confrontations, the computer's knock; arriving (Father Barton, "shove it", the
