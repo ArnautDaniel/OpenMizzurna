@@ -90,6 +90,8 @@ message figure-pushes ( crate -- )         \ (to Matthew) he pushes that crate a
 message figure-perch ( n -- )              \ he's on his feet (0), on a crate (1), on a stool (2) (src: talk_state)
 message figure-crawl ( flag -- )        \ the pad drives him crawling, tank-like, while a scene runs (src: ovl019's duct)
 message figure-shown ( flag -- )        \ (to Matthew) drawn or not (src: actors[0].visible)
+message figure-coord ( which v -- )      \ (to Matthew) one of his place's: 0 x, 1 height, 2 z
+message figure-nudge ( dx dy dz -- )     \ moved by that
 message figure-floor ( floor -- )        \ his floor now, its height under him (src: actor_set_floor)
 message figure-walk ( x z speed motion -- )   \ (to Matthew) a scene walks him there, speed a game frame
 message figure-forward ( speed motion -- )     \ straight on, until idle (-1: the motion as it is)
@@ -135,6 +137,10 @@ message person-unride ( slot -- )          \ no longer along with him
 message companion-halt ( -- )              \ his companion stays where they are (still along: src D_800A37B4 = 0)
 message person-at-door ( slot door side -- )   \ (to the townsfolk) they answer that door, on that side
 message person-door-hold ( slot -- )       \ they wait at the door (src: cmd $53, door_wait 255 frames)
+message person-coord ( slot which v -- )  \ (to the townsfolk) one of their place's: 0 x, 1 height, 2 z (src: cmds 0x21 - 0x23)
+message person-nudge ( slot dx dy dz -- ) \ moved by that (src: cmd 0x38)
+message person-keep ( slot -- )            \ their heading and motion kept, to come back to (src: actor_save_state)
+message person-back ( slot -- )            \ as kept (src: actor_restore_state)
 message person-door-free ( slot -- )       \ no longer at the door
 message person-variant ( slot kind -- )   \ (to the townsfolk) they show that kind's model (0 or their own: theirs)
 message person-away ( slot -- )           \ (to the townsfolk) between stops, out of sight until their next (src: travelling = 1)
@@ -152,6 +158,7 @@ message car-drive ( car route speed -- ) \ drive the route from its start (speed
 message car-carry ( car route speed -- ) \ the same with someone riding: car-arrived at its end
 message car-place ( car x y z heading -- )   \ there, off its route, standing (Matthew's car as he drives it)
 message car-speed ( car speed -- )        \ its top speed now, on its way (src: carline_set_speed)
+message car-switch ( car route -- )       \ at that route's first node it turns onto it (src: cmd 0x37)
 message car-stop ( car -- )              \ stop where it is, riders still in (src: carline_stop)
 message car-arrived ( car -- )           \ broadcast: a car with riders reached its route's end; they get out
 

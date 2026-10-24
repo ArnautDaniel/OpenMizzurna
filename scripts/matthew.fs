@@ -195,6 +195,13 @@ behaviour the-player
   on figure-pushes ( crate -- )  pushing ! ;   \ (-1: none)
   on figure-perch ( n -- )  perch ! ;
   on figure-crawl ( flag -- )  crawling ! ;
+  on figure-coord ( which v -- )   \ one of his place's
+    self body? 0= if  2drop exit  then  {: w v :}  self body-pos {: F: x F: y F: z :}
+    w 0 = if  v s>f to x  then  w 1 = if  v s>f to y  then  w 2 = if  v s>f to z  then
+    x y z  self body-area self body-floor body-place ;
+  on figure-nudge ( dx dy dz -- )
+    self body? 0= if  drop 2drop exit  then  {: dx dy dz :}  self body-pos {: F: x F: y F: z :}
+    x dx s>f f+  y dy s>f f+  z dz s>f f+  self body-area self body-floor body-place ;
   on figure-shown ( flag -- )  0= unseen ! ;
   on figure-floor ( floor -- )   \ src: actor_set_floor: his floor, and its height under him
     floor !  self body? 0= if  exit  then  self body-pos {: F: x F: y F: z :}

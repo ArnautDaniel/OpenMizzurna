@@ -5,7 +5,7 @@
 \ Each op does its work through its subsystem's messages; an op whose subsystem isn't built yet is a stub
 \ that takes its arguments and notes it (`unbuilt`).
 IN: events
-USING: engine actors messages clock areas window matthew townsfolk traffic doors effects camera fight ;
+USING: engine actors messages clock areas window matthew townsfolk traffic doors effects camera fight story-flags ;
 
 \ ---- the cast: actor slots (decomp/include/actor.h); the others by number (`160 actor`) ----
 0 constant matthew    1 constant morgan    2 constant nozz       3 constant cohen     5 constant samuel
@@ -225,32 +225,32 @@ variable loaded-pack
 : memory-card ( mode -- )  1 s" memory-card" unbuilt  0 result! ;
 
 \ ---- actor commands ( actor args -- ): until the townsfolk and Matthew take them ----
-: run ( a x1 -- )  2 act-unbuilt ;   \ cmd $0B
-: face-point ( a x1 x2 x3 -- )  4 act-unbuilt ;   \ cmd $0D
+
+
 : talk-pose ( a x1 -- )  2 act-unbuilt ;   \ cmd $14
-: restore-state ( a -- )  1 act-unbuilt ;   \ cmd $16
+
 : anim-step ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $18
-: freeze ( a -- )  1 act-unbuilt ;   \ cmd $1F
-: unfreeze ( a -- )  1 act-unbuilt ;   \ cmd $20
-: set-x ( a x1 -- )  2 act-unbuilt ;   \ cmd $21
-: set-y ( a x1 -- )  2 act-unbuilt ;   \ cmd $22
-: set-z ( a x1 -- )  2 act-unbuilt ;   \ cmd $23
-: lift ( a x1 x2 x3 -- )  4 act-unbuilt ;   \ cmd $24
+
+
+
+
+
+
 : item-query ( a x1 -- )  2 act-unbuilt ;   \ cmd $2E
 : item-show ( a x1 -- )  2 act-unbuilt ;   \ cmd $2F
 : act ( a -- )  1 act-unbuilt ;   \ cmd $36
-: partner-command ( a x1 -- )  2 act-unbuilt ;   \ cmd $37
-: move-by ( a x1 x2 x3 -- )  4 act-unbuilt ;   \ cmd $38
-: ignore-a ( a x1 -- )  2 act-unbuilt ;   \ cmd $3C
-: ignore-b ( a x1 -- )  2 act-unbuilt ;   \ cmd $3D
+
+
+
+
 : examine ( a -- )  1 act-unbuilt ;   \ cmd $4A
-: reset ( a -- )  1 act-unbuilt ;   \ cmd $4D
+
 : kill-thread ( a -- )  1 act-unbuilt ;   \ cmd $4E
-: save-state ( a -- )  1 act-unbuilt ;   \ cmd $4F
-: door-release ( a -- )  1 act-unbuilt ;   \ cmd $54
-: walk-path ( a x1 x2 x3 x4 x5 -- )  6 act-unbuilt ;   \ cmd $55
+
+
+
 : depart-alt ( a -- )  1 act-unbuilt ;   \ cmd $56
-: ending-schedule ( a x1 -- )  2 act-unbuilt ;   \ cmd $59
+
 : go-to-actor ( a x1 -- )  2 act-unbuilt ;   \ cmd $5A
 : place-alt ( a -- )  1 act-unbuilt ;   \ cmd $5E
 
@@ -291,13 +291,15 @@ variable minigame-busy   \ a code minigame not over yet (src: minigame_id still 
     {: v n :}  s" rumble" actor-named {: r :}  v $100 = if  0 n r send rumble-small  else  0 v n r send rumble-large  then ;
 : sprite-count+ ( -- )  0 s" sprite-count+" unbuilt ;   \ op $15D
 : sprite-count-close ( -- )  0 s" sprite-count-close" unbuilt ;   \ op $15E
-: face-each-other ( a a -- )  2 s" face-each-other" unbuilt ;   \ op $162
-: map-reveal ( n -- )  1 s" map-reveal" unbuilt ;   \ op $165
+
+: map-reveal ( place -- )  1 swap lshift map-known @ or map-known ! ;   \ op $165 (src: map_reveal: the map knows it)
 : ambient-start ( id -- )  s" sound" actor-named send loop-sound ;   \ op $166 (src: ambient_start)
 : ambient-stop ( id -- )  s" sound" actor-named send stop-loop ;   \ op $167
-: wait-attached ( a -- )  1 s" wait-attached" unbuilt  settle ;   \ op $16E
-: set-357c ( n -- )  1 s" set-357c" unbuilt ;   \ op $170
-: map-sync ( -- )  0 s" map-sync" unbuilt ;   \ op $172
+
+variable fire-lit   \ src: D_800A357C: area 5's fire burning (its object shown)
+10 constant the-fire   \ (area 5's object 10, in its first scene; its texture's flicker: to come)
+: set-357c ( n -- )  dup fire-lit !  the-fire swap 0<> s" areas" actor-named send object-shown ;   \ op $170
+: map-sync ( -- ) ;   \ op $172 (src: waits for the town's tiles: ours are there when drawn)
 : xa-play ( n -- )  s" sound" actor-named send play-stream ;   \ op $173 (src: xa_play)
 : xa-stop ( -- )  s" sound" actor-named send stop-stream ;   \ op $174
 defer door-sound ( kind -- )   \ op $176 (door-sounds.fs)
@@ -546,8 +548,6 @@ $3F constant stepping-out-1   $40 constant stepping-out-0   \ (by the side's way
     figure-place@ if  drop the-camera send camera-pivot  then ;
 : camera-heading ( a -- )   \ $150: the camera faces as the figure does
     figure-place@ if  >r 2drop drop r> the-camera send camera-face  then ;
-: camera-face ( a b -- )   \ $11B: heading from one figure toward the other
-    2 s" camera-face" unbuilt ;
 
 : heading-to ( x z x' z' -- heading )   \ from the first point toward the second (4096 a turn)
     rot - s>f  swap - s>f fswap fatan2 4096e f* 2e pi f* f/ f>s  4095 and ;
@@ -556,3 +556,49 @@ $3F constant stepping-out-1   $40 constant stepping-out-0   \ (by the side's way
     a figure-place@ 0= if  exit  then  drop nip {: ax az :}
     t figure-place@ 0= if  exit  then  drop nip {: tx tz :}
     a  ax az tx tz heading-to  v turn-figure ;
+: camera-face ( a b -- )   \ op $11B: the camera's heading from one figure toward the other
+    {: a b :}  a figure-place@ 0= if  exit  then  drop nip {: ax az :}
+    b figure-place@ 0= if  exit  then  drop nip {: bx bz :}  ax az bx bz heading-to the-camera send camera-face ;
+: face-each-other ( a b -- )  {: a b :}  a b 0 face  b a 0 face ;   \ op $162
+: face-point ( a x z speed -- )   \ cmd $0D (src: actor_turn_to_point)
+    {: a x z v :}  a figure-place@ 0= if  exit  then  drop nip {: ax az :}  a  ax az x z heading-to  v turn-figure ;
+: run ( a speed -- )  run-motion go-forward ;   \ cmd $0B: straight on, running
+
+\ ---- where a figure is, piecemeal (cmds $21 - $23, $38) ----
+: set-coord ( a which v -- )   \ which: 0 x, 1 height, 2 z
+    {: a w v :}  a matthew = if  w v a figure-of send figure-coord exit  then
+    a person? if  a w v the-townsfolk send person-coord  then ;
+: set-x ( a x -- )  0 swap set-coord ;   \ cmd $21
+: set-y ( a y -- )  1 swap set-coord ;   \ cmd $22
+: set-z ( a z -- )  2 swap set-coord ;   \ cmd $23
+: move-by ( a dx dy dz -- )   \ cmd $38
+    {: a dx dy dz :}  a matthew = if  dx dy dz a figure-of send figure-nudge exit  then
+    a person? if  a dx dy dz the-townsfolk send person-nudge  then ;
+
+\ ---- kept and given back, held still (cmds $4F, $16, $1F, $20) ----
+: save-state ( a -- )  dup person? if  the-townsfolk send person-keep  else  drop  then ;     \ (Matthew's: as he is)
+: restore-state ( a -- )  dup person? if  the-townsfolk send person-back  else  drop  then ;
+: freeze ( a -- )  dup person? if  the-townsfolk send person-idle  else  drop  then ;   \ (src: frozen: stops where they are)
+: unfreeze ( a -- )  drop ;
+: door-release ( a -- )  dup person? if  the-townsfolk send person-door-free  else  drop  then ;   \ cmd $54
+: reset ( a -- )   \ cmd $4D: off the stool, out of the car, off the paths, at no door, their thread over, standing
+    {: a :}  a person? 0= if  exit  then
+    a seated? if  a the-townsfolk send seat-leave  then
+    a s" walkers" actor-named send walker-stop  a end-route  a the-townsfolk send person-unride
+    a the-townsfolk send person-door-free  a the-townsfolk send person-idle ;
+\ Matthew walks through everyone for now: whom he'd ignore doesn't matter (src: cmds $3C, $3D: his ignore_a / _b)
+: ignore-a ( a b -- )  2drop ;
+: ignore-b ( a b -- )  2drop ;
+
+\ ---- walking and riding (cmds $24, $37, $55, $59) ----
+: lift ( a node dest speed -- )   \ cmd $24: along the town's footpaths (src: actor_lift: a walker)
+    walk-motion s" walkers" actor-named send walker-start ;
+: partner-command ( a route -- )   \ cmd $37: their car turns onto that route at its first node
+    over person? if  swap partner-of ?dup if  swap s" traffic" actor-named send car-switch exit  then  then  2drop ;
+: walk-path ( a x y z motion speed -- )   \ cmd $55: to the point, its height too (motion -1: walking)
+    {: a x y z m v :}  a y set-y  a x z v  m 0< if  walk-motion  else  m  then  walk-with ;
+: ending-schedule ( a route -- )   \ cmd $59: they leave on that route of the executable's (src: EM_ENDINGSCHEDULE)
+    {: a r :}  a scheduled? 0= if  exit  then  a the-townsfolk send person-depart
+    r $FFFFFFFF and main-word ?dup if  a start-route  then ;
+: wait-attached ( a -- )   \ op $16E: until they ride
+    settle  dup person? 0= if  drop exit  then  begin  yield  dup riding? until  drop ;

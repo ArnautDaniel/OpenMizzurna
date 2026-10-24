@@ -148,3 +148,4 @@ $164  0 story-bit constant morgan-mortal-journey-talk-done    \ func_8002F554 (M
 $164  1 story-bit constant morgan-necklace-talk-done          \ func_8002F554, needs +0x44 bit0 and +0x20 bit18: npc_talk(1, 10) "..."; required by ovl002 for the necklace sc
 $018  5 story-bit constant hideout-robbers-caught              \ ovl028 0x80102064 (the hideout's scene) -> set; the town reads it (no more lookout by his door)
 $008 16 story-bit constant seat-searched                       \ ovl008 the bus seat searched (area 8 and Mel's talk read it)
+variable map-known   \ the places the map knows, a bit each (src: g_map_known: map_reveal; saved with the story)

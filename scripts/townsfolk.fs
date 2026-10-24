@@ -27,6 +27,7 @@ begin-structure person
   field: figure         \ their model (0: not loaded yet)
   field: travelling     \ between stops, walking their route
   field: person-area   field: on-floor   field: px   field: py   field: pz   field: heading-now   \ where they are
+  field: kept-heading   field: kept-anim   \ (src: actor_save_state: kept to come back to)
   field: walking        \ walking to a point (src: ACTOR_F_NAV)
   field: goal-x   field: goal-z   field: stride   field: stride-motion
   field: riding         \ the car they ride in (0: none)
@@ -342,6 +343,13 @@ behaviour townsfolk
     rot person-of {: n sd p :}  n p answered-door !  sd p answered-side ! ;
   on person-door-hold ( slot -- )  person-of {: p :}  true p at-door !  255 p door-wait ! ;   \ cmd $53
   on person-door-free ( slot -- )  person-of 0 swap at-door ! ;   \ back in (src: ACTOR_F_DOOR cleared)
+  on person-coord ( slot which v -- )
+    rot person-of {: w v p :}  w 0 = if  v p px !  then  w 1 = if  v p py !  then  w 2 = if  v p pz !  then ;
+  on person-nudge ( slot dx dy dz -- )  {: s dx dy dz :}  s person-of {: p :}  dx p px +!  dy p py +!  dz p pz +! ;
+  on person-keep ( slot -- )  person-of {: p :}  p heading-now @ p kept-heading !  p moving anim @ p kept-anim ! ;
+  on person-back ( slot -- )
+    dup person-of {: s p :}  p kept-heading @ p heading-now !  0 p turning !
+    p kept-anim @ 0< 0= if  s p kept-anim @ -1 true show  then ;
   on person-variant ( slot kind -- )  swap person-of shown-kind ! ;   \ src: actor_model_variant
   on person-away ( slot -- )  person-of {: p :}  true p travelling !  0 p walking !  -1 p person-area ! ;
   on person-unlink ( slot -- )  person-of 0 swap riding ! ;

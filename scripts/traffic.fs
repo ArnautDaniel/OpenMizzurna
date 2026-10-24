@@ -59,6 +59,7 @@ begin-structure car
   field: lane-number
   field: lane-turn      \ at this many bends left the car swings into its lane (-1: done)
   field: lane-dx   field: lane-dz
+  field: switch-route   \ another route it turns onto at that route's first node (0: none; src: loop_node, cmd 0x37)
   field: x   field: y   field: z   field: heading   \ where it is
 end-structure
 create cars  #cars car * allot
@@ -99,7 +100,12 @@ PRIVATE>
         -1 c lane-turn !  c lane-dx @ negate c dx +!  c lane-dz @ negate c dz +!
         c parks-next? if  pulling-in-speed s>f c speed f!  parked-speed c top-speed !  else  -1 c lane-node !  then
     then ;
+: switch? ( c -- )   \ at the switch route's first node: on along it (src: car_next's loop_node)
+    {: c :}  c switch-route @ ?dup 0= if  exit  then  {: sw :}
+    c route-row @ c next-node @ 1- 0 max route-node  sw 0 route-node = if
+        sw c route-row !  1 c next-node !  0 c switch-route !  then ;
 : next-node! ( c -- more? )   \ toward the route's next node; false: the route is over (src: car_next)
+    dup switch?
     {: c :}  c route-row @ {: r :}
     c route-end? if
         r route-ends @ ends-parked = if  false c driving !  0e c along f!  false exit  then
@@ -180,6 +186,7 @@ behaviour traffic-runner
   on car-carry ( car route speed -- )  rot car-of {: n v c :}  c n v start  c driving @ c carrying ! ;
   on car-stop ( car -- )  car-of false swap driving ! ;
   on car-speed ( car speed -- )  swap car-of top-speed ! ;
+  on car-switch ( car route -- )  route-of swap car-of switch-route ! ;
   on car-place ( car x y z heading -- )   \ (Matthew driving it: off its route, where he has it)
     {: n px py pz ph :}  n car-of {: c :}  false c driving !  false c carrying !  true c shown !  -1 c lane-node !
     px c x !  py c y !  pz c z !  ph c heading ! ;

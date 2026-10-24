@@ -39,7 +39,7 @@ it on a route, gets in and rides; at the route's end they get out beside their s
 
 `car-park ( car route )` (at the route's start, standing), `car-hide`, `car-drive ( car route speed )`,
 `car-carry ( car route speed )` (riders: at the end `car-arrived ( car )` is broadcast), `car-stop`,
-`car-place ( car x y z heading )` (off its route, standing there: Matthew's car as he drives it, driving.md). Facts:
+`car-switch ( car route )` (at that route's first node it turns onto it: cmd 0x37), `car-place ( car x y z heading )` (off its route, standing there: Matthew's car as he drives it, driving.md). Facts:
 `car-now ( car -- x y z heading )`, `car-driving?`, `car-carrying?`, `car-shown?`, `partner-of ( slot -- car | 0 )`,
 `seat ( i -- side forward )`, `beside ( x z heading side forward -- x z )`.
 
@@ -62,5 +62,5 @@ it on a route, gets in and rides; at the route's end they get out beside their s
 ## To come
 
 The cars' own days (those without a person), Matthew riding
-(cmd 0x26, Morgan's car), a car turning onto another route at a node (cmd 0x37), pushing Matthew out of the way,
+(cmd 0x26, Morgan's car), pushing Matthew out of the way,
 headlights at night, Mel's bike.

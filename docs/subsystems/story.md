@@ -130,3 +130,25 @@ Also built: the flags and the story actor's new game and prologue end (`tests/st
 The text ops go to the message window (`docs/subsystems/window.md`).
 
 **Next**: the flags in the saves (with the saves subsystem); the areas' rules.
+
+## The actor commands and the small ops (scripts/events.fs)
+
+Built on the townsfolk's, Matthew's, the walkers' and traffic's messages:
+- **Place.** `set-x` / `set-y` / `set-z` (one coordinate, sent as such so a script's following ops see it) and
+  `move-by`.
+- **Heading.** `face-point`, `face-each-other`, `camera-face` (the camera's heading from one figure to another).
+- **Moving.** `run` (straight on, running); `lift` (along the town's footpaths); `walk-path` (to a point, with its
+  height).
+- **State.** `save-state` / `restore-state` (heading and motion kept); `freeze` (they stop where they are);
+  `reset` (off the stool, out of the car, off the paths, at no door, their route over, standing);
+  `door-release`.
+- **Cars and endings.** `partner-command` (their car turns onto a route at its first node); `ending-schedule`
+  (they leave on that route of the executable's).
+- **Waits.** `wait-attached` (until they ride).
+- **The map and the fire.** `map-reveal` (the map knows a place: story-flags.fs's `map-known`, saved with the
+  story); `set-357c` (area 5's fire object).
+- **Nothing to do here:** `map-sync` (the original waited for the town's tiles); `ignore-a` / `ignore-b`
+  (Matthew walks through people for now).
+- **Still stubs:** the pictures (`picture-show` / `picture-hide`, `cd-picture(s)`), `prompt`, `memory-card`, the
+  hospital's `elevator-doors`, `gesture`, `talk-pose`, `anim-step`, `examine`, `act`, `item-query` /
+  `item-show`, `kill-thread`, `depart-alt`, `go-to-actor`, `place-alt`, and `door-reveal-room`.
