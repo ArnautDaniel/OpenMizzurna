@@ -27,6 +27,7 @@ create path 32 allot
 : meta ( -- addr )  area @ s" 0.bin" area-path library-file drop ;
 : table ( n -- addr )  meta swap 2* + sw@ meta + ;
 : shell-objects ( -- n )  header-table table 8 + c@ ;
+: scene-reverb ( -- type )  reverb-table table scene @ 2* + c@ ;   \ (a fact: src scene_reverb - its depth unused)
 : model-objects ( -- n )  header-table table 9 + c@ ;
 : objects ( -- n )  shell-objects model-objects + ;
 : shown? ( scene object -- flag )  swap objects * + shown-table table + c@ 0<> ;

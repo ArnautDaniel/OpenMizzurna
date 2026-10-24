@@ -44,6 +44,7 @@ PRIM(p_voices_on) { PUSH(au_voices_on()); }                    /* ( -- n ) */
 PRIM(p_all_off) { au_all_off(); }
 PRIM(p_master) { au_master(POP() / FULL); }                    /* ( volume -- ) */
 PRIM(p_reverb) { Cell depth = POP(); au_reverb((int)POP(), depth / FULL); }   /* ( type depth -- ) */
+PRIM(p_reverb_type) { PUSH(au_reverb_type()); }   /* ( -- type ) */
 PRIM(p_sep_load) {   /* ( folder len bank -- sep | -1 ) */
     Cell bank = POP();
     char folder[200];
@@ -77,7 +78,7 @@ void bind_audio(Forth *f) {
         {"bank-load", p_bank_load}, {"bank-free", p_bank_free}, {"key-on", p_key_on}, {"key-off", p_key_off},
         {"loop-off", p_loop_off}, {"voice-pitch", p_voice_pitch}, {"voice-volume", p_voice_volume},
         {"voice-on?", p_voice_on}, {"voices-on", p_voices_on}, {"all-voices-off", p_all_off},
-        {"sound-volume", p_master}, {"reverb", p_reverb}, {"sep-load", p_sep_load}, {"sep-free", p_sep_free},
+        {"sound-volume", p_master}, {"reverb", p_reverb}, {"reverb@", p_reverb_type}, {"sep-load", p_sep_load}, {"sep-free", p_sep_free},
         {"seq-play", p_seq_play}, {"seq-stop", p_seq_stop}, {"seq-fade", p_seq_fade}, {"seq-playing?", p_seq_playing},
         {"xa-start", p_xa_start}, {"xa-end", p_xa_end}, {"xa-playing?", p_xa_playing}, {"audio-run", p_audio_run}, {"audio-record", p_audio_record},
     };

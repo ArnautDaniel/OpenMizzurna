@@ -30,7 +30,7 @@ the ambient plus each light by how much the face turns to it (at most 255 / 128)
 the fog's colour by the PlayStation's depth cue: 1.25 - 12.5 h / depth (h the projection, 400 in the town; the
 depth in model units) - clear to 4000, all fog from 20000. Unlit models: neither.
 
-## To come
+## Also
 
-The sky (its colour from `hour-sky-top` / `-low`, stars, clouds, the horizon strip, sun and moon), snow falling,
-the scripted ambient fades (func_80025330), a muzzle flash's light.
+A shot's flash (`muzzle-flash`: three bright lights for a frame, src shootout_flash_lights). The sky and the snow
+are their own pages (sky.md, snow.md). The original's scripted ambient fade (func_80025330) has no caller.

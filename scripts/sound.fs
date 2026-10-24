@@ -94,6 +94,8 @@ create treads   \ a motion, then the frames of it that sound (ended by -1) - src
   $3F , 20 , 31 , 42 , -1 ,   $40 , 40 , 45 , 50 , -1 ,
   $7 , 5 , 10 , -1 ,  $B , 5 , 10 , -1 ,   $8 , 4 , 9 , -1 ,   $C , 4 , 9 , -1 ,   $6 , 5 , -1 ,  $A , 5 , -1 ,
   $9 , 4 , -1 ,  $D , 4 , -1 ,
+  $3 , 9 , 16 , -1 ,  $4 , 9 , 16 , -1 ,  $BB , 9 , 16 , -1 ,  $BC , 9 , 16 , -1 ,   \ (the turns: the asm's
+  $1596 , 9 , 16 , -1 ,  $1597 , 9 , 16 , -1 ,  $15A3 , 9 , 16 , -1 ,  $15A4 , 9 , 16 , -1 ,   \ 0x8001C928 - no others)
 here constant treads-end
 : treads-of ( id -- addr | 0 )   \ its frames
     treads begin  dup treads-end <  while
@@ -256,7 +258,9 @@ create xa-volumes  $4D c, $4C c, $4E c, $52 c, $67 c, $6D c, $7F c,
     dup xa-volumes + c@  xa-start  true streaming ! ;
 : stream-off ( -- )  xa-end  false streaming ! ;
 
-: entered ( area -- )   \ src: area_sound_free, area_sound_load, area_sep_open
+$28 constant reverb-depth   \ (src: scene_reverb_apply: every scene's at 0x28 of 0x7F)
+: entered ( area -- )   \ src: area_sound_free, area_sound_load, area_sep_open; scene_reverb_apply
+    scene-reverb reverb-depth reverb
     background-off  #loops 2 * 0 do  -1 loops-held i cells + !  loop
     -1 on-scene !  0 toll !  0 birds !  false wind-on !  -1 river !
     open-area  0 cycle !  0e sound-due f! ;

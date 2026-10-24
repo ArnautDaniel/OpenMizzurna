@@ -58,8 +58,8 @@ and seq.c, which the engine's mixer follows). The engine's `src/audio/` and `scr
     0x159C on 3 and 11; 0x3F on 20, 31, 42; 0x40 on 40, 45, 50; and so on.
   - The sound is the area's ground: by its scene, plus area 26's decks; else 0x64.
   - It's quieter by a twentieth of the distance from the camera, out of hearing at 127.
-  - The original also sounded frames 9 and 16 of any other motion; that's left out until checked against the
-    game.
+  - The turns (motions 3, 4, $BB, $BC, $1596, $1597, $15A3, $15A4) sound on frames 9 and 16 - the assembly's
+    switch sends only those there (a decompile had read it as every other motion); the rest are silent.
 - **The areas' own, a game frame at a time:**
   - area 5's scene-1 loop;
   - now-and-then sounds (1 in 64) in areas 7, 8, 10, 13, 23;
@@ -76,10 +76,6 @@ and seq.c, which the engine's mixer follows). The engine's `src/audio/` and `scr
 
 Built: `tests/library/test_sound.fs`, plus sounds checked in the fight, driving, dog chase and car chase tests.
 
-To come:
-- the pad's rumble;
-- the opening's own bank and set;
-- the stereo / mono option and the volume setting;
-- each area's reverb type;
-- the elevator's and other scenes' C sound calls;
-- the original's frames-9-and-16 footsteps, if they prove right.
+Built too: the pad's rumble (rumble.md), the opening's own bank and set (title.fs), each area's reverb (its
+scene's type on entering, depth $28: `reverb@`). The original has no stereo / mono or volume setting (its menu:
+new game, continue, the screen's place, vibration).

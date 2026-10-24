@@ -57,5 +57,7 @@ T{ 26 12 0 at-time  24 into  tolled?  toll @ 120 > -> true true }T
 testing the forest outdoors: the wind held, the river's voice
 T{ 26 14 0 at-time  26 into  4 steps  wind-on @ 0<>  river @ 0< 0= -> true true }T
 T{ 26 7 s" areas" actor-named send enter-area  deliver  4 steps  wind-on @  river @ -> 0 -1 }T
+testing an area's reverb: its scene's type on entering (src: scene_reverb_apply)
+T{ 21 into  reverb@  scene-reverb -> scene-reverb 1 }T
 
 test-summary

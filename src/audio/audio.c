@@ -366,6 +366,8 @@ void au_reverb(int type, float depth) {
     au_unlock();
 }
 
+int au_reverb_type(void) { return sReverb.type; }
+
 static void reverb_run(const float *in, float *out, int frames) {
     int i, c, k, type = sReverb.type;
 

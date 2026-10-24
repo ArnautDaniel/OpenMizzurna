@@ -38,6 +38,7 @@ int au_voices_on(void);                           /* how many sound */
 void au_all_off(void);
 void au_master(float volume);
 void au_reverb(int type, float depth);           /* the original's reverb types (0 off .. 9) */
+int au_reverb_type(void);   /* the one in effect (0 none) */
 
 /* sequence sets: a SEP (its folder in the library) played on a bank; returns the set or -1 */
 int au_sep_load(const char *folder, int bank);
