@@ -34,8 +34,11 @@ Matthew driving his car (slot 26) in the town (src: ovl027 `car_update`, cevcon.
 - **Getting out.** ○ when |speed| ≤ 9 puts him at the first of the car's 6 seat points that's free, seen, on his
   feet. The car stays where it is.
 - **Leaving the town** ends the drive.
-- **Drawn:** the fuel gauge, a strip at (−144, 30) with its needle easing toward the fuel; the speed (a sixth of
-  it) at (−128, 74). The gauge's and the digits' pictures are to come.
+- **Drawn** (from the HUD's sheet, `ui/clock.png`): the fuel gauge's scale at (−144, 30) with its marker
+  easing a unit a frame toward the fuel; the speed's three digits (a sixth of it, jittering from 80 up) at
+  (−128, 74) and "Km/h", over a dark backdrop.
+- **With a passenger** (native $8004305C): at the wheel, and the one along with him rides in the car
+  (`person-ride` mode 2).
 
 ## Status
 

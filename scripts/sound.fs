@@ -202,6 +202,7 @@ variable wind-on
         every-so-often chance if  forest-call play-effect  then
         wind-on @ 0= if  forest-wind full wind-down - loop-on-at  true wind-on !  then
         forest-river river-on
+        matthew-there? 0= if  exit  then
         river-loudest  matthew-now 2drop drop river-x - river-step / river-loudest min -  river-volume
     else  wind-on @ if  forest-wind loop-stop  false wind-on !  then  river-off  then
     cabin-hum the-cabin-scene loop-in-scene ;
@@ -223,6 +224,7 @@ variable birds
     town-bell town-toll-apart bells
     engine-going @ 0= if  town-hours  then
     birds @ if  birds @ birds-frames < if  1 birds +!  else  morning-birds loop-stop  0 birds !  then  then
+    matthew-there? 0= if  exit  then   \ (between areas: no body yet)
     matthew-now drop nip {: x z :}
     x z by-the-river?  engine-going @ 0= and if
         town-river river-on

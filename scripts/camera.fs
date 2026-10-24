@@ -30,13 +30,16 @@ create history #history 4 * cells allot   variable newest
     area @ the-town = if  driving @ if  driving-eye-y  else  town-eye-y  then  town-look-y town-dist  town-projection
     else  scene @ scene-camera  indoor-projection  then
     projection !  dist !  look-y !  eye-y ! ;
+variable turned-round   \ he faces backwards (the boat: src camera_follow's boat_mode)
+2048 constant half-a-turn
+: followed ( -- x y z yaw )  matthew-now  turned-round @ if  half-a-turn + 4095 and  then ;
 : camera-reset ( -- )   \ src: camera_reset: behind Matthew now, the history filled with where he is
     profile  matthew-there? 0= if  exit  then
-    #history 0 do  matthew-now remember  loop
-    matthew-now yaw !  target! ;
+    #history 0 do  followed remember  loop
+    followed yaw !  target! ;
 : follow ( -- )
     matthew-there? 0= if  exit  then
-    matthew-now remember
+    followed remember
     lag entry  dup @ over cell+ @ rot 2 cells + dup @ swap cell+ @   ( x y z yaw )
     yaw !  target! ;
 
@@ -109,6 +112,7 @@ behaviour follow-camera
   on camera-behind ( look-y dist eye-y -- )  eye-y !  dist !  look-y !  false following !  true low-behind ! ;
   on camera-reset ( -- )  camera-reset ;
   on camera-driving ( flag -- )  driving !  profile ;
+  on camera-turned-round ( flag -- )  turned-round ! ;
 end-behaviour
 
 : spawn-camera ( -- id )  follow-camera camera-state s" camera" spawn ;

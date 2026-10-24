@@ -8,7 +8,7 @@
 \ him out at the first free door. The fuel gauge and the speed are shown. A step at the original's rate (30 a
 \ second in the town).
 IN: driving
-USING: engine actors messages keys screen areas figures floors matthew traffic talk look events events.main sound rumble ui ;
+USING: engine actors messages keys screen areas figures floors matthew traffic talk look events events.main sound rumble ui townsfolk ;
 
 variable at-the-wheel   \ src: g_driving
 120 constant full-tank
@@ -120,18 +120,39 @@ fvariable due
     perch-in-car s" matthew" actor-named send figure-perch  show-car
     engine-sound engine-tones s" sound" actor-named send engine-start ;
 main-exe $8004301C ' at-the-wheel! native:
+2 constant in-his-car   \ (the companion's mode: riding with him - src D_800A37B4 = 2)
+: with-passenger ( -- )   \ src: car_enter_with_passenger (0x8004305C): at the wheel, the one along with him riding
+    at-the-wheel!  companion @ 0< if  exit  then
+    companion @ in-his-car s" townsfolk" actor-named send person-ride ;
+main-exe $8004305C ' with-passenger native:
 
-\ ---- drawing: the fuel gauge and the speed (src: fuel_gauge_draw; their pictures to come) ----
--144 constant gauge-x   30 constant gauge-top   64 constant gauge-h   16 constant gauge-w   80 constant needle-base
--128 constant speed-x   74 constant speed-y   6 constant speed-shown   \ (the speed shown: a sixth of it)
-$302030E0 constant gauge-back   $F0C060FF constant needle-ink   $FFFFFFFF constant speed-ink
-variable needle   full-tank needle !
+\ ---- drawing: the fuel gauge and the speed (src: hud.c fuel_gauge_draw: from the HUD's sheet, ui/clock.png) ----
+\ the scale beside a marker easing a unit a frame toward the fuel; the speed's three digits (a sixth of it,
+\ jittering from 80 up) and "Km/h" over a dark backdrop
+-144 constant gauge-x   30 constant scale-top   15 constant scale-w   64 constant scale-h   80 constant marker-base
+16 constant marker-w   8 constant marker-h   -128 constant digits-x   74 constant digits-y   16 constant digit-w
+-80 constant unit-x   32 constant unit-w   6 constant speed-shown   80 constant jitter-from   4 constant jitter   \ (src: g_rand & 3)
+$F0 constant scale-u   $A0 constant marker-u   $10 constant marker-v   $A8 constant unit-u   $30 constant unit-v
+-128 constant backdrop-left   -36 constant backdrop-top-right   -44 constant backdrop-bottom-right   90 constant backdrop-bottom
+$00000080 constant backdrop-ink
+variable needle   full-tank needle !   variable gauge-sheet
+: sheet ( -- image )  gauge-sheet @ ?dup if  exit  then  s" ui/clock.png" image dup gauge-sheet ! ;
+: part ( u v w h x y -- )   \ a piece of the sheet at the original's place, opaque
+    {: u v w h x y :}  blend-ps-solid pen-blend  sheet u v w h  x y >screen  w scale *  h scale *  draw-image-part
+    blend-usual pen-blend ;
+: digit ( n x -- )  {: n x :}  n digit-w * 0 digit-w digit-w x digits-y part ;
 : draw-gauge ( -- )
     needle @ fuel @ < if  1 needle +!  then  needle @ fuel @ > if  -1 needle +!  then
-    scale {: k :}
-    gauge-back pen-color  gauge-x gauge-top >screen  gauge-w k *  gauge-h k *  draw-rect
-    needle-ink pen-color  gauge-x needle-base needle @ 4 / - >screen  gauge-w k *  8 k *  draw-rect
-    speed-ink pen-color  0 font  k pen-scale  speed @ 0 max speed-shown / n>str  speed-x speed-y >screen draw-text ;
+    backdrop-ink pen-color
+    backdrop-left digits-y >screen  backdrop-top-right digits-y >screen
+    backdrop-left backdrop-bottom >screen  backdrop-bottom-right backdrop-bottom >screen
+    backdrop-ink backdrop-ink backdrop-ink backdrop-ink draw-quad
+    $FFFFFFFF pen-color
+    scale-u 0 scale-w scale-h gauge-x scale-top part
+    marker-u marker-v marker-w marker-h gauge-x marker-base needle @ 4 / - part
+    speed @ 0 max speed-shown / dup jitter-from >= if  jitter random +  then {: n :}
+    n 100 / digits-x digit  n 10 / 10 mod digits-x digit-w + digit  n 10 mod digits-x digit-w 2* + digit
+    unit-u unit-v unit-w digit-w unit-x digits-y part ;
 : draw-driving ( -- )  driving? if  draw-gauge  then ;
 ' draw-driving on-draw
 PRIVATE>

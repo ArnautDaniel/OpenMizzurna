@@ -341,6 +341,7 @@ $48 constant at-the-bar   \ (the club: the townsfolk's)
 : call-over ( -- )   \ src: func_8004C640
     hanging-up false his-motion  false in-call !  0 calling ! ;
 main-exe $8004C640 ' call-over native:
+main-exe $8004791C ' comes-again native:   \ (the garage's: it calls back in three minutes)
 : watch-call ( -- )   \ the call-number's script over: he puts it away (src: phone_incoming_update's D_800996E0)
     in-call? 0= if  exit  then  call-thread @ event-alive? if  exit  then
     -1 call-thread !  ['] events.main:exe-800996E0 start-event ;

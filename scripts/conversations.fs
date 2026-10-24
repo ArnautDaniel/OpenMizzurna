@@ -218,3 +218,19 @@ PRIVATE>
 ' cohens-line cohen default-line!   ' mels-line mel default-line!   ' james-line james default-line!
 ' wolfs-line wolf default-line!   ' lorraines-line rolein default-line!   ' samuels-line samuel default-line!
 ' winonas-line winona default-line!
+
+\ ---- the C their scenes call (src: char_talk.c) ----
+: james-off ( -- )  ['] events.main:route-800858AC james start-route ;   \ src: evfn_8002CC24: his own walk
+: liz-off ( -- )  ['] events.main:route-80086EBC lidds start-route ;     \ src: evfn_8002D5F4
+10 constant pocket-camera   $1C8 constant film-day   $1CC constant film-hour   $1D0 constant film-minute
+: camera-handed-in ( -- )   \ src: func_8002E988: the photos due an hour on
+    pocket-camera s" items" actor-named send take-item
+    clock-time minutes/hour + time>date {: d h m :}  d film-day story!  h film-hour story!  m film-minute story-c! ;
+$018 27 story-bit constant winona-photo-asked   \ (src: evfn_80030F84 reads +0x18 bit 27)
+: photo-asked ( -- n )  winona-photo-asked flag? 1 and ;
+18 constant winonas-place
+: winona-off ( -- )   \ src: evfn_80032CE4: her place on the map; she sets off if standing
+    winonas-place map-reveal  winona travelling? 0= if  winona s" townsfolk" actor-named send person-depart  then ;
+main-exe $8002CC24 ' james-off native:   main-exe $8002D5F4 ' liz-off native:
+main-exe $8002E988 ' camera-handed-in native:   main-exe $80030F84 ' photo-asked native:
+main-exe $80032CE4 ' winona-off native:

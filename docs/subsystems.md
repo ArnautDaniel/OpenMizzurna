@@ -55,6 +55,7 @@ phase-1 port's files (`../port/src/game/`), which name the decomp's functions; t
 | Saves ([page](subsystems/saves.md), built) | the save file, the save point's dialog, continuing | `cmcard.c`, `boot.c` |
 | Pause ([page](subsystems/pause.md), built) | Start: the pause, the prologue's skip | `pad_map.c`, `cui.c` |
 | Title ([page](subsystems/title.md), built) | the logo, the movies, the title and its menu, loading, the endings | `opening.c` |
+| Boat ([page](subsystems/boat.md), built) | the rowing boat on the town's lake, the boathouses | `ovl027.c` |
 | Weather | snow, the sky, the day's light | `snow.c`, `sky.c`, `clock.c` |
 | Sound ([page](subsystems/sound.md), built) | effects, held loops, the background music and ambience, XA, footsteps, the areas' own sounds | `sound.c`, `ambience.c` |
 | Fight ([page](subsystems/fight.md), built) | a fistfight: the pad or the AI each side, the hits, the game over | `fight.c` |

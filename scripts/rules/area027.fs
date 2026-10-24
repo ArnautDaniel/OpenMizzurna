@@ -205,6 +205,10 @@ this-area ' entered-town 0 area-hooks!
 \ ---- the deputy shown the sheriff's badge: his scene (src: area_minigame_start's 27; showing.fs) ----
 ' entry-8010A240 27 minigame-script!
 
+\ ---- Lorraine's door (src: ovl027 evfn_80106D84: a knock at it) ----
+$2F constant lorraines-door-id
+this-area ovl $80106D84 :noname  lorraines-door-id knock drop ; native:
+
 \ ---- the photo shop's clerk shown the pocket camera, once he has met him (src: actor_handler_158) ----
 158 constant photo-clerk   10 constant pocket-camera   $64 constant takes-the-film
 $1BC 1 story-bit constant met-the-clerk   \ (src: +0x1BC bit 1: set at his first talk, func_80105FF8)

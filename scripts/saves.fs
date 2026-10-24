@@ -53,6 +53,7 @@ $1970 constant sum-at
 variable card-answer
 : answered ( -- )  thread thread-result slot @ card-answer ! ;   \ src: func_8004E5B8: the thread's answer
 main-exe $8004E5B8 ' answered native:
+main-exe $8004E594 ' answered native:   main-exe $8004E5F4 ' answered native:   \ (the other cards' and the format's: one card, never asked)
 1 constant cancelled
 : dialog ( slot -- )   \ (in the save point's event): its result 0 saved, 1 not
     ['] events.ovl001:entry-80103624 execute         \ "checking the memory card"

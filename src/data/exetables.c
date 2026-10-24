@@ -101,6 +101,8 @@ static const ExeTable kTables[] = {
     {"item-reactions", 0x800966A8, 23 * 4, "the items a character reacts to (u32 a bit an item, by character)"},
     {"reaction-packs", 0x80012A3C, 23, "a character's event pack of reactions to items (u8, by character)"},
     {"robert-locker-stops", 0x80092198, 3 * 4, "where Robert goes for the locker, 12/26 .. 12/28 (s32 a stop)"},
+    {"winona-day-stops", 0x80098E50, 3, "where Winona goes when the story sends her, 12/26 .. 12/28 (u8 a stop; src: evfn_80047B7C)"},
+    {"robert-day-stops", 0x80098E54, 3, "and Robert"},
     /* the phone (src: ftel.c): who answers a number, by where they are or by the time */
     {"phone-morgan", 0x80099734, 129 * 5,
      "Morgan's answer by where he is (stop * 2 + walking; 128 the 27th's noon): u8 the script, u8 it again, 3 more"},

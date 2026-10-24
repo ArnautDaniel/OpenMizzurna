@@ -161,6 +161,9 @@ Built on the townsfolk's, Matthew's, the walkers' and traffic's messages:
   There is none while sitting, except the seated ones (9–12), and none in a resting pose (src: func_80018F2C),
   except 8. Barbara has her own for the plain ones.
 - **`depart-alt`** (cmd $56): a labourer off along their stop's route.
+- **The C the events call** (`native`): every one they reach is written now, each with its subsystem:
+  the story's (the recap, the day's stops, the diary's pages), the characters' (`conversations.fs`), the
+  phone's, the boat's, the car's, the saves', the fight's, the areas'.
 - **Never reached** (no event uses them, so they stay notes): `talk-pose`, `anim-step`, `examine`, `act`,
   `kill-thread`, `go-to-actor`, `place-alt`, `door-reveal-room`, the sprite counters,
   `wait-attached-to`.

@@ -286,6 +286,8 @@ $A constant fight-music   $D constant own-music   \ (rows of the music table)
     begin-fight ;
 PRIVATE>
 
+: winner-human? ( -- flag )  fight-winner @ fighter# human? ;   \ (a fact: src fight_winner_is_human)
+
 state: fight-state end-state
 behaviour fights
   on spawned ( -- )  self subscribe tick ;

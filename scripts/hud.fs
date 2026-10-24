@@ -4,7 +4,7 @@
 \ to do; the clock top left - the date, the weekday, the time - while it runs; and in the town the corner map,
 \ seen with his heading, his mark on it. The notebook and the map hide it. It only draws.
 IN: hud
-USING: engine actors messages screen clock areas figures matthew driving look ui ring notebook map events ;
+USING: engine actors messages screen clock areas figures matthew driving look ui ring notebook map events boat ;
 
 <PRIVATE
 : ui-picture ( var addr len -- image )   \ ui/<name>.png, loaded once
@@ -37,7 +37,10 @@ variable icon-frame   variable icon-count   fvariable due
     id second-set < 0= second-set-v and  icon-frame @ icon-size * +  icon-size icon-size
     x icon-in + y icon-down + part ;
 : prompt-frame ( id x u -- )  prompts-y prompt-frame-at ;
-: the-prompts ( -- act look )  ring-up? if  ring-act-prompt @ ring-look-prompt @  else  act-prompt @ look-prompt @  then ;
+: the-prompts ( -- act look )
+    ring-up? if  ring-act-prompt @ ring-look-prompt @ exit  then
+    rowing? if  -1 boat-prompt @ exit  then   \ (src: the boathouses' ○)
+    act-prompt @ look-prompt @ ;
 : draw-prompts ( -- )  the-prompts {: a l :}  a act-x 0 prompt-frame  l look-x frame-w prompt-frame ;
 
 \ ---- the clock (src: func_800157B4: from the sheet's v $80) ----
@@ -74,7 +77,8 @@ fvariable sin-a   fvariable cos-a
 : seen ( x y -- sx sy )   \ a point of the window, turned and seen, in window pixels
     {: x y :}  x s>f cos-a f@ f*  y s>f sin-a f@ f* f-  seen-at f* f>s corner-mid-x +
     x s>f sin-a f@ f*  y s>f cos-a f@ f* f+  seen-at f* f>s corner-mid-y +  >screen ;
-: where-he-is ( -- x z heading )  driving? if  his-car-now exit  then  matthew-now {: x y z h :}  x z h ;
+: where-he-is ( -- x z heading )   \ (rowing: the boat's way, he faces back - src: the map turned round)
+    driving? if  his-car-now exit  then  matthew-now {: x y z h :}  x z  h rowing? if  2048 +  then ;
 : draw-corner ( -- )
     where-he-is {: x z h :}
     x units-across / map-left +  map-bottom z units-down / -  {: px py :}

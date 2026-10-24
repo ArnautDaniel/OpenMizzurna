@@ -82,6 +82,7 @@ message car-bumped ( -- )                 \ (to the driving) a knock: its speed 
 message car-nudge ( dx dz -- )            \ (to the driving) the car moved by that (src: the chase's crash slide)
 message left-the-car ( -- )               \ broadcast: Matthew got out of his car (src: car_exit's func_80106980)
 message camera-driving ( flag -- )       \ (to the camera) following the car: its eye higher (src: camera_follow's g_driving)
+message camera-turned-round ( flag -- )  \ (to the camera) Matthew faces backwards: it looks the other way (the boat)
 message camera-behind ( look-y dist eye-y -- ) \ low behind Matthew, turning as he turns (src: ovl019's duct crawl)
 message camera-reset ( -- )              \ behind Matthew now, where he stands (src: camera_reset)
 message figure-anim ( id next loop -- )  \ play motion id (looping or not); then `next` (-1: hold its last frame)
