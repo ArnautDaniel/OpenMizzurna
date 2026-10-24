@@ -1,5 +1,5 @@
 \ the sky on the game's data (docs/subsystems/sky.md)
-USING: tester engine actors messages clock areas events daylight sky ;
+USING: tester engine actors messages clock areas events daylight sky sky.private ;
 
 : settled ( -- )  10 0 do  deliver  loop  events-stop  deliver ;
 settled
@@ -18,5 +18,9 @@ T{ 26 0 0 at-time  top-now rgb@ -> 0 0 16 }T
 
 testing not clear: the sum of the three halved, kept as a byte (as the game did)
 T{ overcast weather!  26 12 0 at-time  top-now red @ -> 144 160 + 176 + 2/ 255 and }T
+
+testing where there's a sky: the town, the cemetery, the forest but the cabin; not indoors
+: in ( area scene -- )  s" areas" actor-named send enter-area  deliver ;
+T{ the-town 0 in sky-here?  7 0 in sky-here?  26 0 in sky-here?  26 7 in sky-here?  1 0 in sky-here? -> true true true false false }T
 
 test-summary

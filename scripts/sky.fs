@@ -136,8 +136,16 @@ $2A7 constant east   $6A7 constant west
         mx $AC - wrapped  24  my $84 -  my $6C -  piece-at
     then ;
 
+\ where there's a sky (src: func_800204C8, and the town's own drawing): the cemetery, the forest but the cabin, the
+\ yard, the lake, the north shore outside, the park, the town
+: sky-here? ( -- flag )
+    area @ case
+        7 of  true  endof   9 of  true  endof   13 of  true  endof   27 of  true  endof
+        26 of  scene @ 7 <>  endof   8 of  scene @ 0=  endof   10 of  scene @ 0=  endof
+        false swap
+    endcase ;
 : draw-sky ( -- )
-    area @ 0< if  exit  then
+    area @ 0< if  exit  then  sky-here? 0= if  exit  then
     true behind  horizon {: h :}
     h colours  h stars  sun  moon  h clouds  h mountains
     false behind  flares

@@ -31,6 +31,11 @@ horizon strip: averaged); a solid one (255) covers it - the PlayStation's semi-t
 - **The moon**: at night in clear weather, rising an hour later each day (`moon-heights`), its phase by the date.
 - The colours and shades ease a step every other frame; a jump in time or a new area sets them at once.
 
+## Where
+
+Only where there's one (src: func_800204C8 and the town's own drawing): the town, the cemetery, the forest but
+the cabin, the yard (scene 0), the lake, the north shore outside (scene 0), the park (`sky-here?`).
+
 ## Notes
 
 Snow falling is snow.md's. The lens flares are drawn over the scene as the original's overlays were; their order
