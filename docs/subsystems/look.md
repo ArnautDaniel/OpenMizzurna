@@ -32,7 +32,7 @@ vocabulary `rules.areaNNN` (`scripts/rules/areaNNN.fs`): its four words and the 
 registered with `area-rules!` / `native:`.
 
 An area's hooks: `area-hooks! ( area enter scene )` (entering, a scene shown), `area-frame! ( area xt )` (each
-step while Matthew's the player's), `area-leave! ( area xt )` (left for another: src the overlays' clean-ups - the
+step while Matthew's the player's), `area-leave! ( area xt )` (as any area is loaded, the same one too: src the overlays' clean-ups - the
 club's show ended, off a stool or a crate, the deputy's walk ended and his refusal remembered).
 
 Facts it keeps for the rules: `zone-answer` / `check-answer` (what the tables gave), `zone-match` / `check-match`

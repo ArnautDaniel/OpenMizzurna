@@ -182,7 +182,7 @@ behaviour looking
     self subscribe area-entered  self subscribe scene-shown ;
   on area-entered ( area scene -- )   \ src: the last overlay's clean-up; the new one's entering, then its scene hook
     swap content {: sc a :}
-    area-was @ dup 0< 0=  over a <> and if  rules-of on-leave @ hook  else  drop  then  a area-was !
+    area-was @ dup 0< 0= if  rules-of on-leave @ hook  else  drop  then  a area-was !   \ (any area loaded: the same too)
     a rules-of {: r :}  r on-enter @ hook  r on-scene @ ?dup if  sc swap execute  then ;
   on scene-shown ( scene -- )  area @ content rules-of on-scene @ ?dup if  execute  else  drop  then ;
   on tick ( -- )  watch ;
