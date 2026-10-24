@@ -18,20 +18,23 @@ endif()
 # the release's version (tools/release-linux.sh sets it): set, the program updates itself on start (update.c)
 set(OM_VERSION "" CACHE STRING "the release's version (empty: no updates)")
 
-# ---- the Forth system and the actor kernel (no SDL: the forth tool and the language tests) ----
-add_library(forth STATIC src/forth/forth.c)
-target_include_directories(forth PUBLIC src/forth)
-target_link_libraries(forth PUBLIC m)
+# ---- the Forth system (ClankForth, a submodule: shared with OpenHuey) and the actor kernel ----
+set(CLANKFORTH_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external/clankforth" CACHE PATH "ClankForth's sources")
+if(NOT EXISTS "${CLANKFORTH_DIR}/CMakeLists.txt")
+    message(FATAL_ERROR "no ClankForth in ${CLANKFORTH_DIR}: git submodule update --init")
+endif()
+enable_testing()
+set(CLANKFORTH_TESTS ON CACHE BOOL "the language's tests (ctest)")   # (theirs run with ours)
+add_subdirectory("${CLANKFORTH_DIR}" clankforth)
 
 add_library(mactor STATIC src/kernel/mactor.c)
-target_link_libraries(mactor PUBLIC forth)
+target_link_libraries(mactor PUBLIC clankforth)
 
-add_executable(forth-tool src/forth/repl.c)
+# the forth tool with the actor kernel (tools/forth-tool.c): the kernel's tests
+add_executable(forth-tool tools/forth-tool.c)
 set_target_properties(forth-tool PROPERTIES OUTPUT_NAME forth)
-target_link_libraries(forth-tool PRIVATE forth mactor)
-target_compile_definitions(forth-tool PRIVATE "OM_SCRIPT_DIR=\"${SCRIPT_DIR}\"")
+target_link_libraries(forth-tool PRIVATE mactor)
 
-enable_testing()
 file(GLOB FORTH_TESTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_*.fs")
 foreach(t ${FORTH_TESTS})
     get_filename_component(name "${t}" NAME_WE)
@@ -76,7 +79,7 @@ add_executable(openmizzurna
     src/platform/library.c src/platform/update.c src/core/files.c)
 target_link_libraries(openmizzurna PRIVATE omdata)
 target_include_directories(openmizzurna PRIVATE src/third_party)
-target_link_libraries(openmizzurna PRIVATE forth mactor SDL3::SDL3 m)
+target_link_libraries(openmizzurna PRIVATE clankforth mactor SDL3::SDL3 m)
 target_compile_definitions(openmizzurna PRIVATE "OM_SCRIPT_DIR=\"${SCRIPT_DIR}\"" "OM_VERSION=\"${OM_VERSION}\"")
 
 # the game's own tests: tests/<subsystem>/test_*.fs, run headless inside the game

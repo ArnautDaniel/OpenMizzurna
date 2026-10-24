@@ -1,0 +1,3 @@
+[submodule "external/clankforth"]
+	path = external/clankforth
+	url = https://github.com/ArnautDaniel/ClankForth.git

@@ -18,14 +18,16 @@ Start with `docs/design.md`, then `docs/actors.md` (the kernel), `docs/forth.md`
 
 ## Building and running
 
-Needs CMake, a C compiler, SDL3 and OpenGL 4.6; libavcodec (FFmpeg) for the movies, found by pkg-config.
+Needs CMake, a C compiler, SDL3 and OpenGL 4.6; libavcodec (FFmpeg) for the movies, found by pkg-config. The
+Forth system is [ClankForth](https://github.com/ArnautDaniel/ClankForth), a submodule: clone with
+`--recurse-submodules` (or, in a clone, `git submodule update --init`).
 
 ```sh
 cmake -S . -B build -G Ninja && ninja -C build
 build/openmizzurna                                   # the game (` opens the Forth console)
 build/openmizzurna --hidden --frames 3 --eval "..."  # headless; `s" shot.png" screenshot` for a picture
 cd build && SDL_AUDIO_DRIVER=dummy ctest             # the tests
-build/forth                                          # the Forth on its own (a prompt)
+build/forth                                          # the Forth with the actor kernel (a prompt)
 ```
 
 Keys: the PlayStation pad as the keyboard (`scripts/keys.fs`): arrows / W A S D the d-pad, C circle, X cross,
@@ -46,13 +48,13 @@ your library and saves stay; `OM_NO_UPDATE=1` turns it off). The same script mak
 
 | path | what |
 |---|---|
-| `src/forth/` | the Forth system (from OpenHuey) and the `forth` tool |
+| `external/clankforth/` | the Forth system: ClankForth, a submodule shared with OpenHuey |
 | `src/kernel/` | the actor kernel: MActors, mailboxes, delivery (from OpenHuey's HActor) |
 | `src/platform/` | SDL3 window, GL 4.6 loader, input and controls |
 | `src/render/` | the renderer |
 | `src/game/` | the engine loop's state, the engine's Forth words, the console |
-| `scripts/` | the game: `prelude.fs` (the language), `game.fs` (where it starts), a file per subsystem |
-| `tests/` | `test_*.fs` the language and kernel (the `forth` tool); `<subsystem>/test_*.fs` the game's, headless |
+| `scripts/` | the game: `prelude.fs` (its few words for every script), `game.fs` (where it starts), a file per subsystem |
+| `tests/` | `test_*.fs` the kernel (the `forth` tool, `tools/forth-tool.c`); `<subsystem>/test_*.fs` the game's, headless |
 | `docs/` | the design, the dialect, the subsystems' pages |
 
 ## License

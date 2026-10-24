@@ -12,11 +12,11 @@
  * The game's data is the library (platform/library.c, docs/library.md): on the first run, with no library, the
  * player picks their disc and it is imported.
  *
- * Start-up: the window (SDL3, OpenGL 4.6 core), the renderer, the Forth system with the engine's words and
- * the actor kernel, then scripts/prelude.fs and scripts/game.fs - which decide everything else. Each
- * frame: input, simulation steps at a fixed rate as real time asks (engine_tick: hooks, tasks, the actors), then
- * drawing at the display's rate (vsync), blending the last two steps. */
-#include "forth/forth.h"
+ * Start-up: the window (SDL3, OpenGL 4.6 core), the renderer, the Forth system (ClankForth) with the engine's
+ * words and the actor kernel, then its prelude, scripts/prelude.fs and scripts/game.fs - which decide everything
+ * else. Each frame: input, simulation steps at a fixed rate as real time asks (engine_tick: hooks, tasks, the
+ * actors), then drawing at the display's rate (vsync), blending the last two steps. */
+#include "forth.h"
 #include "game/engine.h"
 #include "game/movie.h"
 #include "audio/audio.h"
@@ -104,8 +104,8 @@ static int start_scripts(Engine *e) {
     forth_constant(e->forth, "hidden?", e->hidden ? -1 : 0);
     forth_constant(e->forth, "boot-mode", e->boot_mode);
     forth_add_root(e->forth, dir);
-    snprintf(path, sizeof(path), "%s/prelude.fs", dir);
-    if (forth_include(e->forth, path) != 0) {
+    snprintf(path, sizeof(path), "%s/prelude.fs", dir);   /* (the language's, then the game's few words) */
+    if (forth_prelude(e->forth) != 0 || forth_include(e->forth, path) != 0) {
         return 0;
     }
     snprintf(path, sizeof(path), "%s/game.fs", dir);

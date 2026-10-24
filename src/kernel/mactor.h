@@ -13,7 +13,7 @@
 #ifndef MACTOR_H
 #define MACTOR_H
 
-#include "../forth/forth.h"
+#include "forth.h"
 
 #define MACTOR_MAX 256      /* actors alive at once */
 #define MMSG_ARGS 16        /* cells a message carries */

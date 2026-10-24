@@ -2,9 +2,10 @@
 
 OpenMizzurna is Mizzurna Falls rebuilt: a C engine (`src/`, SDL3 + OpenGL 4.6) with the game as Forth actors
 passing messages (`scripts/`). The architecture follows OpenHuey (github.com/ArnautDaniel/OpenHuey,
-`openhuey-src/`), whose Forth system and actor kernel were copied here. The decomp (`../decomp/`) and the
-phase-1 port (`../port/`, runnable C) are the reference for what the game does; the original executable can be
-read too. Read `README.md`, then `docs/design.md`, `docs/actors.md`, `docs/forth.md`, `docs/subsystems.md`.
+`openhuey-src/`), whose actor kernel was copied here. The Forth system is ClankForth (`external/clankforth`, a
+submodule both projects share): a change to the language or the VM is a pull request to
+github.com/ArnautDaniel/ClankForth, then the submodule moved forward here (its own CLAUDE.md has its rules).
+The decomp (`../decomp/`) and the phase-1 port (`../port/`, runnable C) are the reference for what the game does; the original executable can be read too. Read `README.md`, then `docs/design.md`, `docs/actors.md`, `docs/forth.md`, `docs/subsystems.md`.
 
 How this project works:
 - **Intent, not structure**: reproduce what the game does (timings, rules, schedules), not how the PS1 code was

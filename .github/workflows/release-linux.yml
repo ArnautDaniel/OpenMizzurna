@@ -30,6 +30,8 @@ jobs:
             libgl1-mesa-dev libegl1-mesa-dev libgles2-mesa-dev
 
       - uses: actions/checkout@v4
+        with:
+          submodules: true   # (ClankForth: external/clankforth)
 
       - name: The dependencies, kept between runs
         uses: actions/cache@v4
