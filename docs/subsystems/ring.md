@@ -48,7 +48,7 @@ the fact `ui-busy?`.
   - an item shown goes to that person (`show-to`);
   - the diary plays its reading (main 0x8009AA14);
   - Kathy's note, Mel's note (its first use once the diary's 23rd is read) and the photo play their scripts;
-  - the phone, the notebook and the map are their own screens' (to come: they will hear `ring-chosen`).
+  - the phone, the notebook and the map hear `ring-chosen` and open (phone.md, notebook.md, map.md).
 
 ## Showing an item (showing.fs)
 
@@ -76,8 +76,5 @@ the fact `ui-busy?`.
 
 ## Status
 
-**Built:** the ring, the lists, turning, reading, showing, using, and the world standing still.
-
-**To come:**
-- the act prompt over a person who would answer (the HUD's prompts);
-- the phone, the notebook and the map, which the ring's choice opens.
+**Built:** the ring, the lists, turning, reading, showing (its act prompt over a person who would answer),
+using, the phone, the notebook and the map it opens, and the world standing still.

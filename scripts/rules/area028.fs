@@ -1,6 +1,6 @@
 \ area028.fs - area 28's rules: the hideout cabin (src: ovl028.c; decomp/docs/areas/area28.md;
 \ port/src/game/ovl028.c): the closed door □ (a first knock, then the later ones), the C its scene calls. Its
-\ look rows are the table's; the scene's fight is the events' (to come).
+\ look rows are the table's; the scene's fight is the events' op (fight.fs).
 IN: rules.area028
 USING: engine actors messages story-flags events look talk areas ;
 

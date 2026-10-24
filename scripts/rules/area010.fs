@@ -1,7 +1,7 @@
 \ area010.fs - area 10's rules: the north-shore cabin (src: ovl010.c; decomp/docs/areas/area10.md;
 \ port/src/game/ovl010.c): the crate (crate.fs: push it under the window, climb it), the window (the look row on
 \ top: a scene once its time has come, else a peep), a later scene at the landing; both are minigames that are
-\ scripts. (The fight inside them: the minigames, to come.)
+\ scripts (their fight the events' op: fight.fs).
 IN: rules.area010
 USING: engine actors messages story-flags events look talk areas matthew crate ;
 

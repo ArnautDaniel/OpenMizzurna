@@ -20,11 +20,11 @@ native), or nothing - then the area's own rules decide (from the story's flags, 
   a turn: src player_face_zone);
 - **check rows** match the zone's id and his heading within ± the row's degrees (and the talk state flags,
   bits 13 / 14: in a conversation, or not);
-- `n hint` - the row's extra: the text of the hint shown (to come).
+- `n hint` - the row's extra: the prompt shown (hud.md).
 
 ## The rules
 
-Pressing ○ with Matthew the player's, and no window up: the figure in front (to come: the townsfolk), else the
+Pressing ○ with Matthew the player's, and no window up: the figure in front (talk.md), else the
 area's rules - `look-check` gives an action from the zone (the zone rows' answer) and check (the check rows'
 answer), and `look-do` does it (his look motion first: 0x51); an area without rules, or action 0, runs the
 check row's target, else the zone row's. □ the same with `act-check` / `act-do`. An area's rules are a
@@ -93,8 +93,8 @@ Area 19's (`scripts/rules/area019.fs`, the apartment building - 31 and 32 its gr
 doors (○: the keyhole when it's time, or in when open; □: knocking at two), the mailboxes, the duct cover's
 lines, the duct itself (the crawl, minigame 41: the pad drives him), the way out of the far room (the chase,
 minigame 22, out to the town), two rooms shown by the zones he walks into, a room's two sets of things by the
-story, who says what, two talk hooks. (To come: the stalker in the town after the chase, minigame 24; the
-events' lock.)
+story, who says what, two talk hooks; the stalker in the town after the chase (minigame 24, rules/area027.fs).
+(The events' lock is the area's own for now.)
 Area 17's (`scripts/rules/area017.fs`, the school's main building; `tests/library/test_area017.fs`): with a
 companion along (off her schedule) she leads the way up on her own thread - Matthew stays the player's - and waits
 at the locker; ○ there opens it (items taken and given), the desk after it, the way out not without her, closing
@@ -102,12 +102,12 @@ time by floor and where he is (once).
 Area 16's (`scripts/rules/area016.fs`, the school library; `tests/library/test_area016.fs`): the crate, closing
 time by room (once), a teacher by the hour, the key rack and the key (with a companion along), a poster, the doors'
 scenes by the key and the hours, a book and the newspaper archive (once each), who says what, the building's halves
-shown by where he is, three minigames that are scripts. (To come: the bios the archive waits on, two EXE functions
-not understood yet.)
+shown by where he is, three minigames that are scripts, the companion leaving him (she and Robert to the day's
+stops).
 Area 13's (`scripts/rules/area013.fs`, the park; `tests/library/test_area013.fs`): the old man there by the hour,
 talking to him (a character pack's scripts), his lessons (the one reached: a minigame that's a script), who says
-what, a night scene once, the way down with or without a companion, the lights by floor and time of day. (The
-lesson's fuel: with the car, to come.)
+what, a night scene once, the way down with or without a companion, the lights by floor and time of day, the
+lesson's fuel (the car's).
 Area 11's (`scripts/rules/area011.fs`, the inn's room; `tests/library/test_area011.fs`): a scene the first time
 in, the crate, a thing to take once found.
 Area 10's (`scripts/rules/area010.fs`, the north-shore cabin; `tests/library/test_area010.fs`): the crate
@@ -117,15 +117,15 @@ Area 9's (`scripts/rules/area009.fs`, the lake; `tests/library/test_area009.fs`)
 (four stools, ordering from the counterman), the boat, a scene at the pier once, who says what.
 Area 8's (`scripts/rules/area008.fs`, the junkyard's bus; `tests/library/test_area008.fs`): the seat looked at
 twice then searched, getting off the bus, a figure there at its point in the story; the dog chase (minigame 26,
-`dog-chase.md`). The two-player model viewer (minigame 43): to come.
+`dog-chase.md`); the two-player fight (minigame 43: each player picks a model from the area's list, then they
+fight, again or enough).
 Area 7's (`scripts/rules/area007.fs`, the cemetery; `tests/library/test_area007.fs`): its two timed scenes (on
 arriving or as they come), a visitor at a grave, walking out of the grounds, who says what, Father Barton's talk
 here, the day's and the night's lights (`object-shown`, to the areas), the C its events call.
 Area 6's (`scripts/rules/area006.fs`, Astin Farm; `tests/library/test_area006.fs`): the two things in the room to
 take, the warning when its owner heads home, the closet and the way out, the closet's doors.
 Area 5 (`scripts/rules/area005.fs`; `tests/library/test_area005.fs`): one chain of scripts from the warp in to the
-warp out; its fights (`fight.md`) and shoot-out (`shootout.md`) are played; the flare is to come - the scripts
-carry on past it.
+warp out; its fights (`fight.md`), shoot-out (`shootout.md`) and flare (minigame 40, flare.fs) are played.
 Area 4 (James's house) has no rules: the visit is one script, reached by knocking at his door
 (`docs/subsystems/doors.md`).
 Area 3's (`scripts/rules/area003.fs`, the Roland residence; `tests/library/test_area003.fs`): heading home at
@@ -138,12 +138,14 @@ doors swing open and the way out leads to the town (with Morgan, or the attack's
 closing at 21:55 (upstairs 19:55) by room; the attack on Isabella and its aftermath; Barbara's introduction and
 invitation, her door and her cigarettes; the Epoch's analysis; Cohen's room, his lodge key and the envelope;
 Isabella's room; the wounded guard; who says what; the hospital talks of Samuel, the nurse, Barbara, James,
-Lidds, Cohen and Morgan; the C its events call. To come: the bulletin board's recap, the evening windows.
+Lidds, Cohen and Morgan; the C its events call; the bulletin board's recap, the evening windows (areas.md); the
+ending its last scene calls.
 Area 12's (`scripts/rules/area012.fs`, Club Wolves; `tests/library/test_area012.fs`): who's there by the hour
 (the bouncer 21:58 - 23:25, the fan 21:28 - 23:55, Loretta after her call), the nightly timetable (the bouncer on
 and off, the fan in and out), Isabella's show at 22:30 (or her cancelling it) and its end at 23:00, James's first
 meeting, Mel's confrontation, closing at 01:58; the bar's stools and ordering from Wolf; who says what; the
-conversations of Wolf, James, Mel, the bouncer, the fan and Loretta here. To come: the two fights, the prompt.
+conversations of Wolf, James, Mel, the bouncer, the fan and Loretta here; the two fights (the events' op,
+fight.md) and the prompt (the events' op, hud.md).
 Area 18's (`scripts/rules/area018.fs`, Ringwald's Gas Station; `tests/library/test_area018.fs`): ○ at the counter
 talks to Robert while he's behind it, his and Steve's lines by their stops, 22:00 - 22:59 the attendant sends
 Matthew out to the town (not from 23:00: Robert's "open 24 hours").

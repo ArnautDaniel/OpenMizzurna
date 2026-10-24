@@ -4,7 +4,7 @@
 \ the Epoch's analysis, Cohen's room, Isabella's, the wounded guard; the look and act rows' extras (the doors,
 \ Barbara's door and her cigarettes); who says what, and the characters' hospital talks.
 IN: rules.area002
-USING: engine actors messages clock story-flags items townsfolk floors events look talk areas matthew showing ;
+USING: engine actors messages clock story-flags items townsfolk floors events look talk areas matthew showing title ;
 
 2 constant this-area   29 constant upstairs   30 constant the-other-wing   \ (29, 30: their geometry, area 2's rules)
 10 constant the-guard   107 constant the-nurse   94 constant patient-94   176 constant patient-176
@@ -405,7 +405,7 @@ $20D constant morgan-lets-go   $1C3 constant bartons-line   $202 constant winona
     prologue-done flag? if  ['] events.ovl002:entry-80106E98  else  ['] events.ovl002:entry-801075DC  then  start-event ;
 : cohen-to-his-bed ( -- )   \ 0x801045EC: Cohen to his stop for the day (28th - 30th)
     today 28 - 0 max 2 min cells cohens-stops + @  cohen swap goto-stop ;
-: the-ending ( -- )  0 s" the ending (the opening program)" unbuilt ;   \ 0x801045CC
+: the-ending ( -- )  bad-ending ending ;   \ 0x801045CC (src: opening_exec(1), as ending_bad)
 this-area ovl $80104188 ' a-late-door native:   this-area ovl $8010434C ' walk-off-or-door native:
 this-area ovl $80104428 ' the-lab-door native:   this-area ovl $8010448C ' cohens-door native:
 this-area ovl $80104524 ' from-downstairs native:   this-area ovl $80104584 ' the-stairs native:

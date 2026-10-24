@@ -8,7 +8,7 @@ object_hide: the areas' hooks - the cemetery's day and night lights).
 The area being played (src: `area.c` load_area, `model.c` func_8001D698, `draw.c` area_draw): its two model
 groups - the shell and the objects, `NNN_4` part 3 (`models/NNN_4.3.0.gltf`, `.3.1.gltf`) - drawn at the
 area's origin in the area's texture set; which objects each scene shows; each scene's camera profile. The
-town (area 27) is drawn by its own subsystem (to come).
+town (area 27) is drawn by its own subsystem (town.md).
 
 ## Data (`NNN_4` part 0, the metadata: read where it lies, `library-file`)
 

@@ -301,7 +301,7 @@ variable minigame-running
 create minigame-codes  #minigames cells allot   minigame-codes #minigames cells erase
 : minigame-code! ( xt n -- )  cells minigame-codes + ! ;
 : minigame-code ( n -- xt | 0 )  dup #minigames u< if  cells minigame-codes + @  else  drop 0  then ;
-: minigame ( n -- )   \ op $145 (src: minigame_start): a script's, an area's code, else to come
+: minigame ( n -- )   \ op $145 (src: minigame_start): a script's, else an area's code (else noted unbuilt)
     dup minigame-xt ?dup if  nip dup minigame-running !  launch-event minigame-thread !  exit  then
     dup minigame-code ?dup if  nip execute exit  then
     1 s" minigame" unbuilt ;
@@ -329,7 +329,7 @@ variable minigame-busy   \ a code minigame not over yet (src: minigame_id still 
 : ambient-stop ( id -- )  s" sound" actor-named send stop-loop ;   \ op $167
 
 variable fire-lit   \ src: D_800A357C: area 5's fire burning (its object shown)
-10 constant the-fire   \ (area 5's object 10, in its first scene; its texture's flicker: to come)
+10 constant the-fire   \ (area 5's object 10, in its first scene; its flames: rules/area005.fs)
 : set-357c ( n -- )  dup fire-lit !  the-fire swap 0<> s" areas" actor-named send object-shown ;   \ op $170
 : map-sync ( -- ) ;   \ op $172 (src: waits for the town's tiles: ours are there when drawn)
 : xa-play ( n -- )  s" sound" actor-named send play-stream ;   \ op $173 (src: xa_play)
@@ -468,9 +468,20 @@ $39 constant to-diner-stool   $44 constant to-club-stool   $45 constant takes-cl
 : seat-command ( actor args.. n cmd -- )
     takes-club-stool = if  drop take-club-seat exit  then
     drop go-seat ;
-: act-command ( actor args.. n cmd -- )   \ a person's riding commands; the rest still to come
+\ walking to a node of the town's paths (src: cmd 0x4C: the paths' graph, 033_4 part 5 - walkers.fs) and riding
+\ along in someone's car (cmd 0x50)
+$4C constant to-path-node   $50 constant into-their-car   30 constant path-pace   32 constant path-node-bytes
+: path-node ( n -- x z )
+    path-node-bytes *  s" cdbin/033_4/5/0.bin" library-file drop +  dup sl@  swap 4 + sl@ ;
+: to-node ( a n -- )  path-node {: a x z :}  a x z path-pace walk-motion walk-with ;
+: in-their-car ( a car -- )  over person? if  the-townsfolk send person-in-car  else  2drop  then ;
+: own-command? ( cmd -- flag )  dup to-path-node =  swap into-their-car = or ;
+: own-command ( actor arg 1 cmd -- )  swap drop  to-path-node = if  to-node  else  in-their-car  then ;
+: act-command ( actor args.. n cmd -- )   \ (src: actor_command_default; the commands it doesn't list it ignores)
     dup seat-command? if  seat-command exit  then
-    over 2 + pick scheduled? if  riding-command  else  act-unbuilt-command  then ;
+    dup own-command? if  own-command exit  then
+    over 2 + pick scheduled? if  riding-command exit  then
+    drop 0 ?do  drop  loop  drop ;
 
 \ ---- the camera and the scene ----
 : the-camera ( -- id )  s" camera" actor-named ;
@@ -524,7 +535,7 @@ create resting-motions  68 , 72 , 161 , 167 ,   \ src: D_80080438 (and an area's
 
 \ ---- doors (docs/subsystems/doors.md) ----
 \ Matthew steps through a door from the room he is in (src: func_80045008: put at its spot on his side, turned,
-\ stepping through - a motion that holds its move; the door's opening and the next room's objects: to come)
+\ stepping through - a motion that holds its move; the door opening on the side shown)
 $3F constant stepping-out-1   $40 constant stepping-out-0   \ (by the side's way)
 -470 constant behind-look-y   -812 constant behind-dist   -1802 constant behind-eye-y   -693 constant behind-yaw
 : my-room ( -- room )  area @ the-town = if  town-room  else  scene @  then ;
@@ -564,6 +575,7 @@ $3F constant stepping-out-1   $40 constant stepping-out-0   \ (by the side's way
     {: a n room flip :}                \ while they step through
     a matthew = if  n room flip matthew-door-walk exit  then
     a person? 0= if  a n room 3 s" through-door" unbuilt  exit  then
+    n door-anim   \ (src: the door opens on the side shown, whoever walks through)
     a n room flip n stage-for the-townsfolk send person-through-door  a wait-anim ;
 : through-door ( a door room -- )  false door-walk ;        \ op $13B, $140
 : through-door-back ( a door room -- )  true door-walk ;    \ op $15F: coming the other way

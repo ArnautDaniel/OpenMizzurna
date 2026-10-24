@@ -2,7 +2,7 @@
 \ there tonight (the bouncer, the fan, Loretta, Isabella on stage), the night's timetable and Isabella's show,
 \ closing time, James's first meeting, Mel's confrontation; the bar's stools (counter.fs) and ordering from Wolf;
 \ who says what, the area's conversations (Wolf, James, Mel, the bouncer, the fan, Loretta), the C its events call.
-\ Its look and act are the tables' rows alone (its doors). (The fights and the prompt: the minigames, to come.)
+\ Its look and act are the tables' rows alone (its doors); its fights and prompt are the events' ops.
 IN: rules.area012
 USING: engine actors messages clock story-flags townsfolk events look talk areas matthew window list-menu counter ;
 

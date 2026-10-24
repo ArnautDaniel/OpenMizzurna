@@ -3,7 +3,7 @@
 \ morning hunt (slipping past him while he's away, his chase, following Cohen through the forest at his pace,
 \ the deadlines, the run back to the cabin), the cabin and its shell box, closing time, the ways in and out, a
 \ meeting at the waterfall at its time, the last evening's places and scenes, who says what. The cabin's
-\ shoot-out is a minigame to come.
+\ shoot-out (shootout.fs), its water and window (the texture animations).
 IN: rules.area026
 USING: engine actors messages keys clock story-flags items townsfolk events look talk areas matthew screen shootout ;
 

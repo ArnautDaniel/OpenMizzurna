@@ -1,5 +1,5 @@
 \ ui.fs - the screens over the field (docs/subsystems/ring.md; src: cui.c ui_lock, ui_busy): while one is up
-\ (the item ring; the phone, the notebook and the map to come) the world stands still - the clock, Matthew, the
+\ (the item ring, the notebook, the map) the world stands still - the clock, Matthew, the
 \ townsfolk, the cars, the camera - and the events go on. The fact ui-busy? is the ui actor's; a screen sends it
 \ ui-lock when it opens and ui-unlock when it closes. A screen that leaves the world going on (the phone) takes the
 \ pad instead (take-pad, give-pad): the field leaves it alone (field-pad?).

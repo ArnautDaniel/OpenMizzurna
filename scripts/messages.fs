@@ -136,6 +136,7 @@ message person-through-door ( slot door room flip stage -- )   \ out of that doo
                                           \ stage: the area they're shown in (-1: the room's own)
 message person-attach ( slot route speed -- )   \ get in their car: it drives that route, they ride (src: cmd 0x2C)
 message person-get-in ( slot -- )         \ climb into their car (src: cmd 0x42)
+message person-in-car ( slot car -- )      \ (to the townsfolk) out of sight in that car, out with its riders (src: cmd 0x50)
 message person-ride ( slot mode -- )      \ (to the townsfolk) they go along with Matthew: 1 following on foot, 2 in his car
 message person-unride ( slot -- )          \ no longer along with him
 message companion-halt ( -- )              \ his companion stays where they are (still along: src D_800A37B4 = 0)
@@ -170,7 +171,7 @@ message car-arrived ( car -- )           \ broadcast: a car with riders reached 
 message muzzle-flash ( -- )              \ (to the daylight) a shot lights the scene for a frame (src: shootout_flash_lights)
 message set-weather ( weather hold -- )  \ (to the daylight) clear, overcast or snowing; hold: it stays (src: func_80025384)
 
-\ ---- the screens over the field: the item ring, and those to come (docs/subsystems/ring.md) ----
+\ ---- the screens over the field: the item ring and what it opens (docs/subsystems/ring.md) ----
 message ui-lock ( -- )                   \ (to the ui) a screen is up: the world stands still (src: ui_lock)
 message ui-unlock ( -- )                 \ (to the ui) that screen is gone (src: ui_unlock)
 message take-pad ( -- )                  \ (to the ui) a screen has the pad, the world going on (the phone: src its pad mode)

@@ -221,7 +221,7 @@ $1645 constant getting-in      \ the motion of climbing in (the town's own)
     p on-ground ;
 
 $3F constant through-door-1   $40 constant through-door-0   \ the motions of stepping out of a door, by way
-: through-door ( slot door room flip stage -- )   \ src: func_8004535C (the door's opening: the doors, to come)
+: through-door ( slot door room flip stage -- )   \ src: func_8004535C (the door opening: events.fs's door-walk)
     {: s n room flip stage :}  n room flip door-way {: w :}  w 0= if  exit  then
     s person-of {: p :}  0 p walking !
     stage 0< if  w out-area @  else  stage  then  p person-area !  w out-x @ p px !  w out-z @ p pz !  w out-heading @ p heading-now !
@@ -371,6 +371,8 @@ behaviour townsfolk
   on person-through-door ( slot door room flip stage -- )  through-door ;
   on person-attach ( slot route speed -- )  attach ;
   on person-get-in ( slot -- )  get-in ;
+  on person-in-car ( slot car -- )   \ src: cmd 0x50: parked, that car their partner - out when it unloads
+    swap person-of {: c p :}  0 p walking !  0 p forward !  c p riding !  the-town p person-area ! ;
   on car-arrived ( car -- )  unload ;
 end-behaviour
 

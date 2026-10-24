@@ -29,9 +29,5 @@ What the field shows over the picture while Matthew is the player's (src: `hud.c
 
 ## Status
 
-**Built:** the prompts and their facts, the clock, the corner map.
-
-**To come:**
-- the boat's fuel gauge (with the boat);
-- the prompts beside the message box (the events' prompt op);
-- the game-over panel's picture.
+**Built:** the prompts and their facts (the ring's and the boat's too), the events' prompt beside the message
+box, the clock, the corner map. (The boat has no gauge; the game-over panel is screen.fs's `draw-game-over`.)

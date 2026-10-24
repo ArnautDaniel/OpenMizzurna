@@ -29,5 +29,5 @@ facts `camera-moving?` ... for the events' waits.
 Low behind him (`camera-behind ( look-y dist eye-y )`, src: ovl019's crawl): at his place, turning as he turns,
 until a scene places the camera or he is the player's again.
 
-**Built**: following, fixed shots, the moves (seen: the opening's slow pan along the bed). **To come**:
-`camera-face` between two figures (the townsfolk), the town's and the car's follow.
+**Built**: following (on foot, in the town, behind the car: `camera-driving`), fixed shots, the moves (seen: the
+opening's slow pan along the bed), `camera-face` between two figures.

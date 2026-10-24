@@ -43,6 +43,4 @@ The slot is then written. The result is 0 when saved, 1 when not.
 
 ## Status
 
-**Built:** the file, saving from the save point, continuing.
-
-**To come:** the title's load menu, which will call `continue-game`.
+**Built:** the file, saving from the save point, continuing (the title's menu calls `continue-game`).
