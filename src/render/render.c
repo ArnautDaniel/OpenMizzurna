@@ -27,6 +27,7 @@ typedef struct Batch {
     uint32_t texture;
     int blend;          /* RENDER_BLEND_* */
     int behind;         /* drawn before the 3D */
+    int clip[4];        /* x y w h in window pixels (w 0: none) */
     int first, count;   /* vertices */
 } Batch;
 
@@ -40,6 +41,7 @@ static struct {
     int nbatches;
     int blend;   /* for the quads to come */
     int behind;
+    int clip[4];
     int loc_ps;
     int w, h;
     uint8_t *last_frame;   /* for render_screenshot: read back at render_end when asked */
@@ -199,6 +201,7 @@ void render_begin(int window_w, int window_h, float r, float g, float b) {
     R.nbatches = 0;
     R.blend = RENDER_BLEND_ALPHA;
     R.behind = 0;
+    memset(R.clip, 0, sizeof(R.clip));
     glViewport(0, 0, window_w, window_h);
     glClearNamedFramebufferfv(0, GL_COLOR, 0, clear);
     glClearNamedFramebufferfi(0, GL_DEPTH_STENCIL, 0, 1.0f, 0);
@@ -210,11 +213,15 @@ static uint32_t swap_rgba(uint32_t rgba) {   /* 0xRRGGBBAA to the bytes R G B A 
 
 static int new_batch(uint32_t texture) {   /* (the last batch, or a new one when the texture or blend differs) */
     if (R.nbatches == 0 || R.batches[R.nbatches - 1].texture != texture || R.batches[R.nbatches - 1].blend != R.blend ||
-        R.batches[R.nbatches - 1].behind != R.behind) {
+        R.batches[R.nbatches - 1].behind != R.behind || memcmp(R.batches[R.nbatches - 1].clip, R.clip, sizeof(R.clip)) != 0) {
+        Batch *b;
+
         if (R.nbatches == (int)(sizeof(R.batches) / sizeof(R.batches[0]))) {
             return 0;
         }
-        R.batches[R.nbatches++] = (Batch){texture, R.blend, R.behind, R.nverts, 0};
+        b = &R.batches[R.nbatches++];
+        *b = (Batch){texture, R.blend, R.behind, {0, 0, 0, 0}, R.nverts, 0};
+        memcpy(b->clip, R.clip, sizeof(R.clip));
     }
     return 1;
 }
@@ -255,6 +262,7 @@ void render_image_uv(GpuTexture t, float x, float y, float w, float h, float u0,
 }
 
 void render_blend(int mode) { R.blend = mode; }
+void render_clip(int x, int y, int w, int h) { R.clip[0] = x, R.clip[1] = y, R.clip[2] = w, R.clip[3] = h; }
 void render_behind(int behind) { R.behind = behind != 0; }
 
 void render_quad4(const float xy[8], const uint32_t rgba[4]) {
@@ -274,7 +282,11 @@ void render_quad4(const float xy[8], const uint32_t rgba[4]) {
 }
 
 void render_image_quad(GpuTexture t, const float xy[8], uint32_t rgba) {
-    static const float uv[8] = {0, 0, 1, 0, 0, 1, 1, 1};
+    render_image_quad_uv(t, xy, 0, 0, 1, 1, rgba);
+}
+
+void render_image_quad_uv(GpuTexture t, const float xy[8], float u0, float v0, float u1, float v1, uint32_t rgba) {
+    const float uv[8] = {u0, v0, u1, v0, u0, v1, u1, v1};
     Vertex2D *v, c[4];
     int k;
 
@@ -349,9 +361,17 @@ static void draw_batches(int behind) {
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             break;
         }
+        if (R.batches[i].clip[2] > 0) {   /* (GL's from the bottom left) */
+            glEnable(GL_SCISSOR_TEST);
+            glScissor(R.batches[i].clip[0], R.h - R.batches[i].clip[1] - R.batches[i].clip[3], R.batches[i].clip[2],
+                      R.batches[i].clip[3]);
+        } else {
+            glDisable(GL_SCISSOR_TEST);
+        }
         glBindTextureUnit(0, R.batches[i].texture);
         glDrawArrays(GL_TRIANGLES, R.batches[i].first, R.batches[i].count);
     }
+    glDisable(GL_SCISSOR_TEST);
     glBlendEquation(GL_FUNC_ADD);
 }
 

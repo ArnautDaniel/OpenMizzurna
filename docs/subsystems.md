@@ -51,7 +51,7 @@ phase-1 port's files (`../port/src/game/`), which name the decomp's functions; t
 | Pictures ([page](subsystems/pictures.md), built) | the small picture beside the message box, the big one above it | `ccdtim.c` |
 | Notebook ([page](subsystems/notebook.md), built) | the people and numbers Matthew knows | `fhbook.c` |
 | Map ([page](subsystems/map.md), built) | the town map: the places known, his arrow, the names | `mapscreen.c` |
-| HUD | the clock and fuel on screen, prompts | `hud.c`, `hudprim.c` |
+| HUD ([page](subsystems/hud.md), built) | the prompts, the clock, the corner map (the boat's fuel to come) | `hud.c`, `hudprim.c`, `cecheck.c` |
 | Weather | snow, the sky, the day's light | `snow.c`, `sky.c`, `clock.c` |
 | Sound ([page](subsystems/sound.md), built) | effects, held loops, the background music and ambience, XA, footsteps, the areas' own sounds | `sound.c`, `ambience.c` |
 | Fight ([page](subsystems/fight.md), built) | a fistfight: the pad or the AI each side, the hits, the game over | `fight.c` |

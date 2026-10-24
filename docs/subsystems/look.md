@@ -41,6 +41,12 @@ Things before him: ○ on an actor that has an examining (`examined-by!`, src: t
 answers cmd 0x31 with 6) runs it, else talking; □ on one with a taking (`taken-by!`, CMD_ACT, cmd 0x32's 4) runs
 it, else the place's act (talk.fs: `look-at-it`, `take-it`).
 
+## The prompts
+
+Each step, while he has control, look.fs works out what ○ and □ would do here, as an icon for the HUD (src:
+prompt_id): the facts `look-prompt` and `act-prompt` (−1 none), and `has-control?`. See
+`docs/subsystems/hud.md`.
+
 ## Status
 
 **Built**: the 242 rows (`scripts/events/checks.fs`), the subsystem (`scripts/look.fs`), area 1's rules

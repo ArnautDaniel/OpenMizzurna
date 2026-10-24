@@ -47,15 +47,18 @@ create tile-sets  town-columns town-rows * allot   tile-sets town-columns town-r
 
 \ ---- what a table answers: a row to run, or (asking the area) the zone ----
 variable zone-answer   variable zone-match   variable check-answer   variable check-match
+-1 constant no-prompt
+variable zone-prompt   variable check-prompt   \ the matched row's hint (src: the tables' arg; no-prompt none)
 : rows ( table -- first )   \ the table's rows here: the area's, or in the town the tile's he stands on
     {: t :}  area @ the-town <> if  area @ content t table-list @ exit  then
     t look-checks =  t act-checks = or 0= if  0 exit  then
     matthew-now drop nip tile-of  t town-list @ ;
 : zone-table ( table -- )   \ src: func_8003F1A8
-    -1 zone-answer !  0 zone-match !
+    -1 zone-answer !  0 zone-match !  no-prompt zone-prompt !
     at-zone drop {: t idx :}  idx 0< if  exit  then
     t rows  begin  dup while
         dup row-zone @ idx =  idx faces-zone? and if
+            dup row-prompt @ zone-prompt !
             dup row-kind @ ask-the-area = if  drop idx zone-answer !  else  zone-match !  then  exit
         then  next-row @
     repeat  drop
@@ -66,11 +69,12 @@ variable zone-answer   variable zone-match   variable check-answer   variable ch
     row-states @ {: st :}  matthew-perch {: p :}
     st $4000 and 0<>  p 1 = =  st $2000 and 0<>  p 2 = = and ;
 : check-table ( table -- )   \ src: func_8003EF88 (the rows for his perch: talk_state 1 or 2, else neither)
-    -1 check-answer !  0 check-match !
+    -1 check-answer !  0 check-match !  no-prompt check-prompt !
     at-zone nip {: t id :}  id 0< if  exit  then
     matthew-now nip nip nip {: h :}
     t rows  begin  dup while
         dup row-zone @ id =  over perch-fits? and  over h faced? and if
+            dup row-prompt @ check-prompt !
             dup row-kind @ ask-the-area = if  drop id check-answer !  else  check-match !  then  exit
         then  next-row @
     repeat  drop ;
@@ -118,15 +122,50 @@ variable circle-first   \ a word ○ tries before the rest ( -- handled? ): the 
     r act-check-xt @ if  zone-answer @ check-answer @ r act-check-xt @ execute  r act-do-xt @ execute
     else  run-rows  then ;
 
+\ ---- the prompts: what ○ and □ would do here, an icon each for the HUD (src: cecheck.c prompt_id, look_update /
+\ act_update): the thing before him (its answer), else the zone's row, else the check's, else the area's check
+\ through its table (prompts-NNN) ----
+create answer-prompts  7 , 12 , 16 , 6 , 20 , 3 , 5 ,   \ src: D_80096128: by the thing's answer
+1 constant answer-talk   4 constant answer-take   6 constant answer-examine
+variable look-prompt   no-prompt look-prompt !   variable act-prompt   no-prompt act-prompt !   \ (facts)
+: answer-prompt ( answer -- id )  1- cells answer-prompts + @ ;
+create prompt-areas  0 , 1 , 2 , 3 , 8 , 10 , 16 , 17 , 18 , 19 , 23 , 24 , 26 , 27 , -1 ,   \ (those with a table)
+: has-prompts? ( area -- flag )
+    {: a :}  prompt-areas  begin  dup @ 0< 0= while  dup @ a = if  drop true exit  then  cell+  repeat  drop false ;
+: area-prompt ( action -- id )   \ the area's check's
+    dup 0> 0= if  drop no-prompt exit  then
+    area @ content {: act a :}  a has-prompts? 0= if  no-prompt exit  then
+    $clear  s" prompts-" $+  a 100 < if  s" 0" $+  then  a 10 < if  s" 0" $+  then  a n>str $+  $@  act 1- exe-s16 ;
+: first-prompt ( answer zone check action -- id )   \ src: prompt_id
+    {: an zn ck ac :}  an if  an answer-prompt exit  then
+    zn 0< 0= if  zn exit  then  ck 0< 0= if  ck exit  then  ac area-prompt ;
+: look-answer ( -- answer )   \ (what the thing before him answers: examined, else talked to)
+    in-front dup 0< if  drop 0 exit  then  cells examinings + @ if  answer-examine  else  answer-talk  then ;
+: act-answer ( -- answer )   \ (taken)
+    in-front dup 0< if  drop 0 exit  then  cells takings + @ if  answer-take  else  0  then ;
+: area-action ( zone check xt -- action )  ?dup if  execute  else  2drop 0  then ;
+: prompts ( -- )
+    look-answer  look-zones zone-table  look-checks check-table
+    zone-prompt @ check-prompt @  zone-answer @ check-answer @ area @ content rules-of look-check-xt @ area-action
+    first-prompt look-prompt !
+    act-answer  act-zones zone-table  act-checks check-table
+    zone-prompt @ check-prompt @  zone-answer @ check-answer @ area @ content rules-of act-check-xt @ area-action
+    first-prompt act-prompt ! ;
+: no-prompts ( -- )  no-prompt look-prompt !  no-prompt act-prompt ! ;
+
 variable controlled   variable circle-was   variable square-was
 : pressed ( key var -- flag )  >r key-down? dup r@ @ 0= and swap r> ! ;   \ (a held button: once)
 variable pad-taken   \ a frame hook took the pad this step (src: the pad's field mode: a stool's keys)
 : take-pad ( -- )  true pad-taken ! ;
+: has-control? ( -- flag )   \ Matthew the player's (src: player_has_control: no event holding him)
+    controlled @ 0<>  events-running @ 0=  control-given @ or and ;
 : watch ( -- )
     pad-circle circle-was pressed  pad-square square-was pressed  {: o s :}
-    controlled @ 0=  events-running @ control-given @ 0= and or  area @ 0< or  matthew-there? 0= or if  exit  then
+    no-prompts
+    has-control? 0=  area @ 0< or  matthew-there? 0= or if  exit  then
     field-pad? 0= if  exit  then   \ (a screen up: the pad is its own)
     matthew-perch perch-in-car = if  exit  then   \ (driving: the car has the pad)
+    prompts
     events-running @ {: before :}   \ (an event that gave him back: he acts as the player - src: player_has_control)
     false pad-taken !  area @ content rules-of on-frame @ hook
     events-running @ before >  pad-taken @ or if  exit  then   \ (the hook may have started one, or have the pad)

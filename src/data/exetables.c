@@ -169,6 +169,7 @@ const ExeTable *exetable_named(const char *name) {
 
 /* the areas' tables: in an area's code file */
 #define SHOOTOUT_ROUND (224 + 612)   /* a round's 17 target rows (13 bytes; 3 to spare), 17 camera steps (36 bytes) */
+#define PROMPTS 32   /* (as many checks as any area has) */
 static const AreaTable kAreaTables[] = {
     {"shootout-5", 5, 0x80106A68, 4 * SHOOTOUT_ROUND,
      "the warehouse's shoot-out: four rounds (src: ovl005 shootout_update). A round: 17 rows of 13 bytes - u8 the "
@@ -192,6 +193,21 @@ static const AreaTable kAreaTables[] = {
     {"tail-zones", 27, 0x80109CA8, 5 * 16, "his sight's zones: s32 x, z, x, z - two corners (src: func_800296F8)"},
     {"robber-patrol", 27, 0x80109F1C, 8 * 8, "the robber's loop round the town: 8 points of s32 x, z (src: patrol)"},
     {"keypad-code", 27, 0x80101ED0, 4, "the door's code: a button's bit each (0x10 triangle, 0x20 circle, 0x40 cross, 0x80 square)"},
+    /* the HUD's prompts for the area's own checks (src: cecheck.c prompt_id: D_80095C7C, by the content area) */
+    {"prompts-000", 0, 0x801054F4, PROMPTS * 2, "the prompt (an icon) of the area's check k + 1 (s16 by k)"},
+    {"prompts-001", 1, 0x80103D94, PROMPTS * 2, "the prompt (an icon) of the area's check k + 1 (s16 by k)"},
+    {"prompts-002", 2, 0x801048D8, PROMPTS * 2, "the prompt (an icon) of the area's check k + 1 (s16 by k)"},
+    {"prompts-003", 3, 0x80102CA0, PROMPTS * 2, "the prompt (an icon) of the area's check k + 1 (s16 by k)"},
+    {"prompts-008", 8, 0x8010302C, PROMPTS * 2, "the prompt (an icon) of the area's check k + 1 (s16 by k)"},
+    {"prompts-010", 10, 0x80102680, PROMPTS * 2, "the prompt (an icon) of the area's check k + 1 (s16 by k)"},
+    {"prompts-016", 16, 0x80103B24, PROMPTS * 2, "the prompt (an icon) of the area's check k + 1 (s16 by k)"},
+    {"prompts-017", 17, 0x80102B48, PROMPTS * 2, "the prompt (an icon) of the area's check k + 1 (s16 by k)"},
+    {"prompts-018", 18, 0x80102164, PROMPTS * 2, "the prompt (an icon) of the area's check k + 1 (s16 by k)"},
+    {"prompts-019", 19, 0x80103630, PROMPTS * 2, "the prompt (an icon) of the area's check k + 1 (s16 by k)"},
+    {"prompts-023", 23, 0x801024E8, PROMPTS * 2, "the prompt (an icon) of the area's check k + 1 (s16 by k)"},
+    {"prompts-024", 24, 0x80103A74, PROMPTS * 2, "the prompt (an icon) of the area's check k + 1 (s16 by k)"},
+    {"prompts-026", 26, 0x80105828, PROMPTS * 2, "the prompt (an icon) of the area's check k + 1 (s16 by k)"},
+    {"prompts-027", 27, 0x8010A648, PROMPTS * 2, "the prompt (an icon) of the area's check k + 1 (s16 by k)"},
 };
 #define NAREATABLES (int)(sizeof(kAreaTables) / sizeof(kAreaTables[0]))
 

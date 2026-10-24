@@ -42,10 +42,14 @@ enum { RENDER_BLEND_ALPHA, RENDER_BLEND_ADD, RENDER_BLEND_SUBTRACT, RENDER_BLEND
 /* the 2D drawn from now on goes behind the 3D (the sky) or over it, as usual (until render_end) */
 void render_behind(int behind);
 void render_blend(int mode);
+/* the 2D drawn from now on only within this window rectangle (w 0: everywhere), until render_end */
+void render_clip(int x, int y, int w, int h);
 /* a four-cornered shape, a colour a corner (corners as the PlayStation's G4: 0 1 / 2 3) */
 void render_quad4(const float xy[8], const uint32_t rgba[4]);
 /* a picture on four corners (0 1 / 2 3: its top left, top right, bottom left, bottom right), tinted */
 void render_image_quad(GpuTexture t, const float xy[8], uint32_t rgba);
+/* the same with a part of it (uv 0..1) */
+void render_image_quad_uv(GpuTexture t, const float xy[8], float u0, float v0, float u1, float v1, uint32_t rgba);
 void render_text(float x, float y, float scale, uint32_t rgba, const char *s, int n);
 float render_text_width(float scale, int chars);
 float render_line_height(float scale);

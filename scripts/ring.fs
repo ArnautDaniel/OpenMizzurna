@@ -11,6 +11,7 @@ USING: engine actors messages keys screen clock areas figures matthew window ite
 
 variable ring-open
 : ring-up? ( -- flag )  ring-open @ 0<> ;
+variable ring-act-prompt   variable ring-look-prompt   \ (facts: the HUD's prompts while it's up; -1 none)
 
 <PRIVATE
 \ ---- the items: the executable's table, in the ring's order (src: D_80095B48) ----
@@ -104,6 +105,10 @@ variable circle   variable cross   variable square   variable triangle
     0 answer !  -1 faced !
     key-list? @ 0=  empty? or if  exit  then
     in-front dup faced !  dup 0< if  drop exit  then  item-now answer-to answer ! ;
+$13 constant show-prompt   3 constant read-prompt   \ src: func_80048500 / func_8004850C: □ shows, ○ reads
+: ring-prompts ( -- )   \ (src: ○'s whenever there's an item; □'s for a person who'd answer)
+    answer @ if  show-prompt ring-act-prompt !  then
+    empty? 0= if  read-prompt ring-look-prompt !  then ;
 : start-turn ( way -- )
     dup turn-way !  sel @ + #shown + #shown mod sel !  turn-frames turn !  -1 name-msg ! ;
 : turn-step ( -- )   \ src: ring_menu_rotate, a game frame
@@ -122,9 +127,10 @@ variable circle   variable cross   variable square   variable triangle
         #keys @ if  true show-list  else  nothing-there name-msg !  then  exit  then
     item-now none close-on ;
 : inputs ( -- )   \ src: ring_menu_input
+    -1 ring-act-prompt !  -1 ring-look-prompt !
     turn @ if  exit  then
     reading @ if  window-up? 0= if  false reading !  name-now  then  exit  then
-    faced-answer
+    faced-answer  ring-prompts
     square @ answer @ 0<> and if  item-now faced @ close-on exit  then
     circle @ if
         empty? if  exit  then

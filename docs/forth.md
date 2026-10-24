@@ -182,6 +182,9 @@ are built, each listed here.
 | `ambient-light` / `fog-color` / `fog!` | `r g b --` / `r g b --` / `flag --` | the ambient (4096 full), the fog's colour (128: as it is), fog on |
 | `image` / `image-size` / `draw-image` | `addr len -- image` / `image -- w h` / `image x y w h --` | a library picture drawn in 2D, tinted by the pen (a negative size flips) |
 | `draw-image-quad` | `image x0 y0 x1 y1 x2 y2 x3 y3 --` | the same on four corners (0 1 / 2 3), as two triangles (the item ring's cards) |
+| `draw-image-part` | `image u v w h x y w' h' --` | part of it (its texels u, v, w, h) into a rectangle (the HUD's sheets) |
+| `draw-image-quad-part` | `image u v w h x0 y0 x1 y1 x2 y2 x3 y3 --` | part of it on four corners (the corner map, turned) |
+| `clip-2d` | `x y w h --` | the 2D from now on only within that window rectangle (w 0: everywhere; the corner map's window) |
 | `behind` | `flag --` | the 2D from now on behind the 3D (the sky) or over it |
 | `records` / `#records` / `record` | `path len word len -- table` / `table -- n` / `table i -- addr` | a library text's lines that start with the word: each line's numbers a row (a cell each) |
 | `draw-billboard` | `image x z bottom top half yaw grey blend --` | an upright picture in the world facing the heading yaw (grey 128: as it is; blend: 0 solid, 1 half ...) |

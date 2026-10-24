@@ -499,6 +499,11 @@ static const SkyPiece kUiPieces[] = {
     {"map", 4, 0x1C0, 0x100, 0x1C0, 0x1FF, 0, 0, 256, 240},
     {"map-other", 4, 0x1C0, 0x100, 0x1C0, 0x1FE, 0, 0, 256, 240},
     {"map-dot", 4, 0x2C0, 0, 0x2D0, 0xFD, 0xA0, 0x98, 8, 8},
+    /* the HUD's (src: hud.c prompt_draw, func_800157B4, func_800168D0): the prompts' two frames, their icons (16 x
+     * 16, three frames down; from id 16 the second set), the clock's pieces and the pause label */
+    {"prompt-frames", 4, 0x300, 0, 0x300, 0xFD, 0, 0xB8, 96, 24},
+    {"prompt-icons", 4, 0x300, 0, 0x300, 0xFE, 0, 0, 256, 96},
+    {"clock", 4, 0x2C0, 0, 0x2D0, 0xFD, 0, 0x80, 256, 0x50},
 };
 
 #define MAP_ICONS 22

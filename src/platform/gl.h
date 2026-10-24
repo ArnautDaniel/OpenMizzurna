@@ -20,6 +20,7 @@ typedef void (APIENTRY *OM_GLPOLYGONOFFSET)(GLfloat, GLfloat);
 typedef void (APIENTRY *OM_GLSTENCILFUNC)(GLenum, GLint, GLuint);
 typedef void (APIENTRY *OM_GLSTENCILOP)(GLenum, GLenum, GLenum);
 typedef void (APIENTRY *OM_GLVIEWPORT)(GLint, GLint, GLsizei, GLsizei);
+typedef void (APIENTRY *OM_GLSCISSOR)(GLint, GLint, GLsizei, GLsizei);
 
 /* every GL function used: X(type, name). The objects are made and changed by name, OpenGL 4.5 style
  * (direct state access): glCreate*, glNamed*, glTexture*, glVertexArray*, glProgramUniform*. */
@@ -112,7 +113,8 @@ typedef void (APIENTRY *OM_GLVIEWPORT)(GLint, GLint, GLsizei, GLsizei);
     X(OM_GLPOLYGONOFFSET, glPolygonOffset) \
     X(OM_GLSTENCILFUNC, glStencilFunc) \
     X(OM_GLSTENCILOP, glStencilOp) \
-    X(OM_GLVIEWPORT, glViewport)
+    X(OM_GLVIEWPORT, glViewport) \
+    X(OM_GLSCISSOR, glScissor)
 
 #define GL_DECLARE(type, name) extern type p_##name;
 GL_FUNCTIONS(GL_DECLARE)
@@ -131,6 +133,7 @@ GL_FUNCTIONS(GL_DECLARE)
 #define glStencilFunc p_glStencilFunc
 #define glStencilOp p_glStencilOp
 #define glViewport p_glViewport
+#define glScissor p_glScissor
 #define glGetUniformLocation p_glGetUniformLocation
 #define glBlendEquation p_glBlendEquation
 #define glBlendColor p_glBlendColor

@@ -27,6 +27,8 @@ minutes/hour hours/day * constant minutes/day
 
 \ ---- the time, as a fact (the clock keeps it; anyone reads it) ----
 variable time-now
+variable clock-holds   \ (a fact: the reasons holding it, a bit each)
+: clock-running? ( -- flag )  clock-holds @ 0= ;
 : clock-time ( -- t )  time-now @ ;
 : between? ( day h1 m1 h2 m2 -- flag )   \ now within h1:m1 .. h2:m2 of that day (day 0: any; src: event_time_window)
     {: d h1 m1 h2 m2 :}  clock-time time>date {: day hour minute :}
@@ -57,12 +59,12 @@ end-state
 PRIVATE>
 
 behaviour clock
-  on spawned ( -- )  self subscribe tick  new-game-time dup now !  time-now !  story-stopped hold-bit holds ! ;
+  on spawned ( -- )  self subscribe tick  new-game-time dup now !  time-now !  story-stopped hold-bit dup holds !  clock-holds ! ;
   on tick ( -- )  running? if  run  then ;
   on set-time ( t -- )  jump-to ;
   on advance-minute ( -- )  now @ 1+ jump-to ;
-  on hold-clock ( reason -- )  hold-bit holds @ or holds ! ;
-  on release-clock ( reason -- )  hold-bit invert holds @ and holds ! ;
+  on hold-clock ( reason -- )  hold-bit holds @ or dup holds !  clock-holds ! ;
+  on release-clock ( reason -- )  hold-bit invert holds @ and dup holds !  clock-holds ! ;
   on in-town ( flag -- )  town? ! ;
   on what-time ( -- )  now @ sender send the-time ;
 end-behaviour
