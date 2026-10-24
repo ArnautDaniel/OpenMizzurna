@@ -8,11 +8,11 @@ USING: engine actors messages areas matthew window ;
 
 500 constant indoor-projection   400 constant town-projection   \ src: GsSetProjection(g_on_overworld ? 400 : 500)
 \ the town's profile (src: camera_reset / camera_follow on the overworld)
--700 constant town-eye-y   -600 constant town-look-y   -2850 constant town-dist
+-700 constant town-eye-y   -600 constant town-look-y   -2850 constant town-dist   -900 constant driving-eye-y
 \ the follow's lag: two of the original's frames (15 a second indoors, 30 in the town) - in steps (30 a second)
 4 constant indoor-lag   2 constant town-lag
 
-variable following   variable reset-due
+variable following   variable reset-due   variable driving   \ (following the car)
 create target 3 cells allot   variable yaw
 variable dist   variable eye-y   variable look-y   variable projection
 : target! ( x y z -- )  target 2 cells + !  target cell+ !  target ! ;
@@ -27,7 +27,7 @@ create history #history 4 * cells allot   variable newest
 : lag ( -- n )  area @ the-town = if  town-lag  else  indoor-lag  then ;
 
 : profile ( -- )   \ the scene's heights and distance (the town's own)
-    area @ the-town = if  town-eye-y town-look-y town-dist  town-projection
+    area @ the-town = if  driving @ if  driving-eye-y  else  town-eye-y  then  town-look-y town-dist  town-projection
     else  scene @ scene-camera  indoor-projection  then
     projection !  dist !  look-y !  eye-y ! ;
 : camera-reset ( -- )   \ src: camera_reset: behind Matthew now, the history filled with where he is
@@ -108,6 +108,7 @@ behaviour follow-camera
   on camera-fixed ( -- )  false following ! ;
   on camera-behind ( look-y dist eye-y -- )  eye-y !  dist !  look-y !  false following !  true low-behind ! ;
   on camera-reset ( -- )  camera-reset ;
+  on camera-driving ( flag -- )  driving !  profile ;
 end-behaviour
 
 : spawn-camera ( -- id )  follow-camera camera-state s" camera" spawn ;

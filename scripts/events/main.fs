@@ -9164,6 +9164,34 @@ defer L-80099064
     end-script
     ;
 
+\ $800965B0
+: into-the-car
+    -666 -3936 -1206 0 0 0 480 camera-set
+    matthew camera-at
+    3 door-sound
+    matthew 5701 0 anim
+    26 actor 5711 0 anim
+    matthew wait-anim
+    main-exe $8004301C native
+    end-script
+    ;
+
+\ $80096610
+: into-the-car-with
+    matthew as-this-one
+    -666 -3936 -1206 0 0 0 480 camera-set
+    matthew camera-at
+    3 door-sound
+    matthew 5701 0 anim
+    26 actor 5711 0 anim
+    matthew wait-anim
+    matthew 0 0 0 set-pos
+    26 actor 5712 0 anim
+    this-one 0 0 0 set-pos
+    main-exe $8004305C native
+    end-script
+    ;
+
 : L-80096904
     winona as-this-one
     matthew winona face-each-other

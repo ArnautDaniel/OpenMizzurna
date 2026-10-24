@@ -71,6 +71,8 @@ variable list-x   variable list-z
 : blocked? ( x z floor -- flag )   \ src: point_blocked (on foot)
     {: x z fl :}  x z fl false list-at {: l :}
     l off-the-map = if  true exit  then  x z l region-at no-region <> ;
+defer solid-billboard? ( x z -- flag )   \ a solid billboard there (src: billboard_blocked: billboards.fs, town.fs)
+:noname ( x z -- flag )  2drop false ; is solid-billboard?
 : zones-of ( x z floor -- list | 0 )  true list-at  dup off-the-map = if  drop 0  then ;
 : zone-at ( x z floor -- id | -1 )  {: x z fl :}  x z  x z fl zones-of  region-at ;   \ src: player_zone
 : zone-hit ( x z floor -- index id | -1 -1 )  {: x z fl :}  x z  x z fl zones-of  region-hit ;

@@ -3,7 +3,7 @@
 \ the tiles around the camera are loaded - a window of 6 x 6, moving with it - and those within two tiles of
 \ the camera's drawn, the ground and the buildings and props on it. Its 38 street lamps light up in the evening.
 IN: town
-USING: engine actors messages clock areas camera daylight billboards ;
+USING: engine actors messages clock areas floors camera daylight billboards ;
 
 6 constant window      \ tiles a side kept loaded (src: map_stream_update)
 2 constant reach       \ tiles drawn either side of the camera's (src: func_80107F80's 5 x 5)
@@ -57,6 +57,13 @@ create buildings columns rows * cells allot   buildings columns rows * cells era
     sprites the-stand stand-sprites !  s" town/sprites"  the-stand stand-folder-length !  the-stand stand-folder !
     draw-stand ;
 : draw-tile-all ( col row -- )  2dup draw-tile  draw-billboards ;
+: town-billboard? ( x z -- flag )   \ a solid billboard of the tile there (src: billboard_blocked on the overworld)
+    2dup tile-of 2dup on-map? 0= if  2drop 2drop false exit  then
+    2dup billboards {: x z c r t :}  t 0= if  false exit  then
+    t the-stand stand-rows !  0 the-stand stand-first !  t #records the-stand stand-count !
+    c r tile-origin  the-stand stand-z !  the-stand stand-x !  x z stand-blocks? ;
+: any-billboard? ( x z -- flag )  area @ the-town = if  town-billboard?  else  area-billboard?  then ;
+' any-billboard? is solid-billboard?
 : draw-town ( -- )
     area @ the-town <> if  exit  then
     camera-tile {: cc cr :}

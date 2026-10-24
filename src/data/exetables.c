@@ -67,6 +67,8 @@ static const ExeTable kTables[] = {
     {"flare-sizes", 0x800807E4, 14, "and its half size (u8)"},
     {"stars-x", 0x800806F8, 20 * 4, "the 20 stars: where across (s32; a 320-pixel repeat; src: func_8001F000)"},
     {"stars-y", 0x80080748, 20 * 4, "and how high above the horizon's top"},
+    {"billboard-solid-kinds", 0x8009587C, 34 * 2,
+     "an area's solid billboards: those whose sprite is under this (s16, by area; 0 none - src: billboard_blocked)"},
     {"snow-wobble", 0x8009583C, 32 * 2, "a snowflake's sway: 32 steps of s8 x, z (src: the flakes' loop)"},
     /* the fight (src: fight.c, SUGI) */
     {"fight-moves", 0x80092A80, 30 * 4,

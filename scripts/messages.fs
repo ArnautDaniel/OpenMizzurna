@@ -59,6 +59,7 @@ message walker-start ( slot node dest speed motion -- )   \ (to the walkers) alo
 message walker-stop ( slot -- )            \ stop walking there, stand (src: walker_remove)
 message flare-on ( slot -- )             \ (to the flare) a flare's glow at their feet, growing (src: ground_flare_draw)
 message shootout-start ( plan -- )         \ a shoot-out by an area's plan (shootout.fs; src: shootout_begin)
+message camera-driving ( flag -- )       \ (to the camera) following the car: its eye higher (src: camera_follow's g_driving)
 message camera-behind ( look-y dist eye-y -- ) \ low behind Matthew, turning as he turns (src: ovl019's duct crawl)
 message camera-reset ( -- )              \ behind Matthew now, where he stands (src: camera_reset)
 message figure-anim ( id next loop -- )  \ play motion id (looping or not); then `next` (-1: hold its last frame)
@@ -128,6 +129,7 @@ message car-park ( car route -- )        \ (to the traffic) stand at the route's
 message car-hide ( car -- )              \ off the roads
 message car-drive ( car route speed -- ) \ drive the route from its start (speed: units a frame)
 message car-carry ( car route speed -- ) \ the same with someone riding: car-arrived at its end
+message car-place ( car x y z heading -- )   \ there, off its route, standing (Matthew's car as he drives it)
 message car-stop ( car -- )              \ stop where it is, riders still in (src: carline_stop)
 message car-arrived ( car -- )           \ broadcast: a car with riders reached its route's end; they get out
 

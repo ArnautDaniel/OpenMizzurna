@@ -21,6 +21,10 @@ func_800243F0). 32 x 24 tiles of 19980 world units; tile (col, row)'s centre is 
   (src: billboard_draw); their sprites (`town/sprites.txt`, `town/sprites/<i>.png`) are drawn in the first light's
   colour, a sixth of its sum and at least 40 of 128 (src: D_800A3848; some at full brightness), their texels
   marked to blend averaged with what is behind. Engine: `records` (the texts' rows), `draw-billboard`.
+- Solid billboards (`solid-billboard? ( x z )`, floors.fs's deferred word; src: billboard_blocked / billboard_hit):
+  one whose sprite is under the area's count of solid kinds (the executable's `billboard-solid-kinds`, by area:
+  the town's 8) within 128 of the point - the tile's there in the town, the scene's set indoors. Matthew's steps
+  and the car stop at them.
 - The street lamps (38): off by day; from 16:01 they come on a few at a time (a lamp switches 7 frames in 8), from
   17:01 all are on; from 23:01 they go off a few at a time, and stay off until the evening. A lamp's windows and
   lights show their lit textures (the engine's `lamp`). Facts: `lamp-lit? ( i -- flag )`, `tiles-loaded`,

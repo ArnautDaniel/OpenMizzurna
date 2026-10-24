@@ -100,7 +100,10 @@ create area-rules  #content-areas rules * allot   area-rules #content-areas rule
 
 \ ---- pressing ○ and □ ----
 81 constant look-motion   \ src: func_8003FA8C (0x51)
+variable circle-first   \ a word ○ tries before the rest ( -- handled? ): the car's door (driving.fs)
+: circle-first! ( xt -- )  circle-first ! ;
 : press-circle ( -- )   \ src: look_execute: a thing before him (case 6: examined), a person (case 1: talking),
+    circle-first @ ?dup if  execute if  exit  then  then   \ src: case 5, the car: getting in
     in-front dup 0< 0= if  dup look-at-it if  drop exit  then  talk-with exit  then  drop   \ else the place (case 0)
     look-zones zone-table  look-checks check-table
     area @ content rules-of {: r :}
@@ -122,6 +125,7 @@ variable pad-taken   \ a frame hook took the pad this step (src: the pad's field
 : watch ( -- )
     pad-circle circle-was pressed  pad-square square-was pressed  {: o s :}
     controlled @ 0=  events-running @ control-given @ 0= and or  area @ 0< or  matthew-there? 0= or if  exit  then
+    matthew-perch perch-in-car = if  exit  then   \ (driving: the car has the pad)
     events-running @ {: before :}   \ (an event that gave him back: he acts as the player - src: player_has_control)
     false pad-taken !  area @ content rules-of on-frame @ hook
     events-running @ before >  pad-taken @ or if  exit  then   \ (the hook may have started one, or have the pad)

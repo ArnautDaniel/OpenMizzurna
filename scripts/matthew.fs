@@ -107,6 +107,7 @@ $B4 constant crate-ahead            \ the crate before him as he pushes (src: pl
     frot fdup fsin speed f@ f* frames f*  fswap fcos speed f@ f* frames f*   ( F: x z dx dz )
     frot f+ f>s  f+ f>s  swap ;
 : open? ( x z -- flag )  floor @ blocked? 0= ;
+: clear? ( x z -- flag )  2dup open? -rot solid-billboard? 0= and ;   \ (and no solid billboard: src player_update's check after the move)
 variable was-x   variable was-y   variable was-z   \ where he stood before his last step (src: player_restore_pos)
 : step-to ( x z -- )   \ his new place across the floor: indoors his height kept, in the town the ground's there
     {: x z :}  self body-pos 3f>s  was-z !  dup was-y !  swap was-x ! {: y :}
@@ -128,7 +129,7 @@ variable was-x   variable was-y   variable was-z   \ where he stood before his l
             slide-step +loop
         then
     then
-    probe 2dup open? if  step-to  push-along
+    probe 2dup clear? if  step-to  push-along
     else  2drop  0e speed f!  then ;
 \ ---- moved by a scene (src: actor_nav_step, actor_update's move_anim and turn - the events' walk-to, walk-forward,
 \ turn-to): toward a point at a speed a game frame, or straight on until idle; and turning at a speed ----
@@ -219,7 +220,8 @@ end-behaviour
     matthew-actor {: id :}  id body-pos 3f>s  id body-yaw f>s ;
 : matthew-was ( -- x y z )  was-x @ was-y @ was-z @ ;   \ where he stood before his last step (src: player_restore_pos's)
 : matthew-walking? ( -- flag )  heading-there @ 0<> ;   \ (facts: the events' wait-stop, wait-turned)
-: matthew-perch ( -- n )  perch @ ;   \ 0 on his feet, 1 on a crate, 2 on a stool
+4 constant perch-in-car   \ (driving: src partner = the car)
+: matthew-perch ( -- n )  perch @ ;   \ 0 on his feet, 1 on a crate, 2 on a stool, 3 holding a crate, 4 in the car
 : matthew-crawling? ( -- flag )  crawling @ 0<> ;
 : matthew-pushing? ( -- flag )  pushing @ 0< 0= ;
 : matthew-on-foot? ( -- flag )  on-foot @ 0<> ;

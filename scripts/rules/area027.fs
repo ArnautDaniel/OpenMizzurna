@@ -2,7 +2,7 @@
 \ doors - whether Matthew may go in now (their hours, the story) and the script that takes him in.
 IN: rules.area027
 USING: engine actors messages clock story-flags townsfolk areas look talk matthew knock events events.ovl027 tail
-    walkers ;
+    walkers driving ;
 
 27 constant this-area
 
@@ -107,6 +107,7 @@ this-area ovl $8010679C ' riverside-park native:     this-area ovl $801067D0 ' s
 this-area ovl $801067F0 ' lakeside-inn native:       this-area ovl $80106824 ' junkyard native:
 this-area ovl $80106858 ' mels-room native:          this-area ovl $8010688C ' rubin-apartments native:
 this-area ovl $80106D24 ' wolfs-hideout native:      this-area ovl $80106C50 ' school-hall native:
+this-area ovl $80106D04 ' fill-up native:   \ (the gas station's full service)
 
 \ ---- □ at a house's door knocks (src: ovl027 func_80106A04 / func_80106B3C: the act check's answer and the
 \ tile's rows' set make the key) ----

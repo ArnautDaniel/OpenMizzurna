@@ -39,7 +39,7 @@ phase-1 port's files (`../port/src/game/`), which name the decomp's functions; t
 | Items ([page](subsystems/items.md), the list) | what Matthew carries | `items.c` |
 | Talk ([page](subsystems/talk.md), Nozz) | ○ on a person: their story talks, the area's lines, their own | `char_talk.c`, the handlers |
 | Doors | locks, knocking, who answers | `door.c` (SCKNOCK.C) |
-| Car | driving, fuel, the roads; the boat | `ovl027.c` (`car_update`, `boat_update`), `hud.c` (fuel) |
+| Car ([page](subsystems/driving.md), driving built) | driving, fuel, the roads; the boat | `ovl027.c` (`car_update`, `boat_update`), `hud.c` (fuel) |
 | Traffic | the other cars on the roads | `carline.c` |
 | Camera | how each area and scene is framed, tweens, the shot a scene asks for | `camera.c` |
 | Window ([page](subsystems/window.md), built) | the message window, its pages and choices | `msgbox.c`, `ctexstr.c`, `cui.c` |

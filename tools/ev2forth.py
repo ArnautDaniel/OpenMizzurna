@@ -39,7 +39,9 @@ CAST = {0: 'matthew', 1: 'morgan', 2: 'nozz', 3: 'cohen', 5: 'samuel', 6: 'james
 
 # names given to scripts (scope, address) -> word; the rest are named by where they are
 NAMES = {('ovl001', 0x80103FE4): 'new-game-opening',   # src: game_start (boot.c), a new game
-         ('ovl001', 0x80103C60): 'wake-by-the-bed'}     # src: game_start, a loaded game
+         ('ovl001', 0x80103C60): 'wake-by-the-bed',
+         ('main', 0x800965B0): 'into-the-car',         # src: func_8004175C, alone
+         ('main', 0x80096610): 'into-the-car-with'}    # src: func_8004175C, with a passenger     # src: game_start, a loaded game
 
 # VM ops: Forth word and argument kinds (a actor, m text, n number, f frames, p place, i pack script)
 OPS = {
@@ -548,7 +550,10 @@ def main():
     # (and the minigames that are a script alone: src: minigame_main_start's)
     m = re.search(r'\nvoid minigame_main_start\(void\) \{\n(.*?)\n\}\n', main_c, re.S)
     main_minigames = set(int(x, 16) for x in re.findall(r'&D_([0-9A-F]{8})', m.group(1))) if m else set()
-    addrs = sorted(set(x for x in EV.started_scripts(main_c) if x < EXE_BASE + len(exe_img)) | main_minigames |
+    # (and the car's: getting in, alone or with a passenger - src: func_8004175C starts them on a thread it picks
+    # itself, not through event_start)
+    car_scripts = {0x800965B0, 0x80096610}
+    addrs = sorted(set(x for x in EV.started_scripts(main_c) if x < EXE_BASE + len(exe_img)) | main_minigames | car_scripts |
                    {x for _, x in check_targets if EXE_BASE <= x < EXE_BASE + len(exe_img)})
     tx = (lambda m: texts.get('033_4', m - 10000) if 10000 <= m < 15000 else None) if texts else (lambda m: None)
     main_src = Source('main', EV.Mem([(EXE_BASE, exe_img)]), {x: 'exe-%08X' % x for x in addrs})
