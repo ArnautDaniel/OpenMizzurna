@@ -59,8 +59,16 @@ it on a route, gets in and rides; at the route's end they get out beside their s
 - At a stop: their car is parked (`car-at`), hidden or stopped; a stop where they ride sets their car on its way
   (unless it is already carrying them).
 
-## To come
+## Pushed aside, Mel's bike
 
-The cars' own days (those without a person), Matthew riding
-(cmd 0x26, Morgan's car), pushing Matthew out of the way,
-headlights at night, Mel's bike.
+- A car on its way pushes Matthew (640) and his car (1024) out of its way in the town: within that room of it
+  (both ways, then round) each is put at its edge, on the line between them (src: func_80037D50, D_80093914).
+- Mel on his bike: while it's his partner (riding it, or `person-partner`, src func_80029B20) he's on it - its
+  place and way, riding (motion $1652), seen (src: func_80037D50's end).
+
+`tests/library/test_traffic.fs`.
+
+## Status
+
+Built. (The cars move only for their people and the scenes - src carline_start's callers; they have no lights
+of their own.)

@@ -3,7 +3,7 @@
 \ along each road's bends, easing their speed and turning toward the way ahead; a car parking takes a free lane
 \ at its parking node. Facts: car-now, car-driving?, car-carrying?, partner-of, beside.
 IN: traffic
-USING: engine actors messages areas figures ui ;
+USING: engine actors messages areas figures matthew ui ;
 
 26 constant first-car   35 constant #cars
 181 constant #car-routes
@@ -131,6 +131,24 @@ PRIVATE>
     c cx @  c dx @ s>f k f* f>s +  c x !
     c cy @  c dy @ s>f k f* f>s +  c y !
     c cz @  c dz @ s>f k f* f>s +  c z ! ;
+\ a car on its way pushes Matthew and his car out of its way, in the town (src: func_80037D50, D_80093914: each
+\ within its room of the car - both ways, then round - is put that far from it, on the line between them)
+640 constant matthew-room   26 constant his-car   1024 constant his-car-room
+: within-room? ( x z ox oz r -- flag )
+    {: x z ox oz r :}  x ox - abs r <  z oz - abs r < and  0= if  false exit  then
+    x ox - s>f fdup f*  z oz - s>f fdup f* f+  r s>f fdup f* f< ;
+: room-from ( x z ox oz r -- ox' oz' )   \ r from the car (x z), on its line to (ox oz)
+    {: x z ox oz r :}  x ox - s>f  z oz - s>f  fatan2 {: F: a :}
+    x s>f a fsin r s>f f* f- f>s  z s>f a fcos r s>f f* f- f>s ;
+: push-matthew ( c -- )
+    {: c :}  matthew-there? 0= if  exit  then  matthew-now drop {: mx my mz :}
+    c x @ c z @ mx mz matthew-room within-room? 0= if  exit  then
+    c x @ c z @ mx mz matthew-room room-from {: nx nz :}  nx my nz s" matthew" actor-named send figure-place ;
+: push-his-car ( c -- )
+    {: c :}  his-car car-of {: h :}  h c =  h shown @ 0= or if  exit  then
+    c x @ c z @ h x @ h z @ his-car-room within-room? 0= if  exit  then
+    c x @ c z @ h x @ h z @ his-car-room room-from  h z !  h x ! ;
+: push-aside ( c -- )  area @ the-town <> if  drop exit  then  dup push-matthew  push-his-car ;
 : drive ( c slot -- )   \ a step on (src: func_80037D50)
     {: c s :}  game-frames {: F: n :}
     c along f@  c speed f@ n f* f+  c along f!
@@ -143,7 +161,7 @@ PRIVATE>
             c dx @ s>f c dz @ s>f fatan2 full-turn s>f f* 2e pi f* f/ f>s  c heading @ unwrapped  c aim !
         then
     repeat
-    c place  c n turn
+    c place  c n turn  c push-aside
     c driving @ 0=  c carrying @ and if  false c carrying !  s broadcast car-arrived  then ;
 : start ( c route speed -- )   \ at the route's start in its lane, facing its first bend (src: carline_start)
     {: c n v :}  n route-of {: r :}  r 0= if  exit  then

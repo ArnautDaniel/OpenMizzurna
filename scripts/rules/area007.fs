@@ -82,8 +82,10 @@ create barton-lines  6 , $51 ,  10 , $52 ,  14 , $53 ,  18 , $54 ,  22 , $55 ,  
 ' bartons-talk father-barton conversation!
 
 \ ---- the C its events call ----
-: mel-with-his-car ( -- )   \ 0x801026C8 (src: func_80029B20: his car his partner again - ours is the table's -
-    the-town area @ = if  mel $1655 true anim  else  mel idle  then ;   \ in the town his motion by it, else none)
+40 constant mels-bike-slot
+: mel-with-his-car ( -- )   \ 0x801026C8 (src: func_80029B20: his bike his partner again - in the town his motion
+    mel mels-bike-slot s" townsfolk" actor-named send person-partner   \ by it, else none)
+    the-town area @ = if  mel $1655 true anim  else  mel idle  then ;
 : mel-off-his-car ( -- )  mel s" townsfolk" actor-named send person-unlink ;   \ 0x801026EC (src: partner = 0)
 this-area ovl $801026C8 ' mel-with-his-car native:   this-area ovl $801026EC ' mel-off-his-car native:
 

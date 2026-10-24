@@ -79,9 +79,13 @@ PRIVATE>
 : stands-at? ( slot x z -- flag )  {: s x z :}  s person-now drop nip  z =  swap x = and ;   \ (src: the at_xz checks)
 6 constant the-doctor   $545CB constant bedside-x   $45A6E constant bedside-z
 : james-visiting? ( -- flag )  the-doctor bedside-x bedside-z stands-at? ;   \ src: func_8002CBE8 (by Matthew's bed)
-: here? ( slot -- flag )   \ in the area being played, not in a car
+\ Mel on his bike: while it's his partner he's on it (src: func_80037D50's end: placed there, its way, riding)
+13 constant bike-rider   40 constant mels-bike   $1652 constant riding-mels-bike
+: on-mels-bike? ( slot -- flag )  dup bike-rider =  swap person-of riding @ mels-bike = and ;
+: here? ( slot -- flag )   \ in the area being played, not in a car (but Mel on his bike)
     dup figure? 0= if  drop false exit  then
-    person-of {: p :}  p person-area @ area @ =  p person-area @ 0< 0= and  p riding @ 0= and ;
+    dup on-mels-bike? {: s bike :}  s person-of {: p :}
+    p person-area @ area @ =  p person-area @ 0< 0= and  p riding @ 0= bike or and ;
 : walking? ( slot -- flag )  person-of walking @ 0<> ;
 : travelling? ( slot -- flag )  person-of travelling @ 0<> ;   \ between stops (src: a->travelling)
 : last-stop ( slot -- stop )  person-of at-stop @ ;          \ the stop they're at or left (src: a->stop)
@@ -294,8 +298,13 @@ $40000 constant too-far-squared   $FFFF constant near-squared
             -1 p door-wait +!  mx p px @ -  mz p pz @ -  heading-to p heading-now !
         then
     loop ;
+: ride-mels-bike ( -- )
+    bike-rider on-mels-bike? 0=  mels-bike car-shown? 0= or if  exit  then
+    bike-rider person-of {: p :}  mels-bike car-now {: x y z h :}
+    x p px !  y p py !  z p pz !  h p heading-now !  the-town p person-area !
+    bike-rider person-anim-done? if  riding-mels-bike -1 true  p moving play  then ;
 : animate ( -- )   \ walking and motions for everyone (the routes wait on them, seen or not)
-    door-waits
+    door-waits  ride-mels-bike
     companion-mode @ along-on-foot =  companion @ 0< 0= and  matthew-there? and if  follow  then
     #slots 0 do
         i scheduled?  i extra? i person-of person-area @ 0< 0= and  or if
@@ -356,6 +365,7 @@ behaviour townsfolk
   on person-variant ( slot kind -- )  swap person-of shown-kind ! ;   \ src: actor_model_variant
   on person-away ( slot -- )  person-of {: p :}  true p travelling !  0 p walking !  -1 p person-area ! ;
   on person-unlink ( slot -- )  person-of 0 swap riding ! ;
+  on person-partner ( slot car -- )  swap person-of riding ! ;   \ src: func_80029B20: their car their partner again
   on person-idle ( slot -- )  dup person-of {: p :}  0 p walking !  0 p forward !  0 -1 true show ;
   on person-forward ( slot speed motion -- )  rot person-of {: v m p :}  v p forward !  m p forward-motion ! ;
   on person-anim ( slot id next loop -- )  show ;

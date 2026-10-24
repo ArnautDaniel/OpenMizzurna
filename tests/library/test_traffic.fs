@@ -1,5 +1,5 @@
 \ the cars (docs/subsystems/traffic.md), on the game's own data: the library the tests imported
-USING: tester engine actors messages traffic townsfolk events events.car-routes ;
+USING: tester engine actors messages areas matthew traffic traffic.private townsfolk events events.car-routes ;
 39 constant nozz-car
 
 testing who goes with whom (the partners table): Nozz drives car 39, Matthew car 26; slot 4 has none
@@ -47,5 +47,17 @@ testing a trip that goes on when the car arrives: Nozz at his stop 2 (src: his C
 T{ nozz 2 the-townsfolk send person-goto-stop  deliver  nozz route-thread -> -1 }T
 T{ nozz 11 3000 the-townsfolk send person-attach  deliver  steps-until-parked drop  deliver  deliver
    nozz route-thread 0< -> false }T
+
+testing a car pushes Matthew out of its way, in the town: within its room (640) he's put at its edge
+: to-town ( -- )  the-town 0 s" areas" actor-named send enter-area  deliver ;
+: car-at ( car x z -- )  {: c x z :}  c x 0 z 0 s" traffic" actor-named send car-place  deliver ;
+: apart ( x z x' z' -- d )  rot - s>f fdup f*  - s>f fdup f* f+ fsqrt f>s ;
+T{ to-town  300000 0 300000 s" matthew" actor-named send figure-place  deliver
+   30 300100 300000 car-at  30 car-of push-aside  deliver
+   matthew-now drop nip  300100 300000 apart  matthew-room - abs 2 < -> true }T
+testing Mel on his bike: his partner, he rides it - there, its way, seen
+T{ 40 360000 310000 car-at  mel 40 the-townsfolk send person-partner  deliver  1 tick-tasks actors-frame
+   mel person-now drop nip  mel here? -> 360000 310000 true }T
+T{ mel the-townsfolk send person-unlink  deliver -> }T
 
 test-summary
