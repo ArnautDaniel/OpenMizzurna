@@ -513,6 +513,14 @@ PRIM(p_on) {
     k = parse_kind(f, "on");
     PUSH(k);
     forth_execute(f, forth_find(f, ":noname", 7));
+    /* its name, for the call chain (its length kept 0: no word is found by it) */
+    {
+        char name[2 * MNAME_MAX + 8];
+
+        snprintf(name, sizeof(name), "%s:on %s", sDefining->name, sKinds[k].name);
+        memcpy(f->latest->name, name, WORD_NAME_MAX);   /* (a long one cut short) */
+        f->latest->name[WORD_NAME_MAX] = 0;
+    }
 }
 PRIM(p_end_behaviour) {
     Cell x;

@@ -27,6 +27,16 @@ for this game. Names are case-insensitive.
 - **Errors** print a message with the file and line and unwind: at the prompt the stacks are
   emptied; a task that errs is stopped; an `on-tick` hook that errs is removed. `' word catch`
   runs a word and gives -1 instead of unwinding (`error-message` has the text).
+- **The call chain**: an error prints the words that were running under its message, innermost first
+  (`in meta-c@ <- shown? <- show-objects <- areas:on show-scene`); a handler is named for its behaviour
+  and message (`areas:on show-scene`, though no word is found by that name). So does a crash, a bad
+  address (`crashed (a bad address), in the words ...`) or a sanitizer's report. `backtrace ( -- addr len )`
+  gives the chain now: the word calling it first. It is read from the return stacks and from where each
+  call from C (`forth_execute`, a handler, a task's turn) began.
+- **Lent memory** (`forth_guard`: the library's files, `library-file` and `exe-table`): in a debug build
+  (`memory-checked?` true) a fetch or store that reaches past a file's end is an error naming it
+  (`past the end of cdbin/027_4/0.bin (its 4 bytes): 1 at byte 8`), not a quiet read of whatever lies
+  beyond; each file is padded so that an overrun lands where it is seen. A release doesn't check.
 
 ## Vocabularies (as in Factor)
 

@@ -105,4 +105,13 @@ end-behaviour
 greedy counter-state s" g" spawn constant g
 T{ 11 22  3 g send ping  deliver -> 11 22 }T
 
+testing a handler's name in the call chain: its behaviour and message
+actors-reset
+create traced 64 allot   variable traced-n
+behaviour tracing
+  on ping ( n -- )  drop  backtrace dup traced-n !  traced swap move ;
+end-behaviour
+tracing counter-state s" t" spawn constant tr
+T{ 0 tr send ping  deliver  traced traced-n @ s" tracing:on ping" s= -> true }T
+
 test-summary

@@ -114,6 +114,22 @@ typedef struct Source {
 
 typedef void (*OutputFn)(void *ctx, const char *s, size_t n);
 
+#define NESTING_MAX 64   /* forth_execute and task turns within each other, kept for the call chain */
+/* where a nesting began: the task that was running, its next cell, its return stack's depth */
+typedef struct Nesting {
+    Task *t;
+    Cell *ip;
+    int rp;
+} Nesting;
+
+/* memory lent to the scripts (a library file's bytes): reaching past its end is an error (forth_guard) */
+typedef struct Guard {
+    const uint8_t *start;
+    size_t n;            /* its bytes */
+    size_t span;         /* the bytes from start that count as its (its n and the padding past them) */
+    const char *name;
+} Guard;
+
 struct Forth {
     /* the dictionary: one block of memory; `here` is the next free byte */
     uint8_t *mem, *here, *end;
@@ -151,6 +167,7 @@ struct Forth {
     long frame;             /* advanced by forth_run_tasks */
     int tasks_paused;       /* the scheduler stands still (frames don't count): the game paused */
     int depth;              /* nested forth_execute calls (yield may only leave the outermost) */
+    Nesting nesting[NESTING_MAX];   /* [d]: where depth d + 1 began */
     int task_depth;         /* the depth a task runs at */
     int yielded;
     long budget;            /* steps a task may take in one turn before it is stopped (a loop that
@@ -175,6 +192,9 @@ struct Forth {
     Word *w_lit, *w_flit, *w_litstring, *w_exit, *w_halt, *w_comma, *w_does, *w_type;
     char sbuf[16][256];     /* s" in interpret mode: rotating buffers (copy what must last) */
     int nsbuf;
+
+    Guard *guards;          /* sorted by start */
+    int nguards, guards_cap;
 };
 
 /* life */
@@ -228,8 +248,17 @@ Cell forth_pop(Forth *f);
 void forth_fpush(Forth *f, Float x);
 Float forth_fpop(Forth *f);
 
-/* report an error: prints it and unwinds to the catch point (does not return) */
+/* report an error: prints it and the words running, and unwinds to the catch point (does not return) */
 _Noreturn void forth_error(Forth *f, const char *fmt, ...);
+
+/* the words running now, innermost first ("inner <- outer <- areas:on show-scene"); its length */
+size_t forth_backtrace(Forth *f, char *buf, size_t n);
+/* a crash (a bad address, a sanitizer's report) says which words were running: the process's one Forth */
+void forth_report_crashes(Forth *f);
+
+/* lend the scripts n bytes at start, padded to span (span >= n: the allocation's bytes past them): in a
+ * debug build (NDEBUG unset) a fetch or store from start that reaches past n is an error naming it */
+void forth_guard(Forth *f, const void *start, size_t n, size_t span, const char *name);
 
 /* output */
 void forth_type(Forth *f, const char *s, size_t n);

@@ -36,6 +36,7 @@ int main(int argc, char **argv) {
 
     forth_prim(f, "exit-status", p_exit_status);
     bind_mactor(f);
+    forth_report_crashes(f);
     forth_add_root(f, dir);
     snprintf(prelude, sizeof(prelude), "%s/prelude.fs", dir);
     if (forth_include(f, prelude) != 0) {

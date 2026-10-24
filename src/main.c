@@ -96,6 +96,7 @@ static int start_scripts(Engine *e) {
 
     e->forth = forth_new(16 << 20);
     forth_set_output(e->forth, console_output, &e->console);
+    forth_report_crashes(e->forth);
     bind_engine(e->forth);
     bind_mactor(e->forth);
     forth_prim(e->forth, "exit-status", p_exit_status);

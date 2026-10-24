@@ -4,6 +4,7 @@
 
 #include <ctype.h>
 #include <math.h>
+#include <signal.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -114,7 +115,8 @@ void forth_set_output(Forth *f, OutputFn out, void *ctx) {
     f->out_ctx = ctx;
 }
 
-#define ERROR_REPEATS_SAID 300   /* (a repeated error's count: each 300, ten seconds of frames) */
+#define ERROR_REPEATS_SAID 300
+#define BACKTRACE_BYTES 1024   /* (a repeated error's count: each 300, ten seconds of frames) */
 
 _Noreturn void forth_error(Forth *f, const char *fmt, ...) {
     va_list ap;
@@ -126,7 +128,7 @@ _Noreturn void forth_error(Forth *f, const char *fmt, ...) {
     if (f->silent > 0) {
         /* inside `catch`: the caller decides what to say */
     } else {
-        char line[sizeof(f->said) + 300];
+        char line[sizeof(f->said) + 300], chain[BACKTRACE_BYTES];
 
         f->errors++;
         if (f->nsrc > 0) {
@@ -149,6 +151,9 @@ _Noreturn void forth_error(Forth *f, const char *fmt, ...) {
             snprintf(f->said, sizeof(f->said), "%s", f->error);
             f->repeats = 0;
             forth_printf(f, "\n%s\n", line);
+            if (forth_backtrace(f, chain, sizeof(chain)) > 0) {
+                forth_printf(f, "  in %s\n", chain);
+            }
         }
     }
     if (f->catch == NULL) {
@@ -373,6 +378,141 @@ static Word *word_after(Forth *f, Word *w) {
     return best;
 }
 
+/* ---- the call chain: the words running, from the return stacks and where each nesting began ---- */
+
+#define BACKTRACE_WORDS 24
+
+/* a return address (or a task's next cell): inside the dictionary, just after a word's call */
+static int code_address(Forth *f, const Cell *p) {
+    const Word *w;
+
+    if ((const uint8_t *)p <= f->mem || (const uint8_t *)p >= f->here || ((uintptr_t)p % sizeof(Cell)) != 0) {
+        return 0;
+    }
+    w = (const Word *)p[-1];
+    return (const uint8_t *)w >= f->mem && (const uint8_t *)w < f->here && ((uintptr_t)w % sizeof(Cell)) == 0 &&
+           w->code != NULL;
+}
+
+/* the word whose body holds p: the nearest header before it */
+static const Word *word_holding(Forth *f, const void *p) {
+    const Word *best = NULL, *x;
+    Vocab *v;
+
+    for (v = f->vocabs; v != NULL; v = v->next) {
+        for (x = v->latest; x != NULL; x = x->link) {
+            if ((const void *)x < p && (best == NULL || x > best)) {
+                best = x;
+            }
+        }
+    }
+    return best;
+}
+
+typedef struct Chain {
+    char *buf;
+    size_t n, k;
+    int words;
+} Chain;
+
+static void chain_add(Forth *f, Chain *c, const Cell *p) {
+    const Word *w;
+    const char *name;
+
+    if (!code_address(f, p) || (w = word_holding(f, p - 1)) == NULL) {
+        return;
+    }
+    if (c->words == BACKTRACE_WORDS) {
+        name = "...";
+    } else if (c->words > BACKTRACE_WORDS) {
+        return;
+    } else {
+        name = w->len > 0 || w->name[0] ? w->name : ":noname";   /* (a handler: named, though not findable) */
+    }
+    if (c->k < c->n) {
+        c->k += (size_t)snprintf(c->buf + c->k, c->n - c->k, "%s%s", c->words > 0 ? " <- " : "", name);
+        if (c->k >= c->n) {
+            c->k = c->n - 1;
+        }
+    }
+    c->words++;
+}
+
+size_t forth_backtrace(Forth *f, char *buf, size_t n) {
+    Chain c = {buf, n, 0, 0};
+    Task *t = f->t;
+    Cell *ip;
+    int level, top;
+
+    if (n == 0) {
+        return 0;
+    }
+    buf[0] = 0;
+    if (t == NULL) {
+        return 0;
+    }
+    ip = t->ip;
+    top = t->rp;
+    for (level = f->depth;; level--) {   /* each nesting: its words, innermost first, then whose called it */
+        const Nesting *at = level > 0 && level <= NESTING_MAX ? &f->nesting[level - 1] : NULL;
+        int bottom = at != NULL && at->t == t ? at->rp : 0, i;
+
+        chain_add(f, &c, ip);
+        for (i = top - 1; i >= bottom && i < STACK_CELLS; i--) {
+            chain_add(f, &c, (const Cell *)t->rs[i]);
+        }
+        if (at == NULL || at->t == NULL) {
+            break;
+        }
+        t = at->t;
+        ip = at->ip;
+        top = at->rp;
+    }
+    return c.k;
+}
+
+PRIM(p_backtrace) {   /* ( -- addr len ) the words running: this one's caller first */
+    static char chain[BACKTRACE_BYTES];
+    size_t n = forth_backtrace(f, chain, sizeof(chain));
+
+    PUSH(chain);
+    PUSH(n);
+}
+
+static Forth *sCrashForth;
+
+static void crash_report(const char *what) {
+    char chain[BACKTRACE_BYTES];
+
+    if (sCrashForth != NULL && forth_backtrace(sCrashForth, chain, sizeof(chain)) > 0) {
+        fprintf(stderr, "%s, in the words %s\n", what, chain);
+    }
+}
+
+#if defined(__SANITIZE_ADDRESS__)
+/* (the address sanitizer's report: called by it as it reports - its own signal handlers kept) */
+void __asan_on_error(void);
+void __asan_on_error(void) { crash_report("the sanitizer's report below"); }
+#else
+static void on_crash(int sig) {
+    crash_report(sig == SIGSEGV ? "crashed (a bad address)" : sig == SIGFPE ? "crashed (arithmetic)" : "crashed");
+    signal(sig, SIG_DFL);
+    raise(sig);
+}
+#endif
+
+void forth_report_crashes(Forth *f) {
+    sCrashForth = f;
+#if !defined(__SANITIZE_ADDRESS__)
+    signal(SIGSEGV, on_crash);
+    signal(SIGFPE, on_crash);
+    signal(SIGILL, on_crash);
+#ifdef SIGBUS
+    signal(SIGBUS, on_crash);
+#endif
+#endif
+}
+
 /* ---- the inner interpreter ---- */
 
 /* run threaded code from IP until it stops (IP = NULL: `halt`) or the task yields */
@@ -393,6 +533,9 @@ void forth_execute(Forth *f, Word *w) {
 
     code[0] = (Cell)w;
     code[1] = (Cell)f->w_halt;
+    if (f->depth < NESTING_MAX) {   /* (for the call chain: whose words called this) */
+        f->nesting[f->depth] = (Nesting){f->t, saved, f->t->rp};
+    }
     IP = code;
     f->depth++;
     run(f);
@@ -724,6 +867,58 @@ PRIM(p_0gt) { Cell *s = top(f, 1); *s = *s > 0 ? -1 : 0; }
 
 /* ---- memory ---- */
 
+/* ---- memory lent to the scripts (forth_guard): checked in a debug build ---- */
+
+void forth_guard(Forth *f, const void *start, size_t n, size_t span, const char *name) {
+    int i;
+
+    if (f->nguards == f->guards_cap) {
+        int cap = f->guards_cap ? f->guards_cap * 2 : 256;
+        Guard *g = realloc(f->guards, (size_t)cap * sizeof(Guard));
+
+        if (g == NULL) {
+            return;   /* (unchecked, then) */
+        }
+        f->guards = g;
+        f->guards_cap = cap;
+    }
+    for (i = f->nguards; i > 0 && f->guards[i - 1].start > (const uint8_t *)start; i--) {
+        f->guards[i] = f->guards[i - 1];
+    }
+    f->guards[i] = (Guard){start, n, span > n ? span : n, name};
+    f->nguards++;
+}
+
+#ifndef NDEBUG
+static void guard_check(Forth *f, Cell a, size_t size) {
+    const uint8_t *p = (const uint8_t *)a;
+    int lo = 0, hi = f->nguards - 1, at = -1;
+
+    if (f->nguards == 0 || (p >= f->mem && p < f->end)) {   /* (the dictionary's: variables, the most) */
+        return;
+    }
+    while (lo <= hi) {   /* the last guard starting at or before p */
+        int mid = (lo + hi) / 2;
+
+        if (f->guards[mid].start <= p) {
+            at = mid;
+            lo = mid + 1;
+        } else {
+            hi = mid - 1;
+        }
+    }
+    if (at >= 0) {
+        const Guard *g = &f->guards[at];
+        size_t off = (size_t)(p - g->start);
+
+        if (off < g->span && off + size > g->n) {
+            forth_error(f, "past the end of %s (its %zu bytes): %zu at byte %zu", g->name, g->n, size, off);
+        }
+    }
+}
+#endif
+
+static void *addr_n(Forth *f, Cell a, size_t size);
 static void *addr(Forth *f, Cell a) {
     /* (nothing is mapped in the lowest 64 KiB, nor at a "negative" address: a number where an
      * address belongs - a value fetched again, a field's offset used alone - is an error here,
@@ -733,37 +928,47 @@ static void *addr(Forth *f, Cell a) {
     }
     return (void *)a;
 }
+/* an address the scripts reach size bytes at */
+static void *addr_n(Forth *f, Cell a, size_t size) {
+    void *p = addr(f, a);
+#ifndef NDEBUG
+    guard_check(f, a, size);
+#else
+    (void)size;
+#endif
+    return p;
+}
 /* (cells anywhere: an address needn't be aligned - a structure's field, a byte table's) */
-PRIM(p_fetch) { Cell a = POP(), x; memcpy(&x, addr(f, a), sizeof(x)); PUSH(x); }
-PRIM(p_store) { Cell a = POP(), x = POP(); memcpy(addr(f, a), &x, sizeof(x)); }
+PRIM(p_fetch) { Cell a = POP(), x; memcpy(&x, addr_n(f, a, sizeof(x)), sizeof(x)); PUSH(x); }
+PRIM(p_store) { Cell a = POP(), x = POP(); memcpy(addr_n(f, a, sizeof(x)), &x, sizeof(x)); }
 PRIM(p_pstore) {
     Cell a = POP(), x = POP(), y;
-    void *p = addr(f, a);
+    void *p = addr_n(f, a, sizeof(y));
 
     memcpy(&y, p, sizeof(y));
     y = (Cell)((UCell)y + (UCell)x);
     memcpy(p, &y, sizeof(y));
 }
-PRIM(p_cfetch) { Cell a = POP(); PUSH(*(uint8_t *)addr(f, a)); }
-PRIM(p_cstore) { Cell a = POP(), x = POP(); *(uint8_t *)addr(f, a) = (uint8_t)x; }
-PRIM(p_wfetch) { Cell a = POP(); uint16_t v; memcpy(&v, addr(f, a), 2); PUSH(v); }
-PRIM(p_swfetch) { Cell a = POP(); int16_t v; memcpy(&v, addr(f, a), 2); PUSH(v); }
-PRIM(p_wstore) { Cell a = POP(), x = POP(); uint16_t v = (uint16_t)x; memcpy(addr(f, a), &v, 2); }
-PRIM(p_lfetch) { Cell a = POP(); uint32_t v; memcpy(&v, addr(f, a), 4); PUSH(v); }
-PRIM(p_slfetch) { Cell a = POP(); int32_t v; memcpy(&v, addr(f, a), 4); PUSH(v); }
-PRIM(p_lstore) { Cell a = POP(), x = POP(); uint32_t v = (uint32_t)x; memcpy(addr(f, a), &v, 4); }
+PRIM(p_cfetch) { Cell a = POP(); PUSH(*(uint8_t *)addr_n(f, a, 1)); }
+PRIM(p_cstore) { Cell a = POP(), x = POP(); *(uint8_t *)addr_n(f, a, 1) = (uint8_t)x; }
+PRIM(p_wfetch) { Cell a = POP(); uint16_t v; memcpy(&v, addr_n(f, a, 2), 2); PUSH(v); }
+PRIM(p_swfetch) { Cell a = POP(); int16_t v; memcpy(&v, addr_n(f, a, 2), 2); PUSH(v); }
+PRIM(p_wstore) { Cell a = POP(), x = POP(); uint16_t v = (uint16_t)x; memcpy(addr_n(f, a, 2), &v, 2); }
+PRIM(p_lfetch) { Cell a = POP(); uint32_t v; memcpy(&v, addr_n(f, a, 4), 4); PUSH(v); }
+PRIM(p_slfetch) { Cell a = POP(); int32_t v; memcpy(&v, addr_n(f, a, 4), 4); PUSH(v); }
+PRIM(p_lstore) { Cell a = POP(), x = POP(); uint32_t v = (uint32_t)x; memcpy(addr_n(f, a, 4), &v, 4); }
 PRIM(p_move) {   /* ( src dst n -- ) */
     Cell n = POP(), d = POP(), s = POP();
 
     if (n > 0) {
-        memmove(addr(f, d), addr(f, s), (size_t)n);
+        memmove(addr_n(f, d, (size_t)n), addr_n(f, s, (size_t)n), (size_t)n);
     }
 }
 PRIM(p_fill) {   /* ( addr n byte -- ) */
     Cell c = POP(), n = POP(), a = POP();
 
     if (n > 0) {
-        memset(addr(f, a), (int)c, (size_t)n);
+        memset(addr_n(f, a, (size_t)n), (int)c, (size_t)n);
     }
 }
 PRIM(p_cells) { *top(f, 1) *= (Cell)sizeof(Cell); }
@@ -834,10 +1039,10 @@ PRIM(p_fswap) { Float b = FPOP(), a = FPOP(); FPUSH(b); FPUSH(a); }
 PRIM(p_fover) { Float b = FPOP(), a = FPOP(); FPUSH(a); FPUSH(b); FPUSH(a); }
 PRIM(p_frot) { Float c = FPOP(), b = FPOP(), a = FPOP(); FPUSH(b); FPUSH(c); FPUSH(a); }
 PRIM(p_fdepth) { PUSH(f->t->fp); }
-PRIM(p_ffetch) { Float x; memcpy(&x, addr(f, POP()), sizeof(x)); FPUSH(x); }
-PRIM(p_fstore) { Float x = FPOP(); memcpy(addr(f, POP()), &x, sizeof(x)); }
-PRIM(p_sffetch) { float x; memcpy(&x, addr(f, POP()), 4); FPUSH(x); }
-PRIM(p_sfstore) { float x = (float)FPOP(); memcpy(addr(f, POP()), &x, 4); }
+PRIM(p_ffetch) { Float x; memcpy(&x, addr_n(f, POP(), sizeof(x)), sizeof(x)); FPUSH(x); }
+PRIM(p_fstore) { Float x = FPOP(); memcpy(addr_n(f, POP(), sizeof(x)), &x, sizeof(x)); }
+PRIM(p_sffetch) { float x; memcpy(&x, addr_n(f, POP(), 4), 4); FPUSH(x); }
+PRIM(p_sfstore) { float x = (float)FPOP(); memcpy(addr_n(f, POP(), 4), &x, 4); }
 
 /* ---- output ---- */
 
@@ -2098,6 +2303,9 @@ static void task_turn(Forth *f, Task *t) {
         t->state = TASK_DONE;
     } else {
         f->catch = &jb;
+        if (f->depth < NESTING_MAX) {
+            f->nesting[f->depth] = (Nesting){saved, saved->ip, saved->rp};
+        }
         f->t = t;
         f->yielded = 0;
         f->budget = TASK_BUDGET;
@@ -2271,7 +2479,7 @@ static void define_core(Forth *f) {
         {"list", p_list}, {"list-free", p_list_free}, {"push", p_push}, {"pop", p_pop}, {"nth", p_nth},
         {"nth!", p_nth_store}, {"length", p_length}, {"list-clear", p_list_clear}, {"{", p_brace_open},
         {"}", p_brace_close},
-        {"words", p_words}, {"see", p_see}, {"enum:", p_enum}, {"strings:", p_strings}, {"vocabs", p_vocabs}, {"vocab-words", p_vocab_words},
+        {"words", p_words}, {"backtrace", p_backtrace}, {"see", p_see}, {"enum:", p_enum}, {"strings:", p_strings}, {"vocabs", p_vocabs}, {"vocab-words", p_vocab_words},
         {"IN:", p_in}, {"USING:", p_using}, {"USE:", p_use}, {"<PRIVATE", p_private_begin},
         {"PRIVATE>", p_private_end}, {"bye", p_bye}, {"catch", p_catch}, {"error-message", p_error_message},
         {"i", p_i}, {"j", p_j}, {"leave", p_leave}, {"unloop", p_unloop},
@@ -2319,6 +2527,11 @@ static void define_core(Forth *f) {
     f->w_comma = forth_find(f, ",", 1);
     f->w_type = forth_find(f, "type", 4);
     forth_constant(f, "cell", (Cell)sizeof(Cell));
+#ifndef NDEBUG
+    forth_constant(f, "memory-checked?", -1);   /* (a debug build: lent memory's ends checked - forth_guard) */
+#else
+    forth_constant(f, "memory-checked?", 0);
+#endif
 }
 
 Forth *forth_new(size_t dict_bytes) {
@@ -2343,6 +2556,10 @@ Forth *forth_new(size_t dict_bytes) {
 }
 
 void forth_free(Forth *f) {
+    if (sCrashForth == f) {
+        sCrashForth = NULL;
+    }
+    free(f->guards);
     while (f->tasks != NULL) {
         Task *t = f->tasks;
 

@@ -17,5 +17,13 @@ T{ s" screen-effects" exe-table nip -> 128 }T
 T{ s" screen-effects" exe-table drop  s" exe/screen-effects.bin" library-file drop = -> true }T
 testing a file or table the library hasn't: none, asked again none
 T{ s" town/99-99/obstacles.bin" library-file  s" no-such-table" exe-table  s" no-such-table" exe-table -> 0 0 0 0 0 0 }T
+testing reading past a file's end (a debug build's check): an error naming the file, not another's bytes
+: past-the-town's ( -- )  s" cdbin/027_4/0.bin" library-file drop  8 + c@ drop ;   \ (its 4 bytes)
+: at-its-end ( -- c )  s" cdbin/027_4/0.bin" library-file + 1- c@ ;
+T{ ' past-the-town's catch 0<> -> memory-checked? }T
+: said-which? ( -- flag )   \ (no check: nothing to say)
+    memory-checked? 0= if  true exit  then  error-message s" past the end of cdbin/027_4/0.bin (its 4 bytes): 1 at byte 8" s= ;
+T{ said-which? -> true }T
+T{ at-its-end -> 0 }T
 
 test-summary

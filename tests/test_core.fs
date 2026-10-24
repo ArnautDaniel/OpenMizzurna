@@ -182,6 +182,11 @@ T{ error-message s" unknown word nosuchword" s= -> true }T
 : good 5 ;
 T{ ' good catch -> 5 0 }T
 
+testing the call chain: the words running, innermost first
+: chain-inner ( -- addr len )  backtrace ;
+: chain-outer ( -- addr len )  chain-inner ;
+T{ chain-outer s" chain-inner <- chain-outer" s= -> true }T
+
 testing locals: {: a b -- :} take from the stack (the last name the top), | starts one at 0, to stores
 : l-sub ( a b -- a-b )  {: a b -- difference :}  a b - ;
 T{ 10 3 l-sub -> 7 }T

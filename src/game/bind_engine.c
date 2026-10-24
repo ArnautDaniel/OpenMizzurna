@@ -113,6 +113,8 @@ PRIM(p_exe_s32) { PUSH(exe_element(f, 4, 1)); }   /* ( addr len i -- n ) a signe
 /* ---- the library's files ---- */
 /* each read once and kept (a file is a fact; the town alone has thousands): found by its path's hash */
 #define FILE_SLOTS_FIRST 1024   /* the table's first size; doubled when half full */
+#define GUARD_PAD 4096          /* a debug build: bytes past a file's end that count as its (an overrun lands there,
+                                 * and is an error naming the file: forth_guard) */
 typedef struct {
     char *path;   /* NULL: an empty slot */
     uint8_t *data;
@@ -169,6 +171,17 @@ static LibraryFile *library_file(Forth *f, const char *path) {
         if (e->data == NULL) {
             e->size = 0;
         }
+#ifndef NDEBUG
+        if (e->data != NULL) {
+            uint8_t *padded = realloc(e->data, e->size + GUARD_PAD);
+
+            if (padded != NULL) {
+                memset(padded + e->size, 0, GUARD_PAD);
+                e->data = padded;
+                forth_guard(f, e->data, e->size, e->size + GUARD_PAD, e->path);
+            }
+        }
+#endif
         sNFiles++;
     }
     return e;
