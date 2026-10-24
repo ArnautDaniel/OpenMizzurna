@@ -133,6 +133,12 @@ create cordon-shown  256 allot
     c r tile-origin  the-stand stand-z !  the-stand stand-x !  x z stand-blocks? ;
 : any-billboard? ( x z -- flag )  area @ the-town = if  town-billboard?  else  area-billboard?  then ;
 ' any-billboard? is solid-billboard?
+\ the lamp posts lit from 16:00 to 09:00: their sprite drawn as the unlit or the lit one (src: billboard_select)
+1 constant lamp-post   5 constant lamp-unlit   6 constant lamp-lit   9 constant lamps-off-hour   16 constant lamps-on-hour
+: lamps-lit? ( -- flag )  clock-time time>hour {: h :}  h lamps-off-hour <  h lamps-on-hour >= or ;
+: town-sprite ( sprite -- sprite' )
+    area @ the-town <>  over lamp-post <> or if  exit  then  drop  lamps-lit? if  lamp-lit  else  lamp-unlit  then ;
+' town-sprite is sprite-shown
 : draw-town ( -- )
     area @ the-town <> if  exit  then
     camera-tile {: cc cr :}

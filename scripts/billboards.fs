@@ -18,13 +18,15 @@ begin-structure stand
   field: stand-sprites   field: stand-folder   field: stand-folder-length   \ the sprites' list and pictures
 end-structure
 create the-stand  stand allot
+defer sprite-shown ( sprite -- sprite' )   \ the sprite drawn for a row's (the town's lamps: town.fs)
+' noop is sprite-shown
 
 <PRIVATE
 : sprite-image ( i -- image )
     $clear  the-stand stand-folder @ the-stand stand-folder-length @ $+  s" /" $+  n>str $+  s" .png" $+  $@ image ;
 : draw-row ( row grey -- )
-    {: b grey :}  the-stand stand-sprites @ b sprite nth record {: sp :}
-    b sprite nth sprite-image
+    {: b grey :}  b sprite nth sprite-shown {: s :}  the-stand stand-sprites @ s record {: sp :}
+    s sprite-image
     the-stand stand-x @ b at-x nth +  the-stand stand-z @ b at-z nth +  b bottom nth  b top nth  b half-width nth
     camera-yaw  sp full-bright nth if  as-it-is  else  grey  then  sp blend-mode nth  draw-billboard ;
 PRIVATE>
