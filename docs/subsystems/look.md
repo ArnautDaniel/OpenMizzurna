@@ -31,6 +31,10 @@ check row's target, else the zone row's. □ the same with `act-check` / `act-do
 vocabulary `rules.areaNNN` (`scripts/rules/areaNNN.fs`): its four words and the natives its events call,
 registered with `area-rules!` / `native:`.
 
+An area's hooks: `area-hooks! ( area enter scene )` (entering, a scene shown), `area-frame! ( area xt )` (each
+step while Matthew's the player's), `area-leave! ( area xt )` (left for another: src the overlays' clean-ups - the
+club's show ended, off a stool or a crate, the deputy's walk ended and his refusal remembered).
+
 Facts it keeps for the rules: `zone-answer` / `check-answer` (what the tables gave), `zone-match` / `check-match`
 (their rows to run: `run-rows`). The areas' hooks (`area-hooks!`: entering, a scene) run on `area-entered` /
 `scene-shown`; an area's frame hook (`area-frame!`, src: the overlay's per-frame hook) runs each step while

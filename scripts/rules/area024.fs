@@ -213,6 +213,8 @@ variable pulls   variable left-was   variable right-was
 
 ' look-check ' look-do ' act-check ' act-do  this-area area-rules!
 this-area ' church-drawn area-every-frame!
+: leaving ( -- )  the-crate crate-cancel ;   \ src: func_801036B4: off the crate
+this-area ' leaving area-leave!
 this-area ' entered ' scene-hook area-hooks!
 this-area ' each-frame area-frame!
 

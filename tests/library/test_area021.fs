@@ -76,4 +76,9 @@ T{ pad-left 20 held  pad-left true key-hold  20 steps  counter-act-prompt @  cou
 T{ pad-square press  pad-left false key-hold  100 steps
    at-the-counter?  at-diner stool-4 seat-taken?  matthew-on-foot? -> false false true }T
 
+testing leaving the diner on the stool: off it (the area's clean-up), the stool free
+T{ events-stop  at-the-stools  pad-square press  60 steps  at-the-counter?
+   1 0 s" areas" actor-named send enter-area  deliver  2 steps  at-the-counter?  matthew-on-foot?  at-diner stool-4 seat-taken?
+   -> true false true false }T
+
 test-summary

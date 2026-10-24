@@ -161,5 +161,7 @@ this-area ovl $8010317C ' liz-asked native:   this-area ovl $8010319C ' off-she-
 ' events.ovl016:entry-8010390C 16 minigame-script!
 
 ' look-check ' look-do ' act-check ' act-do  this-area area-rules!
+: leaving ( -- )  the-crate crate-cancel ;   \ src: func_80102F3C: off the crate
+this-area ' leaving area-leave!
 this-area ' entered ' scene-hook area-hooks!
 this-area ' each-frame area-frame!

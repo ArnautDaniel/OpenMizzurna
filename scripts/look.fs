@@ -92,6 +92,7 @@ begin-structure rules
   field: look-check-xt   field: look-do-xt   field: act-check-xt   field: act-do-xt
   field: on-enter     field: on-scene     \ the area's hooks: entered ( -- ), a scene ( scene -- )
   field: on-frame     \ and each step while Matthew is the player's ( -- ) (src: the overlay's per-frame hook)
+  field: on-leave     \ left for another area ( -- ) (src: the overlay's clean-up as it goes)
 end-structure
 create area-rules  #content-areas rules * allot   area-rules #content-areas rules * erase
 : rules-of ( area -- addr )
@@ -101,6 +102,8 @@ create area-rules  #content-areas rules * allot   area-rules #content-areas rule
 : area-hooks! ( area enter scene -- )  rot rules-of {: e sc r :}  e r on-enter !  sc r on-scene ! ;
 : hook ( xt|0 -- )  ?dup if  execute  then ;
 : area-frame! ( area xt -- )  swap rules-of on-frame ! ;
+: area-leave! ( area xt -- )  swap rules-of on-leave ! ;
+variable area-was   -1 area-was !   \ (the content area last entered: its clean-up as another is entered)
 
 \ ---- pressing ○ and □ ----
 81 constant look-motion   \ src: func_8003FA8C (0x51)
@@ -177,8 +180,10 @@ state: look-state end-state
 behaviour looking
   on spawned ( -- )  self subscribe tick  self subscribe player-control
     self subscribe area-entered  self subscribe scene-shown ;
-  on area-entered ( area scene -- )   \ src: the overlay's entering, then its scene hook
-    swap content rules-of {: sc r :}  r on-enter @ hook  r on-scene @ ?dup if  sc swap execute  then ;
+  on area-entered ( area scene -- )   \ src: the last overlay's clean-up; the new one's entering, then its scene hook
+    swap content {: sc a :}
+    area-was @ dup 0< 0=  over a <> and if  rules-of on-leave @ hook  else  drop  then  a area-was !
+    a rules-of {: r :}  r on-enter @ hook  r on-scene @ ?dup if  sc swap execute  then ;
   on scene-shown ( scene -- )  area @ content rules-of on-scene @ ?dup if  execute  else  drop  then ;
   on tick ( -- )  watch ;
   on player-control ( flag -- )  controlled ! ;

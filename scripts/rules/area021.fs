@@ -229,5 +229,7 @@ variable spin
 : spin-them ( -- )
     spin-step negate spin +!  spin @ 4095 and {: r :}  #spinning 0 do  spinning i cells + @ 0 r 0 turn-object  loop ;
 this-area ' spin-them area-every-frame!
+: leaving ( -- )  at-the-counter? if  counter-off  then ;   \ src: func_801049A4: off the stool
+this-area ' leaving area-leave!
 this-area ' entered ' scene-hook area-hooks!
 this-area ' each-frame area-frame!

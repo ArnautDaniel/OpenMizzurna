@@ -112,7 +112,6 @@ $DBD5 constant marker-x   $659DB constant marker-z   $C08 constant marker-headin
 : entered ( -- )
     26 10 0 reached? falls-gone !
     1 map-reveal
-    refused-last-visit @ if  deputy-refused flag-toggle  0 refused-last-visit !  then
     joined-the-hunt flag?  26 10 0 before? 0= or if  no-hunt  else  gathering  then hunt !
     deputy-first-speed deputy-stride gait-speed !  bear-first-speed bear-stride gait-speed !
     0 evening-placed !  0 closing-done !  place-deputy  0 deeper !  0 exits-locked !
@@ -470,5 +469,9 @@ this-area ovl $8010431C ' reloaded native:
 
 ' look-check ' look-do ' act-check ' act-do  this-area area-rules!
 this-area ' water-drawn area-every-frame!
+: leaving ( -- )   \ src: func_80104110: his refusal remembered; his walk ended, he stands
+    refused-last-visit @ if  deputy-refused flag-toggle  0 refused-last-visit !  then
+    deputy-walk @ dup 0< 0= if  kill-event  the-deputy idle  -1 deputy-walk !  else  drop  then ;
+this-area ' leaving area-leave!
 this-area ' entered ' scene-hook area-hooks!
 this-area ' each-frame area-frame!
