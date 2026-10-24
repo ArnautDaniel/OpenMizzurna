@@ -76,4 +76,12 @@ enum: act-action  nothing-to-do  take-the-envelope  3 force-the-door ;
 this-area ovl $80102300 ' the-front-door native:
 
 ' look-check ' look-do ' act-check ' act-do  this-area area-rules!
+\ each frame (src: func_801023D0, before drawing): in scene 0 a five-frame texture animation (0); elsewhere it stays
+\ where it was
+0 constant strip-anim   5 constant strip-frames   0 constant strip-scene
+variable strip-frame
+: strip-drawn ( -- )
+    scene @ strip-scene <> if  exit  then
+    strip-anim strip-frame @ texture-frame  strip-frame @ 1+ strip-frames mod strip-frame ! ;
+this-area ' strip-drawn area-every-frame!
 this-area ' entered ' scene-hook area-hooks!

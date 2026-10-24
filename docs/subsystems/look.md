@@ -74,20 +74,20 @@ remembered the next visit); the morning hunt - his walk away on an even minute a
 far, running, lingering: his words), his signs (○), each leg's deadline, the run back to the cabin with the bear
 after him; the cabin door, the shell box (○ then □); closing time, the ways in and out (zones), the waterfall
 meeting at its time; the last evening's way chosen on arriving and its places; the shoot-out in the cabin
-(`shootout.md`). (To come: the movies the last scenes end in, the ambience, the water's animated texture; the events' lock is the area's
-own for now.)
+(`shootout.md`); the last scenes end in the endings' movies (title.md), the ambience is sound.md's. (The events'
+lock is the area's own for now.)
 Area 28's (`scripts/rules/area028.fs`, the hideout cabin; `tests/library/test_area028.fs`): the closed door (□: a
-first knock, then the later ones), the call its scene makes. (To come: the fight its scene runs.)
+first knock, then the later ones), the call its scene makes.
 Area 24's (`scripts/rules/area024.fs`, the church; `tests/library/test_area024.fs`): the crate (its place by the
 floor he's on), the caretaker, the scenes on arriving (the first that fits), a room's scene once, being shown
 out before the 25th's meeting and at closing time, the meeting seen from above by its time, the doors by the
 story (shut while he's locked in), a letter (○ looks, □ reads once its time's come), the stairs up from the
 basement, who says what, a talk hook (a key), the rope (minigame 17: each new press of left or right a pull,
-80 to be free). (To come: minigame 38's flare, the bell, the nave's two sets of things by a flag not yet
-understood.)
+80 to be free); minigame 38's flare; the bell (sound.md); the nave's later set of things from the 25th 14:00
+(areas.md).
 Area 23's (`scripts/rules/area023.fs`, Cohen's house; `tests/library/test_area023.fs`): the locked door upstairs
 (looked at, something found to force it, three tries), the room behind it (a scene, once), the envelope (□,
-once), the front door by the story, who says what. (To come: its sounds, a texture's animation in scene 0.)
+once), the front door by the story, who says what, scene 0's texture animation (areas.md); its sounds are sound.md's.
 Area 19's (`scripts/rules/area019.fs`, the apartment building - 31 and 32 its ground floor and its air duct;
 `tests/library/test_area019.fs`): the crate, the photo on the shelf (□, two scenes, then a scene ○ starts), the
 doors (○: the keyhole when it's time, or in when open; □: knocking at two), the mailboxes, the duct cover's

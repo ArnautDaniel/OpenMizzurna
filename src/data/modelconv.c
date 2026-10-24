@@ -418,6 +418,13 @@ static void area_sprites(Job *j, const VramContext *v, const uint8_t *const *ent
  * textures, as flares/<area>.png */
 static const SkyPiece kGroundFlare = {"ground-flare", 4, 0x380, 0, 0x320, 0xFE, 0x50, 0x10, 24, 24};
 static const int kFlareAreas[] = {5, 24};
+/* the shoot-outs' bullets left (src: shootout_ammo_init / _draw: 16 x 32, from the area's page 0x380): area 5's,
+ * area 26's, as bullets/<area>.png */
+static const SkyPiece kBullets[] = {
+    {"bullet", 4, 0x380, 0, 0x360, 0xFD, 0xE0, 0, 16, 32},
+    {"bullet", 4, 0x380, 0, 0x360, 0xFC, 0xD0, 0, 16, 32},
+};
+static const int kBulletAreas[] = {5, 26};
 
 static void piece_image(Job *j, const VramContext *v, const SkyPiece *p, const char *path) {
     uint8_t *image = malloc((size_t)PAGE_TEXELS * PAGE_TEXELS * 4);
@@ -508,6 +515,8 @@ static const SkyPiece kUiPieces[] = {
     /* the fight's (src: hp_bar_draw, ovl033_func_80101FBC): the fighters' names over their health bars, 80 x 8
      * each, ten down (the executable's `fight-icons` gives a style's; the other minigames name theirs) */
     {"fight-names", 4, 0x300, 0, 0x300, 0xFB, 0, 0x60, 80, 80},
+    /* the shoot-outs' (src: qte_draw_targets): a hit target's burst, four 16 x 16 frames across */
+    {"burst", 4, 0x300, 0, 0x300, 0xFD, 0x60, 0xC0, 64, 16},
 };
 
 #define MAP_ICONS 22
@@ -836,6 +845,133 @@ static const char *area_uri(void *ctx, const char *texture) {
     return s->uri;
 }
 
+/* ---- the areas' texture animations (src: the overlays' MoveImage calls each frame) ----
+ * An animation's frame f copies a block of video memory (its source by f) over the same place; each frame's
+ * textures the block touches (their texels, or their palette) are cut as textures/area-NNN/anim-K/F/<name>.png,
+ * K the area's own count of them. The engine shows them by `texture-frame` (scripts/areas.fs). */
+typedef void (*AnimSource)(int frame, int *x, int *y);
+typedef struct TextureAnim {
+    int area, frames;
+    AnimSource source;
+    int w, h, dst_x, dst_y;   /* (16-bit units) */
+    const char *what;
+} TextureAnim;
+
+static void town_water(int f, int *x, int *y) { *x = 0x288 + f * 4; *y = 0x98; }   /* src: draw.c, area 27 */
+static void hospital_windows(int f, int *x, int *y) {   /* src: ovl002 func_80104804: day's row, evening's */
+    *x = f ? 0x280 : 0x220;
+    *y = f ? 0xFD : 0xFC;
+}
+static void fire(int f, int *x, int *y) {   /* src: ovl005 func_80102C04: two rows of eight 16 x 104 strips */
+    *x = f < 8 ? f * 0x10 + 0x140 : f * 0x10 + 0xC0;
+    *y = f < 8 ? 0 : 0x68;
+}
+static void strip_10(int f, int *x, int *y) { *x = 0x1F6; *y = f * 0x20 + 0x60; }   /* src: ovl010 func_80102570 */
+static void strip_23(int f, int *x, int *y) { *x = 0x218; *y = f * 0x20 + 0x48; }   /* src: ovl023 func_801023D0 */
+static void waterfall(int f, int *x, int *y) { *x = 0x240; *y = 0x3F - f * 2; }     /* src: ovl026 func_80105194 */
+static void cabin_water(int f, int *x, int *y) { *x = 0x171; *y = f * 0x20; }       /* (its scene 7) */
+static void cabin_window(int f, int *x, int *y) { (void)f; *x = 0x1C6; *y = 0xE8; } /* src: func_801057C8 */
+
+static const TextureAnim kTextureAnims[] = {
+    {2, 2, hospital_windows, 16, 1, 0x80, 0xFF, "the windows' palette by day, by evening"},
+    {29, 2, hospital_windows, 16, 1, 0x80, 0xFF, "and in its area 29"},
+    {5, 16, fire, 0x10, 0x68, 0x230, 0, "the fire"},
+    {10, 5, strip_10, 8, 0x20, 0x220, 0xE0, "scene 1's"},
+    {23, 5, strip_23, 8, 0x20, 0x290, 0x88, "scene 0's"},
+    {26, 16, waterfall, 0x18, 0x20, 0x240, 0, "the waterfall"},
+    {26, 5, cabin_water, 8, 0x20, 0x2A8, 0x60, "the cabin's water"},
+    {26, 1, cabin_window, 6, 0x18, 0x179, 0x80, "the cabin's window lit"},
+    {26, 1, cabin_window, 6, 0x18, 0x1C0, 0xE8, "the cabin's window dark"},
+    {27, 6, town_water, 4, 0x10, 0x2A0, 0x98, "the water"},
+};
+
+static int spans_meet(int a, int an, int b, int bn) { return a < b + bn && b < a + an; }
+
+/* does a texture (its page and palette) show any of the block at (x, y) w x h? */
+static int texture_touched(const char *name, int x, int y, int w, int h) {
+    int index, depth, px = -1, py = -1, page_x, page_y, words;
+
+    if (sscanf(name, "page%d-%dbit-palette%d-%d", &index, &depth, &px, &py) != 4 &&
+        sscanf(name, "page%d-%dbit", &index, &depth) != 2) {
+        return 0;
+    }
+    page_x = (index & 0xF) * 64;
+    page_y = (index >> 4 & 1) * 256;
+    words = depth == 4 ? 64 : depth == 8 ? 128 : 256;
+    if (spans_meet(page_x, words, x, w) && spans_meet(page_y, 256, y, h)) {
+        return 1;
+    }
+    return px >= 0 && spans_meet(py, 1, y, h) && spans_meet(px, depth == 4 ? 16 : 256, x, w);
+}
+
+static void move_block(VramContext *v, int sx, int sy, int w, int h, int dx, int dy) {
+    static uint16_t block[VRAM_HEIGHT * VRAM_WIDTH];
+    int r, c;
+
+    for (r = 0; r < h; r++) {
+        for (c = 0; c < w; c++) {
+            block[r * w + c] = v->vram[(sy + r) % VRAM_HEIGHT][(sx + c) % VRAM_WIDTH];
+        }
+    }
+    for (r = 0; r < h; r++) {
+        for (c = 0; c < w; c++) {
+            v->vram[(dy + r) % VRAM_HEIGHT][(dx + c) % VRAM_WIDTH] = block[r * w + c];
+        }
+    }
+}
+
+/* a texture in frame f of an animation: cut into j->page (0: not a texture name) */
+static int cut_in_frame(Job *j, const VramContext *v, const TextureAnim *t, int f, const char *name) {
+    static VramContext moved;
+    int sx, sy;
+
+    t->source(f, &sx, &sy);
+    moved = *v;
+    move_block(&moved, sx, sy, t->w, t->h, t->dst_x, t->dst_y);
+    return cut(j, &moved, name);
+}
+
+static int changed_by(Job *j, const VramContext *v, const TextureAnim *t, const char *name) {   /* any frame */
+    uint64_t still;
+    int f;
+
+    if (!cut(j, v, name)) {
+        return 0;
+    }
+    still = hash_of(j->page, (size_t)PAGE_TEXELS * PAGE_TEXELS * 4);
+    for (f = 0; f < t->frames; f++) {
+        if (cut_in_frame(j, v, t, f, name) && hash_of(j->page, (size_t)PAGE_TEXELS * PAGE_TEXELS * 4) != still) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static void texture_anims(Job *j, const VramContext *v, const Sets *sets, int area) {
+    size_t k;
+    int own = 0, f, i;
+
+    for (k = 0; k < sizeof(kTextureAnims) / sizeof(kTextureAnims[0]) && !j->failed; k++) {
+        const TextureAnim *t = &kTextureAnims[k];
+        if (t->area != area) {
+            continue;
+        }
+        for (i = 0; i < sets->n && !j->failed; i++) {
+            if (sets->hash[i][area] == 0 || !texture_touched(sets->names[i], t->dst_x, t->dst_y, t->w, t->h) ||
+                !changed_by(j, v, t, sets->names[i])) {
+                continue;
+            }
+            for (f = 0; f < t->frames && !j->failed; f++) {
+                char path[200];
+                cut_in_frame(j, v, t, f, sets->names[i]);
+                snprintf(path, sizeof(path), "textures/area-%03d/anim-%d/%d/%s.png", area, own, f, sets->names[i]);
+                texture_file(j, path);
+            }
+        }
+        own++;
+    }
+}
+
 /* a streamed character's textures: in its own folder beside the glTF */
 typedef struct OwnUri {
     char folder[96];
@@ -948,6 +1084,14 @@ static int run(Job *j, const uint8_t *const *entries, const size_t *sizes, int n
                 piece_image(j, v, &kGroundFlare, path);
             }
         }
+        for (i = 0; i < (int)(sizeof(kBulletAreas) / sizeof(kBulletAreas[0])); i++) {
+            if (kBulletAreas[i] == a) {
+                char path[64];
+                snprintf(path, sizeof(path), "bullets/%03d.png", a);
+                piece_image(j, v, &kBullets[i], path);
+            }
+        }
+        texture_anims(j, v, sets, a);
         if (a == TOWN_AREA) {   /* the lamps' textures lit */
             lamps_set(v, 1);
             for (i = 0; i < sets->n && !j->failed; i++) {

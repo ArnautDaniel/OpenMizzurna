@@ -413,6 +413,16 @@ this-area ovl $801045EC ' cohen-to-his-bed native:   this-area ovl $801045CC ' t
 
 ' look-check ' look-do ' act-check ' act-do  this-area area-rules!
 ' events.ovl002:entry-8010780C 35 minigame-script!   \ (src: area_minigame_start's 35)
+\ ---- each frame (src: func_80104774 / func_801047E4, before drawing): in scene 0 one of two object sets by where
+\ he stands; the windows' palette by the hour (texture animation 0: the day's, from 16:00 the evening's) ----
+$19 constant far-set   $1A constant near-set   $19064 constant sets-divide   16 constant evening-hour
+0 constant windows-anim
+: windows-by-hour ( -- )  windows-anim  clock-time time>hour evening-hour >= 1 and  texture-frame ;
+: sets-by-place ( -- )
+    scene @ 0<>  matthew-there? 0= or if  exit  then
+    matthew-now 2drop drop sets-divide > {: far? :}  far-set far? shown!  near-set far? 0= shown! ;
+: hospital-drawn ( -- )  sets-by-place  windows-by-hour ;
+this-area ' hospital-drawn area-every-frame!   29 ' windows-by-hour area-every-frame!
 this-area ' entered ' scene-hook area-hooks!
 this-area ' each-frame area-frame!
 

@@ -250,6 +250,8 @@ PRIM(p_fog_color) {   /* ( r g b -- ) the fog's colour (128: a texture as it is)
 }
 PRIM(p_fog_store) { sLight.fog = POP() != 0; scene3d_light(&sLight); }   /* ( flag -- ) fog or none */
 PRIM(p_lamp) { Cell lit = POP(); scene3d_lamp((int)POP(), lit != 0); }   /* ( lamp flag -- ) a street lamp on or off */
+PRIM(p_texture_frame) { Cell frame = POP(); scene3d_texture_frame((int)POP(), (int)frame); }   /* ( anim frame -- ) -1 none */
+PRIM(p_texture_frame_shown) { PUSH(scene3d_texture_frame_shown((int)POP())); }   /* ( anim -- frame ) -1 none */
 
 void bind_scene(Forth *f) {
     forth_prim(f, "model", p_model);
@@ -260,6 +262,8 @@ void bind_scene(Forth *f) {
     forth_prim(f, "camera", p_camera);
     forth_prim(f, "texture-area", p_texture_area);
     forth_prim(f, "lamp", p_lamp);
+    forth_prim(f, "texture-frame", p_texture_frame);
+    forth_prim(f, "texture-frame@", p_texture_frame_shown);
     forth_prim(f, "light-way", p_light_way);
     forth_prim(f, "light-color", p_light_color);
     forth_prim(f, "ambient-light", p_ambient_light);

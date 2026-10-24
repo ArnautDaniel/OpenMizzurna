@@ -51,7 +51,6 @@ PRIVATE>
 1 constant set-count   2 constant set-at
 <PRIVATE
 : area-text ( -- addr len )  area @ s" 5.billboards.txt" area-path ;
-: three-digits ( n -- )  dup 100 < if  s" 0" $+  then  dup 10 < if  s" 0" $+  then  n>str $+ ;
 : area-sprites ( -- table )  $clear  s" sprites/" $+  area @ three-digits  s" .txt" $+  $@  s" sprite" records ;
 create folder-name 16 allot
 : area-folder ( -- addr len )   \ "sprites/NNN" (kept: the stand holds it)

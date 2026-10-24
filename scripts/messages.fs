@@ -167,6 +167,7 @@ message car-stop ( car -- )              \ stop where it is, riders still in (sr
 message car-arrived ( car -- )           \ broadcast: a car with riders reached its route's end; they get out
 
 \ ---- the day's light and the weather (docs/subsystems/daylight.md) ----
+message muzzle-flash ( -- )              \ (to the daylight) a shot lights the scene for a frame (src: shootout_flash_lights)
 message set-weather ( weather hold -- )  \ (to the daylight) clear, overcast or snowing; hold: it stays (src: func_80025384)
 
 \ ---- the screens over the field: the item ring, and those to come (docs/subsystems/ring.md) ----

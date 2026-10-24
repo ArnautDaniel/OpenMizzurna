@@ -97,6 +97,7 @@ static struct {
     uint32_t quad_vao, quad_vbo;
     int area;
     unsigned char lamp_lit[SCENE3D_LAMPS];
+    int anim_shown[SCENE3D_ANIMS];   /* each of the area's texture animations' frame shown, + 1 (0: none) */
     float view[16], eye[3];
     float fovy, projection_h;
     int have_camera;
@@ -283,6 +284,17 @@ static GpuTexture material_texture(const Material *mt, int *ok) {
         }
     }
     if (mt->area_set) {
+        int a;
+        for (a = 0; a < SCENE3D_ANIMS; a++) {   /* (a frame of one of the area's texture animations) */
+            if (S.anim_shown[a] > 0) {
+                snprintf(path, sizeof(path), "textures/area-%03d/anim-%d/%d/%s.png", S.area, a, S.anim_shown[a] - 1,
+                         mt->texture);
+                t = texture_at(path, ok);
+                if (*ok) {
+                    return t;
+                }
+            }
+        }
         snprintf(path, sizeof(path), "textures/area-%03d/%s.png", S.area, mt->texture);
         t = texture_at(path, ok);
         if (*ok) {
@@ -497,7 +509,21 @@ void model3d_free(Model3D *m) {
 }
 
 /* ---- the frame ---- */
-void scene3d_texture_area(int area) { S.area = area; }
+void scene3d_texture_area(int area) {
+    int a;
+    S.area = area;
+    for (a = 0; a < SCENE3D_ANIMS; a++) {
+        S.anim_shown[a] = 0;
+    }
+}
+void scene3d_texture_frame(int anim, int frame) {
+    if (anim >= 0 && anim < SCENE3D_ANIMS) {
+        S.anim_shown[anim] = frame < 0 ? 0 : frame + 1;
+    }
+}
+int scene3d_texture_frame_shown(int anim) {
+    return anim >= 0 && anim < SCENE3D_ANIMS ? S.anim_shown[anim] - 1 : -1;
+}
 void scene3d_lamp(int lamp, int lit) {
     if (lamp >= 0 && lamp < SCENE3D_LAMPS) {
         S.lamp_lit[lamp] = (unsigned char)(lit != 0);

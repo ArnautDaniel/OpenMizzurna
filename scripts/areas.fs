@@ -102,7 +102,39 @@ objects-still
     {: s :}  s mo-object @ 0<  s mo-motion @ 0= or if  exit  then
     s mo-motion @ s mo-frame f@ f>s {: m f :}
     s mo-object @  m f motion-move  m f motion-turn  pose-object ;
-: pose-objects ( -- )  #moving-objects 0 do  moving-objects i moving-object * + pose-slot  loop ;
+: pose-moving ( -- )  #moving-objects 0 do  moving-objects i moving-object * + pose-slot  loop ;
+\ ---- objects turned by the area's hooks (src: func_80020144: an object's turn - the fans, a lamp knocked over) ----
+8 constant #turned
+begin-structure turned-object
+  field: to-object   field: to-rx   field: to-ry   field: to-rz
+end-structure
+create turned-objects  #turned turned-object * allot
+: turned# ( i -- addr )  turned-object * turned-objects + ;
+: none-turned ( -- )  #turned 0 do  -1 i turned# to-object !  loop ;
+none-turned
+: turned-slot ( object -- addr )   \ its slot (a free one if it has none; all taken: the last)
+    {: o :}  #turned 0 do  i turned# to-object @ o = if  i turned# unloop exit  then  loop
+    #turned 0 do  i turned# to-object @ 0< if  i turned# unloop exit  then  loop  #turned 1- turned# ;
+: turn-object ( object rx ry rz -- )   \ (kept: posed each draw, until the area changes)
+    {: o rx ry rz :}  o turned-slot {: t :}  o t to-object !  rx t to-rx !  ry t to-ry !  rz t to-rz ! ;
+: pose-one ( slot -- )
+    {: t :}  t to-object @ 0< if  exit  then  t to-object @  0 0 0  t to-rx @  t to-ry @  t to-rz @  pose-object ;
+: pose-turned ( -- )  #turned 0 do  i turned# pose-one  loop ;
+: pose-objects ( -- )  pose-moving  pose-turned ;
+
+\ ---- each frame's hook by the area (src: func_800185A4, before drawing: the fans, objects by the hour or by where
+\ he stands, the texture animations) - run once a frame of the original's (15 a second indoors, 30 in the town) ----
+34 constant #areas   15e fconstant hook-indoor-rate   30e fconstant hook-town-rate
+create frame-hooks  #areas cells allot   frame-hooks #areas cells erase
+: area-every-frame! ( area xt -- )  swap cells frame-hooks + ! ;
+: shown! ( object flag -- )  s" areas" actor-named send object-shown ;   \ (the hooks' object_show / object_hide)
+fvariable hook-due
+: frames-a-second ( -- f )  area @ the-town = if  hook-town-rate  else  hook-indoor-rate  then ;
+: hook-frames ( -- n )  hook-due f@ frames-a-second dt f* f+  fdup f>s  dup s>f f-  hook-due f! ;
+: frame-hooks-step ( -- )
+    area @ 0 #areas within 0= if  exit  then
+    area @ cells frame-hooks + @ ?dup 0= if  exit  then  {: xt :}
+    hook-frames 0 ?do  xt execute  loop ;
 
 : draw-area ( -- )
     area @ 0< area @ the-town = or if  exit  then
@@ -111,6 +143,7 @@ objects-still
 ' draw-area on-draw
 
 : load-town ( scene -- )   \ the town: its textures; its tiles the town's own (town.fs)
+    none-turned  0e hook-due f!
     scene !  the-town area !  the-town texture-area  0 origin !  0 origin cell+ !  0 origin 2 cells + ! ;
 : load ( area scene -- )
     over the-town = if  nip load-town exit  then
@@ -119,7 +152,7 @@ objects-still
     dup 0 model-path model shell !  dup 1 model-path model models !
     header-table table  dup sl@ origin !  4 + sl@ origin 2 cells + !
     origin-height origin cell+ !
-    show-objects  objects-still ;
+    show-objects  objects-still  none-turned  0e hook-due f! ;
 
 state: areas-state end-state
 behaviour areas
@@ -128,7 +161,7 @@ behaviour areas
   on show-scene ( scene -- )  dup scene !  show-objects  broadcast scene-shown ;
   on play-area-anim ( entry -- )   \ src: func_8001A150: the list's entry, played once
     area @ 0< area @ the-town = or if  drop exit  then  area-anim false play-object ;
-  on tick ( -- )  objects-step ;
+  on tick ( -- )  objects-step  frame-hooks-step ;
   on object-motion ( object id next -- )   \ one of the area's objects: a motion, then the next looping (-1: held)
     rot {: id nx o :}  nx 0< if  o id false play-object  else  o id nx play-object-then  then ;
   on reveal-room ( scene -- )   \ src: func_8001A044: the first of that scene's objects shown too (seen through a door)

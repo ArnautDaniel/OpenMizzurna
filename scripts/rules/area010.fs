@@ -35,5 +35,13 @@ $71B16 constant landing-x   $7129C constant landing-z   240 constant landing-rea
 this-area ovl $80101FA0 ' the-cabin-window native:   this-area ovl $801024AC ' off-the-crate native:
 ' events.ovl010:entry-80102754 31 minigame-script!   ' events.ovl010:entry-80102D70 32 minigame-script!
 
+\ each frame (src: func_80102570, before drawing): in scene 1 a five-frame texture animation (0); elsewhere it stays
+\ where it was
+0 constant strip-anim   5 constant strip-frames   1 constant strip-scene
+variable strip-frame
+: strip-drawn ( -- )
+    scene @ strip-scene <> if  exit  then
+    strip-anim strip-frame @ texture-frame  strip-frame @ 1+ strip-frames mod strip-frame ! ;
+this-area ' strip-drawn area-every-frame!
 this-area ' entered ' scene-hook area-hooks!
 this-area ' each-frame area-frame!

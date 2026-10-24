@@ -41,7 +41,13 @@ $90624 constant caretaker-x   $64F0 negate constant caretaker-y   $206BA constan
     missing-now? if
         church-winona-missing-seen flag-toggle  ['] events.ovl024:entry-80104C6C start-event
         the-caretaker 0 0 0 set-pos  father-barton 0 0 0 set-pos  1 locked-in !  then ;
+\ scene 0's two object sets: from the 25th 14:00 the later one (src: load_area's, kept while here; func_80103820)
+$14 constant before-set   $15 constant later-set
+variable later-church
+: church-drawn ( -- )
+    scene @ 0<> if  exit  then  before-set later-church @ 0= shown!  later-set later-church @ shown! ;
 : entered ( -- )   \ src: func_80102930
+    25 14 0 reached? later-church !
     20 map-reveal  0 meeting-on !  0 shown-out !  0 locked-in !
     the-caretaker caretaker-x caretaker-y caretaker-z set-pos  the-caretaker 0 caretaker-heading 0 set-rot
     the-crate forget-crate  on-arriving  0 letter-looked-at !  0 closing-done ! ;
@@ -206,6 +212,7 @@ variable pulls   variable left-was   variable right-was
 ' the-rope-minigame 17 minigame-script!
 
 ' look-check ' look-do ' act-check ' act-do  this-area area-rules!
+this-area ' church-drawn area-every-frame!
 this-area ' entered ' scene-hook area-hooks!
 this-area ' each-frame area-frame!
 

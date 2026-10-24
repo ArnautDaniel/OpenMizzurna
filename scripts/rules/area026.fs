@@ -40,6 +40,7 @@ variable talked-this-morning   variable gathering-turn   \ src: D_80107862, D_80
 variable search-talks      \ src: D_80107896: Morgan's at the search
 variable shells-seen       \ src: D_80107878: "Shells!" this visit
 variable shot-out          \ src: D_80107897: the shoot-out begun
+variable falls-gone        \ src: D_800A366C: from the 26th 10:00 (on entering) object 9 hidden
 variable first-sign-seen   variable second-sign-seen   \ src: D_80107864, D_80107860
 variable carcass-looks     \ src: D_80107884
 variable refused-last-visit   \ (src: func_80104110, on leaving: his refusal remembered)
@@ -109,6 +110,7 @@ $DBD5 constant marker-x   $659DB constant marker-z   $C08 constant marker-headin
         bad-ending-route flag-toggle  ['] events.ovl026:entry-80106E54 start-event  the-deputy 0 0 0 set-pos  then
     the-marker 0 0 0 set-pos ;
 : entered ( -- )
+    26 10 0 reached? falls-gone !
     1 map-reveal
     refused-last-visit @ if  deputy-refused flag-toggle  0 refused-last-visit !  then
     joined-the-hunt flag?  26 10 0 before? 0= or if  no-hunt  else  gathering  then hunt !
@@ -349,10 +351,13 @@ $1800 constant gun-tilt
 
 \ ---- □ (0x801033B8 / 0x801036E0): the shell box's halves ----
 enum: act-action  nothing-to-do  6 pry-right  open-right  pry-left  open-left ;
+11 constant reload
+variable gun-loaded   \ src: D_800A3674 = 2: the shoot-out's gun loaded (the executable's: not reset on entering)
 : act-check ( zone check -- action )
     nip {: c :}
     c box-left <>  c box-right <> and if  nothing-to-do exit  then
-    box-open flag?  the-gun-item has-item? 0= or  shot-out @ or if  nothing-to-do exit  then   \ (after: the reload - to come)
+    box-open flag?  the-gun-item has-item? 0= or if  nothing-to-do exit  then
+    shot-out @ if  gun-loaded @ if  nothing-to-do  else  reload  then  exit  then   \ (begun: a reload, unless loaded)
     hunt @ in-the-cabin <>  shells-seen @ 0= or if  nothing-to-do exit  then
     c box-left = if  box-pried flag? if  open-left  else  pry-left  then
     else  box-pried flag? if  open-right  else  pry-right  then  then ;
@@ -362,6 +367,7 @@ enum: act-action  nothing-to-do  6 pry-right  open-right  pry-left  open-left ;
         pry-left of  ['] events.ovl026:entry-80106758 start-event  box-pried flag-toggle  endof
         open-right of  ['] events.ovl026:entry-801068EC start-event  endof
         open-left of  ['] events.ovl026:entry-801067E0 start-event  endof
+        reload of  ['] events.ovl026:entry-80106174 hunt-scene  endof
         drop run-rows 0
     endcase ;
 
@@ -418,7 +424,20 @@ create cohen-lines  5 , 92 ,  11 , 93 ,  13 , 94 ,  15 , 95 ,  19 , 96 ,  21 , 9
 : cabin-door ( flag -- )  dup 0 swap s" areas" actor-named send object-shown  1 swap s" areas" actor-named send object-shown ;
 : door-shown ( -- )  true cabin-door ;    \ 0x80104218 (src: the cabin door's two objects)
 : door-hidden ( -- )  false cabin-door ;  \ 0x80104238
-: window-patch ( -- ) ;   \ 0x80104258 / 0x80104278: the window's texture (to come)
+\ the texture animations (src: func_80105194, func_801057C8): the waterfall outside (0: sixteen frames), the water
+\ in the cabin (1: five), the cabin's window patched lit (2) or dark (3) - each kept till the area's left
+0 constant waterfall-anim   1 constant cabin-water-anim   2 constant window-lit-anim   3 constant window-dark-anim
+16 constant waterfall-frames   5 constant cabin-water-frames   7 constant cabin-scene   9 constant the-falls-object
+: window-lit ( -- )  window-lit-anim 0 texture-frame ;    \ 0x80104258
+: window-dark ( -- )  window-dark-anim 0 texture-frame ;  \ 0x80104278
+variable waterfall-frame   variable cabin-water-frame
+: water-drawn ( -- )
+    the-falls-object falls-gone @ 0= shown!
+    scene @ cabin-scene <> if
+        waterfall-anim waterfall-frame @ texture-frame  waterfall-frame @ 1+ waterfall-frames mod waterfall-frame !
+    else
+        cabin-water-anim cabin-water-frame @ texture-frame
+        cabin-water-frame @ 1+ cabin-water-frames mod cabin-water-frame !  then ;
 \ the shoot-out at the cabin (src: shootout_update): three rounds against the bear
 $86A2 constant his-x   $6392C constant his-z   $8D89 constant bear-x   $63770 constant bear-z   $C40 constant bear-heading
 $158D constant bear-stance   $1593 constant bear-hit   $15A2 constant gun-down   $1598 constant gun-fired
@@ -433,21 +452,23 @@ create the-shootout  3 plan-bytes allot   the-shootout 3 plan-bytes erase
     the-shootout {: p :}  s" shootout-26" p plan-table-len ! p plan-table !  3 p plan-rounds !
     his-x p plan-him-x !  his-z p plan-him-z !  gun-down p plan-stance !  gun-fired p plan-shot-motion !
     gun-up p plan-aimed-motion !  bear-x p plan-foe-x !  bear-z p plan-foe-z !  bear-heading p plan-foe-heading !
-    bear-stance p plan-foe-stance !  bear-hit p plan-foe-hit !  bear-health p plan-full-0 !  0 p plan-full-1 !  bear-name p plan-name-0 !  no-name p plan-name-1 !
+    bear-stance p plan-foe-stance !  bear-hit p plan-foe-hit !  bear-health p plan-full-0 !  0 p plan-full-1 !  bear-name p plan-name-0 !  no-name p plan-name-1 !  the-gun p plan-prop !
     ['] bear-shot p plan-won !  $6D p plan-shot-sound !  $71 p plan-hit-sound !
     p 0 bear-pool a-hit first-swipe ['] events.ovl026:entry-80106454 ['] events.ovl026:entry-80106484 ['] events.ovl026:entry-801064A4 round!
     p 1 bear-pool a-hit second-swipe ['] events.ovl026:entry-80106464 ['] events.ovl026:entry-80106494 ['] events.ovl026:entry-801064A4 round!
     p 2 bear-pool a-hit third-swipe ['] events.ovl026:entry-80106474 ['] events.ovl026:entry-801064B4 ['] events.ovl026:entry-801064A4 round! ;
 plan!
-: shootout-begin ( -- )   \ 0x801040D0
-    shooting hunt !  1 shot-out !  the-shootout s" shootout" actor-named send shootout-start ;
-: reloaded ( -- ) ;       \ 0x8010431C (the shoot-out's)
+: shootout-begin ( -- )   \ 0x801040D0 (and the shoot-out's first frame: the gun loaded)
+    shooting hunt !  1 shot-out !  true gun-loaded !
+    the-shootout s" shootout" actor-named send shootout-start ;
+: reloaded ( -- )  true gun-loaded ! ;   \ 0x8010431C
 this-area ovl $801020F8 ' place-deputy native:   this-area ovl $80104340 ' back-to-the-chase native:
 this-area ovl $80104350 ' the-bear-slows native:   this-area ovl $80104218 ' door-shown native:
-this-area ovl $80104238 ' door-hidden native:   this-area ovl $80104258 ' window-patch native:
-this-area ovl $80104278 ' window-patch native:   this-area ovl $801040D0 ' shootout-begin native:
+this-area ovl $80104238 ' door-hidden native:   this-area ovl $80104258 ' window-lit native:
+this-area ovl $80104278 ' window-dark native:   this-area ovl $801040D0 ' shootout-begin native:
 this-area ovl $8010431C ' reloaded native:
 
 ' look-check ' look-do ' act-check ' act-do  this-area area-rules!
+this-area ' water-drawn area-every-frame!
 this-area ' entered ' scene-hook area-hooks!
 this-area ' each-frame area-frame!

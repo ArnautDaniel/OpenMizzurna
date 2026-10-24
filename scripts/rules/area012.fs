@@ -249,5 +249,13 @@ this-area ovl $80104F0C ' fan-arrived native:   this-area ovl $801037E8 ' on-the
 this-area ovl $80103360 ' on-stool-2 native:
 
 ' events.ovl012:entry-8010709C 42 minigame-script!   \ (src: area_minigame_start's 42)
+\ ---- each frame (src: before drawing): the lights turning, $28 a frame about the vertical ----
+$28 constant spin-step
+create spinning  9 , $A , $B ,
+3 constant #spinning
+variable spin
+: spin-them ( -- )
+    spin-step negate spin +!  spin @ 4095 and {: r :}  #spinning 0 do  spinning i cells + @ 0 r 0 turn-object  loop ;
+this-area ' spin-them area-every-frame!
 this-area ' entered ' scene-hook area-hooks!
 this-area ' each-frame area-frame!

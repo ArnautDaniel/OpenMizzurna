@@ -63,7 +63,26 @@ town.fs) are areas' words.
   profile: src set_scene_state). The events' `set-scene`.
 - Facts: `area`, `scene`, `area-origin`, `floor-height`, `scene-camera`.
 
+## Every frame's hooks (src: func_800185A4, before drawing)
+
+An area's rules give a word run once a frame of the original's - 15 a second indoors, 30 in the town -
+whatever Matthew is doing: `area-every-frame! ( area xt -- )`. What they do:
+- show or hide objects (`shown! ( object flag -- )`): the hospital's two sets by where he stands (2), the church's
+  later set from the 25th 14:00 on entering (24), the falls' object from the 26th 10:00 (26), area 5's fire while
+  it burns;
+- turn objects (`turn-object ( object rx ry rz -- )`, kept and posed each draw until the area changes; src:
+  func_80020144): the fans and lights turning $28 a frame (3, 12, 21), area 3's object on its side from the 26th
+  15:00;
+- step a texture animation (`texture-frame ( anim frame -- )`): the original copied blocks of video memory each
+  frame; the import cuts each frame's textures (docs/library.md) and a material shows its frame's while it's
+  set. Area 5's fire (16 frames), area 10's (scene 1) and area 23's (scene 0) strips (5, kept elsewhere), area
+  26's waterfall (16) and the cabin's water (5), the town's water (6, a frame every other), the hospital's
+  windows by the hour (the day's palette, from 16:00 the evening's: 2 and 29). Area 26's window is patched lit
+  or dark by its events' C (two one-frame animations). Entering an area sets none.
+
+Tested in `tests/library/test_area_drawn.fs`.
+
 ## Status
 
-**Built**: areas indoors drawn with their scenes' objects (seen: Matthew's room). **To come**: the lights,
-object animations, billboards and snow, reverb, the floors' walls and zones (with Matthew's walking), the town.
+**Built**: areas indoors drawn with their scenes' objects, the objects' animations, the frames' hooks and
+texture animations. The lights (daylight.md), billboards and snow, reverb, the floors are their own pages.

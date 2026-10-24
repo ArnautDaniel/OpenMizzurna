@@ -141,5 +141,14 @@ create winona-lines  $D , $BD ,  -1 ,
 this-area ovl $80102A80 ' emmas-key-taken native:
 
 ' look-check ' look-do ' act-check ' act-do  this-area area-rules!
+\ ---- each frame (src: func_80102B5C, before drawing): the ceiling fans turning; object 4 on its side from the
+\ 26th 15:00 (or once the story's word $014 is set) ----
+$28 constant fan-step   8 constant fan-a   $B constant fan-b   4 constant tipped-object   $400 constant on-its-side
+variable fan-turn
+: fans ( -- )
+    fan-step negate fan-turn +!  fan-turn @ 4095 and {: r :}  fan-a 0 r 0 turn-object  fan-b 0 r 0 turn-object ;
+: tipped? ( -- flag )  26 15 0 reached?  $014 story@ 0<> or ;
+: room-drawn ( -- )  tipped? if  tipped-object 0 0 on-its-side turn-object  then  fans ;
+this-area ' room-drawn area-every-frame!
 this-area ' entered ' scene-hook area-hooks!
 this-area ' each-frame area-frame!

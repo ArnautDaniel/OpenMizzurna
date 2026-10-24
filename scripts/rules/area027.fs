@@ -300,6 +300,14 @@ $010 13 story-bit constant library-talk-done   $010 21 story-bit constant ride-h
     dup junkyard-guard = if  drop the-guard exit  then
     dup the-stalker = if  drop 25 minigame  true exit  then  talks-here ;
 ' talks-to this-area area-talk!
+\ each frame (src: func_800185A4's town part): the water's texture animation (0), six frames, a frame every
+\ other of the town's
+0 constant water-anim   6 constant water-frames
+variable water-frame   variable water-odd
+: water-drawn ( -- )
+    water-anim water-frame @ texture-frame
+    water-odd @ 0= if  water-frame @ 1+ water-frames mod water-frame !  then  water-odd @ 0= water-odd ! ;
+this-area ' water-drawn area-every-frame!
 this-area ' entered-town 0 area-hooks!
 this-area ' town-frame area-frame!
 

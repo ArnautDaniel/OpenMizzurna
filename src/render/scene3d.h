@@ -41,6 +41,12 @@ void scene3d_light(const Scene3DLight *l);
 #define SCENE3D_LAMPS 38
 void scene3d_lamp(int lamp, int lit);
 
+/* an area's texture animations (the original's video memory copies): while animation a shows frame f, a material
+ * of the area's set with a texture in textures/area-NNN/anim-a/f/ shows that; -1 none (entering an area: none) */
+#define SCENE3D_ANIMS 4
+void scene3d_texture_frame(int anim, int frame);
+int scene3d_texture_frame_shown(int anim);   /* (-1 none) */
+
 /* the camera, in world units (see above) */
 void scene3d_camera(const float target[3], float yaw, float dist, float eye_y, float look_y, float projection_h);
 

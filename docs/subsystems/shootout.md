@@ -44,11 +44,14 @@ area 5 and area 26; `decomp/docs/research/minigames/README.md` §8). `scripts/sh
   aiming.
 - **Winning.** A round won: its scene, then the next round's first row. The last round won: Matthew is shown,
   the round's scene plays, then it's over (and the plan's won word runs).
+- **A shot** lights the scene for a frame with three bright lights (the daylight's `muzzle-flash`), and kicks
+  the pad.
 - **Losing.** Out of health (100): the round's lost scene, then game over. ○ or Start starts again from the
   first round with full health.
 - **Drawn:**
-  - the targets (for now, squares in the button's colour);
-  - the shots left as bullets at (−140, 40);
+  - the targets: each its button's icon on its body part; a hit one its burst, four frames (`ui/burst.png`);
+  - the shots left as the area's bullets, 16 apart from (−140, 40) (`bullets/<area>.png`: area 5's rounds,
+    area 26's shells);
   - Matthew's bar at (−140, 80), out of 100, his name above;
   - the foe's bar at (18, −80), out of its pool's full health, its name above (the plan's: area 5 the dog and
     the gunman, area 26 the bear).
@@ -61,11 +64,9 @@ Built (`tests/library/test_shootout.fs`):
 - the rows, the hits and misses, the rounds;
 - the camera path;
 - losing, game over and retrying;
-- both areas' plans.
+- both areas' plans;
+- the icons, bullets, the flash, the rumble (the sounds: sound.md).
 
 To come:
-- the original's button and burst icons;
-- the pad's rumble (the shots' and hits' sounds, the retry's music: sound.md);
-- the muzzle flash's lights;
 - area 26's own gun control (L2 to raise the gun, walking with it);
 - the gun prop hidden while aiming.

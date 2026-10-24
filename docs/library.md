@@ -182,6 +182,14 @@ and off (src: func_800243F0: the last row of video memory, lamp i's palette at 1
 they are by day, unlit, and again lit (`textures/lamps/`); a material that is a lamp's light says which
 (`"lamp": i` in its extras).
 
+The texture animations (src: the overlays' video memory copies each frame - a fire's flames, water, a palette
+by the hour): for each, frame by frame, the textures of the area's set the copy changes are cut with it
+(`textures/area-NNN/anim-K/F/<name>.png`, K the area's count of them; scripts/areas.fs's `texture-frame`).
+
+The minigames' pieces: the fighters' names over the health bars (`ui/fight-names.png`, ten 80 x 8 down), a shot
+target's burst (`ui/burst.png`, four 16 x 16 frames across), the shoot-outs' bullets (`bullets/005.png`,
+`bullets/026.png`: each area's, 16 x 32).
+
 The sky's pictures (`sky/`: clouds, the horizon strip, sun, flares, moon) are cut from the common images the same way (docs/subsystems/sky.md).
 
 The check: every tile five parts and nothing more, the region parts the same bytes and the billboards the same again from their text, the models'

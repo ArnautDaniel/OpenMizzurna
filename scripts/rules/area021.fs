@@ -218,5 +218,13 @@ $50208 constant serving-x   $1184 negate constant counter-top
 this-area ovl $8010497C ' mel-goes native:
 this-area ovl $8010383C ' to-the-seat native:   this-area ovl $8010389C ' on-the-counter native:
 
+\ ---- each frame (src: before drawing): the fans turning, $28 a frame about the vertical ----
+$28 constant spin-step
+create spinning  6 , 7 , 8 ,
+3 constant #spinning
+variable spin
+: spin-them ( -- )
+    spin-step negate spin +!  spin @ 4095 and {: r :}  #spinning 0 do  spinning i cells + @ 0 r 0 turn-object  loop ;
+this-area ' spin-them area-every-frame!
 this-area ' entered ' scene-hook area-hooks!
 this-area ' each-frame area-frame!

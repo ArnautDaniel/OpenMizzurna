@@ -23,6 +23,7 @@ begin-structure shootout-plan
   field: plan-foe-stance   field: plan-foe-hit                        \ the foes' stance, hit (-1 none)
   field: plan-full-0   field: plan-full-1                             \ the foes' full health (by pool)
   field: plan-name-0   field: plan-name-1                             \ and their names over the bars (-1 none)
+  field: plan-prop                                                    \ a person-slot prop hidden with him (-1 none)
   field: plan-shot-sound   field: plan-hit-sound                        \ a shot's, a target hit's (-1 none)
   field: plan-won                                                     \ when it's won (an xt; 0 none)
 end-structure
@@ -143,7 +144,12 @@ create was-down circle 1+ cells allot   variable pressed   \ (the buttons presse
 : foe-motion ( id -- )   \ the round's foe in it, looping (-1: none)
     dup 0< if  drop exit  then  foe @ swap -1 true the-townsfolk send person-anim ;
 : foe-faces ( -- )  foe @  cam view-turn @ 2048 + 4095 and  the-townsfolk send person-turn ;
-: him-shown ( flag -- )  him send figure-shown ;
+variable prop-x   variable prop-y   variable prop-z   \ (where the prop was: it's put back there)
+: prop-shown ( flag -- )   \ (src: g_actors[GUN].visible with his)
+    plan @ plan-prop @ {: pr :}  pr 0< if  drop exit  then
+    if  pr prop-x @ prop-y @ prop-z @  else  pr person-now drop prop-z ! prop-y ! prop-x !  pr 0 0 0  then
+    the-townsfolk send extra-place ;
+: him-shown ( flag -- )  dup him send figure-shown  prop-shown ;
 : play-scene ( xt -- )  launch-event scene-thread ! ;
 : scene-over? ( -- flag )  scene-thread @ event-alive? 0= ;
 
@@ -169,7 +175,8 @@ create was-down circle 1+ cells allot   variable pressed   \ (the buttons presse
         round @ 1+ plan @ plan-rounds @ = if  final-scene stage !  true him-shown  then
         this-round round-won @ play-scene  then ;
 : missed ( -- )  missed-scene stage !  this-round round-missed @ play-scene ;
-: fire ( -- )   \ a shot spent: its sound, the pad's kick, his shot's motion (the flash: to come)
+: fire ( -- )   \ a shot spent: its sound, the pad's kick, the flash, his shot's motion
+    s" daylight" actor-named send muzzle-flash
     -1 shots +!  plan @ plan-shot-sound @ sfx?  shot-kick shot-strength shot-kick shake  plan @ plan-shot-motion @ dup 0< if  drop exit  then
     plan @ plan-aimed-motion @ false him send figure-anim ;
 : aim-frame ( -- )
@@ -208,25 +215,27 @@ create was-down circle 1+ cells allot   variable pressed   \ (the buttons presse
     watch-pad  steps-due 0 ?do  shooting? 0= if  leave  then  shootout-frame  loop ;
 
 \ ---- drawing: the targets, the bullets, the bars (src: qte_draw_targets, shootout_ammo_draw, hp_bar_draw) ----
-$FFF0A0FF constant burst-ink   $C8A040FF constant bullet-ink
 8 constant target-half   16 constant bullet-pitch   -140 constant bullets-x   40 constant bullets-y
-6 constant bullet-w   24 constant bullet-h
+16 constant bullet-w   32 constant bullet-h   16 constant burst-size
 -140 constant his-bar-x   80 constant his-bar-y   18 constant foe-bar-x   -80 constant foe-bar-y
 : button-picture ( b -- image )  case  triangle of  triangle-icon  endof  square of  square-icon  endof
     cross of  cross-icon  endof  circle-icon swap  endcase ;
-: square-at ( px py half ink -- )   \ (window pixels; half in the original's)
-    pen-color  scale * {: px py h :}  px h - py h - h 2* h 2* draw-rect ;
+: burst-at ( frame px py -- )   \ a hit's burst (ui/burst.png: four frames across), centred there, opaque
+    {: fr px py :}  burst-size scale * {: w :}  $FFFFFFFF pen-color  blend-ps-solid pen-blend
+    s" ui/burst.png" image  fr burst-size * 0 burst-size burst-size  px w 2/ -  py w 2/ -  w w  draw-image-part
+    blend-usual pen-blend ;
 : target-at ( t px py -- )   \ its button; or, hit, its burst
     {: t px py :}
     t up @ if  t button @ button-picture px py icon-at  exit  then
-    px py target-half t burst @ 2* + burst-ink square-at ;
+    t burst @ px py burst-at ;
 : draw-target ( t -- )
     {: t :}  t up @  t burst @ burst-frames < or 0= if  exit  then
     t  foe @ person-pose  t part @  part-on-screen if  target-at  else  drop  then ;
 : draw-targets ( -- )  targets-shown? if  #targets 0 do  i target# draw-target  loop  then ;
-: draw-bullets ( -- )
-    bullet-ink pen-color  shots @ 0 ?do
-        bullets-x i bullet-pitch * + bullets-y >screen  bullet-w scale *  bullet-h scale *  draw-rect  loop ;
+: bullet-image ( -- image )  $clear  s" bullets/" $+  area @ three-digits  s" .png" $+  $@ image ;   \ (the area's)
+: draw-bullets ( -- )   \ (src: shootout_ammo_draw: a row of them at the left)
+    $FFFFFFFF pen-color  bullet-image {: im :}
+    shots @ 0 ?do  im  bullets-x i bullet-pitch * +  bullets-y  bullet-w bullet-h sprite  loop ;
 : foe-full ( pool -- n )  if  plan @ plan-full-1 @  else  plan @ plan-full-0 @  then ;
 : foe-name ( pool -- n )  if  plan @ plan-name-1 @  else  plan @ plan-name-0 @  then ;
 : draw-shootout ( -- )

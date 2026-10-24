@@ -106,9 +106,19 @@ create fog  rgb allot   create fog-now  rgb allot
     light-record scene-mode + c@ {: md :}
     md hour-light-mode = if  outdoors  else  md mixed  then ;
 : level ( -- pct )  area @ the-town = if  100  else  light-record scene-level + c@  then ;
+\ a shot's flash (src: shootout_flash_lights, muzzle_flash_lights): for a frame three bright lights, the scene's
+\ after
+create flash-ways  $298 , $283 , -383 ,   0 , $157 , $3AC ,   -813 , $157 , -469 ,
+create flash-colors  $FF , $FF , $C8 ,   $FF , $FF , $96 ,   $FF , $FF , $64 ,
+variable flash-due
+: triple ( table i -- x y z )  3 * cells + {: a :}  a @  a cell+ @  a 2 cells + @ ;
+: flash ( -- )
+    3 0 do  i  flash-ways i triple  light-way   i  flash-colors i triple  light-color  loop
+    false flash-due ! ;
 : lighting ( -- )   \ each frame (src: func_80024634)
     area @ 0< if  exit  then
     level the-hours  ease-all
+    flash-due @ if  flash exit  then
     area @ the-town = if  outdoors  else  indoors  then ;
 PRIVATE>
 
@@ -119,6 +129,7 @@ behaviour the-daylight
   on tick ( -- )  lighting ;
   on minute-passed ( t -- )  reroll  seasonal ;
   on set-weather ( w hold -- )  weather-held !  weather ! ;
+  on muzzle-flash ( -- )  true flash-due ! ;
   on time-set ( t -- )  seasonal  area @ 0< 0= if  level the-hours  jump-all  then ;
   on area-entered ( area scene -- )  2drop  level the-hours  jump-all ;
 end-behaviour

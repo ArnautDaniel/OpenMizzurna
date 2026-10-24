@@ -74,6 +74,7 @@ create ($) 256 allot   variable ($len)
 : $clear ( -- )  0 ($len) ! ;
 : $+ ( addr len -- )  255 ($len) @ - min  >r ($) ($len) @ + r@ move  r> ($len) +! ;
 : $@ ( -- addr len )  ($) ($len) @ ;
+: three-digits ( n -- )  dup 100 < if  s" 0" $+  then  dup 10 < if  s" 0" $+  then  n>str $+ ;   \ ("005": the library's names)
 : abort" ( flag "text" -- )  postpone s" postpone (abort") ; immediate   \ an error with the text when flag
 \ records (Forth 2012's structures): a name for each field's offset, and the size -
 \   begin-structure /point  ffield: p.x  ffield: p.y  end-structure     ( addr p.y f@ )

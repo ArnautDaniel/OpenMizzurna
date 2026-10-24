@@ -178,6 +178,7 @@ are built, each listed here.
 | `draw-model-shown` | `model x y z yaw addr n --` | only the parts whose byte (of n) isn't 0 |
 | `forget-model` | `model --` | let a model go: its memory freed, its number another's later (the town's tiles) |
 | `lamp` / `#lamps` | `i flag --` | a town street lamp lit or not: its lights' materials show their lit textures (38) |
+| `texture-frame` / `texture-frame@` | `anim frame --` / `anim -- frame` | one of the area's texture animations at that frame (`textures/area-NNN/anim-a/f/`; −1 none; entering an area: none; 4 an area) |
 | `road-node` / `road-point` | `i -- x y z points first` / `i -- dx dy dz length` | the town's road graph (docs/subsystems/traffic.md) |
 | `light-way` / `light-color` | `i x y z --` / `i r g b --` | light i's way (game axes) and colour (256 full): docs/subsystems/daylight.md |
 | `ambient-light` / `fog-color` / `fog!` | `r g b --` / `r g b --` / `flag --` | the ambient (4096 full), the fog's colour (128: as it is), fog on |

@@ -20,7 +20,6 @@ create entry-images #entries cells allot   entry-images #entries cells erase
 : small-image ( n -- image )   \ pictures/<n>.png, loaded once
     {: n :}  small-images n cells + @ ?dup if  exit  then
     $clear  s" pictures/" $+  n n>str $+  s" .png" $+  $@ image  dup small-images n cells + ! ;
-: three-digits ( n -- )  dup 100 < if  s" 0" $+  then  dup 10 < if  s" 0" $+  then  n>str $+ ;
 : entry-image ( entry -- image )   \ cdbin/NNN_K.png, loaded once
     {: e :}  entry-images e cells + @ ?dup if  exit  then
     $clear  s" cdbin/" $+  e entry-kinds / three-digits  s" _" $+  e entry-kinds mod n>str $+  s" .png" $+
