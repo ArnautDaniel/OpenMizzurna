@@ -25,6 +25,12 @@ $302030E0 constant bar-back   $E0B040FF constant bar-fill
     v 0> if  bar-fill pen-color  x 2 + y 9 + >screen  v k *  6 k *  draw-rect  then ;
 \ the face buttons' colours (the targets, the keypad: their icons to come)
 $40C080FF constant triangle-ink   $E080C0FF constant square-ink   $6080E0FF constant cross-ink   $E05050FF constant circle-ink
-\ the game over (src: gameover_panel_draw: its picture to come)
-$FFFFFFFF constant game-over-ink   -40 constant game-over-x   -8 constant game-over-y
-: draw-game-over ( -- )  game-over-ink pen-color  scale 2 * pen-scale  s" GAME OVER" game-over-x game-over-y >screen draw-text ;
+\ the game over (src: gameover_panel_draw: the screen black, the banner, "CONTINUE" below; ui/game-over*.png)
+$000000FF constant game-over-backdrop
+-128 constant banner-x   -56 constant banner-y   256 constant banner-w   64 constant banner-h
+-40 constant over-caption-x   28 constant over-caption-y   80 constant over-caption-w   16 constant over-caption-h
+: draw-game-over ( -- )
+    game-over-backdrop pen-color  screen-left screen-top >screen  screen-w scale *  screen-h scale *  draw-rect
+    $FFFFFFFF pen-color
+    s" ui/game-over.png" image  banner-x banner-y banner-w banner-h sprite
+    s" ui/game-over-caption.png" image  over-caption-x over-caption-y over-caption-w over-caption-h sprite ;

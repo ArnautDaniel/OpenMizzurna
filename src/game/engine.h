@@ -30,6 +30,8 @@ typedef struct Engine {
     char hud[256];               /* a line at the bottom of the screen */
     char screenshot[512];        /* asked for: written after the next frame is drawn */
     float clear[3];
+    int reboot;                  /* asked for: the scripts start afresh after this step (back to the title) */
+    long boot_mode;              /* what they start into: the scripts' boot-mode (0 the title, 1 / 2 an ending) */
 } Engine;
 
 extern Engine gEngine;

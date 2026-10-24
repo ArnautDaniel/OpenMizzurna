@@ -31,11 +31,16 @@ static void xa_close(void) {
 
 void au_xa_play(int channel, float volume) {
     char path[64];
+
+    snprintf(path, sizeof(path), "xa/TSG/%d.flac", channel);
+    au_flac_play(path, volume);
+}
+
+void au_flac_play(const char *path, float volume) {
     size_t n = 0;
     uint8_t *file;
     drflac *flac;
 
-    snprintf(path, sizeof(path), "xa/TSG/%d.flac", channel);
     file = files_read(path, &n);
     flac = file != NULL ? drflac_open_memory(file, n, NULL) : NULL;
     au_lock();

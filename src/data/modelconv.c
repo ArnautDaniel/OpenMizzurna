@@ -421,7 +421,8 @@ static const int kFlareAreas[] = {5, 24};
 
 static void piece_image(Job *j, const VramContext *v, const SkyPiece *p, const char *path) {
     uint8_t *image = malloc((size_t)PAGE_TEXELS * PAGE_TEXELS * 4);
-    uint16_t page = (uint16_t)((p->page_x / 64 & 0xF) | (p->page_y / 256 & 1) << 4 | (p->depth == 4 ? 0 : 1) << 7);
+    uint16_t page = (uint16_t)((p->page_x / 64 & 0xF) | (p->page_y / 256 & 1) << 4 |
+                               (p->depth == 4 ? 0 : p->depth == 8 ? 1 : 2) << 7);
     uint16_t palette = (uint16_t)(p->palette_x / 16 | p->palette_y << 6);
     int y;
 
@@ -644,6 +645,66 @@ static void portrait_images(Job *j, VramContext *v, const uint8_t *const *entrie
         }
     }
     free(image);
+}
+
+/* the title screen's (src: opening.c op_sprites_init and its states: CD.BIN 034_2, OPENING's one picture of them
+ * all): the logo, the title's picture (16-bit, in two pages), its name, "press start", the menu as each of its
+ * four lines is chosen (their palettes), the vibration line's four, the screen-adjust frame, the card panel's
+ * messages (and their error colour), the save slots, the endings' closing cards; as title/<name>.png */
+#define TITLE_ENTRY (34 * CDBIN_KINDS + 2)
+static const SkyPiece kTitle[] = {
+    {"logo", 8, 0x1C0, 0, 0x140, 0xFE, 0, 0xB4, 150, 51},
+    {"picture-left", 16, 0x140, 0, 0, 0, 0, 0, 256, 180},
+    {"picture-right", 16, 0x240, 0, 0, 0, 0, 0, 64, 180},
+    {"name", 8, 0x300, 0, 0x140, 0xFC, 0, 0, 143, 37},
+    {"press-start", 8, 0x180, 0, 0x140, 0xF7, 0x40, 0xB4, 63, 15},
+    {"menu-0", 8, 0x2C0, 0, 0x140, 0xF8, 0x20, 0, 80, 48},
+    {"menu-1", 8, 0x2C0, 0, 0x140, 0xFD, 0x20, 0x30, 80, 48},
+    {"menu-2", 8, 0x2C0, 0, 0x140, 0xFB, 0x20, 0x60, 80, 48},
+    {"menu-3", 8, 0x2C0, 0, 0x140, 0xF9, 0x20, 0x90, 80, 48},
+    {"vibration", 8, 0x340, 0, 0x140, 0xF6, 0x20, 0, 80, 64},
+    {"adjust-left", 4, 0x280, 0, 0x240, 0xFF, 0, 0, 256, 240},
+    {"adjust-right", 4, 0x2C0, 0, 0x240, 0xFF, 0, 0, 64, 240},
+    {"card-panel", 8, 0x300, 0, 0x140, 0xFA, 0, 0x26, 143, 0xB0},
+    {"card-panel-error", 8, 0x300, 0, 0x140, 0xF5, 0, 0x26, 143, 0xB0},
+    {"slots", 8, 0x140, 0, 0x140, 0xFF, 0, 0xB4, 96, 48},
+    {"end-bad", 4, 0x380, 0, 0x240, 0xFE, 0, 0, 128, 16},
+    {"end-final", 4, 0x380, 0, 0x240, 0xFD, 0, 0x10, 128, 16},
+};
+
+/* the game over's panel (src: hud.c gameover_panel_init: CD.BIN 034_1, 4-bit: the banner and its
+ * caption) */
+#define GAME_OVER_ENTRY (34 * CDBIN_KINDS + 1)
+static const SkyPiece kGameOver[] = {
+    {"game-over", 4, 0x380, 0x100, 0x390, 0x180, 0, 0, 256, 64},
+    {"game-over-caption", 4, 0x380, 0x100, 0x380, 0x180, 0, 0x50, 80, 16},
+};
+
+static void title_images(Job *j, VramContext *v, const uint8_t *const *entries, const size_t *sizes, int n) {
+    size_t i;
+
+    if (GAME_OVER_ENTRY < n && entries[GAME_OVER_ENTRY] != NULL) {
+        vram_clear(v);
+        vram_load_tim(v, entries[GAME_OVER_ENTRY], sizes[GAME_OVER_ENTRY]);
+        for (i = 0; i < sizeof(kGameOver) / sizeof(kGameOver[0]) && !j->failed; i++) {
+            char path[64];
+
+            snprintf(path, sizeof(path), "ui/%s.png", kGameOver[i].name);
+            piece_image(j, v, &kGameOver[i], path);
+        }
+    }
+
+    if (TITLE_ENTRY >= n || entries[TITLE_ENTRY] == NULL) {
+        return;
+    }
+    vram_clear(v);
+    vram_load_tim(v, entries[TITLE_ENTRY], sizes[TITLE_ENTRY]);
+    for (i = 0; i < sizeof(kTitle) / sizeof(kTitle[0]) && !j->failed; i++) {
+        char path[64];
+
+        snprintf(path, sizeof(path), "title/%s.png", kTitle[i].name);
+        piece_image(j, v, &kTitle[i], path);
+    }
 }
 
 static void sky_images(Job *j, const VramContext *v) {
@@ -920,6 +981,7 @@ static int run(Job *j, const uint8_t *const *entries, const size_t *sizes, int n
     }
     if (!j->failed) {
         portrait_images(j, v, entries, sizes, n, exe, exe_n);   /* (its own contexts: after the areas') */
+        title_images(j, v, entries, sizes, n);
     }
     free(ms.list);
     free(v);

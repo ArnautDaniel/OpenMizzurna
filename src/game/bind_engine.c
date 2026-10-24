@@ -9,6 +9,7 @@
 #include "../render/scene3d.h"
 #include "../data/png.h"
 #include "../platform/library.h"
+#include "movie.h"
 
 #include <SDL3/SDL.h>
 
@@ -248,7 +249,7 @@ PRIM(p_exe_table) {   /* ( addr len -- addr n ) a table of the executable by nam
 }
 
 /* ---- images: the library's pictures drawn in 2D (the sky) ---- */
-#define MAX_IMAGES 128
+#define MAX_IMAGES 512
 static struct {
     char path[160];
     GpuTexture t;
@@ -350,6 +351,30 @@ PRIM(p_load_file) {   /* ( addr max name len -- n | -1 ) up to max bytes read; -
     PUSH((Cell)fread((void *)addr, 1, (size_t)max, fp));
     fclose(fp);
 }
+/* the movies (movie.h) */
+#define FULL_VOLUME 127.0f
+PRIM(p_movie_open) {   /* ( name len volume -- flag ) movies/<name>: its pictures from now, its sound playing */
+    Cell vol = POP(), n = POP();
+    const char *s = (const char *)POP();
+    char name[64];
+
+    snprintf(name, sizeof(name), "%.*s", (int)n, s);
+    PUSH(movie_open(name, (float)vol / FULL_VOLUME) ? -1 : 0);
+}
+PRIM(p_movie_advance) { PUSH(movie_advance(1.0 / STEPS_PER_SECOND)); }   /* ( -- frame ) a step on: -1 before, -2 over */
+PRIM(p_movie_draw) {   /* ( x y w h -- ) the picture now, in window pixels, tinted */
+    Cell h = POP(), wd = POP(), y = POP(), x = POP();
+    GpuTexture t = movie_texture();
+
+    if (t.id != 0) {
+        render_image(t, (float)x, (float)y, (float)wd, (float)h, gEngine.pen);
+    }
+}
+PRIM(p_movie_close) { movie_close(); }
+PRIM(p_reboot) {   /* ( mode -- ) after this step the scripts start afresh, boot-mode that (the game over: the title) */
+    gEngine.boot_mode = POP();
+    gEngine.reboot = 1;
+}
 PRIM(p_clip) {   /* ( x y w h -- ) the 2D from now on only within this window rectangle (w 0: everywhere) */
     Cell ch = POP(), cw = POP(), y = POP();
     render_clip((int)POP(), (int)y, (int)cw, (int)ch);
@@ -430,7 +455,7 @@ void bind_engine(Forth *f) {
         {"on-tick", p_on_tick}, {"off-tick", p_off_tick}, {"on-draw", p_on_draw}, {"off-draw", p_off_draw},
         {"ticks", p_ticks}, {"dt", p_dt}, {"seconds", p_seconds}, {"step-blend", p_step_blend}, {"pen-color", p_pen_color}, {"pen-scale", p_pen_scale}, {"draw-text", p_draw_text},
         {"draw-rect", p_draw_rect}, {"pen-blend", p_pen_blend}, {"draw-quad", p_draw_quad}, {"screen-size", p_screen_size}, {"char-size", p_char_size}, {"hud", p_hud},
-        {"clear-color", p_clear_color}, {"random", p_random}, {"image", p_image}, {"image-size", p_image_size}, {"draw-image", p_draw_image}, {"draw-image-quad", p_draw_image_quad}, {"draw-image-part", p_draw_image_part}, {"clip-2d", p_clip}, {"save-file", p_save_file}, {"load-file", p_load_file}, {"draw-image-quad-part", p_draw_image_quad_part}, {"behind", p_behind}, {"pad-rumble", p_pad_rumble}, {"draw-billboard", p_draw_billboard}, {"draw-ground-quad", p_draw_ground_quad}, {"screenshot", p_screenshot},
+        {"clear-color", p_clear_color}, {"random", p_random}, {"image", p_image}, {"image-size", p_image_size}, {"draw-image", p_draw_image}, {"draw-image-quad", p_draw_image_quad}, {"draw-image-part", p_draw_image_part}, {"clip-2d", p_clip}, {"reboot", p_reboot}, {"movie-open", p_movie_open}, {"movie-advance", p_movie_advance}, {"movie-draw", p_movie_draw}, {"movie-close", p_movie_close}, {"save-file", p_save_file}, {"load-file", p_load_file}, {"draw-image-quad-part", p_draw_image_quad_part}, {"behind", p_behind}, {"pad-rumble", p_pad_rumble}, {"draw-billboard", p_draw_billboard}, {"draw-ground-quad", p_draw_ground_quad}, {"screenshot", p_screenshot},
         {"screenshot-pending?", p_screenshot_pending}, {"console!", p_console_store}, {"exe-table", p_exe_table}, {"library-file", p_library_file}, {"exe-u8", p_exe_u8}, {"exe-s8", p_exe_s8}, {"exe-s16", p_exe_s16}, {"exe-s32", p_exe_s32},
     };
     Vocab *was = f->m.current, *v = forth_vocab(f, "engine");

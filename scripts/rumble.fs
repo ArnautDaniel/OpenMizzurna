@@ -2,7 +2,7 @@
 \ A pad has two: the small, on or off, and the large at a strength (0 - 255); each runs for so many of the
 \ original's pad frames (60 a second; -1: until told otherwise) and then stops.
 IN: rumble
-USING: engine actors messages ;
+USING: engine actors messages settings ;
 
 <PRIVATE
 2 constant #ports   60e fconstant pad-frames
@@ -17,6 +17,7 @@ create ports  motors #ports * allot   ports motors #ports * erase
     p large-left f@ f0> if  p large-left f@ dt pad-frames f* f- 0e fmax p large-left f!  then ;
 : drive ( n -- )
     dup port# {: n p :}  p wear
+    vibration? 0= if  n false 0 pad-rumble exit  then   \ (the title's menu: vibration off)
     n  p small-left f@ running?  p large-left f@ running? if  p large-strength @  else  0  then  pad-rumble ;
 : rumble-tick ( -- )  #ports 0 do  i drive  loop ;
 PRIVATE>

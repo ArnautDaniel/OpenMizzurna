@@ -187,6 +187,8 @@ are built, each listed here.
 | `draw-image-quad-part` | `image u v w h x0 y0 x1 y1 x2 y2 x3 y3 --` | part of it on four corners (the corner map, turned) |
 | `clip-2d` | `x y w h --` | the 2D from now on only within that window rectangle (w 0: everywhere; the corner map's window) |
 | `save-file` / `load-file` | `addr len name len -- flag` / `addr max name len -- n` | the player's own files, `<home>/saves/<name>` (load: -1 none) |
+| `movie-open` / `movie-advance` / `movie-draw` / `movie-close` | `name len volume -- flag` / `-- frame` / `x y w h --` / `--` | a movie of the library: its pictures (a step on each advance: -1 not yet, -2 over) and its sound |
+| `reboot` / `boot-mode` | `mode --` / `-- mode` | after this step the scripts start afresh (Forth and the actors), `boot-mode` that: 0 the title, 1 / 2 an ending's movie (the game over, an ending) |
 | `behind` | `flag --` | the 2D from now on behind the 3D (the sky) or over it |
 | `records` / `#records` / `record` | `path len word len -- table` / `table -- n` / `table i -- addr` | a library text's lines that start with the word: each line's numbers a row (a cell each) |
 | `draw-billboard` | `image x z bottom top half yaw grey blend --` | an upright picture in the world facing the heading yaw (grey 128: as it is; blend: 0 solid, 1 half ...) |

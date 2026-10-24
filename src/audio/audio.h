@@ -49,6 +49,8 @@ int au_seq_playing(int sep, int seq);
 
 /* an XA stream: the library's xa/TSG/<channel>.flac at a volume, to its end */
 void au_xa_play(int channel, float volume);
+/* any FLAC of the library the same way (a movie's sound) */
+void au_flac_play(const char *path, float volume);
 void au_xa_stop(void);
 int au_xa_playing(void);
 

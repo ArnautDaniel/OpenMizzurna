@@ -16,6 +16,7 @@
  * drawing at the display's rate (vsync), blending the last two steps. */
 #include "forth/forth.h"
 #include "game/engine.h"
+#include "game/movie.h"
 #include "audio/audio.h"
 #include "kernel/mactor.h"
 #include "platform/library.h"
@@ -97,6 +98,7 @@ static int start_scripts(Engine *e) {
     forth_prim(e->forth, "exit-status", p_exit_status);
     forth_prim(e->forth, "error-count", p_error_count);
     forth_constant(e->forth, "hidden?", e->hidden ? -1 : 0);
+    forth_constant(e->forth, "boot-mode", e->boot_mode);
     forth_add_root(e->forth, dir);
     snprintf(path, sizeof(path), "%s/prelude.fs", dir);
     if (forth_include(e->forth, path) != 0) {
@@ -216,6 +218,19 @@ int main(int argc, char **argv) {
         }
         if (ticks == 4) {
             lag = 0;   /* (far behind - a stall: don't try to catch up) */
+        }
+        if (e->reboot) {   /* back to the title (or an ending): the scripts' world afresh, as the original's sessions */
+            e->reboot = 0;
+            au_all_off();
+            au_xa_stop();
+            movie_close();
+            mactor_reset();
+            forth_free(e->forth);
+            e->ntick_hooks = e->ndraw_hooks = 0;
+            memset(e->held, 0, sizeof(e->held));
+            if (!start_scripts(e)) {
+                e->console.open = 1;
+            }
         }
         e->step_blend = (float)lag / (float)tick_ns;   /* (drawing every display frame: vsync paces it) */
         draw(e);

@@ -190,3 +190,6 @@ message items-set ( mask -- )            \ (to the items) the list from a save's
 message his-car-at ( x z heading -- )    \ (to the driving) his car there (src: save_apply)
 message fuel-set ( n -- )
 message person-restore ( slot stop kind -- )   \ (to the townsfolk) at that stop, showing that kind (src: actor_load)
+
+\ ---- the title (docs/subsystems/title.md) ----
+message title-boot ( mode -- )           \ (to the title) start it: 0 the logo, 1 / 2 an ending's movie and card
