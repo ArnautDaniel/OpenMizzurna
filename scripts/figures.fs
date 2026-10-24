@@ -54,6 +54,13 @@ end-structure
                                                          \  src: actor_anim's next, the wait_anim it ends)
     true ;
 
+\ a figure's footfalls (src: func_8001C57C, on the frames of its motion): the sound's to say what's heard
+defer footfall ( id frame x z -- )
+:noname ( id frame x z -- )  2drop 2drop ; is footfall
+: advance-heard ( p x z -- end? )   \ advance, telling footfall of the frame it reaches (where the figure stands)
+    {: p x z :}  p frame {: was :}  p advance  p frame {: now :}
+    now was <>  p anim @ 0< 0= and if  p anim @ now x z footfall  then ;
+
 \ ---- the original's game frames: the figures moved a step each (15 a second indoors, ~30 in the town) ----
 15e fconstant indoor-game-frames   30e fconstant town-game-frames
 : game-frames ( F: -- n )   \ how many of them this step covers

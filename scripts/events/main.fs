@@ -9192,6 +9192,74 @@ defer L-80099064
     end-script
     ;
 
+\ $80096704
+: exe-80096704
+    10 frames wait
+    107 sound
+    end-script
+    ;
+
+\ $80096718
+: exe-80096718
+    10 frames wait
+    108 sound
+    end-script
+    ;
+
+\ $8009672C
+: exe-8009672C
+    16 frames wait
+    101 0 sequence-play
+    36 frames wait
+    100 0 sequence-play
+    end-script
+    ;
+
+\ $80096758
+: exe-80096758
+    16 frames wait
+    116 sound
+    36 frames wait
+    104 sound
+    end-script
+    ;
+
+\ $8009677C
+: exe-8009677C
+    16 frames wait
+    124 sound
+    36 frames wait
+    110 sound
+    end-script
+    ;
+
+\ $800967A0
+: exe-800967A0
+    16 frames wait
+    102 0 sequence-play
+    36 frames wait
+    101 0 sequence-play
+    end-script
+    ;
+
+\ $800967CC
+: exe-800967CC
+    10 frames wait
+    119 sound
+    2 frames wait
+    119 sound
+    end-script
+    ;
+
+\ $800967F0
+: exe-800967F0
+    10 frames wait
+    116 sound
+    35 frames wait
+    117 sound
+    end-script
+    ;
+
 : L-80096904
     winona as-this-one
     matthew winona face-each-other

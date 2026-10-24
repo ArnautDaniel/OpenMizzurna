@@ -89,6 +89,8 @@ static const ExeTable kTables[] = {
     {"area-sounds", 0x80081458, 34 * 4,
      "an area's sounds: s16 how many effect sequences its set holds, s16 its ambience (a row of `music`) "
      "(src: area_sep_open, func_800225AC)"},
+    {"door-sounds", 0x80096814, 34,
+     "the sound of a door of the third kind, by the content area (u8; 0 none - src: func_80041D24)"},
     {"music", 0x800814DC, MUSIC_TRACKS * MUSIC_ENTRY,
      "the background music: per track its sequence's CD.BIN entry, then 0 or 1, and its volume (src: music_play)"},
 };

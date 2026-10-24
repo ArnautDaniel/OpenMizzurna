@@ -553,6 +553,8 @@ def main():
     # (and the car's: getting in, alone or with a passenger - src: func_8004175C starts them on a thread it picks
     # itself, not through event_start)
     car_scripts = {0x800965B0, 0x80096610}
+    # (and the doors' sounds: src func_80041D24 starts them on the main thread itself)
+    car_scripts |= {0x8009672C, 0x80096758, 0x8009677C, 0x800967A0, 0x80096704, 0x80096718, 0x800967CC, 0x800967F0}
     addrs = sorted(set(x for x in EV.started_scripts(main_c) if x < EXE_BASE + len(exe_img)) | main_minigames | car_scripts |
                    {x for _, x in check_targets if EXE_BASE <= x < EXE_BASE + len(exe_img)})
     tx = (lambda m: texts.get('033_4', m - 10000) if 10000 <= m < 15000 else None) if texts else (lambda m: None)

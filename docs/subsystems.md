@@ -14,7 +14,7 @@ phase-1 port's files (`../port/src/game/`), which name the decomp's functions; t
 | world | areas and their scenes, floors, walls and trigger zones, doors' positions, the town's tiles and roads | `area.c`, `floor.c`, `cphysics.c`, `map_stream.c`, `carline.c` |
 | figures | characters' models, their motions and keyed animation, billboards (trees, lamps) | `model.c`, `actor_anim.c`, `snow.c` (billboards) |
 | render | the picture: areas, the town, figures, the sky, snow, the day's light, 2D | `draw.c`, `sky.c`, `snow.c`, `clock.c` (lighting), `ovl027.c` (tile renderer) |
-| audio | sound effects (VAB), sequences (SEP), music and voice streams (XA), reverb | `sound.c`, `ambience.c`, phase 1's `psx/audio.c` |
+| audio ([page](subsystems/sound.md), built) | sound effects (VAB), sequences (SEP), music and voice streams (XA), reverb | `sound.c`, `ambience.c`, phase 1's `psx/audio.c` |
 | movies | the STR movies | phase 1's `psx/movie.c` |
 | saves | the save files (the memory card's contents as files) | `cmcard.c` |
 
@@ -52,7 +52,7 @@ phase-1 port's files (`../port/src/game/`), which name the decomp's functions; t
 | Map | the town map, places known | `mapscreen.c` |
 | HUD | the clock and fuel on screen, prompts | `hud.c`, `hudprim.c` |
 | Weather | snow, the sky, the day's light | `snow.c`, `sky.c`, `clock.c` |
-| Music | the background music, ambience, stage music | `sound.c`, `ambience.c` |
+| Sound ([page](subsystems/sound.md), built) | effects, held loops, the background music and ambience, XA, footsteps, the areas' own sounds | `sound.c`, `ambience.c` |
 | Fight ([page](subsystems/fight.md), built) | a fistfight: the pad or the AI each side, the hits, the game over | `fight.c` |
 | Shoot-out ([page](subsystems/shootout.md), built) | button targets on a foe: the rounds, the camera's path, the game over | `qte.c`, `shootout.c`, the overlays |
 | Tail ([page](subsystems/tail.md), built) | tailing the lookout to his door, unseen; the door's keypad | `ovl027.c` (`func_801025E0`) |

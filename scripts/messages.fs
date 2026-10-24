@@ -59,6 +59,7 @@ message walker-start ( slot node dest speed motion -- )   \ (to the walkers) alo
 message walker-stop ( slot -- )            \ stop walking there, stand (src: walker_remove)
 message flare-on ( slot -- )             \ (to the flare) a flare's glow at their feet, growing (src: ground_flare_draw)
 message play-sound ( id -- )             \ (to the sound) an effect once: under 100 the common bank's program, else the area's
+message play-sound-at ( id volume -- )  \ the same, at a volume (0 - 127: footsteps further off)
 message loop-sound ( id -- )             \ an effect held, until stopped (src: ambient_start)
 message stop-loop ( id -- )              \ (src: ambient_stop)
 message play-sequence ( id loop? -- )    \ a sequence: under 100 the common set's, else the area's (src: seq_play)

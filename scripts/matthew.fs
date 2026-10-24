@@ -187,7 +187,9 @@ PRIVATE>
 behaviour the-player
   on spawned ( -- )  figure-path model figure !  self subscribe tick  self subscribe player-control ;
   on figure-place ( x y z -- )  0 heading-there !  0 ahead !  place ;
-  on tick ( -- )  crawling @ if  crawl  then  control  scene-moves  moving advance if  moving hold-move @ if  keep-move  then  then ;
+  on tick ( -- )  crawling @ if  crawl  then  control  scene-moves
+    moving  unseen @  self body? 0= or if  advance  else  self body-pos 3f>s nip  advance-heard  then
+    if  moving hold-move @ if  keep-move  then  then ;
   on player-control ( flag -- )  controlled ! ;
   on figure-on-foot ( flag -- )  on-foot ! ;
   on figure-pushes ( crate -- )  pushing ! ;   \ (-1: none)

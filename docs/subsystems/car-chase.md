@@ -39,6 +39,6 @@ Chasing the bike through the town in Matthew's car (area 27's minigame 21; src: 
 ## Status
 
 Built (`tests/library/test_car_chase.fs`). To come:
-- the sounds, the rumble, the music stopping;
+- the rumble (the knocks' and the crash's sounds, the music stopping: sound.md);
 - the bike's own motions (its wobble and fall);
 - Mel riding drawn as the original seated her.

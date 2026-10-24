@@ -42,7 +42,7 @@ Matthew driving his car (slot 26) in the town (src: ovl027 `car_update`, cevcon.
 Built (`tests/library/test_driving.fs`). To come:
 - the road blocks (`car_road_block`: 18 tiles' zones, before 12/28 03:00);
 - other people and cars in the way;
-- the scrape and crash sounds, the pad's rumble, the engine's pitch;
+- the pad's rumble (its scrapes and crash sound, its engine held and pitched by the speed: sound.md);
 - a passenger getting in (`into-the-car-with`);
 - the car's lean and wheels (`func_80109430`);
 - unsticking it (`func_80106370`);

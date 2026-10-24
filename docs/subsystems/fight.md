@@ -35,5 +35,6 @@ A fistfight between two figures (src: fight.c `fight_start` / `fight_update`, th
 ## Status
 
 Built: the moves, the pad, the AI, the hits, the knock-out, the game over and retry, the camera, the bars
-(`tests/library/test_fight.fs`). To come: the sounds, the rumble, the bars' name icons and the game over's
+(`tests/library/test_fight.fs`). Its sounds - by the area and the move: a hit's and its voice, a miss, a fall; its music, off on a loss -
+are sound.md's. To come: the rumble, the bars' name icons and the game over's
 picture, style 7's own motions, the two put apart after a win (src: `actor_place_apart`), billboards as walls.

@@ -299,7 +299,8 @@ variable minigame-busy   \ a code minigame not over yet (src: minigame_id still 
 : map-sync ( -- )  0 s" map-sync" unbuilt ;   \ op $172
 : xa-play ( n -- )  s" sound" actor-named send play-stream ;   \ op $173 (src: xa_play)
 : xa-stop ( -- )  s" sound" actor-named send stop-stream ;   \ op $174
-: door-sound ( n -- )  1 s" door-sound" unbuilt ;   \ op $176
+defer door-sound ( kind -- )   \ op $176 (door-sounds.fs)
+:noname ( kind -- )  1 s" door-sound" unbuilt ; is door-sound
 : wait-attached-to ( a a -- )  2 s" wait-attached-to" unbuilt  settle ;   \ op $178
 : cd-pictures ( n n -- )  2 s" cd-pictures" unbuilt ;   \ op $179
 

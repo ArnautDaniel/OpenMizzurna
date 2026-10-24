@@ -297,7 +297,7 @@ $40000 constant too-far-squared   $FFFF constant near-squared
             i walking? i riding? 0= and if  i walk-step  then   \ (riding: their walk waits for the car)
             i person-of forward @ if  i step-forward  then
             i person-of turning @ if  i turn-a-step  then
-            i person-of moving advance drop
+            i here? if  i person-of moving  i person-now drop nip  advance-heard  else  i person-of moving advance  then  drop
         then
     loop ;
 

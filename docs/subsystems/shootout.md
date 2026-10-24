@@ -64,8 +64,7 @@ Built (`tests/library/test_shootout.fs`):
 
 To come:
 - the original's button and burst icons;
-- the gunshot sounds and the pad's rumble;
+- the pad's rumble (the shots' and hits' sounds, the retry's music: sound.md);
 - the muzzle flash's lights;
-- the music again on a retry;
 - area 26's own gun control (L2 to raise the gun, walking with it);
 - the gun prop hidden while aiming.
