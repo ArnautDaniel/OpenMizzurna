@@ -430,7 +430,7 @@ static int same_text(const char *path, const uint8_t *block, size_t n, CdconvRea
     ok = a.n == b.n;
     for (i = 0; ok && i < a.n; i++) {
         ok = a.messages[i].n == b.messages[i].n &&
-             memcmp(a.messages[i].codes, b.messages[i].codes, sizeof(uint16_t) * (size_t)a.messages[i].n) == 0;
+             (a.messages[i].n == 0 || memcmp(a.messages[i].codes, b.messages[i].codes, sizeof(uint16_t) * (size_t)a.messages[i].n) == 0);
         if (!ok) {
             snprintf(why, nwhy, "%s: message %d differs", path, i);
         }

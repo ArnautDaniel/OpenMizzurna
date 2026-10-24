@@ -22,6 +22,10 @@ Its first words are s16 offsets of its tables:
 | 5 lights | per scene 0x22 bytes: its mode, level, ambient, three lights | daylight.fs |
 | 6 reverb | per scene {type, depth} (the depth unused: every scene's 0x28) | `scene-reverb`, sound.fs |
 
+A scene's record is read only where the file has it (`record-of`, `scene-record`, `meta-c@`): a scene past the
+area's own (an event of another area sharing its scripts, as 29 does 2's) shows nothing and reads zeros - no
+camera profile, light or reverb. A file shorter than the offsets (the town's: 4 bytes) is no table at all.
+
 The origin's height and each floor's: the executable's `area-height` table (4 s16 an area: floor 0..3; the
 origin stands on floor 1; src: func_80020738).
 

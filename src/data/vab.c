@@ -216,11 +216,11 @@ static int mode_word(char **at, const char *one, const char *zero, int *bit) {
 }
 
 static int tone_line(uint8_t *vh, char *at, char *why, size_t nwhy) {
-    long b, s, v[6];
+    long b, s, v[6] = {0};
     uint8_t *t;
     unsigned a1 = 0, a2 = 0;
     char *key;
-    int bit;
+    int bit = 0;
 
     if (!number(&at, &b) || !number(&at, &s) || b < 0 || b >= used_programs(vh) || s < 0 || s >= VAB_TONES_PER_PROGRAM) {
         snprintf(why, nwhy, "a tone line wants a block and a slot");
@@ -248,7 +248,7 @@ static int tone_line(uint8_t *vh, char *at, char *why, size_t nwhy) {
         } else if (strcmp(key, "decay") == 0) { ok = number(&at, v); a1 |= (unsigned)(v[0] & 0xF) << 4; }
         else if (strcmp(key, "sustain-level") == 0) { ok = number(&at, v); a1 |= (unsigned)(v[0] & 0xF); }
         else if (strcmp(key, "sustain") == 0) {
-            int down;
+            int down = 0;
             ok = mode_word(&at, "exponential", "linear", &bit) && mode_word(&at, "decrease", "increase", &down) &&
                  numbers(&at, v, 2);
             a2 |= (bit ? ADSR2_SUSTAIN_EXPONENTIAL : 0) | (down ? ADSR2_SUSTAIN_DECREASE : 0) |
@@ -320,7 +320,7 @@ uint8_t *vab_header_from_text(const char *s, size_t n, size_t *size, char *why, 
     copy[n] = 0;
     for (line = copy; line != NULL; line = next) {
         char *at = line, *key;
-        long v[2];
+        long v[2] = {0};
         int ok = 1;
 
         next = strchr(line, '\n');
@@ -336,6 +336,9 @@ uint8_t *vab_header_from_text(const char *s, size_t n, size_t *size, char *why, 
             continue;
         }
         key = word(&at);
+        if (key == NULL) {   /* (a line of spaces) */
+            continue;
+        }
         if (strcmp(key, "version") == 0) { ok = number(&at, v); put32(head + 4, (uint32_t)v[0]); }
         else if (strcmp(key, "id") == 0) { ok = number(&at, v); put32(head + 8, (uint32_t)v[0]); }
         else if (strcmp(key, "size") == 0) { ok = number(&at, v); put32(head + 12, (uint32_t)v[0]); }

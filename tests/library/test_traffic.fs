@@ -22,6 +22,13 @@ testing a car parked at a route's start: at its first node (the lane's first car
 T{ nozz-car 7 the-traffic send car-park  deliver  nozz-car car-driving? -> false }T
 T{ nozz-car car-now drop x-z -> 81 road-node 2drop x-z }T
 
+testing a stretch of no length (two of its points in one place): the car stays at its start, not lost far off
+: placed-on-nothing ( -- x z )
+    nozz-car car-of {: c :}  1000 c cx !  0 c cy !  2000 c cz !  50 c dx !  0 c dy !  50 c dz !  0 c stretch !
+    5e c along f!  c place  c x @  c z @ ;
+T{ placed-on-nothing -> 1000 2000 }T
+T{ nozz-car 7 the-traffic send car-park  deliver  nozz-car car-now drop x-z -> 81 road-node 2drop x-z }T
+
 testing driving: on its way, and at its route's end it parks and its riders get out
 : steps-until-parked ( -- n )   \ (the tick, as the engine sends it)
     0 begin  1+  broadcast tick  deliver  nozz-car car-driving? 0=  over 20000 > or  until ;

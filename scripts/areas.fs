@@ -24,16 +24,26 @@ create path 32 allot
     {: a s n :}  s" cdbin/" path swap move
     a 100 / [char] 0 + path 6 + c!  a 10 / 10 mod [char] 0 + path 7 + c!  a 10 mod [char] 0 + path 8 + c!
     s" _4/" path 9 + swap move  s path 12 + n move  path 12 n + ;
-create no-meta  64 allot   no-meta 64 erase   \ (no library: an empty table - no heights, cameras, lights)
-: meta ( -- addr )  area @ s" 0.bin" area-path library-file 0= if  drop no-meta  then ;
+reverb-table 1+ 2* constant meta-header   \ bytes: the tables' offsets
+\ (no library, or an area without one - the town's is 4 bytes of 0: an empty table - no heights, cameras, lights)
+create no-meta  64 allot   no-meta 64 erase
+: meta-file ( -- addr n )  area @ s" 0.bin" area-path library-file ;
+: meta ( -- addr )  meta-file meta-header < if  drop no-meta  then ;
 : table ( n -- addr )  meta swap 2* + sw@ meta + ;
+: meta-c@ ( addr -- c )   \ a byte of it; past its end 0 (a scene the area hasn't: nothing shown, no reverb)
+    meta-file {: m n :}  dup m - n u< if  c@  else  drop 0  then ;
+: record-of ( table scene bytes -- addr )   \ a scene's record in a table of one a scene (one it hasn't: zeros)
+    {: t sc b :}  t table  sc b * +  {: a :}  meta-file {: m n :}  a b + m - n u> if  no-meta  else  a  then ;
+: scene-record ( table bytes -- addr )  scene @ swap record-of ;   \ the scene's
 : shell-objects ( -- n )  header-table table 8 + c@ ;
-: scene-reverb ( -- type )  reverb-table table scene @ 2* + c@ ;   \ (a fact: src scene_reverb - its depth unused)
+2 constant reverb-record
+: scene-reverb ( -- type )  reverb-table reverb-record scene-record c@ ;   \ (a fact: src scene_reverb - its depth unused)
 : model-objects ( -- n )  header-table table 9 + c@ ;
 : objects ( -- n )  shell-objects model-objects + ;
-: shown? ( scene object -- flag )  swap objects * + shown-table table + c@ 0<> ;
+: shown? ( scene object -- flag )  swap objects * + shown-table table + meta-c@ 0<> ;
+6 constant camera-record
 : scene-camera ( scene -- eye-y look-y dist )   \ src: scene_camera_profile
-    6 * camera-table table +  dup sw@  over 2 + sw@  rot 4 + sw@ ;
+    camera-table swap camera-record record-of  dup sw@  over 2 + sw@  rot 4 + sw@ ;
 4 constant floors/area
 : floor-height ( area floor -- y )   \ src: func_80020738 (the origin stands on floor 1; 0 with no table)
     swap floors/area * +  >r s" area-height" r> exe-s16 ;

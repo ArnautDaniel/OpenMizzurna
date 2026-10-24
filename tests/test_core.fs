@@ -28,6 +28,10 @@ T{ 3 0 5 within 5 0 5 within -> true false }T
 T{ 12 0 10 clamp -> 10 }T
 T{ $ff #10 %101 -> 255 10 5 }T
 T{ 'A' -> 65 }T
+testing sums wrap round, as Forth's do: the largest and one more is the smallest
+-1 1 rshift constant largest   largest negate 1- constant smallest
+T{ largest 1+  largest 1 +  smallest 1-  smallest negate  largest 2 * -> smallest smallest largest smallest -2 }T
+T{ variable w  largest w !  1 w +!  w @ -> smallest }T
 
 testing comparisons
 T{ 1 2 < 2 1 < -> true false }T

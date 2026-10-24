@@ -333,7 +333,7 @@ static int import_disc(Import *im) {
                 failed = 1;
             }
         }
-        if (!failed) {   /* the models, and the textures they're drawn with */
+        if (!failed && !SDL_GetAtomicInt(&im->cancel)) {   /* the models, and the textures they're drawn with */
             ImportWrite w = {im, root};
             char mwhy[512] = "";
 

@@ -53,4 +53,10 @@ T{ 29 0 into  2 steps  0 texture-frame@ -> 1 }T
 testing the town's water: a frame every other of the town's (30 a second)
 T{ 27 0 into  2 steps  0 texture-frame@ 0 6 within -> true }T
 
+testing a scene past the area's (area 4 has one): nothing shown, no reverb, nothing read past its table
+T{ 4 0 into  0 0 shown?  1 0 shown?  1 1 shown? -> true false false }T
+T{ 4 3 into  scene-reverb  0 up?  1 up? -> 0 false false }T
+testing the town's metadata (4 bytes: none): no objects of its own
+T{ 27 0 into  objects -> 0 }T
+
 test-summary

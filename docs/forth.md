@@ -8,7 +8,8 @@ for this game. Names are case-insensitive.
 
 - **Cells** are pointer-sized integers, and addresses are real addresses: `@` and `!` reach C
   structs directly. Memory words come in sizes: `c@ w@ sw@ l@ sl@ @` (8/16/32 bits, signed
-  variants) and their stores.
+  variants) and their stores. Sums, differences and products wrap round (`+ - * 1+ 1- negate abs +! +loop`):
+  the largest cell `1+` is the smallest, as Forth has it.
 - **Floats** have their own stack (doubles). A number with a `.` or an exponent is a float:
   `1.5`, `2e`, `-0.25e3`. In memory floats are 32-bit like the game's: `sf@ sf!` (and `f@ f!` for
   a Forth `fvariable`, which holds a double).
@@ -206,8 +207,8 @@ are built, each listed here.
 | `part-on-screen` | `model motion frame x y z yaw part -- px py true \| false` | where a part of the posed figure falls in the window, with this frame's camera |
 | `n>str` / `$clear $+ $@` | `n -- addr len` / ... | a number's digits; a string built a piece at a time (prelude) |
 | `exe-u8` / `exe-s8` / `exe-s16` / `exe-s32` | `addr len i -- n` | element i of a table of the executable (0 past its end or with none) |
-| `library-file` | `addr len -- addr n` | a library file's bytes (read once, kept); `0 0` if none |
-| `exe-table` | `addr len -- addr n` | a table of the executable by name (`s" music" exe-table`); `0 0` if none |
+| `library-file` | `addr len -- addr n` | a library file's bytes (read once, kept - as many as are asked for); `0 0` if none |
+| `exe-table` | `addr len -- addr n` | a table of the executable by name (`s" music" exe-table`: the library's `exe/music.bin`, as `library-file`); `0 0` if none |
 
 The pad's buttons as keys: `scripts/keys.fs` (`pad-circle`, `pad-cross`, ... the d-pad `pad-up` ...).
 

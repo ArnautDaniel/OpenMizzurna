@@ -28,7 +28,7 @@
 #define PACK_BANKS 200         /* from here: an event pack's, by its CD.BIN entry */
 #define ENTRY_BANKS 1000       /* from here: any CD.BIN entry's, by 1000 + the entry */
 #define ENTRY_KINDS 5          /* CD.BIN: 5 entries a group */
-#define MAX_FILES 128
+#define MAX_FILES 512          /* (the disc has some 120 banks) */
 
 /* ---- text files ---- */
 typedef struct TextFile {

@@ -141,7 +141,7 @@ PRIVATE>
     d abs turn-snap < if  c aim @  else  c heading @  d s>f  1e 0.75e n f** f-  f* f>s -  then
     c heading ! ;   \ (kept unwrapped, as its aim is: whole turns off only at a node)
 : place ( c -- )   \ along its stretch
-    {: c :}  c along f@ c stretch @ s>f f/ {: F: k :}
+    {: c :}  c stretch @ 0> if  c along f@ c stretch @ s>f f/  else  0e  then {: F: k :}   \ (none: at its start)
     c cx @  c dx @ s>f k f* f>s +  c x !
     c cy @  c dy @ s>f k f* f>s +  c y !
     c cz @  c dz @ s>f k f* f>s +  c z ! ;

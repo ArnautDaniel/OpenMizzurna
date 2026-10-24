@@ -111,37 +111,77 @@ PRIM(p_exe_s16) { PUSH(exe_element(f, 2, 1)); }   /* ( addr len i -- n ) a signe
 PRIM(p_exe_s32) { PUSH(exe_element(f, 4, 1)); }   /* ( addr len i -- n ) a signed 32-bit word */
 
 /* ---- the library's files ---- */
-#define MAX_FILES 256
-static struct {
-    char path[160];
+/* each read once and kept (a file is a fact; the town alone has thousands): found by its path's hash */
+#define FILE_SLOTS_FIRST 1024   /* the table's first size; doubled when half full */
+typedef struct {
+    char *path;   /* NULL: an empty slot */
     uint8_t *data;
     size_t size;
-} sFiles[MAX_FILES];
-static int sNFiles;
+} LibraryFile;
+static LibraryFile *sFiles;
+static size_t sFileSlots, sNFiles;
+
+static size_t path_hash(const char *s) {   /* FNV-1a */
+    size_t h = 2166136261u;
+    for (; *s; s++) {
+        h = (h ^ (uint8_t)*s) * 16777619u;
+    }
+    return h;
+}
+
+static LibraryFile *file_slot(LibraryFile *table, size_t slots, const char *path) {
+    size_t i = path_hash(path) & (slots - 1);
+    while (table[i].path != NULL && strcmp(table[i].path, path) != 0) {
+        i = (i + 1) & (slots - 1);
+    }
+    return &table[i];
+}
+
+static int files_grow(void) {
+    size_t slots = sFileSlots ? sFileSlots * 2 : FILE_SLOTS_FIRST, i;
+    LibraryFile *table = calloc(slots, sizeof(*table));
+
+    if (table == NULL) {
+        return 0;
+    }
+    for (i = 0; i < sFileSlots; i++) {
+        if (sFiles[i].path != NULL) {
+            *file_slot(table, slots, sFiles[i].path) = sFiles[i];
+        }
+    }
+    free(sFiles);
+    sFiles = table;
+    sFileSlots = slots;
+    return 1;
+}
+
+/* the file's bytes and size (NULL 0 if the library hasn't it), read the first time it is asked for */
+static LibraryFile *library_file(Forth *f, const char *path) {
+    LibraryFile *e;
+
+    if ((sNFiles + 1) * 2 > sFileSlots && !files_grow()) {
+        forth_error(f, "library-file: out of memory");
+    }
+    e = file_slot(sFiles, sFileSlots, path);
+    if (e->path == NULL) {
+        e->path = strdup(path);
+        e->data = files_read(path, &e->size);
+        if (e->data == NULL) {
+            e->size = 0;
+        }
+        sNFiles++;
+    }
+    return e;
+}
 
 PRIM(p_library_file) {   /* ( addr len -- addr n ) a library file's bytes (kept: read once); 0 0 if none */
     char path[160];
-    int i;
+    LibraryFile *e;
 
     cstring(f, path, sizeof(path));
-    for (i = 0; i < sNFiles; i++) {
-        if (strcmp(sFiles[i].path, path) == 0) {
-            PUSH(sFiles[i].data);
-            PUSH(sFiles[i].size);
-            return;
-        }
-    }
-    if (sNFiles == MAX_FILES) {
-        forth_error(f, "library-file: too many files");
-    }
-    snprintf(sFiles[sNFiles].path, sizeof(sFiles[sNFiles].path), "%s", path);
-    sFiles[sNFiles].data = files_read(path, &sFiles[sNFiles].size);
-    if (sFiles[sNFiles].data == NULL) {
-        sFiles[sNFiles].size = 0;
-    }
-    PUSH(sFiles[sNFiles].data);
-    PUSH(sFiles[sNFiles].size);
-    sNFiles++;
+    e = library_file(f, path);
+    PUSH(e->data);
+    PUSH(e->size);
 }
 
 /* ---- hooks: words run every tick / every frame's 2D ---- */
@@ -217,35 +257,13 @@ PRIM(p_clear_color) {   /* ( F: r g b -- ) */
 /* ---- the game's data ---- */
 PRIM(p_exe_table) {   /* ( addr len -- addr n ) a table of the executable by name (data/exetables.c); 0 0 if none */
     char name[64], path[96];
-    size_t n = 0;
-    uint8_t *d;
-    static uint8_t *loaded[64];
-    static char names[64][64];
-    static size_t sizes[64];
-    static int nloaded;
-    int i;
+    LibraryFile *e;
 
     cstring(f, name, sizeof(name));
-    for (i = 0; i < nloaded; i++) {   /* (read once, kept: a table is a fact) */
-        if (strcmp(names[i], name) == 0) {
-            PUSH(loaded[i]);
-            PUSH(sizes[i]);
-            return;
-        }
-    }
     snprintf(path, sizeof(path), "exe/%s.bin", name);
-    d = files_read(path, &n);
-    if (d == NULL || nloaded == 64) {
-        free(d);
-        PUSH(0);
-        PUSH(0);
-        return;
-    }
-    snprintf(names[nloaded], sizeof(names[0]), "%s", name);
-    loaded[nloaded] = d;
-    sizes[nloaded++] = n;
-    PUSH(d);
-    PUSH(n);
+    e = library_file(f, path);
+    PUSH(e->data);
+    PUSH(e->size);
 }
 
 /* ---- images: the library's pictures drawn in 2D (the sky) ---- */

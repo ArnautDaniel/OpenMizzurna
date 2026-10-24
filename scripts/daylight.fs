@@ -82,7 +82,7 @@ create fog  rgb allot   create fog-now  rgb allot
 34 constant scene-light-record   10 constant scene-light   6 constant light-rgb
 29 constant scene-ambient   32 constant scene-level   33 constant scene-mode
 2 constant hour-light-mode      \ (mode 2: the hour's light and the fog, as outdoors)
-: light-record ( -- addr )  light-table table  scene @ scene-light-record * + ;
+: light-record ( -- addr )  light-table scene-light-record scene-record ;
 : sum ( addr -- n )  dup c@  over 1+ c@ +  swap 2 + c@ + ;
 : scene-way ( i -- x y z )  scene-light * light-record + {: a :}  a sw@  a 2 + sw@  a 4 + sw@ ;
 : scene-rgb ( i -- addr )  scene-light * light-rgb + light-record + ;

@@ -586,9 +586,9 @@ static void loop_step(Forth *f, Cell n) {
     if (t->rp < 3) {
         forth_error(f, "loop: not in a do loop");
     }
-    d = t->rs[t->rp - 1] - t->rs[t->rp - 2];
-    nd = d + n;
-    t->rs[t->rp - 1] += n;
+    d = (Cell)((UCell)t->rs[t->rp - 1] - (UCell)t->rs[t->rp - 2]);   /* (wrapping, as the sums do) */
+    nd = (Cell)((UCell)d + (UCell)n);
+    t->rs[t->rp - 1] = (Cell)((UCell)t->rs[t->rp - 1] + (UCell)n);
     if ((d ^ nd) < 0) {   /* crossed the line between limit - 1 and limit */
         t->rp -= 3;
         IP++;
@@ -665,9 +665,10 @@ PRIM(p_rdrop) { (void)rpop(f); }
 /* ---- arithmetic and logic ---- */
 
 #define BINOP(name, expr) PRIM(name) { Cell b = POP(), a = POP(); PUSH(expr); }
-BINOP(p_add, a + b)
-BINOP(p_sub, a - b)
-BINOP(p_mul, a * b)
+/* (Forth's sums wrap around: done unsigned, which C defines) */
+BINOP(p_add, (Cell)((UCell)a + (UCell)b))
+BINOP(p_sub, (Cell)((UCell)a - (UCell)b))
+BINOP(p_mul, (Cell)((UCell)a * (UCell)b))
 BINOP(p_and, a & b)
 BINOP(p_or, a | b)
 BINOP(p_xor, a ^ b)
@@ -711,11 +712,11 @@ PRIM(p_muldiv) {   /* a * b / c with a wide intermediate */
     divisor(f, c);
     PUSH((Cell)(p / c));
 }
-PRIM(p_negate) { Cell *s = top(f, 1); *s = -*s; }
-PRIM(p_abs) { Cell *s = top(f, 1); if (*s < 0) *s = -*s; }
+PRIM(p_negate) { Cell *s = top(f, 1); *s = (Cell)(0 - (UCell)*s); }
+PRIM(p_abs) { Cell *s = top(f, 1); if (*s < 0) *s = (Cell)(0 - (UCell)*s); }
 PRIM(p_invert) { Cell *s = top(f, 1); *s = ~*s; }
-PRIM(p_1add) { *top(f, 1) += 1; }
-PRIM(p_1sub) { *top(f, 1) -= 1; }
+PRIM(p_1add) { Cell *s = top(f, 1); *s = (Cell)((UCell)*s + 1); }
+PRIM(p_1sub) { Cell *s = top(f, 1); *s = (Cell)((UCell)*s - 1); }
 PRIM(p_0eq) { Cell *s = top(f, 1); *s = *s == 0 ? -1 : 0; }
 PRIM(p_0ne) { Cell *s = top(f, 1); *s = *s != 0 ? -1 : 0; }
 PRIM(p_0lt) { Cell *s = top(f, 1); *s = *s < 0 ? -1 : 0; }
@@ -740,7 +741,7 @@ PRIM(p_pstore) {
     void *p = addr(f, a);
 
     memcpy(&y, p, sizeof(y));
-    y += x;
+    y = (Cell)((UCell)y + (UCell)x);
     memcpy(p, &y, sizeof(y));
 }
 PRIM(p_cfetch) { Cell a = POP(); PUSH(*(uint8_t *)addr(f, a)); }

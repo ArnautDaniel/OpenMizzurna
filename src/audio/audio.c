@@ -86,10 +86,11 @@ int au_bank_load(int slot, const char *bank_text, const char *samples) {
         return 0;
     }
     count = le16(vh + VH_SAMPLES);
-    au_bank_free(slot);
-    au_lock();
-    b = &au_banks[slot];
-    memset(b, 0, sizeof(*b));
+    b = calloc(1, sizeof(*b));   /* (read whole before the mixer sees it: no disk while it waits) */
+    if (b == NULL) {
+        free(vh);
+        return 0;
+    }
     read_programs(b, vh);
     for (i = 1; i <= count && i < AU_SAMPLES; i++) {   /* (sample 0 is none) */
         uint8_t *wav;
@@ -102,7 +103,11 @@ int au_bank_load(int slot, const char *bank_text, const char *samples) {
         }
     }
     b->used = 1;
+    au_bank_free(slot);
+    au_lock();
+    au_banks[slot] = *b;
     au_unlock();
+    free(b);
     free(vh);
     return 1;
 }
@@ -299,7 +304,7 @@ static void envelope_step(AuVoice *v) {
         break;
     }
     cycles = 1 << (shift > ENV_RATE_SPLIT ? shift - ENV_RATE_SPLIT : 0);
-    delta = step << (shift < ENV_RATE_SPLIT ? ENV_RATE_SPLIT - shift : 0);
+    delta = step * (1 << (shift < ENV_RATE_SPLIT ? ENV_RATE_SPLIT - shift : 0));
     if (expo && !down && v->level > ENV_EXP_KNEE) {
         cycles *= 4;
     }
