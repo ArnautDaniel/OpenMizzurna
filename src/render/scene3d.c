@@ -62,7 +62,15 @@ typedef struct Draw {
     int node;                           /* (its first in the frame's pool of node matrices) */
     unsigned char shown[MAX_SHOWN];   /* a byte a node (0: hidden) */
     int nshown;                       /* (nodes past it are shown) */
+    int tag;                          /* whose it is (scene3d_tag: a figure's slot; -1 none) */
 } Draw;
+
+/* a model held at a node of a tagged figure drawn this frame (put there as the frame is drawn) */
+#define MAX_HELD 32
+typedef struct Held {
+    Model3D *m;
+    int tag, node;
+} Held;
 
 #define MAX_QUADS 4096
 typedef struct Quad {
@@ -575,16 +583,23 @@ static void place_matrix(const float pos[3], float yaw, float *world) {   /* sta
     world[12] = p[0], world[13] = p[1], world[14] = p[2];
 }
 
+static int sNextTag = -1;
+static Held sHeld[MAX_HELD];
+static int sNHeld;
+
 static Draw *new_draw(Model3D *m, const float pos[3], float yaw) {
     Draw *d;
 
     if (m == NULL || S.ndraws == MAX_DRAWS) {
+        sNextTag = -1;
         return NULL;
     }
     d = &S.draws[S.ndraws++];
     d->m = m;
     d->posed = 0;
     d->nshown = 0;
+    d->tag = sNextTag;
+    sNextTag = -1;
     place_matrix(pos, yaw, d->world);
     return d;
 }
@@ -998,9 +1013,41 @@ static void quads_draw(int pass, const float *vp) {
     }
 }
 
+void scene3d_tag(int tag) { sNextTag = tag; }
+
+void scene3d_draw_held(Model3D *m, int tag, int node) {
+    if (m != NULL && sNHeld < MAX_HELD) {
+        sHeld[sNHeld].m = m, sHeld[sNHeld].tag = tag, sHeld[sNHeld].node = node;
+        sNHeld++;
+    }
+}
+
+static void place_held(void) {   /* each held model at its holder's node, as the holder stands posed this frame */
+    int k, i, n = S.ndraws;
+
+    for (k = 0; k < sNHeld; k++) {
+        for (i = 0; i < n; i++) {
+            Draw *h = &S.draws[i], *d;
+            float world[16];
+            if (h->tag != sHeld[k].tag || !h->posed || sHeld[k].node < 0 || sHeld[k].node >= h->m->nnodes) {
+                continue;
+            }
+            mat_mul(world, h->world, S.pool[h->node + sHeld[k].node]);
+            d = new_draw(sHeld[k].m, (const float[3]){0, 0, 0}, 0);
+            if (d != NULL) {
+                memcpy(d->world, world, sizeof(world));
+            }
+            break;
+        }
+    }
+    sNHeld = 0;
+}
+
 void scene3d_flush(int w, int h) {
     float proj[16], vp[16];
     int pass, i, k;
+
+    place_held();
 
     if ((S.ndraws == 0 && S.nquads == 0) || !S.have_camera) {
         S.ndraws = 0;

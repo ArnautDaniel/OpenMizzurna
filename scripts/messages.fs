@@ -162,6 +162,7 @@ message person-back ( slot -- )            \ as kept (src: actor_restore_state)
 message person-door-free ( slot -- )       \ no longer at the door
 message person-variant ( slot kind -- )   \ (to the townsfolk) they show that kind's model (0 or their own: theirs)
 message person-away ( slot -- )           \ (to the townsfolk) between stops, out of sight until their next (src: travelling = 1)
+message figure-holds ( holder prop hand -- ) \ (to the townsfolk) the holder's hand (1 right, 0 left) holds that prop (-1: lets go)
 message person-tilt ( slot rx rz -- )    \ (to the townsfolk) they're tilted so (src: rot_x, rot_z)
 message person-partner ( slot car -- )    \ (to the townsfolk) that car their partner (ridden: Mel's bike) (src: func_80029B20)
 message person-unlink ( slot -- )         \ no longer with their car: out of it where they are (src: partner = 0)

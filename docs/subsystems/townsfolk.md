@@ -107,6 +107,14 @@ the routes take one (`take-diner-seat`, `take-club-seat`: $3A, $45), walk to its
 `seat-approach`), sit (`sit-diner-seat`, $3B, $46: seated motion $77) and leave it ($48, $49) - messages
 `seat-take`, `seat-sit`, `seat-leave`. A jump in time frees them all.
 
+## Held
+
+A prop in someone's hand (src: actor_hold, func_800275FC; the events' ignore_a / ignore_b - so named in the decomp,
+they are the right hand and the left): `figure-holds ( holder prop hand )`, -1 lets go. It's drawn at the
+holder's hand - their figure's node 5 (right) or 7 (left), as they stand posed this frame (the engine's
+`figure-tag`, `draw-held`) - and kept where the holder stands (but 16, 23, and 151 in the right hand), so let go
+it's at their feet. (`tests/library/test_event_ops.fs`.)
+
 ## Seen
 
 Those on another floor than Matthew's aren't drawn, but in the park and the town (src: func_8002A10C).

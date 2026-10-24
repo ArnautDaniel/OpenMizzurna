@@ -40,6 +40,12 @@ testing the events' lock: the clock stands while it's on, counted; reset with th
 T{ events-stop  deliver  event-lock  deliver  event-locked?  lock-held? -> true true }T
 T{ event-lock  event-unlock  deliver  event-locked?  event-unlock  deliver  event-locked?  lock-held? -> true false false }T
 T{ event-lock  deliver  events-stop  deliver  event-locked?  lock-held? -> false false }T
+testing a prop in his hand (the events' ignore-a: the right): held, where he stands; -1 lets go
+24 constant the-gun
+: hold-it ( -- )  matthew the-gun ignore-a ;   : drop-it ( -- )  matthew -1 ignore-a ;
+T{ 1 into  events-stop  ' hold-it start-event  4 steps  the-gun townsfolk.private:held?
+   the-gun person-now drop nip  matthew-now drop nip  rot = -rot = and -> true true }T
+T{ ' drop-it start-event  4 steps  the-gun townsfolk.private:held? -> false }T
 testing the elevator doors: nothing outside the hospital
 T{ 1 1 elevator-doors  unbuilt-ops @ -> unbuilt-ops @ }T
 

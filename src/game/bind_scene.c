@@ -200,6 +200,13 @@ static int pose_of(Motion *mt, Cell frame, short (*turns)[3], float move[3]) {  
     return parts;
 }
 static short sTiltX, sTiltZ;   /* the next draw-figure's tilt (figure-tilt) */
+PRIM(p_figure_tag) { scene3d_tag((int)POP()); }   /* ( tag -- ) the next figure drawn is this one's (its slot) */
+PRIM(p_draw_held) {   /* ( model tag node -- ) held at that node of the figure tagged so this frame */
+    Cell node = POP(), tag = POP(), m = POP();
+    if (m >= 1 && m <= sNModels) {
+        scene3d_draw_held(sModels[m - 1].m, (int)tag, (int)node);
+    }
+}
 PRIM(p_figure_tilt) { sTiltZ = (short)POP(); sTiltX = (short)POP(); }   /* ( rx rz -- ) the next draw-figure tilted so
                                                                           * (src: an actor's rot_x, rot_z) */
 PRIM(p_draw_figure) {   /* ( model motion frame x y z yaw -- ) a figure posed in a frame of a motion */
@@ -290,6 +297,8 @@ void bind_scene(Forth *f) {
     forth_prim(f, "lamp", p_lamp);
     forth_prim(f, "texture-frame", p_texture_frame);
     forth_prim(f, "figure-tilt", p_figure_tilt);
+    forth_prim(f, "figure-tag", p_figure_tag);
+    forth_prim(f, "draw-held", p_draw_held);
     forth_prim(f, "ground-part", p_ground_part);
     forth_prim(f, "ground-tilt", p_ground_tilt);
     forth_prim(f, "texture-frame@", p_texture_frame_shown);

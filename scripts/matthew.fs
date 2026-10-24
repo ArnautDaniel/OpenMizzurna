@@ -261,6 +261,7 @@ end-behaviour
 : anim-done? ( -- flag )  moving done @  moving anim @ 0< or ;   \ (a fact: the events' wait-anim)
 : draw-matthew ( -- )
     matthew-there? unseen @ 0= and if
+        0 figure-tag   \ (his slot: what he holds is drawn in his hands)
         figure @  moving anim @ 0< if  0 0  else  moving clip @ moving frame  then  matthew-now draw-figure
     then ;
 ' draw-matthew on-draw

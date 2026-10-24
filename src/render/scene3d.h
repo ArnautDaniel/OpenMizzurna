@@ -47,6 +47,11 @@ void scene3d_lamp(int lamp, int lit);
 void scene3d_texture_frame(int anim, int frame);
 int scene3d_texture_frame_shown(int anim);   /* (-1 none) */
 
+/* the next model drawn is tagged so (a figure's slot); a model held at a node of the figure drawn with that tag this
+ * frame (the hand that holds it: src actor_hold), placed as the frame is drawn */
+void scene3d_tag(int tag);
+void scene3d_draw_held(Model3D *m, int tag, int node);
+
 /* the camera, in world units (see above) */
 void scene3d_camera(const float target[3], float yaw, float dist, float eye_y, float look_y, float projection_h);
 

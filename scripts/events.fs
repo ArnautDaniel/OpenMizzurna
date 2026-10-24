@@ -738,9 +738,14 @@ $3F constant stepping-out-1   $40 constant stepping-out-0   \ (by the side's way
     a s" walkers" actor-named send walker-stop  a end-route  a the-townsfolk send person-unride
     a the-townsfolk send person-door-free  a the-townsfolk send person-idle ;
 \ Matthew walks through everyone for now: whom he'd ignore doesn't matter (src: cmds $3C, $3D: his ignore_a / _b)
-: ignore-a ( a b -- )   \ op $133: a pays b no heed (src: ignore_a - Matthew's: not in his way; -1 none), a frame
+$FFFFFFFF constant none-held   \ (the scripts' -1, a 32-bit word)
+: held-slot ( b -- b | -1 )  dup none-held and none-held = if  drop -1  then ;
+: ignore-a ( a b -- )   \ op $133: a holds b in the right hand (-1: lets go; src: ignore_a - not in his way), a frame
+    held-slot  2dup 1 the-townsfolk send figure-holds
     swap matthew = if  his-ignore-a !  else  drop  then  1 frames wait ;
-: ignore-b ( a b -- )  swap matthew = if  his-ignore-b !  else  drop  then  1 frames wait ;   \ op $134
+: ignore-b ( a b -- )   \ op $134: in the left hand
+    held-slot  2dup 0 the-townsfolk send figure-holds
+    swap matthew = if  his-ignore-b !  else  drop  then  1 frames wait ;
 
 \ ---- walking and riding (cmds $24, $37, $55, $59) ----
 : lift ( a node dest speed -- )   \ cmd $24: along the town's footpaths (src: actor_lift: a walker)

@@ -199,6 +199,7 @@ are built, each listed here.
 | `motion` / `motion-frames` / `motion-move` | `addr len -- motion` / `motion -- n` / `motion frame -- dx dy dz` | a character motion from the library and its frames |
 | `draw-figure` | `model motion frame x y z yaw --` | a figure posed in a motion's frame |
 | `ground-part` / `ground-tilt` | `model part x z cx cy cz -- y true \| false` / `heading -- rx rz` | the ground in one part of a model (an area's shell); a body's tilt on the last ground found (src: func_800466A4) |
+| `figure-tag` / `draw-held` | `tag --` / `model tag node --` | the next figure drawn is tagged so (its slot); a model held at a node of the figure tagged so this frame (src: actor_hold) |
 | `figure-tilt` | `rx rz --` | the next `draw-figure` tilted so (its root part turned about x and z; src: an actor's rot_x, rot_z) |
 | `bank-load` ... `audio-record` | | the sound's words: docs/subsystems/sound.md |
 | `draw-ground-quad` | `image x y z half grey blend --` | a picture lying flat in the world, centred there |

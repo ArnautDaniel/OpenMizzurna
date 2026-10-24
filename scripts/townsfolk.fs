@@ -28,6 +28,7 @@ begin-structure person
   field: travelling     \ between stops, walking their route
   field: person-area   field: on-floor   field: px   field: py   field: pz   field: heading-now   \ where they are
   field: ride-seat      \ the car's seat they get out by (src: a->ride_seat)
+  field: held-by   field: held-hand   \ (a prop) the one holding it, +1 (0 none), and which hand
   field: tilt-x   field: leaning-z   \ their tilt (src: rot_x, rot_z: a prop on its side, the lookout leaning)
   field: kept-heading   field: kept-anim   \ (src: actor_save_state: kept to come back to)
   field: walking        \ walking to a point (src: ACTOR_F_NAV)
@@ -260,13 +261,28 @@ variable controlled
     p figure @  p figure-kind @ k = and if  p figure @ exit  then
     k kind-model model  dup p figure !  k p figure-kind !  ;
 : draw-person ( slot -- )
-    dup model-of {: s m :}  s person-of moving {: mv :}
+    dup model-of {: s m :}  s person-of moving {: mv :}  s figure-tag
     s person-of tilt-x @  s person-of leaning-z @ figure-tilt  m  mv clip @  mv frame  s person-now  draw-figure ;
+\ held in a hand (src: actor_hold, func_800275FC: the events' ignore_a / ignore_b - the right hand, the left): drawn
+\ at the holder's hand (its figure's node 5, or 7), where the holder stands
+5 constant right-hand-node   7 constant left-hand-node   1 constant right-hand
+: held? ( slot -- flag )  person-of held-by @ 0<> ;
+: let-go-of ( slot holder hand -- )   \ (that slot, if it's what the holder held in that hand)
+    {: s h hand :}  s person-of {: p :}  p held-by @ h 1+ =  p held-hand @ hand = and if  0 p held-by !  then ;
+: hold-in ( holder prop hand -- )   \ prop -1: the hand lets go
+    {: h pr hand :}  #slots 0 do  i h hand let-go-of  loop
+    pr 0 #slots within 0= if  exit  then  pr person-of {: p :}  h 1+ p held-by !  hand p held-hand ! ;
+: draw-held-prop ( slot -- )
+    dup model-of {: s m :}  s person-of {: p :}
+    m  p held-by @ 1-  p held-hand @ right-hand = if  right-hand-node  else  left-hand-node  then  draw-held ;
 \ seen only on his floor (src: func_8002A10C: but in the park and the town)
 13 constant the-park
 : on-his-floor? ( slot -- flag )
     area @ the-park =  area @ the-town = or if  drop true exit  then  person-of on-floor @ floor @ = ;
-: draw-townsfolk ( -- )  #slots 0 do  i here? if  i on-his-floor? if  i draw-person  then  then  loop ;
+: draw-one ( slot -- )
+    dup held? if  draw-held-prop exit  then
+    dup here? 0= if  drop exit  then  dup on-his-floor? if  draw-person  else  drop  then ;
+: draw-townsfolk ( -- )  #slots 0 do  i draw-one  loop ;
 ' draw-townsfolk on-draw
 : step-forward ( slot -- )   \ src: actor_update's move_anim: straight on along their heading
     {: s :}  s person-of {: p :}
@@ -308,8 +324,19 @@ $40000 constant too-far-squared   $FFFF constant near-squared
     bike-rider person-of {: p :}  mels-bike car-now {: x y z h :}
     x p px !  y p py !  z p pz !  h p heading-now !  the-town p person-area !
     bike-rider person-anim-done? if  riding-mels-bike -1 true  p moving play  then ;
+\ a held prop where its holder stands (src: func_800275FC: but 16 and 23, and 151 in the right hand)
+16 constant crate-prop   23 constant other-crate-prop   151 constant right-hand-stays
+: holder-place ( holder -- x y z )  dup 0= if  drop matthew-now drop  else  person-now drop  then ;
+: follows-holder? ( slot -- flag )
+    {: s :}  s crate-prop =  s other-crate-prop = or  if  false exit  then
+    s right-hand-stays =  s person-of held-hand @ right-hand = and 0= ;
+: carry ( slot -- )
+    {: s :}  s held? 0=  s follows-holder? 0= or if  exit  then  s person-of {: p :}
+    p held-by @ 1- {: h :}  h 0= matthew-there? 0= and if  exit  then
+    h holder-place  p pz !  p py !  p px !  area @ p person-area ! ;
+: carry-held ( -- )  #slots 0 do  i carry  loop ;
 : animate ( -- )   \ walking and motions for everyone (the routes wait on them, seen or not)
-    door-waits  ride-mels-bike
+    door-waits  ride-mels-bike  carry-held
     companion-mode @ along-on-foot =  companion @ 0< 0= and  matthew-there? and if  follow  then
     #slots 0 do
         i scheduled?  i extra? i person-of person-area @ 0< 0= and  or if
@@ -336,6 +363,7 @@ behaviour townsfolk
   on minute-passed ( t -- )  controlled @ if  minute  else  drop  then ;
   on player-control ( flag -- )  controlled ! ;
   on person-turn ( slot heading -- )  swap person-of  0 over turning !  heading-now ! ;
+  on figure-holds ( holder prop hand -- )  hold-in ;   \ src: actor_command 0x3C / 0x3D, func_800275FC
   on person-tilt ( slot rx rz -- )  rot person-of {: x z p :}  x p tilt-x !  z p leaning-z ! ;
   on person-turning ( slot target speed -- )
     rot person-of {: t v p :}  v 0= if  t p heading-now !  0 p turning !  exit  then
