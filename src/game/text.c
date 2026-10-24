@@ -3,7 +3,8 @@
  * Text: the library's text files (data/text.h: `#id` then the message's lines), a message by bank and id:
  *   bank 0..32  an area's (cdbin/NNN_4/4.txt), 33 the common one (cdbin/033_4/4.txt);
  *   bank 34     the list menus' labels (cdbin/033_4/6.txt: in the list font's own codes - drawn with font 1);
- *   bank 200+   an event pack's (cdbin/NNN_T.txt, the pack by its CD.BIN entry).
+ *   bank 200+   an event pack's (cdbin/NNN_T.txt, the pack by its CD.BIN entry);
+ *   bank 1000+  any CD.BIN entry's text (1000 + the entry: the map's place names, 034_3).
  * The game's fonts (data/mfo.h: cdbin/033_4/5/3 the dialogue font, 5/4 the list font) drawn as the game drew
  * them, a glyph its own width (the 2021 patch's proportional font), lines 16 pixels apart, in one of the font's
  * palettes (its colours). */
@@ -25,6 +26,7 @@
 #define COMMON_BANK 33
 #define LIST_BANK 34           /* the list menus' labels */
 #define PACK_BANKS 200         /* from here: an event pack's, by its CD.BIN entry */
+#define ENTRY_BANKS 1000       /* from here: any CD.BIN entry's, by 1000 + the entry */
 #define ENTRY_KINDS 5          /* CD.BIN: 5 entries a group */
 #define MAX_FILES 128
 
@@ -45,6 +47,8 @@ static int bank_path(int bank, char *path, size_t n) {
         snprintf(path, n, "cdbin/%03d_4/4.txt", bank);
     } else if (bank == LIST_BANK) {
         snprintf(path, n, "cdbin/%03d_4/6.txt", COMMON_BANK);
+    } else if (bank >= ENTRY_BANKS) {
+        snprintf(path, n, "cdbin/%03d_%d.txt", (bank - ENTRY_BANKS) / ENTRY_KINDS, (bank - ENTRY_BANKS) % ENTRY_KINDS);
     } else if (bank >= PACK_BANKS) {
         snprintf(path, n, "cdbin/%03d_%d.txt", bank / ENTRY_KINDS, bank % ENTRY_KINDS);
     } else {

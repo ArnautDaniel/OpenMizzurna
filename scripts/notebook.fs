@@ -81,7 +81,6 @@ create portraits 256 cells allot   portraits 256 cells erase
 : once ( var addr len -- image )   \ a picture of the library's, loaded once
     {: v a n :}  v @ ?dup if  exit  then  a n image  dup v ! ;
 : ui-piece ( var addr len -- image )  {: v a n :}  v @ ?dup if  exit  then  $clear  s" ui/" $+  a n $+  s" .png" $+  $@ image  dup v ! ;
-: piece ( image x y w h -- )  {: im x y w h :}  im x y >screen  w scale *  h scale *  draw-image ;
 : portrait ( kind -- image )
     {: k :}  portraits k cells + @ ?dup if  exit  then
     $clear  s" portraits/" $+  k n>str $+  s" .png" $+  $@ image  dup portraits k cells + ! ;
@@ -89,16 +88,16 @@ create portraits 256 cells allot   portraits 256 cells erase
 : line ( n x y -- )  {: n x y :}  book-text n text-of  x y ink-text ;
 : label ( id x y -- )  {: id x y :}  list-font font  list-ink font-palette  list-text id text-of  x y >screen font-text ;
 : draw-book ( -- )
-    left-image s" cdbin/042_1.png" once  book-x book-y half-w book-h piece
-    right-image s" cdbin/042_2.png" once  book-x half-w + book-y half-w book-h piece
-    cross-button s" button-cross" ui-piece  hint-x hint-y button-w button-w piece
-    exit-label s" exit" ui-piece  hint-x button-w + hint-y hint-w hint-h piece ;
+    left-image s" cdbin/042_1.png" once  book-x book-y half-w book-h sprite
+    right-image s" cdbin/042_2.png" once  book-x half-w + book-y half-w book-h sprite
+    cross-button s" button-cross" ui-piece  hint-x hint-y button-w button-w sprite
+    exit-label s" exit" ui-piece  hint-x button-w + hint-y hint-w hint-h sprite ;
 : draw-menu ( -- )
     characters-line menu-x menu-y line  phone-numbers-line menu-x menu-y line-h + line
-    hand s" hand" ui-piece  hand-x hand-y row @ line-h * + hand-w line-h piece ;
+    hand s" hand" ui-piece  hand-x hand-y row @ line-h * + hand-w line-h sprite ;
 : arrows ( -- )
-    more-above? if  above s" more-above" ui-piece  arrow-x above-y button-w button-w piece  then
-    more-below? if  below s" more-below" ui-piece  arrow-x below-y button-w button-w piece  then ;
+    more-above? if  above s" more-above" ui-piece  arrow-x above-y button-w button-w sprite  then
+    more-below? if  below s" more-below" ui-piece  arrow-x below-y button-w button-w sprite  then ;
 : row-y ( r -- y )  dup line-h *  swap rows-before-gap < 0= line-h and +  rows-y + ;
 : draw-numbers ( -- )
     #known @ at @ - rows-a-page min 0 max 0 ?do
@@ -108,7 +107,7 @@ create portraits 256 cells allot   portraits 256 cells erase
     known at @ cells + @ 4 * + {: o :}  s" notebook-people" o exe-u8 ;
 : draw-person ( -- )
     #known @ 0= if  exit  then
-    1 person-byte ?dup if  portrait  portrait-x portrait-y portrait-w portrait-h piece  then
+    1 person-byte ?dup if  portrait  portrait-x portrait-y portrait-w portrait-h sprite  then
     name-label label-x name-y label  0 person-byte label-x name-after + name-y label
     job-label label-x job-y label  2 person-byte label-x job-after + job-y label
     3 person-byte rows-x bio-y line  arrows ;

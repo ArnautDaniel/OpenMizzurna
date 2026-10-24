@@ -363,7 +363,7 @@ create symbol-images 4 cells allot   symbol-images 4 cells erase   variable blan
     common-text  step @ keying = if  enter-a-number  else  its-ringing  then  text-of  caption-x caption-y >screen font-text
     4 0 do
         i #digits @ < if  digits i cells + @ symbol-image  else  blank  then
-        digits-x i digit-size * + digits-y >screen  digit-size scale *  dup  draw-image
+        digits-x i digit-size * + digits-y digit-size digit-size sprite
     loop ;
 ' draw-dial on-draw
 PRIVATE>

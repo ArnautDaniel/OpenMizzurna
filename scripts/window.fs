@@ -136,7 +136,7 @@ create portrait-images 256 cells allot   portrait-images 256 cells erase
     speaker @ dup 0< if  drop exit  then
     dup $99 = if  drop 1  then  dup $9C = if  drop $14  then  $FF and
     dup on-sheet? 0= if  drop exit  then
-    portrait-image  $FFFFFFFF pen-color  portrait-x portrait-y >screen  portrait-w scale *  portrait-h scale *  draw-image ;
+    portrait-image  $FFFFFFFF pen-color  portrait-x portrait-y portrait-w portrait-h sprite ;
 : draw-window ( -- )
     window-up? if  band draw-portrait draw-lines draw-arrow draw-cursor  then ;
 ' draw-window on-draw

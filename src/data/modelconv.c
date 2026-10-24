@@ -495,10 +495,28 @@ static const SkyPiece kUiPieces[] = {
     {"hand", 4, 0x2C0, 0, 0x2D0, 0xFD, 0x60, 0xB0, 24, 16},
     {"more-above", 4, 0x300, 0, 0x300, 0xFD, 0xA0, 0xB0, 16, 16},
     {"more-below", 4, 0x300, 0, 0x300, 0xFD, 0xA0, 0xC0, 16, 16},
+    /* the map's (src: mapscreen.c: the picture on page 0x17 in its two palettes, a place's dot) */
+    {"map", 4, 0x1C0, 0x100, 0x1C0, 0x1FF, 0, 0, 256, 240},
+    {"map-other", 4, 0x1C0, 0x100, 0x1C0, 0x1FE, 0, 0, 256, 240},
+    {"map-dot", 4, 0x2C0, 0, 0x2D0, 0xFD, 0xA0, 0x98, 8, 8},
 };
+
+#define MAP_ICONS 22
+#define MAP_ICONS_A_ROW 11
+#define MAP_ICON 16
+#define MAP_ICONS_V 0xD0
 
 static void ui_images(Job *j, const VramContext *v) {
     size_t i;
+
+    for (i = 0; i < MAP_ICONS && !j->failed; i++) {   /* the map's places' icons (src: func_8004C6E4, palette $3F30) */
+        SkyPiece p = {"map-icon", 4, 0x300, 0, 0x300, 0xFC, (int)(i % MAP_ICONS_A_ROW) * MAP_ICON,
+                      MAP_ICONS_V + (int)(i / MAP_ICONS_A_ROW) * MAP_ICON, MAP_ICON, MAP_ICON};
+        char path[64];
+
+        snprintf(path, sizeof(path), "ui/map-icon-%u.png", (unsigned)i);
+        piece_image(j, v, &p, path);
+    }
 
     for (i = 0; i < sizeof(kUiPieces) / sizeof(kUiPieces[0]) && !j->failed; i++) {
         char path[64];

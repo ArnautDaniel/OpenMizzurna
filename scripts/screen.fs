@@ -9,6 +9,13 @@ USING: engine ;
 : >screen ( x y -- x' y' )   \ the original's point to the window's pixels
     scale * screen-size nip 2/ +  swap  scale * screen-size drop 2/ +  swap ;
 
+\ ---- the 2D's blending (pen-blend), and the PlayStation's opaque sprites ----
+0 constant blend-usual   1 constant blend-add   2 constant blend-subtract
+3 constant blend-ps-add   4 constant blend-ps-half   5 constant blend-ps-solid
+: sprite ( image x y w h -- )   \ a picture of the library's at the original's place and size, opaque as its
+                                \ sprites (a texel marked to blend covers too)
+    {: im x y w h :}  blend-ps-solid pen-blend  im x y >screen  w scale *  h scale *  draw-image  blend-usual pen-blend ;
+
 \ ---- what the minigames draw alike ----
 \ a health bar (src: hp_bar_draw): its frame `full` + 3 across, 8 high, at x and y + 8; the health filled in it
 $302030E0 constant bar-back   $E0B040FF constant bar-fill

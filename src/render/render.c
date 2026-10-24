@@ -65,13 +65,15 @@ static const char *kFragment2D =
     "in vec2 v_uv;\n"
     "in vec4 v_color;\n"
     "layout(binding = 0) uniform sampler2D image;\n"
-    "uniform int ps;\n"   /* 0 as usual; 1 the PlayStation's add, 2 its half (blending: one, one minus alpha) */
+    "uniform int ps;\n"   /* 0 as usual; 1 the PlayStation's add, 2 its half (blending: one, one minus alpha);
+                           * 3 its opaque: every texel but 0 solid */
     "out vec4 color;\n"
     "void main() {\n"
     "    vec4 t = texture(image, v_uv);\n"
     "    if (ps == 0) { color = t * v_color; return; }\n"
     "    if (t.a < 0.25) discard;\n"
     "    vec3 c = min(t.rgb * v_color.rgb, vec3(1.0));\n"
+    "    if (ps == 3) { color = vec4(c, v_color.a); return; }\n"
     "    color = t.a > 0.75 ? vec4(c, 1.0) : ps == 1 ? vec4(c, 0.0) : vec4(c * 0.5, 0.5);\n"
     "}\n";
 
@@ -326,7 +328,8 @@ static void draw_batches(int behind) {
             continue;
         }
         glProgramUniform1i(R.program, R.loc_ps, R.batches[i].blend == RENDER_BLEND_PS_ADD ? 1 :
-                                                R.batches[i].blend == RENDER_BLEND_PS_HALF ? 2 : 0);
+                                                R.batches[i].blend == RENDER_BLEND_PS_HALF ? 2 :
+                                                R.batches[i].blend == RENDER_BLEND_PS_SOLID ? 3 : 0);
         switch (R.batches[i].blend) {   /* (the PlayStation's: the screen plus or minus the colour) */
         case RENDER_BLEND_ADD:
             glBlendEquation(GL_FUNC_ADD);

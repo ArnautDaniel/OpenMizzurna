@@ -25,11 +25,11 @@ create entry-images #entries cells allot   entry-images #entries cells erase
     {: e :}  entry-images e cells + @ ?dup if  exit  then
     $clear  s" cdbin/" $+  e entry-kinds / three-digits  s" _" $+  e entry-kinds mod n>str $+  s" .png" $+
     $@ image  dup entry-images e cells + ! ;
-: half ( entry x -- )  {: e x :}  e entry-image  x big-y >screen  half-w scale *  half-h scale *  draw-image ;
+: half ( entry x -- )  {: e x :}  e entry-image  x big-y half-w half-h sprite ;
 : draw-pictures ( -- )
     $FFFFFFFF pen-color
     big-picture-up? if  left-half @ big-x half  right-half @ ?dup if  big-x half-w + half  then  then
-    picture-up? if  small @ small-image  small-x small-y >screen  small-size scale *  dup  draw-image  then ;
+    picture-up? if  small @ small-image  small-x small-y small-size small-size sprite  then ;
 ' draw-pictures on-draw
 PRIVATE>
 

@@ -71,13 +71,13 @@ $46 constant star-dim   $64 constant star-bright
 : stars ( h -- )   \ src: func_8001F000: twinkling, on clear nights
     the-weather clear <>  night-sky? 0= or if  drop exit  then
     {: h :}  frames-seen @ 1 and if  star-dim  else  star-bright  then  {: c :}
-    c c star-blue rgba pen-color  1 pen-blend
+    c c star-blue rgba pen-color  blend-add pen-blend
     #stars 0 do  i h star  loop ;
 
 8 constant pieces   256 constant piece   246 constant cloud-band
 : clouds ( h -- )   \ src: func_8001F26C: 8 above the horizon, 8 mirrored above them, drifting
     {: h :}  s" sky/clouds.png" image {: im :}  im 0= if  exit  then
-    clouds-now @ shade pen-color  3 pen-blend
+    clouds-now @ shade pen-color  blend-ps-add pen-blend
     heading-x drift f@ f>s + full-turn 1- and {: o :}
     pieces 0 do
         im  o screen-right - i piece * + wrapped  piece  h cloud-band -  h gap -  piece-at
@@ -86,7 +86,7 @@ $46 constant star-dim   $64 constant star-bright
 70 constant strip
 : mountains ( h -- )   \ src: func_8001F4C0: the horizon strip
     {: h :}  s" sky/horizon.png" image {: im :}  im 0= if  exit  then
-    horizon-now @ shade pen-color  4 pen-blend
+    horizon-now @ shade pen-color  blend-ps-half pen-blend
     heading-x {: o :}
     pieces 0 do  im  o screen-right - i piece * + wrapped  piece  h strip -  h gap -  piece-at  loop ;
 
@@ -103,7 +103,7 @@ $2A7 constant east   $6A7 constant west
     clock-time minutes/day mod {: m :}  m sun-up <  m sun-down > or if  exit  then
     s" sun-heights" clock-time time>hour height {: sy :}  sun-x {: sx :}
     s" sky/sun.png" image ?dup if
-        $80 shade pen-color  3 pen-blend
+        $80 shade pen-color  blend-ps-add pen-blend
         sx $C0 - wrapped  $40  sy $98 -  sy $58 -  piece-at
     then ;
 : flare-at ( i sx sy -- x y )   \ src: along the line from the sun through the screen's centre
@@ -119,7 +119,7 @@ $2A7 constant east   $6A7 constant west
     the-weather clear <> if  exit  then
     clock-time minutes/day mod {: m :}  m sun-up <  m sun-down > or if  exit  then
     s" sun-heights" clock-time time>hour height {: sy :}  sun-x wrapped {: sx :}
-    $80 shade pen-color  3 pen-blend
+    $80 shade pen-color  blend-ps-add pen-blend
     #flares 0 do  i sx sy flare  loop ;
 28 constant waxing   31 constant full-moon   \ its phases: to the 27th, to the 30th, then the 31st
 2 60 * 1+ constant moon-set   17 60 * constant moon-rise
@@ -132,7 +132,7 @@ $2A7 constant east   $6A7 constant west
     heading-x  t time>hour moon-west >= if  west  else  east  then + {: mx :}
     t time>day waxing < if  s" sky/moon-1.png"  else  t time>day full-moon < if  s" sky/moon-2.png"  else  s" sky/moon-3.png"  then  then
     image ?dup if
-        $80 shade pen-color  3 pen-blend
+        $80 shade pen-color  blend-ps-add pen-blend
         mx $AC - wrapped  24  my $84 -  my $6C -  piece-at
     then ;
 
@@ -141,7 +141,7 @@ $2A7 constant east   $6A7 constant west
     true behind  horizon {: h :}
     h colours  h stars  sun  moon  h clouds  h mountains
     false behind  flares
-    $FFFFFFFF pen-color  0 pen-blend ;
+    $FFFFFFFF pen-color  blend-usual pen-blend ;
 ' draw-sky on-draw
 
 : sky-step ( -- )

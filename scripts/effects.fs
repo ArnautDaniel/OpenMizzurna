@@ -53,7 +53,7 @@ variable iris   variable iris-target   variable r-in   variable r-out
 : grey ( c -- rgba )  dup 24 lshift over 16 lshift or swap 8 lshift or $FF or ;
 : cyan ( c -- rgba )  dup 16 lshift swap 8 lshift or $FF or ;   \ (no red: subtracted, a red flash)
 : >pen ( -- )   \ how it meets the picture
-    blend-word @ case  subtract-blend of  2 pen-blend  endof  add-blend of  1 pen-blend  endof  0 pen-blend  endcase ;
+    blend-word @ case  subtract-blend of  blend-subtract pen-blend  endof  add-blend of  blend-add pen-blend  endof  blend-usual pen-blend  endcase ;
 : corner ( x y -- x' y' )  >screen ;
 : shape ( x0 y0 x1 y1 x2 y2 x3 y3 c0 c1 c2 c3 -- )   \ on the original's screen
     {: x0 y0 x1 y1 x2 y2 x3 y3 c0 c1 c2 c3 :}
@@ -90,7 +90,7 @@ variable nix variable niy variable nox variable noy variable nfx variable nfy   
         iris-effect of  iris-ring  endof
         tint of  tint-level cyan whole  endof
     endcase
-    0 pen-blend ;
+    blend-usual pen-blend ;
 : draw-effect-under ( -- )  under @ if  draw-effect  then ;
 : draw-effect-over ( -- )  under @ 0= if  draw-effect  then ;
 ' draw-effect-under on-draw

@@ -122,6 +122,10 @@ static const ExeTable kTables[] = {
     {"portrait-tables", 0x8007FF4C, 7 * 24 * 6,
      "the portrait sheets' cells: {s16 kind, palette x, y} x 24, a sheet: the areas', the diner's, the forest's, "
      "Isabella's building's, the hospital's, the club's, the common set's"},
+    /* the map (src: mapscreen.c) */
+    {"map-places", 0x8009A520, 22, "a place's icon (bits 0 - 4) and $40: shown only once known (u8, by place)"},
+    {"map-dots", 0x8009A538, 22 * 4, "a place's dot on the map picture (s16 x, y up)"},
+    {"map-icons", 0x8009A590, 22 * 4, "its icon's top left (s16 x, y: the screen's)"},
     /* the notebook (src: fhbook.c) */
     {"character-bios", 0x800963C8, 23, "the biography a character's talk makes known (u8, by character: src character_met)"},
     {"notebook-people", 0x8009A828, 24 * 4,

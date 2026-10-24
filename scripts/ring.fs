@@ -189,7 +189,6 @@ $00000080 constant backdrop-color   $C8AA6480 constant bar-color   \ src: func_8
 variable title-tools   variable title-items   variable exit-label   variable cross-button
 : ui-image ( var addr len -- image )   \ ui/<name>.png, loaded once
     {: v a n :}  v @ ?dup if  exit  then  $clear  s" ui/" $+  a n $+  s" .png" $+  $@ image  dup v ! ;
-: piece ( image x y w h -- )  {: im x y w h :}  im x y >screen  w scale *  h scale *  draw-image ;
 : stripe ( color top bottom -- )  {: c t b :}  c pen-color  screen-left t >screen  screen-w scale *  b t - scale *  draw-rect ;
 : draw-name ( -- )
     name-msg @ 0< if  exit  then
@@ -202,10 +201,10 @@ variable title-tools   variable title-items   variable exit-label   variable cro
     bar-color bar-top  reading @ if  bar-tall-bottom  else  bar-bottom  then  stripe
     $FFFFFFFF pen-color
     key-list? @ if  title-items s" ring-items"  else  title-tools s" ring-tools"  then  ui-image
-    title-x title-y title-w title-h piece
+    title-x title-y title-w title-h sprite
     reading @ 0= if
-        cross-button s" button-cross" ui-image hint-x hint-y button-w button-w piece
-        exit-label s" exit" ui-image hint-x button-w + hint-y hint-w title-h piece
+        cross-button s" button-cross" ui-image hint-x hint-y button-w button-w sprite
+        exit-label s" exit" ui-image hint-x button-w + hint-y hint-w title-h sprite
     then
     draw-name ;
 ' draw-ring on-draw

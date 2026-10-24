@@ -184,7 +184,7 @@ PRIM(p_draw_rect) {   /* ( x y w h -- ) */
     Cell h = POP(), wd = POP(), y = POP(), x = POP();
     render_rect((float)x, (float)y, (float)wd, (float)h, gEngine.pen);
 }
-PRIM(p_pen_blend) { render_blend((int)POP()); }   /* ( mode -- ) 0 as usual, 1 add, 2 subtract; 3 / 4 the PlayStation's add / half */
+PRIM(p_pen_blend) { render_blend((int)POP()); }   /* ( mode -- ) 0 as usual, 1 add, 2 subtract; 3 / 4 / 5 the PlayStation's add, half, opaque */
 PRIM(p_draw_quad) {   /* ( x0 y0 x1 y1 x2 y2 x3 y3 c0 c1 c2 c3 -- ) corners 0 1 / 2 3, a colour each */
     uint32_t c[4];
     float xy[8];
