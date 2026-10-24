@@ -44,6 +44,9 @@ with the speaker on one, the shot but no turning, no gesture (0x80096298).
 (their rules) - `tests/library/test_conversations.fs`; showing them items (showing.fs, ring.md), gestures, the
 portrait beside the box (window.md).
 
+Someone with no talk of their own and none of the area's says nothing (src: actor_talk_start: the default
+handler answers EM_TALK with nothing); 107 and 155 say the passer-by's, still (src: actor_handler_107, _155).
+
 The townspeople (src: func_800300E4, slots $41 - $58 kinds 0 - 23, $71 - $7C the rest): walking, the line for
 their kind and the stop they left - (stop, line) pairs or a line by stop (the executable's `people-lines-<kind>`),
 kind 21 by odd and even stops, kind 15's said by slot $50, kind 16's after a round of 11 - else the passer-by's

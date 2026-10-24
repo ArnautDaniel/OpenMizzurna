@@ -259,6 +259,8 @@ PRIVATE>
 : people-lines ( -- )  #slots 0 do  i townsperson? if  ['] townsperson-line i default-line!  then  loop ;
 people-lines
 ' workers-own-line 132 default-line!   ' workers-own-line 133 default-line!   ' workers-own-line 134 default-line!
+: passing-line ( slot -- )  passer-by swap still-gesture one-liner ;   \ src: actor_handler_107, _155: the passer-by's, still
+' passing-line 107 default-line!   ' passing-line 155 default-line!
 
 \ ---- the C their scenes call (src: char_talk.c) ----
 : james-off ( -- )  ['] events.main:route-800858AC james start-route ;   \ src: evfn_8002CC24: his own walk

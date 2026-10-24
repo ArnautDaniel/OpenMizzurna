@@ -75,9 +75,8 @@ create takings  #slots cells allot   takings #slots cells erase           \ □:
     {: s :}  s character-index {: k :}
     k 0< 0= if  s" character-bios" k exe-u8  else  s 101 = if  23  else  s 111 = if  22  else  exit  then  then  then
     dup 24 < if  s" notebook" actor-named send learn-bio  else  drop  then ;
-: talk-with ( slot -- )   \ src: actor_talk_start
-    {: s :}  s met
+: talk-with ( slot -- )   \ src: actor_talk_start: their own talks (EM_EVTALK), the area's, their line (EM_TALK) -
+    {: s :}  s met                                           \ the default handler's: nothing said
     s their-talks if  exit  then
     area @ cells area-talks + @ ?dup if  s swap execute if  exit  then  then
-    s cells default-lines + @ ?dup if  s swap execute exit  then
-    hmm-what s 7 one-liner ;
+    s cells default-lines + @ ?dup if  s swap execute  then ;

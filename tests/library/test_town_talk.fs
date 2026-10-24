@@ -47,6 +47,10 @@ testing their own line (anywhere): walking from a stop with a line, the one of t
 : expected-own ( stop -- msg )
     {: st :}  s" lines-workers" st exe-s16 if  s" lines-workers" st 5 mod exe-s16  else  passer-by  then ;
 T{ fresh  first-worker 7 true put-at-stop  first-worker workers-own-line  line @ -> 7 expected-own }T
+testing someone with no talk of their own (Mrs. Roland, away from her area's): nothing said (src: the default
+\ handler); 107 the passer-by's, still
+T{ fresh  1 0 s" areas" actor-named send enter-area  deliver  events-stop  17 talk-with  events-running @ -> 0 }T
+T{ fresh  107 talk-with  said -> passer-by 107 still-gesture }T
 T{ events-stop -> }T
 
 test-summary
