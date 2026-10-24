@@ -480,12 +480,17 @@ static void item_pictures(Job *j, const VramContext *v, const uint8_t *const *en
 }
 
 /* the item ring's 2D pieces (src: ring.c func_8003D6E0, func_8003EA28: the UI's textures, palettes $3F6D / $3F70):
- * its titles (the tools, the key items) and its hint (✕ EXIT), as ui/<name>.png */
+ * its titles (the tools, the key items) and its hint (✕ EXIT); the face buttons; as ui/<name>.png */
 static const SkyPiece kUiPieces[] = {
     {"ring-tools", 4, 0x2C0, 0, 0x2D0, 0xFD, 0xB0, 0x90, 48, 16},       /* "TOOL" */
     {"ring-items", 4, 0x2C0, 0, 0x2D0, 0xFD, 0xB0, 0x80, 48, 16},       /* "ITEM": the key items */
     {"exit", 4, 0x2C0, 0, 0x2D0, 0xFD, 0xB0, 0xA0, 40, 16},             /* "EXIT" */
     {"button-cross", 4, 0x300, 0, 0x300, 0xFD, 0x80, 0xB0, 16, 16},
+    /* the phone's digits (src: ftel.c: D_800A34E4's columns; a blank one below) */
+    {"button-circle", 4, 0x300, 0, 0x300, 0xFD, 0x90, 0xB0, 16, 16},
+    {"button-square", 4, 0x300, 0, 0x300, 0xFD, 0x70, 0xB0, 16, 16},
+    {"button-triangle", 4, 0x300, 0, 0x300, 0xFD, 0x60, 0xB0, 16, 16},
+    {"digit-blank", 4, 0x300, 0, 0x300, 0xFD, 0x60, 0xC0, 16, 16},
 };
 
 static void ui_images(Job *j, const VramContext *v) {
@@ -496,6 +501,36 @@ static void ui_images(Job *j, const VramContext *v) {
 
         snprintf(path, sizeof(path), "ui/%s.png", kUiPieces[i].name);
         piece_image(j, v, &kUiPieces[i], path);
+    }
+}
+
+/* the small pictures beside the message box (src: ccdtim.c func_8003E5E8: D_80095BD4's rectangles, D_80095C44's
+ * palettes): the phone's (0), the items got, the people on the line - 48 x 48 each, 0 .. 14 on the UI page at
+ * (384, 256), 15 .. 27 on the one at (960, 256); as pictures/<n>.png */
+static const uint8_t kPictureAt[][2] = {   /* u, v */
+    {0, 64}, {48, 64}, {96, 64}, {144, 64}, {192, 64}, {0, 112}, {48, 112}, {96, 112}, {144, 112}, {192, 112},
+    {0, 160}, {48, 160}, {96, 160}, {144, 160}, {192, 160},
+    {144, 80}, {192, 80}, {0, 128}, {48, 128}, {0, 32}, {48, 32}, {96, 32}, {144, 32}, {192, 32}, {0, 80}, {48, 80},
+    {96, 80}, {96, 128},
+};
+static const uint16_t kPicturePalette[] = {
+    0x7418, 0x7419, 0x741A, 0x7458, 0x7459, 0x745A, 0x7498, 0x7499, 0x749A, 0x74D8, 0x74D9, 0x74DA, 0x7518, 0x7519,
+    0x751A, 0x6CBC, 0x6CBD, 0x6CBE, 0x6CBF, 0x6C3C, 0x6C3D, 0x6C3E, 0x6C3F, 0x6C7C, 0x6C7D, 0x6C7E, 0x6C7F, 0x6CFC,
+};
+#define PICTURE_SIZE 48
+#define FIRST_PAGE_PICTURES 15
+
+static void picture_images(Job *j, const VramContext *v) {
+    size_t i;
+
+    for (i = 0; i < sizeof(kPictureAt) / sizeof(kPictureAt[0]) && !j->failed; i++) {
+        uint16_t pal = kPicturePalette[i];
+        SkyPiece p = {"picture", 4, i < FIRST_PAGE_PICTURES ? 0x180 : 0x3C0, 0x100, (pal & 0x3F) * 16, pal >> 6,
+                      kPictureAt[i][0], kPictureAt[i][1], PICTURE_SIZE, PICTURE_SIZE};
+        char path[64];
+
+        snprintf(path, sizeof(path), "pictures/%u.png", (unsigned)i);
+        piece_image(j, v, &p, path);
     }
 }
 
@@ -753,6 +788,7 @@ static int run(Job *j, const uint8_t *const *entries, const size_t *sizes, int n
             sky_images(j, v);   /* (the sky's: the common images, as in the town) */
             item_pictures(j, v, entries, sizes, n);
             ui_images(j, v);
+            picture_images(j, v);
             area_sprites(j, v, entries, sizes, n, TOWN_AREA, "town/sprites.txt", "town/sprites");
         }
         for (i = 0; i < ms.n && !j->failed; i++) {

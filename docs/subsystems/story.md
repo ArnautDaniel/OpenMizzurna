@@ -149,6 +149,9 @@ Built on the townsfolk's, Matthew's, the walkers' and traffic's messages:
   story); `set-357c` (area 5's fire object).
 - **Nothing to do here:** `map-sync` (the original waited for the town's tiles); `ignore-a` / `ignore-b`
   (Matthew walks through people for now).
-- **Still stubs:** the pictures (`picture-show` / `picture-hide`, `cd-picture(s)`), `prompt`, `memory-card`, the
-  hospital's `elevator-doors`, `gesture`, `talk-pose`, `anim-step`, `examine`, `act`, `item-query` /
-  `item-show`, `kill-thread`, `depart-alt`, `go-to-actor`, `place-alt`, and `door-reveal-room`.
+- **Pictures and items.** `picture-show` / `picture-hide` and `cd-picture(s)` are the pictures'
+  (`docs/subsystems/pictures.md`). An event's end hides the small picture, and the big one it showed.
+  `item-query` / `item-show` are showing.fs's answers (`docs/subsystems/ring.md`).
+- **Still stubs:** `prompt`, `memory-card`, the hospital's `elevator-doors`, `gesture`, `talk-pose`,
+  `anim-step`, `examine`, `act`, `kill-thread`, `depart-alt`, `go-to-actor`, `place-alt`, and
+  `door-reveal-room`.

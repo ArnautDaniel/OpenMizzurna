@@ -47,7 +47,8 @@ phase-1 port's files (`../port/src/game/`), which name the decomp's functions; t
 | List menu ([page](subsystems/list-menu.md), built) | the board of labels to pick from: the diner's, the bar's orders | `cui.c` |
 | Crate ([page](subsystems/crate.md), built) | a crate to push or climb, the perch the rows go by | `player_misc.c`, `player.c` |
 | Counter ([page](subsystems/counter.md), the diner) | sitting at a bar's counter: leaning, calling the barman, ordering | `counter.c`, the overlays |
-| Phone | dialling, calls, who calls when | `ftel.c` |
+| Phone ([page](subsystems/phone.md), built) | dialling, calls, who calls when | `ftel.c`, `cui.c` |
+| Pictures ([page](subsystems/pictures.md), built) | the small picture beside the message box, the big one above it | `ccdtim.c` |
 | Notebook | the people and numbers Matthew knows | `fhbook.c` |
 | Map | the town map, places known | `mapscreen.c` |
 | HUD | the clock and fuel on screen, prompts | `hud.c`, `hudprim.c` |

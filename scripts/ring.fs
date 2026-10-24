@@ -132,7 +132,7 @@ variable circle   variable cross   variable square   variable triangle
     then
     cross @ if  key-list? @ if  false show-list  else  none none close-on  then  then ;
 : may-open? ( -- flag )   \ src: pad_update's menu_allowed, field_actions; cui.c ui_update
-    controlled @ 0=  ui-busy? or  window-up? or  matthew-there? 0= or if  false exit  then
+    controlled @ 0=  field-pad? 0= or  window-up? or  matthew-there? 0= or if  false exit  then
     prologue-done flag? 0= if  false exit  then
     area @ 5 = if  false exit  then   \ (the shoot-out's town square)
     area @ 26 =  shooting? and if  false exit  then

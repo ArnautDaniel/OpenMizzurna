@@ -32,7 +32,8 @@ variable time-now
     {: d h1 m1 h2 m2 :}  clock-time time>date {: day hour minute :}
     d 0<>  d day <> and if  false exit  then
     hour minutes/hour * minute + {: t :}  t h1 minutes/hour * m1 + >=  t h2 minutes/hour * m2 + <= and ;
-: reached? ( day hour minute -- flag )  date>time clock-time <= ;   \ src: event_time_reached
+: reached? ( day hour minute -- flag )   \ src: event_time_reached (day 0: never - func_800424E0's 999999)
+    {: d h m :}  d 0= if  false exit  then  d h m date>time clock-time <= ;
 
 \ ---- the actor ----
 state: clock-state

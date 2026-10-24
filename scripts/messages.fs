@@ -16,7 +16,7 @@ message minute-passed ( t -- )          \ broadcast: a minute ran by; t the new 
 message time-set ( t -- )               \ broadcast: the time jumped to t
 
 \ why the clock is held (src: field_update's checks, each now said by its subsystem)
-enum: clock-hold  story-stopped event-running no-control menu-open text-shown ;
+enum: clock-hold  story-stopped event-running no-control menu-open text-shown phone-up ;
 
 \ ---- the story (docs/subsystems/story.md) ----
 message new-game ( -- )                 \ (to the story) start the game afresh: 12/25 09:00, the opening
@@ -168,5 +168,13 @@ message set-weather ( weather hold -- )  \ (to the daylight) clear, overcast or 
 \ ---- the screens over the field: the item ring, and those to come (docs/subsystems/ring.md) ----
 message ui-lock ( -- )                   \ (to the ui) a screen is up: the world stands still (src: ui_lock)
 message ui-unlock ( -- )                 \ (to the ui) that screen is gone (src: ui_unlock)
+message take-pad ( -- )                  \ (to the ui) a screen has the pad, the world going on (the phone: src its pad mode)
+message give-pad ( -- )
 message ring-chosen ( item shown-to -- ) \ broadcast: the ring closed on an item (-1 none); shown-to: the person it
                                          \ was shown to (-1: chosen for use)
+
+\ ---- the pictures beside the message box and above it (docs/subsystems/pictures.md) ----
+message show-picture ( n -- )            \ (to the pictures) the small picture n beside the box (src: func_800484C8)
+message hide-picture ( -- )
+message show-big-picture ( left right -- )   \ (to the pictures) the big one above the box: two CD.BIN entries, its
+                                             \ halves (0 0: none - src: the VM's cd_picture ops)

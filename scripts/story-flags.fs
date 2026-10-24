@@ -28,6 +28,8 @@ $78 constant session-bytes
 create session-block  session-bytes allot   session-block session-bytes erase
 : session@ ( offset -- n )  session-block + sl@ ;
 : session! ( n offset -- )  session-block + l! ;
+: session-c@ ( offset -- n )  session-block + c@ ;
+: session-c! ( n offset -- )  session-block + c! ;
 $060 constant hospital-walk-off-seen   \ (src: D_800F6910: Morgan's "hold on a moment" at the hospital, the prologue)
 $064 constant pending-scenes           \ (src: D_800F6914: bit 0 leaving the hospital with Morgan, bit 2 the 31st's
                                        \  23:50 scene done, bits 6.. the phone's last calls)

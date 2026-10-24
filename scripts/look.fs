@@ -125,7 +125,7 @@ variable pad-taken   \ a frame hook took the pad this step (src: the pad's field
 : watch ( -- )
     pad-circle circle-was pressed  pad-square square-was pressed  {: o s :}
     controlled @ 0=  events-running @ control-given @ 0= and or  area @ 0< or  matthew-there? 0= or if  exit  then
-    ui-busy? if  exit  then   \ (a screen up: the pad is its own)
+    field-pad? 0= if  exit  then   \ (a screen up: the pad is its own)
     matthew-perch perch-in-car = if  exit  then   \ (driving: the car has the pad)
     events-running @ {: before :}   \ (an event that gave him back: he acts as the player - src: player_has_control)
     false pad-taken !  area @ content rules-of on-frame @ hook

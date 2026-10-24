@@ -73,10 +73,12 @@ PRIVATE>
     over stop-of 0< if  2drop false exit  then  swap person-of at-stop @ = ;
 : at-record? ( slot record -- flag )   \ standing at a stop of that record (src: at_place; the handlers' checks)
     {: s r :}  s stop-of 0< if  false exit  then  s current-row stop-record @ r = ;
-: james-visiting? ( -- flag )  false ;   \ src: func_8002CBE8 (James by Matthew's bed: his position, to come)
 
 : kind-of ( slot -- kind )  dup person-of shown-kind @ ?dup if  nip  then ;   \ the kind whose model they show
 : person-now ( slot -- x y z heading )  person-of {: p :}  p px @  p py @  p pz @  p heading-now @ ;
+: stands-at? ( slot x z -- flag )  {: s x z :}  s person-now drop nip  z =  swap x = and ;   \ (src: the at_xz checks)
+6 constant the-doctor   $545CB constant bedside-x   $45A6E constant bedside-z
+: james-visiting? ( -- flag )  the-doctor bedside-x bedside-z stands-at? ;   \ src: func_8002CBE8 (by Matthew's bed)
 : here? ( slot -- flag )   \ in the area being played, not in a car
     dup figure? 0= if  drop false exit  then
     person-of {: p :}  p person-area @ area @ =  p person-area @ 0< 0= and  p riding @ 0= and ;

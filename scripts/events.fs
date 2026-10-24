@@ -5,7 +5,8 @@
 \ Each op does its work through its subsystem's messages; an op whose subsystem isn't built yet is a stub
 \ that takes its arguments and notes it (`unbuilt`).
 IN: events
-USING: engine actors messages clock areas window matthew townsfolk traffic doors effects camera fight story-flags ;
+USING: engine actors messages clock areas window matthew townsfolk traffic doors effects camera fight story-flags
+    pictures ;
 
 \ ---- the cast: actor slots (decomp/include/actor.h); the others by number (`160 actor`) ----
 0 constant matthew    1 constant morgan    2 constant nozz       3 constant cohen     5 constant samuel
@@ -52,7 +53,11 @@ variable the-prop   \ the actor the C gives a script it starts (src: the script'
     0 swap thread-task slot !  -1 events-running +!
     events-running @ 0= if  no-control release  false control-given !  true broadcast player-control  then ;
 : event-ended ( -- )  thread event-over ;
-: thread-ended ( -- )  thread #event-threads < if  event-ended  else  0 thread thread-task slot !  then ;
+variable picture-thread   -1 picture-thread !   \ the event that showed the big picture (src: its thread's `picture`)
+: pictures-gone ( -- )   \ src: thread_end: the small picture hidden; its big one with the thread
+    s" pictures" actor-named {: p :}  p send hide-picture
+    thread picture-thread @ = if  -1 picture-thread !  0 0 p send show-big-picture  then ;
+: thread-ended ( -- )  pictures-gone  thread #event-threads < if  event-ended  else  0 thread thread-task slot !  then ;
 : run-event ( -- )   \ a task's body: its word, then it's over
     thread thread-xt slot @ execute  thread-ended ;
 : begin-thread ( xt actor i -- )
@@ -260,9 +265,12 @@ defer shown-item ( a answer -- )
 : sound ( n -- )  s" sound" actor-named send play-sound ;   \ op $114 (src: sound_play)
 : sequence-play ( id loop? -- )  0<> s" sound" actor-named send play-sequence ;   \ op $115 (src: seq_play)
 : sequence-stop ( id -- )  s" sound" actor-named send stop-sequence ;   \ op $116
-: picture-show ( n -- )  1 s" picture-show" unbuilt ;   \ op $123
-: picture-hide ( -- )  0 s" picture-hide" unbuilt ;   \ op $124
-: cd-picture ( n -- )  1 s" cd-picture" unbuilt ;   \ op $12B
+: the-pictures ( -- id )  s" pictures" actor-named ;
+: picture-show ( n -- )  the-pictures send show-picture ;   \ op $123
+: picture-hide ( -- )  the-pictures send hide-picture ;     \ op $124
+: big-picture ( left right -- )   \ (0 0: none)
+    over 0= if  2drop 0 0  then  over if  thread  else  -1  then  picture-thread !  the-pictures send show-big-picture ;
+: cd-picture ( n -- )  0 big-picture ;   \ op $12B (src: cd_picture: n, 0 none)
 : music ( row -- )  s" sound" actor-named send play-music ;   \ op $144 (src: music_play)
 \ the minigames that are a script alone (src: an area's area_minigame_start setting minigame_script), by number
 64 constant #minigames
@@ -307,7 +315,7 @@ variable fire-lit   \ src: D_800A357C: area 5's fire burning (its object shown)
 defer door-sound ( kind -- )   \ op $176 (door-sounds.fs)
 :noname ( kind -- )  1 s" door-sound" unbuilt ; is door-sound
 : wait-attached-to ( a a -- )  2 s" wait-attached-to" unbuilt  settle ;   \ op $178
-: cd-pictures ( n n -- )  2 s" cd-pictures" unbuilt ;   \ op $179
+: cd-pictures ( left right -- )  dup 0= if  2drop 0 0  then  big-picture ;   \ op $179: none when right is 0
 
 \ ---- text with a picture (after its stub) ----
 : say-reset ( text -- )  picture-hide  matthew 0 0 show  text-pending settle ;              \ $105
