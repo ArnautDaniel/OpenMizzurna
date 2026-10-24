@@ -259,9 +259,9 @@ defer memory-card ( slot -- )   \ op $152 (saves.fs: the save dialog; its result
 \ ---- actor commands ( actor args -- ): until the townsfolk and Matthew take them ----
 
 
-: talk-pose ( a x1 -- )  2 act-unbuilt ;   \ cmd $14
+: talk-pose ( a x1 -- )  2 act-unbuilt ;   \ cmd $14  (no script uses it)
 
-: anim-step ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $18
+: anim-step ( a x1 x2 -- )  3 act-unbuilt ;   \ cmd $18  (no script uses it)
 
 
 
@@ -272,22 +272,22 @@ defer answer-item ( a item -- answer )   \ (showing.fs)
 defer shown-item ( a answer -- )
 : item-query ( a item -- )  answer-item result! ;   \ cmd $2E: what they'd answer to the item
 : item-show ( a answer -- )  shown-item ;          \ cmd $2F: shown it
-: act ( a -- )  1 act-unbuilt ;   \ cmd $36
+: act ( a -- )  1 act-unbuilt ;   \ cmd $36  (no script uses it)
 
 
 
 
-: examine ( a -- )  1 act-unbuilt ;   \ cmd $4A
+: examine ( a -- )  1 act-unbuilt ;   \ cmd $4A  (no script uses it)
 
-: kill-thread ( a -- )  1 act-unbuilt ;   \ cmd $4E
+: kill-thread ( a -- )  1 act-unbuilt ;   \ cmd $4E  (no script uses it)
 
 
 
 : depart-alt ( a -- )   \ cmd $56: off along their stop's route (src: the labourers' CMD_DEPART_ALT)
     dup scheduled? if  s" townsfolk" actor-named send person-depart  else  1 act-unbuilt  then ;
 
-: go-to-actor ( a x1 -- )  2 act-unbuilt ;   \ cmd $5A
-: place-alt ( a -- )  1 act-unbuilt ;   \ cmd $5E
+: go-to-actor ( a x1 -- )  2 act-unbuilt ;   \ cmd $5A  (no script uses it)
+: place-alt ( a -- )  1 act-unbuilt ;   \ cmd $5E  (no script uses it)
 
 \ ---- the other ops: until their subsystems are built ----
 : sound ( n -- )  s" sound" actor-named send play-sound ;   \ op $114 (src: sound_play)
@@ -332,8 +332,8 @@ variable minigame-busy   \ a code minigame not over yet (src: minigame_id still 
     settle  begin  minigame-running? while  yield  repeat ;
 : rumble ( strength frames -- )   \ op $155: 0x100 the small motor, else the large at that strength
     {: v n :}  s" rumble" actor-named {: r :}  v $100 = if  0 n r send rumble-small  else  0 v n r send rumble-large  then ;
-: sprite-count+ ( -- )  0 s" sprite-count+" unbuilt ;   \ op $15D
-: sprite-count-close ( -- )  0 s" sprite-count-close" unbuilt ;   \ op $15E
+: sprite-count+ ( -- )  0 s" sprite-count+" unbuilt ;   \ op $15D  (no script uses it)
+: sprite-count-close ( -- )  0 s" sprite-count-close" unbuilt ;   \ op $15E  (no script uses it)
 
 : map-reveal ( place -- )  1 swap lshift map-known @ or map-known ! ;   \ op $165 (src: map_reveal: the map knows it)
 : ambient-start ( id -- )  s" sound" actor-named send loop-sound ;   \ op $166 (src: ambient_start)
@@ -347,7 +347,7 @@ variable fire-lit   \ src: D_800A357C: area 5's fire burning (its object shown)
 : xa-stop ( -- )  s" sound" actor-named send stop-stream ;   \ op $174
 defer door-sound ( kind -- )   \ op $176 (door-sounds.fs)
 :noname ( kind -- )  1 s" door-sound" unbuilt ; is door-sound
-: wait-attached-to ( a a -- )  2 s" wait-attached-to" unbuilt  settle ;   \ op $178
+: wait-attached-to ( a a -- )  2 s" wait-attached-to" unbuilt  settle ;   \ op $178  (no script uses it)
 : cd-pictures ( left right -- )  dup 0= if  2drop 0 0  then  big-picture ;   \ op $179: none when right is 0
 
 \ ---- text with a picture (after its stub) ----
