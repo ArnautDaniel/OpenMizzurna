@@ -31,6 +31,7 @@ horizon strip: averaged); a solid one (255) covers it - the PlayStation's semi-t
 - **The moon**: at night in clear weather, rising an hour later each day (`moon-heights`), its phase by the date.
 - The colours and shades ease a step every other frame; a jump in time or a new area sets them at once.
 
-## To come
+## Notes
 
-Snow falling (snow.c), the lens flares' order among the overlays.
+Snow falling is snow.md's. The lens flares are drawn over the scene as the original's overlays were; their order
+among the other overlays (the HUD, the window) follows the drawing's, not the original's ordering table.

@@ -39,8 +39,5 @@ Running from the junkyard's dog to the yard's far side (area 8's minigame 26; sr
 
 ## Status
 
-Built: the chase, the bite, the game over and retry, the camera, the bar (`tests/library/test_dog_chase.fs`).
-
-To come:
-- the pad's rumble (the bite's sound and the chase's music: sound.md);
-- the barking ambience.
+Built: the chase, the bite (its sound, the pad's shake, the flash), the game over and retry, the camera, the bar,
+the chase's music (`tests/library/test_dog_chase.fs`); the yard's barking now and then is sound.md's (area 8's).

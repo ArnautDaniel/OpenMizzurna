@@ -19,8 +19,8 @@ Its first words are s16 offsets of its tables:
 | 0 header | s32 origin x, z; u8 shell objects, model objects | `header-table` |
 | 1 shown | a byte a scene and object (shell objects first): shown or not | `shown?` |
 | 2 cameras | per scene s16 eye height, look height, distance | `scene-camera` |
-| 5 lights | per scene 0x22 bytes (to come: the light) | |
-| 6 reverb | per scene {type, depth} (to come: the sound) | |
+| 5 lights | per scene 0x22 bytes: its mode, level, ambient, three lights | daylight.fs |
+| 6 reverb | per scene {type, depth} (the depth unused: every scene's 0x28) | `scene-reverb`, sound.fs |
 
 The origin's height and each floor's: the executable's `area-height` table (4 s16 an area: floor 0..3; the
 origin stands on floor 1; src: func_80020738).

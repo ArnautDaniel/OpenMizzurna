@@ -67,6 +67,6 @@ Built (`tests/library/test_shootout.fs`):
 - both areas' plans;
 - the icons, bullets, the flash, the rumble (the sounds: sound.md).
 
-To come:
-- area 26's own gun control (L2 to raise the gun, walking with it);
-- the gun prop hidden while aiming.
+The gun on the cabin's floor is hidden with him while aiming (the plan's `plan-prop`). The original's own gun
+walk for area 26 (func_801044C8) runs only while the shoot-out is on, when he's hidden or held by its scenes: it
+never shows, and its raise is never set.

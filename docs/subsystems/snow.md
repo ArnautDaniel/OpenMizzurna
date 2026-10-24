@@ -23,6 +23,7 @@ The snow falling (src: `snow.c`: func_8003AE04, func_8003B0C0, the flakes' loops
 Engine: `snow-scene ( kind )`, `snow-emitter ( i x z heading )`, `snow-flakes ( n )`, `snow-live`, `snow-step`
 (a game frame), `draw-snow ( image x y z )` (about the camera's pivot); scene3d's `scene3d_sprite`.
 
-## To come
+## Notes
 
-The flakes settling on the ground in the original's depth order (here they meet the scene's depth).
+The flakes meet the scene by its depth (the original sorted them into its ordering table by distance - where a
+flake meets the ground the two can differ by a pixel).
