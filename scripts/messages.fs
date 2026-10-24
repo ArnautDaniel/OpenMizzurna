@@ -138,6 +138,7 @@ message person-attach ( slot route speed -- )   \ get in their car: it drives th
 message person-get-in ( slot -- )         \ climb into their car (src: cmd 0x42)
 message car-anim ( car id next -- )      \ (to the traffic) a motion of its own, then the next held (-1: its last frame; id -1: none)
 message town-door-swing ( slot -- )       \ (to the town) a door's town side swings: its animation slot (src: func_8001A190)
+message person-passenger ( slot car seat -- ) \ (to the townsfolk) in that car, to get out by that seat (src: car_enter_with_passenger)
 message person-in-car ( slot car -- )      \ (to the townsfolk) out of sight in that car, out with its riders (src: cmd 0x50)
 message person-ride ( slot mode -- )      \ (to the townsfolk) they go along with Matthew: 1 following on foot, 2 in his car
 message person-unride ( slot -- )          \ no longer along with him

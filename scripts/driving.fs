@@ -136,9 +136,11 @@ create zone-1-blocks  512 , 1317 , 1902 , 2008 ,   4 constant #zone-1-blocks
     engine-sound engine-tones s" sound" actor-named send engine-start ;
 main-exe $8004301C ' at-the-wheel! native:
 2 constant in-his-car   \ (the companion's mode: riding with him - src D_800A37B4 = 2)
+1 constant passenger-seat
 : with-passenger ( -- )   \ src: car_enter_with_passenger (0x8004305C): at the wheel, the one along with him riding
-    at-the-wheel!  companion @ 0< if  exit  then
-    companion @ in-his-car s" townsfolk" actor-named send person-ride ;
+    at-the-wheel!  companion @ 0< if  exit  then   \ (in the car at its second seat: out by it with him)
+    companion @ in-his-car s" townsfolk" actor-named send person-ride
+    companion @ his-car passenger-seat s" townsfolk" actor-named send person-passenger ;
 main-exe $8004305C ' with-passenger native:
 
 \ ---- drawing: the fuel gauge and the speed (src: hud.c fuel_gauge_draw: from the HUD's sheet, ui/clock.png) ----

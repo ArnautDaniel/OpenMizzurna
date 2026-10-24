@@ -75,7 +75,9 @@ Someone going along with Matthew (src: actor_ride, cmd $26 `ride`; D_800A37B0 / 
 mode )` - 1 following him on foot, 2 in his car - `person-unride`, `companion-halt` (they stay put, still along).
 Following (src: func_80037944): they face him and keep 0x100 .. 0x200 behind - pulled up to 0x1FF when further
 (walking), stepping back to 0x101 when nearer (unless that's blocked) - in his area and on his floor; the
-minute's rules leave them be. Facts: `going-along?`, `following?`. (In his car: to come.)
+minute's rules leave them be. Facts: `going-along?`, `following?`. In his car (src: car_enter_with_passenger: the
+driving's `with-passenger`) they ride at its second seat; when he gets out they get out by it and follow on foot
+again (`left-the-car`, src car_exit).
 
 ## Off their schedule
 
@@ -105,6 +107,7 @@ the routes take one (`take-diner-seat`, `take-club-seat`: $3A, $45), walk to its
 `seat-approach`), sit (`sit-diner-seat`, $3B, $46: seated motion $77) and leave it ($48, $49) - messages
 `seat-take`, `seat-sit`, `seat-leave`. A jump in time frees them all.
 
-## To come
+## Elsewhere
 
-Talking to them: built in part (`docs/subsystems/talk.md`). Riding is built (`docs/subsystems/traffic.md`). The streamed models' variants, a door opening as they pass (the doors).
+Talking to them (talk.md), riding (traffic.md), the models they show (`person-variant`: another kind's, loaded
+when it changes), doors opening as they pass (events.fs's door walk).

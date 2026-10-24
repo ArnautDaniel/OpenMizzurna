@@ -101,7 +101,7 @@ The minigames that are a script alone (src: area_minigame_start setting minigame
 number (`minigame-script!`), and the `minigame` op starts that script as an event. Those that are an area's
 code alone are registered with `minigame-code!` (the stalker's 24 and 25, the car chase's 21), and the op runs
 that word at once; one that lasts says so (`minigame-begun` / `minigame-over`) and `wait-minigame` waits for it.
-Any others are to come.
+Every minigame the events start is one or the other.
 `wait-minigame` (op $149) waits for that script's end (`minigame-running?`). An area can register a word of its
 own as its script (area 19's chase: its scene, then the main executable's minigame 23; area 8's dog chase). `scene-reset` (op $11A, src:
 func_80018B44) changes the area under a running scene, Matthew where he is; `wait-near` (op $117) waits until

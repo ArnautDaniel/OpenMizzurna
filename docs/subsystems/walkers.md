@@ -33,5 +33,6 @@ carline.c `func_8003C08C`). `scripts/walkers.fs`, the actor `walkers`.
 
 ## Status
 
-Built: walking the graph, the stalker's loop and his capture (`tests/library/test_walkers.fs`). To come: the
-town's other pedestrians, pausing them all (src: `func_8003C588`).
+Built: walking the graph, the stalker's loop and his capture (`tests/library/test_walkers.fs`). The walkers are
+the scripts' (command $24, `lift`); the original has no other pedestrians, and its pause for them all
+(`func_8003C588`) has no caller.

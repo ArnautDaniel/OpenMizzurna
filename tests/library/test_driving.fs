@@ -55,4 +55,10 @@ testing the town's solid billboards (src: billboard_blocked): one of the car's t
     t k record {: b :}  ox b at-x nth +  oz b at-z nth + ;
 T{ by-the-car  a-solid-one 2dup solid-billboard?  -rot 400 + solid-billboard? -> true false }T
 
+testing a passenger: in his car at its second seat; out with him, beside that seat, following on foot again
+: winona-along ( -- )  winona 1 s" townsfolk" actor-named send person-ride  deliver ;
+T{ by-the-car  winona-along  with-passenger  deliver  winona riding?  following? -> true true }T
+T{ step-out  deliver  2 steps  winona riding?  companion-mode @  winona here? -> false 1 true }T
+T{ winona s" townsfolk" actor-named send person-unride  deliver -> }T
+
 test-summary

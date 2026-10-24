@@ -27,6 +27,7 @@ begin-structure person
   field: figure         \ their model (0: not loaded yet)
   field: travelling     \ between stops, walking their route
   field: person-area   field: on-floor   field: px   field: py   field: pz   field: heading-now   \ where they are
+  field: ride-seat      \ the car's seat they get out by (src: a->ride_seat)
   field: tilt-x   field: leaning-z   \ their tilt (src: rot_x, rot_z: a prop on its side, the lookout leaning)
   field: kept-heading   field: kept-anim   \ (src: actor_save_state: kept to come back to)
   field: walking        \ walking to a point (src: ACTOR_F_NAV)
@@ -141,7 +142,7 @@ $7202F constant club-approach-x   $46C77 constant club-approach-z   $502D0 const
 \ ---- a companion: someone going along with Matthew (src: actor_ride, D_800A37B0 / D_800A37B4) ----
 variable companion   -1 companion !   \ who (-1: no one)
 variable companion-mode                \ 0 stopped where they are, 1 following him on foot, 2 in his car
-1 constant along-on-foot   2 constant along-in-the-car
+1 constant along-on-foot   2 constant along-in-the-car   26 constant his-car-slot
 : minutes-to-go ( slot -- n )   \ till they leave their stop (src: the handlers' cmd 0x52; walking: 0)
     dup stop-of 0< if  drop 0 exit  then  dup current-row stop-until @  swap drop  clock-time - ;
 : at-a-door? ( slot -- flag )  person-of at-door @ 0<> ;
@@ -159,7 +160,6 @@ variable companion-mode                \ 0 stopped where they are, 1 following h
 \ riding in their car (docs/subsystems/traffic.md)
 $1645 constant getting-in      \ the motion of climbing in (the town's own)
 1024 constant get-in-turn      \ turned so from the car's way (src: func_80029AEC, 0x1400 of a turn)
-0 constant riders-seat         \ (src: actor_attach - every rider the first seat)
 : attach ( slot route speed -- )   \ src: actor_attach: they ride, the car drives the route
     {: s n v :}  s partner-of {: c :}  c 0= if  exit  then
     s person-of {: p :}  0 p walking !  c p riding !  the-town p person-area !
@@ -170,8 +170,8 @@ $1645 constant getting-in      \ the motion of climbing in (the town's own)
     s getting-in -1 false show ;
 : get-out ( slot car -- )   \ src: car_unload_riders: beside their seat, facing the car's way
     {: s c :}  s person-of {: p :}  c car-now {: x y z h :}
-    x z h riders-seat seat beside  p pz !  p px !  y p py !  h p heading-now !
-    0 p riding !  the-town p person-area ! ;
+    x z h p ride-seat @ seat beside  p pz !  p px !  y p py !  h p heading-now !
+    0 p riding !  0 p ride-seat !  the-town p person-area ! ;
 : unload ( car -- )  #slots 0 do  i scheduled? if  i person-of riding @ over = if  i over get-out  then  then  loop  drop ;
 : ride-on ( slot row -- )   \ a stop with them riding: their car on its way (unless it is already)
     {: s r :}  s partner-of {: c :}  c 0= if  exit  then  s person-of {: p :}
@@ -325,7 +325,7 @@ PRIVATE>
 state: townsfolk-state end-state
 behaviour townsfolk
   on spawned ( -- )  self subscribe tick  self subscribe time-set  self subscribe minute-passed
-    self subscribe car-arrived
+    self subscribe car-arrived  self subscribe left-the-car
     self subscribe player-control ;
   on tick ( -- )  ui-busy? 0= if  animate  then ;   \ (src: cobj.c: no moving while ui_busy)
   on time-set ( t -- )  settle-all ;
@@ -386,6 +386,10 @@ behaviour townsfolk
   on person-in-car ( slot car -- )   \ src: cmd 0x50: parked, that car their partner - out when it unloads
     swap person-of {: c p :}  0 p walking !  0 p forward !  c p riding !  the-town p person-area ! ;
   on car-arrived ( car -- )  unload ;
+  on left-the-car ( -- )   \ src: car_exit: his car's riders out by their seats, one along with him on foot again
+    his-car-slot unload  companion-mode @ along-in-the-car = if  along-on-foot companion-mode !  then ;
+  on person-passenger ( slot car seat -- )   \ src: car_enter_with_passenger: in that car, out by that seat
+    rot person-of {: c st p :}  0 p walking !  0 p forward !  c p riding !  st p ride-seat !  the-town p person-area ! ;
 end-behaviour
 
 : spawn-townsfolk ( -- id )  townsfolk townsfolk-state s" townsfolk" spawn ;
