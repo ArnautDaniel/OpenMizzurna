@@ -7,7 +7,7 @@
 \ scene, then the keypad: four face buttons, the code the town's own; wrong, again (the third time with a hint);
 \ right, through the door. A step at the original's rate (30 a second in the town).
 IN: tail
-USING: engine actors messages keys screen areas figures matthew townsfolk events events.ovl027 ;
+USING: engine actors messages keys screen areas figures matthew townsfolk story-flags events events.ovl027 ;
 
 \ ---- facts ----
 variable tail-point   \ src: D_8010CA28: the point he walks to (the keypad's: frames since the 4th press)
@@ -18,7 +18,7 @@ variable tail-point   \ src: D_8010CA28: the point he walks to (the keypad's: fr
 \ what he does at a point (the table's)
 1 constant goes-on   4 constant looks-back   5 constant looks-aside   7 constant at-his-door
 enum: tail-stage  off  pacing  intro  next-point  to-point  on-his-way  looking-back  looking-aside  in-a-scene  door
-    looking-round  keypad ;
+    looking-round  keypad  robber-at-door  robber-walking  robber-stopped  robber-fleeing  robber-caught ;
 variable stage   variable seen   variable timer   variable after-scene   variable scene-thread
 fvariable due
 
@@ -74,6 +74,37 @@ variable taken   \ (a step takes one press: the first)
     1 misses +!  misses @ hint-after >= if  ['] entry-80109EF8  else  ['] entry-80109EF0  then
     ['] keypad-again spotted ;
 
+\ ---- the robber (src: states 11 - 17): from the diner's door round his loop of the town's points, walking; once
+\ he's been spoken to, fleeing round it - running with Matthew within 0x800 ----
+8 constant #patrol   $800 constant too-close   30 constant robber-walks   $82 constant robber-runs
+1 constant walking-motion   5 constant running-motion
+variable patrol-point   variable gait-now
+: patrol-xz ( i -- x z )  2* {: k :}  s" robber-patrol" k exe-s32  s" robber-patrol" k 1+ exe-s32 ;
+: close-to-him? ( -- flag )
+    lookout person-now drop nip {: x z :}  matthew-now drop nip {: mx mz :}
+    mx x - s>f fdup f*  mz z - s>f fdup f* f+ fsqrt too-close s>f f< ;
+: go-patrol ( speed motion -- )   \ toward the point (again only when the point or the gait changes)
+    {: v m :}  m gait-now @ = if  exit  then  m gait-now !
+    lookout patrol-point @ patrol-xz v m the-townsfolk send person-walk ;
+: patrol-step ( flee? -- )   \ src: patrol
+    {: flee :}  lookout walking? 0=  gait-now @ 0< 0= and if
+        patrol-point @ 1+ #patrol mod patrol-point !  -1 gait-now !  then
+    flee close-to-him? and if  robber-runs running-motion  else  robber-walks walking-motion  then  go-patrol ;
+: robber-frame ( -- )
+    stage @ case
+        robber-at-door of  scene-over? if  0 patrol-point !  -1 gait-now !  robber-walking stage !  then  endof
+        robber-walking of  false patrol-step  endof
+        robber-stopped of  scene-over? if  -1 gait-now !  robber-fleeing stage !  then  endof
+        robber-fleeing of  true patrol-step  endof
+        robber-caught of  scene-over? if  off stage !  then  endof
+    endcase ;
+: robber-out? ( -- flag )  stage @ robber-at-door robber-caught 1+ within ;
+variable robber-talks   \ src: D_8010CA31
+: at-the-door ( -- )  ['] entry-80109F5C play-scene  robber-at-door stage !  0 robber-talks !  0e due f! ;   \ minigame 18
+: spoken-to ( -- )   \ minigames 19 (first), 20 (caught: src +0x10 bit 16)
+    robber-talks @ 0= if  1 robber-talks !  lookout idle  ['] entry-8010A008 play-scene  robber-stopped stage ! exit  then
+    $010 story@ $10000 or $010 story!  ['] entry-8010A064 play-scene  robber-caught stage ! ;
+
 \ ---- a step (src: func_801025E0) ----
 : walk-on ( -- )  lookout tail-point @ point-xz walk-to  on-his-way stage ! ;
 : next-one ( -- )   \ src: state 1
@@ -106,6 +137,7 @@ variable taken   \ (a step takes one press: the first)
     point-zone in-zone? if  0 misses !  ['] entry-80109D60 ['] keypad-again spotted  0 seen ! exit  then
     near-him? if  ['] entry-80109CF8 ['] next-one spotted  then ;
 : tail-frame ( -- )
+    robber-out? if  robber-frame exit  then
     stage @ case
         intro of  scene-over? if  first-of-the-way tail-point !  walk-on  then  endof
         next-point of  next-one  endof
@@ -137,6 +169,7 @@ variable taken   \ (a step takes one press: the first)
     lookout route-thread 0< 0= if  lookout end-route  then
     ['] entry-80109E54 play-scene  0 seen !  0 misses !  0e due f!  intro stage ! ;
 PRIVATE>
+: the-robber-out? ( -- flag )  robber-out? ;   \ (a fact: the town's talk asks)
 
 state: tail-state end-state
 behaviour tails
@@ -144,6 +177,8 @@ behaviour tails
   on tick ( -- )  tail-tick ;
   on tail-pace ( -- )  pace ;
   on tail-start ( -- )  begin-tail ;
+  on robber-start ( -- )  at-the-door ;
+  on robber-spoken-to ( -- )  spoken-to ;
   on area-entered ( area in-a-scene -- )  drop the-town <> if  off stage !  0 tail-point !  then ;
 end-behaviour
 

@@ -3,7 +3,7 @@
 \ fits), the scenes by room, a meeting's time and closing time, the doors by the story, a letter (○ then □), the
 \ stairs up from the basement, who says what, the talks here, the rope (minigame 17: the pad's left and right).
 IN: rules.area024
-USING: engine actors messages keys clock story-flags items townsfolk events look talk areas matthew crate ;
+USING: engine actors messages keys clock story-flags items townsfolk events look talk areas matthew crate rumble ;
 
 24 constant this-area
 16 constant the-crate-slot   95 constant the-caretaker   149 constant the-letter   148 constant the-rope
@@ -185,7 +185,7 @@ this-area ovl $80103760 ' into-the-nave native:   this-area ovl $801033DC ' crat
 
 \ ---- the rope (minigame 17, src: area_minigame_update): each new press of left or right a pull; at 10, 25 and
 \ 50 his strain shows; at 80 he's free (its scene) ----
-80 constant pulls-to-free
+80 constant pulls-to-free   1 constant a-tug   255 constant free-strength   10 constant free-shake   \ (the pad: src D_800F8248)
 $1401 constant straining   $1403 constant strain-1   $1404 constant strain-1-held
 $1405 constant strain-2   $1406 constant strain-2-held   $1407 constant strain-3
 variable pulls   variable left-was   variable right-was
@@ -201,8 +201,8 @@ variable pulls   variable left-was   variable right-was
 : the-rope-minigame ( -- )
     0 pulls !  pad-left key-down? left-was !  pad-right key-down? right-was !
     matthew straining 1 anim
-    begin  yield  pulled? if  1 pulls +!  strain  then  pulls @ pulls-to-free >= until
-    events.ovl024:entry-80103A08 ;
+    begin  yield  pulled? if  1 pulls +!  strain  a-tug 0 0 shake  then  pulls @ pulls-to-free >= until
+    0 free-strength free-shake shake  events.ovl024:entry-80103A08 ;   \ (free: the large motor 10 frames)
 ' the-rope-minigame 17 minigame-script!
 
 ' look-check ' look-do ' act-check ' act-do  this-area area-rules!

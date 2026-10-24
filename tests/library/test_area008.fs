@@ -1,7 +1,7 @@
 \ area 8's rules on the game's data (scripts/rules/area008.fs): the junkyard's bus - the seat looked at twice, then
 \ searched; the figure on the bus at its point in the story (another kind's model), talking to it
 USING: tester engine actors messages clock areas keys matthew townsfolk events window story-flags talk
-    rules.area008 ;
+    fight rules.area008 ;
 
 : steps ( n -- )  0 ?do  1 tick-tasks  actors-frame  loop ;
 : settled ( -- )  10 0 do  deliver  loop  events-stop  deliver ;
@@ -22,5 +22,15 @@ T{ search-the-seat act-do  played-out  seat-searched flag?  0 0 look-check -> tr
 testing at its point in the story a figure is on the bus, in another kind's model; talking to it
 T{ $01C story@ $20000000 or $01C story!  on-the-bus-now  events-stop  on-the-bus here?  on-the-bus kind-of -> true 1 }T
 T{ on-the-bus talks-here  started?  $01C story@ $40000000 and 0<> -> true true true }T
+
+testing the two-player fight's picking (minigame 43): each pad its pick, ○ settles it; then the fight
+: tap ( key -- )  dup true key-hold  2 steps  false key-hold  2 steps ;
+T{ events-stop  this-area 0 s" areas" actor-named send enter-area  deliver  2 steps
+   43 minigame  4 steps  minigame-running?  0 picker# picked @ -> true 0 }T
+T{ pad-up tap  pad-up tap  pad2-down tap  0 picker# picked @  1 picker# picked @ -> 2 35 }T
+T{ pad-circle tap  pad2-circle tap  0 picker# chosen @ 0<>  1 picker# chosen @ 0<> -> true true }T
+T{ 60 steps  fighting? -> true }T
+testing enough: it's over
+T{ vs-over  events-stop  minigame-running? -> false }T
 
 test-summary

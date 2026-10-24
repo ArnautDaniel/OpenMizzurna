@@ -48,6 +48,19 @@ Tailing the lookout to his door, and the door's keypad (src: ovl027 `func_801025
     keypad again.
 - **Drawn:** the buttons entered, 16 × 16 at (−32 + 16·i, 60), in the buttons' colours (`screen.fs`).
 
+## The robber (minigames 18 to 20)
+
+- **At the diner's door** (src: the diner's door check): on the robbery's day (+0x5C bits 4–11), 15:00–19:59, with
+  +0xEC bit 1 set and +0x10 bit 15 clear, there's no entry. Instead his scene plays (`entry-80109F5C`, minigame
+  18), +0x10 bit 15 is set, and the lookout mode is off.
+- **His loop.** Afterwards he walks round the town's eight points (`robber-patrol`) at 30, motion 1.
+- **Spoken to** (src: lookout_act's robber mode):
+  - the first time, his scene (`entry-8010A008`, minigame 19); then he flees round the loop, running (0x82,
+    motion 5) whenever Matthew is within 0x800;
+  - the next time, caught (`entry-8010A064`, minigame 20; +0x10 bit 16).
+- The diner's door also has the original's first check: Mel's stop 16 and +0x18 bit 2 clear give the overheard
+  scene (`entry-8010B89C`).
+
 ## Status
 
 Built: pacing, the tail, being seen, the door, the keypad (`tests/library/test_tail.fs`).
@@ -55,4 +68,4 @@ Built: pacing, the tail, being seen, the door, the keypad (`tests/library/test_t
 To come:
 - the look aside's lean;
 - the keypad's button icons;
-- the robber's later minigames (18 to 20: the diner door, his flight round the loop, the fight).
+- (the robber's minigames are built: see below).

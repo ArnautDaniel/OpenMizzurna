@@ -48,6 +48,6 @@ void platform_bind_next(int i);
 int platform_binding_wanted(void);
 
 /* a gamepad's motors: the small one on or off, the large one's strength (0..1); none: nothing */
-void platform_rumble(int small_on, float large);
+void platform_rumble(int port, int small_on, float large);   /* port 0 the first pad, 1 the second */
 
 #endif

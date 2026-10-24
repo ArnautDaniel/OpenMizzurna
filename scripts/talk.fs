@@ -53,6 +53,8 @@ create area-talks  33 cells allot   area-talks 33 cells erase                 \ 
 : pack-of ( slot -- pack )  character-index s" character-packs" rot exe-u8 ;
 variable talking-pack   variable talking-n
 : pack-talk-event ( -- )  talking-pack @ talking-n @ call-pack-script ;
+: npc-talk-as-matthew ( slot n -- )   \ src: npc_talk(0, slot << 16 | n): Matthew's pack, the person's talk
+    {: s n :}  s matthew 0 face  s idle  matthew pack-of talking-pack !  n talking-n !  ['] pack-talk-event start-event ;
 : npc-talk ( slot n -- )
     {: s n :}  s matthew 0 face  s idle   \ (src: actor_turn_to_actor, actor_anim 0)
     s pack-of talking-pack !  n talking-n !  ['] pack-talk-event start-event ;

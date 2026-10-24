@@ -8,7 +8,7 @@
 \ him out at the first free door. The fuel gauge and the speed are shown. A step at the original's rate (30 a
 \ second in the town).
 IN: driving
-USING: engine actors messages keys screen areas figures floors matthew traffic talk look events events.main sound ;
+USING: engine actors messages keys screen areas figures floors matthew traffic talk look events events.main sound rumble ;
 
 variable at-the-wheel   \ src: g_driving
 120 constant full-tank
@@ -24,7 +24,7 @@ variable fuel   full-tank fuel !   \ src: g_fuel (a new game starts full; the ga
 8 constant steer-step   4 constant steer-ease   800 constant steer-turnover   5 constant steer-slow   12 constant steer-fast
 \ its sounds (src: func_80109A10 the engine's two tones; engine_sound's key; car_scrape, the crash)
 $66 constant engine-sound   2 constant engine-tones   10 constant key-per-speed   $29 constant idle-key
-$69 constant crash-sound   $3D constant loud-enough
+$69 constant crash-sound   $3D constant loud-enough   2 constant scrape-frames   255 constant crash-strength
 $20 constant probe-step   $200 constant probe-limit   $32 constant swerve   300 constant car-half
 \ getting in (src: func_8004175C: beside the driver's door, facing across the car)
 $1D6 negate constant door-side   $64 negate constant door-forward   $400 constant across
@@ -59,7 +59,10 @@ fvariable due
 : probe ( h -- blocked? )  cx @ cz @ rot speed @ along 2dup wall? -rot solid-billboard? or ;   \ src: car_probe
 : hits? ( x z -- flag )   \ src: car_tile_hit: its box's two corners
     {: x z :}  x car-half - z car-half - wall?  x car-half + z car-half + wall? or ;
-: scrape ( -- )  speed @ loud-enough >= if  crash-sound sfx  then ;   \ (the pad's rumble: to come)
+: scrape ( -- )   \ src: car_scrape: the pad shakes by the speed
+    speed @ loud-enough >= if  crash-sound sfx  scrape-frames speed @ 2/ 255 min scrape-frames shake  then ;
+: crashed ( -- )   \ src: car_update's hit: full shake and the crash, at speed
+    speed @ loud-enough >= if  crash-sound sfx  scrape-frames crash-strength scrape-frames shake  then ;
 : swerve-way ( -- h )   \ the heading it moves on: ahead, or the first free one each side (it steers that way)
     ch @ {: h :}  speed @ 0> 0=  h probe 0= or if  h exit  then
     probe-limit probe-step do
@@ -70,7 +73,7 @@ fvariable due
 : move-car ( -- )
     swerve-way {: h :}  cx @ cz @ {: x z :}
     x z h speed @ along {: nx nz :}  x z h speed @ 2/ along {: hx hz :}
-    nx nz hits?  hx hz hits? or if  scrape  0e velocity f!  0 speed ! exit  then   \ (the rumble: to come)
+    nx nz hits?  hx hz hits? or if  crashed  0e velocity f!  0 speed ! exit  then
     nx cx !  nz cz !  nx nz ground-under cy ! ;
 : show-car ( -- )
     his-car cx @ cy @ cz @ ch @ 4095 and s" traffic" actor-named send car-place

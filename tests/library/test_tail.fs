@@ -47,4 +47,16 @@ testing talked to in the town: his (the tail or his warning); someone else's not
 T{ in-town  the-lookout talks-here  deliver  started?  mel talks-here -> true true false }T
 T{ events-stop -> }T
 
+testing the robber: at the diner's door on its day (15:00 - 19:59) - no entry, his scene, then round his loop
+: robbery-on ( day -- )  robber-armed flag-set  robber-met flag-clear  4 lshift $05C story! ;
+T{ in-town  28 robbery-on  28 16 0 date>time s" clock" actor-named send set-time  deliver
+   $52 open?  deliver  stage @  robber-met flag? -> false robber-at-door true }T
+T{ played-out  4 steps  stage @  lookout walking? -> robber-walking true }T
+testing spoken to: his scene, then fleeing round it - running with Matthew close
+T{ the-lookout talks-here  deliver  stage @ -> true robber-stopped }T
+T{ played-out  4 steps  lookout person-now drop nip 300 - put-him  4 steps  stage @  gait-now @ -> robber-fleeing running-motion }T
+testing spoken to again: caught (his scene; +0x10 bit 16)
+T{ the-lookout talks-here  deliver  stage @  $010 story@ $10000 and 0<> -> true robber-caught true }T
+T{ events-stop -> }T
+
 test-summary

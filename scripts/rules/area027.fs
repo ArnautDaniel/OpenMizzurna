@@ -26,6 +26,8 @@ $01C 27 story-bit constant junkyard-c   $008 16 story-bit constant junkyard-d
 $020 16 story-bit constant hideout-a    $020 17 story-bit constant hideout-b    \ src: & 0x30000 == 0x10000
 $018 2 story-bit constant mel-at-diner-seen
 10 constant junkyard-guard   $1A123 constant guard-at-gate   \ (actor 10 at x 0x1A123: the junkyard's gate kept)
+$16D07 constant guard-at-the-farm   \ (at Astin Farm)
+variable hall-tried   \ src: D_8010CA2E: the school's main hall tried with Winona this visit
 
 \ ---- shut: the "closed" script with its message (src: refuse, D_8010A510's operand) ----
 $31 constant closed   $32 constant diner-not-open   $33 constant diner-closing   $34 constant hospital-not-open
@@ -36,6 +38,19 @@ variable shut-message
 : refuse ( msg -- false )  shut-message !  ['] shut start-event  false ;
 
 \ ---- may he go through this door now? (src: ovl027_func_80103A70; Winona riding with him: to come) ----
+variable lookout-mode   \ src: D_8010CA2C: 1 the lookout by his door (0: the robber)
+$018 2 story-bit constant mel-overheard   16 constant mel-on-his-way   \ (src: +0x18 bit 2; Mel's stop 16)
+$010 15 story-bit constant robber-met   $0EC 1 story-bit constant robber-armed   \ (src: +0x10 bit 15, +0xEC bit 1)
+$05C constant robbery-day-word   4 constant robbery-day-shift   \ (src: the day in +0x5C bits 4 - 11)
+: robbery-day ( -- day )  robbery-day-word story@ robbery-day-shift rshift $FF and ;
+: diner-door ( -- open? )   \ src: ovl027_func_80103A70's 0x52
+    mel-overheard flag? 0=  mel last-stop mel-on-his-way = and if
+        mel-overheard flag-set  ['] entry-8010B89C start-event  false exit  then
+    0 0 0 6 59 between? if  diner-not-open refuse exit  then
+    0 19 55 23 59 between?  today 28 >=  0 18 55 23 59 between? and or if  diner-closing refuse exit  then
+    robber-met flag? 0=  robber-armed flag? and  robbery-day 15 0 19 59 between? and if
+        18 minigame  robber-met flag-set  0 lookout-mode !  false exit  then
+    true ;
 : open? ( door -- flag )
     case
         $00 of   \ the sheriff's department
@@ -50,10 +65,7 @@ variable shut-message
             mel mel-at-his-room at-record? 0=  mel-room-a flag? mel-room-b flag? and 0= and
             mel-room-counter story@ 0<> and if  true  else  closed refuse  then  endof
         $1B of  closed refuse  endof   \ the Roland residence
-        $52 of   \ the diner (src: Mel's first visit there, the robber at the door - to come)
-            0 0 0 6 59 between? if  diner-not-open refuse  else
-            0 19 55 23 59 between?  today 28 >=  0 18 55 23 59 between? and or if  diner-closing refuse  else  true  then
-            then  endof
+        $52 of  diner-door  endof
         $10 of   \ the hospital
             hospital-always-open flag? if  true  else
             0 0 0 7 59 between? if  hospital-not-open refuse  else
@@ -96,7 +108,9 @@ variable shut-message
 : mels-room         $24 ['] entry-8010BD0C go-in ;
 : rubin-apartments  $47 ['] entry-8010C004 go-in ;
 : wolfs-hideout     $20 open? if  hideout-a flag-set  ['] entry-8010AA78 start-event  then ;   \ src: |= 0x20000
-: school-hall       ['] entry-8010B5E0 start-event ;   \ (with Winona riding along: a minigame - to come)
+: school-hall ( -- )   \ src: evfn_80106C50: with Winona along, her scene there (minigame 10), the hall tried
+    winona going-along? if  10 minigame  1 hall-tried ! exit  then  ['] entry-8010B5E0 start-event ;
+' entry-80109F04 10 minigame-script!   \ (src: area_minigame_start's 10)
 
 this-area ovl $80106594 ' roland-residence native:   this-area ovl $801065C8 ' sheriffs-office native:
 this-area ovl $801065FC ' haines-diner native:       this-area ovl $80106630 ' st-peters native:
@@ -144,11 +158,11 @@ enum: knocks  no-knock  at-astin-farm  at-the-rolands  at-the-strasbourgs  at-me
 \ ---- the lookout (106) by his door (src: ovl027_func_801040B0's minigame 1; lookout_act) - tail.fs ----
 $000 6 story-bit constant tail-armed   \ (src: +0x00 bit 6: the town's tail armed)
 106 constant the-lookout   $14 constant mel-still-around   \ (src: Mel's stop under 0x14)
-variable lookout-mode   \ src: D_8010CA2C: 1 the lookout by his door
 : entered ( -- )
     tail-armed flag?  hideout-robbers-caught flag? 0= and dup lookout-mode !
     if  s" tail" actor-named send tail-pace  then ;
 : talks-here ( slot -- handled? )
+    dup the-lookout =  the-robber-out? and if  drop  s" tail" actor-named send robber-spoken-to  true exit  then
     the-lookout <>  lookout-mode @ 0= or if  false exit  then
     mel stop-of mel-still-around <  tail-started? 0= and if  s" tail" actor-named send tail-start
     else  ['] entry-8010B470 start-event  then  true ;
@@ -167,6 +181,8 @@ variable stalker-due   variable stalking
 : rounds ( -- )  begin  stalking @ while  0 3 leg  3 9 leg  9 0 leg  repeat ;
 : stalk ( -- )  true stalking !  ['] rounds the-stalker start-route ;   \ minigame 24
 ' stalk 24 minigame-code!
+: robber-at-the-door ( -- )  s" tail" actor-named send robber-start ;   \ minigame 18
+' robber-at-the-door 18 minigame-code!
 : caught ( -- )   \ minigame 25 (src: actor_handler_112 in the town)
     false stalking !  the-stalker end-route  the-stalker s" walkers" actor-named send walker-stop
     stalker-caught flag-toggle  ['] entry-8010A178 start-event ;
@@ -175,7 +191,13 @@ variable stalker-due   variable stalking
 : entered-town ( -- )
     entered  false stalking !  the-stalker end-route
     stalker-due @ if  0 stalker-due !  24 minigame  then ;
+: the-guard ( -- handled? )   \ src: func_80106E40: at the farm his scene (minigame 34); at the gate his talk
+    junkyard-guard person-now 2drop drop {: x :}
+    x guard-at-the-farm = if  $020 story@ $10 or $020 story!  34 minigame  true exit  then
+    x guard-at-gate = if  junkyard-guard 0 npc-talk-as-matthew  then  true ;
+' entry-8010A358 34 minigame-script!   \ (src: area_minigame_start's 34)
 : talks-to ( slot -- handled? )
+    dup junkyard-guard = if  drop the-guard exit  then
     dup the-stalker = if  drop 25 minigame  true exit  then  talks-here ;
 ' talks-to this-area area-talk!
 this-area ' entered-town 0 area-hooks!

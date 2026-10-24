@@ -100,7 +100,7 @@ static void key_pressed(Input *in, SDL_Scancode k) {
 /* ---- a gamepad, played as the keyboard: its buttons hold the keys the scripts read for the pad's
  * (scripts/keys.fs: the PlayStation pad's layout), the d-pad the arrows, the left stick W A S D past half
  * way - and its own reading (pad-stick), for walking as far as it is pushed ---- */
-static SDL_Gamepad *sPad;
+static SDL_Gamepad *sPad, *sPad2;   /* the first and the second (the two-player fight's) */
 static bool sHeld[SDL_SCANCODE_COUNT];   /* the keyboard's and the pad's, together */
 static bool sPadHeld[SDL_SCANCODE_COUNT];
 static const struct { SDL_GamepadButton button; SDL_Scancode key; } kPadKeys[] = {
@@ -117,12 +117,29 @@ static const struct { SDL_GamepadButton button; SDL_Scancode key; } kPadKeys[] =
     {SDL_GAMEPAD_BUTTON_DPAD_LEFT, SDL_SCANCODE_LEFT},
     {SDL_GAMEPAD_BUTTON_DPAD_RIGHT, SDL_SCANCODE_RIGHT},
 };
+/* the second pad: its buttons as keys of their own (scripts/keys.fs's pad2-*), the keyboard's too */
+static const struct { SDL_GamepadButton button; SDL_Scancode key; } kPad2Keys[] = {
+    {SDL_GAMEPAD_BUTTON_EAST, SDL_SCANCODE_O},  {SDL_GAMEPAD_BUTTON_WEST, SDL_SCANCODE_Y},
+    {SDL_GAMEPAD_BUTTON_NORTH, SDL_SCANCODE_P}, {SDL_GAMEPAD_BUTTON_SOUTH, SDL_SCANCODE_U},
+    {SDL_GAMEPAD_BUTTON_LEFT_SHOULDER, SDL_SCANCODE_7}, {SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER, SDL_SCANCODE_9},
+    {SDL_GAMEPAD_BUTTON_START, SDL_SCANCODE_H}, {SDL_GAMEPAD_BUTTON_BACK, SDL_SCANCODE_G},
+    {SDL_GAMEPAD_BUTTON_DPAD_UP, SDL_SCANCODE_I}, {SDL_GAMEPAD_BUTTON_DPAD_DOWN, SDL_SCANCODE_K},
+    {SDL_GAMEPAD_BUTTON_DPAD_LEFT, SDL_SCANCODE_J}, {SDL_GAMEPAD_BUTTON_DPAD_RIGHT, SDL_SCANCODE_L},
+};
 #define STICK_DEAD 0.25f   /* (the stick's dead zone) */
 #define STICK_KEY 0.5f     /* (past this, it holds a key) */
 
-static SDL_Scancode pad_key(SDL_GamepadButton b) {
+static SDL_Scancode pad_key(SDL_GamepadButton b, int second) {
     size_t i;
 
+    if (second) {
+        for (i = 0; i < sizeof(kPad2Keys) / sizeof(kPad2Keys[0]); i++) {
+            if (kPad2Keys[i].button == b) {
+                return kPad2Keys[i].key;
+            }
+        }
+        return SDL_SCANCODE_UNKNOWN;
+    }
     for (i = 0; i < sizeof(kPadKeys) / sizeof(kPadKeys[0]); i++) {
         if (kPadKeys[i].button == b) {
             return kPadKeys[i].key;
@@ -146,6 +163,11 @@ static void pad_poll(Input *in) {
 
     memset(sPadHeld, 0, sizeof(sPadHeld));
     in->stick_x = in->stick_y = 0.0f;
+    if (sPad2 != NULL) {
+        for (i = 0; i < sizeof(kPad2Keys) / sizeof(kPad2Keys[0]); i++) {
+            sPadHeld[kPad2Keys[i].key] = SDL_GetGamepadButton(sPad2, kPad2Keys[i].button);
+        }
+    }
     if (sPad == NULL) {
         return;
     }
@@ -165,9 +187,11 @@ static void pad_poll(Input *in) {
     }
 }
 
-void platform_rumble(int small_on, float large) {
-    if (sPad != NULL) {   /* (held a little past the next tick: renewed each one) */
-        SDL_RumbleGamepad(sPad, small_on ? 0xFFFF : 0, (Uint16)(large * 65535.0f), 100);
+void platform_rumble(int port, int small_on, float large) {
+    SDL_Gamepad *pad = port == 0 ? sPad : sPad2;
+
+    if (pad != NULL) {   /* (held a little past the next tick: renewed each one) */
+        SDL_RumbleGamepad(pad, small_on ? 0xFFFF : 0, (Uint16)(large * 65535.0f), 100);
     }
 }
 
@@ -210,6 +234,9 @@ void platform_close(void) {
     if (sPad != NULL) {
         SDL_CloseGamepad(sPad);
     }
+    if (sPad2 != NULL) {
+        SDL_CloseGamepad(sPad2);
+    }
     if (sContext != NULL) {
         SDL_GL_DestroyContext(sContext);
     }
@@ -250,19 +277,29 @@ void platform_poll(Input *in) {
         case SDL_EVENT_GAMEPAD_ADDED:
             if (sPad == NULL) {
                 sPad = SDL_OpenGamepad(e.gdevice.which);
+            } else if (sPad2 == NULL) {
+                sPad2 = SDL_OpenGamepad(e.gdevice.which);
             }
             break;
         case SDL_EVENT_GAMEPAD_REMOVED:
             if (sPad != NULL && SDL_GetGamepadID(sPad) == e.gdevice.which) {
                 SDL_CloseGamepad(sPad);
-                sPad = NULL;
+                sPad = sPad2;   /* (the second, if any, is the first now) */
+                sPad2 = NULL;
+            } else if (sPad2 != NULL && SDL_GetGamepadID(sPad2) == e.gdevice.which) {
+                SDL_CloseGamepad(sPad2);
+                sPad2 = NULL;
             }
             break;
-        case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
-            if (pad_key((SDL_GamepadButton)e.gbutton.button) != SDL_SCANCODE_UNKNOWN) {
-                in->pressed[pad_key((SDL_GamepadButton)e.gbutton.button)] = true;
+        case SDL_EVENT_GAMEPAD_BUTTON_DOWN: {
+            int second = sPad2 != NULL && SDL_GetGamepadID(sPad2) == e.gbutton.which;
+            SDL_Scancode k = pad_key((SDL_GamepadButton)e.gbutton.button, second);
+
+            if (k != SDL_SCANCODE_UNKNOWN) {
+                in->pressed[k] = true;
             }
             break;
+        }
         case SDL_EVENT_MOUSE_MOTION:
             in->mouse_dx += e.motion.xrel;
             in->mouse_dy += e.motion.yrel;

@@ -287,7 +287,8 @@ variable minigame-busy   \ a code minigame not over yet (src: minigame_id still 
 : elevator-doors ( n n -- )  2 s" elevator-doors" unbuilt ;   \ op $148
 : wait-minigame ( -- )   \ op $149: until the minigame's over
     settle  begin  minigame-running? while  yield  repeat ;
-: rumble ( n n -- )  2 s" rumble" unbuilt ;   \ op $155
+: rumble ( strength frames -- )   \ op $155: 0x100 the small motor, else the large at that strength
+    {: v n :}  s" rumble" actor-named {: r :}  v $100 = if  0 n r send rumble-small  else  0 v n r send rumble-large  then ;
 : sprite-count+ ( -- )  0 s" sprite-count+" unbuilt ;   \ op $15D
 : sprite-count-close ( -- )  0 s" sprite-count-close" unbuilt ;   \ op $15E
 : face-each-other ( a a -- )  2 s" face-each-other" unbuilt ;   \ op $162

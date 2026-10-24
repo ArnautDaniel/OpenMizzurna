@@ -3,7 +3,7 @@
 \ getting off the bus, the minigame that is a script alone, the dog chase (minigame 26: dog-chase.fs). (Minigame 43,
 \ the two-player viewer: to come.)
 IN: rules.area008
-USING: engine actors messages clock story-flags townsfolk events look talk areas dog-chase ;
+USING: engine actors messages keys clock story-flags townsfolk events look talk areas dog-chase ;
 
 8 constant this-area
 153 constant on-the-bus   1 constant morgans-kind
@@ -54,6 +54,42 @@ this-area ovl $80102140 ' off-the-bus native:
     s" dog-chase" actor-named send dog-chase-stop
     events.ovl008:entry-8010344C ;
 ' the-dog-chase 26 minigame-script!
+
+\ ---- the two-player fight (minigame 43, src: area_minigame_update's 5 and 6, vs_pick): each player picks a model
+\ with up and down (the first pad, the second's), ○ settles it (a nod); both settled, a moment, the fight's
+\ scene - asking whether to go again; again, the picking again; enough, it's over (src: vs_mode_end) ----
+153 constant first-fighter   102 constant second-fighter   36 constant #vs-models   21 constant settle-frames
+$75 constant nod   $74 constant nodded
+begin-structure picker
+  field: picked   field: chosen   field: up-was   field: down-was   field: ok-was
+end-structure
+create pickers  picker 2 * allot
+variable vs-going   variable vs-wait
+: picker# ( i -- p )  picker * pickers + ;
+: edge ( down? addr -- new? )  {: d a :}  d a @ 0= and  d a ! ;
+: show-pick ( slot p -- )  picked @ {: k :}  s" vs-models" k exe-u8 actor-model ;
+: pick-step ( slot p up down ok -- )   \ src: vs_pick
+    {: s p u dn ok :}  p chosen @ if  exit  then
+    u key-down? p up-was edge if  p picked @ 1+ dup #vs-models >= if  drop 0  then  p picked !  then
+    dn key-down? p down-was edge if  p picked @ 1- dup 0< if  drop #vs-models 1-  then  p picked !  then
+    ok key-down? p ok-was edge if  s nod nodded 1 anim-then  true p chosen !  then
+    s p show-pick ;
+: fresh-picks ( -- )  pickers picker 2 * erase  0 vs-wait ! ;
+: picking ( -- done? )
+    first-fighter 0 picker# pad-up pad-down pad-circle pick-step
+    second-fighter 1 picker# pad2-up pad2-down pad2-circle pick-step
+    0 picker# chosen @  1 picker# chosen @ and 0= if  false exit  then
+    1 vs-wait +!  vs-wait @ settle-frames >= ;
+: vs-loop ( -- )   \ (its own thread: Matthew the player's no more than the scene lets him)
+    begin  vs-going @ while
+        fresh-picks  begin  yield  picking  vs-going @ 0= or until
+        vs-going @ if  events.ovl008:entry-8010377C  then
+    repeat ;
+-3 constant vs-thread
+: vs-mode ( -- )  true vs-going !  minigame-begun  ['] vs-loop vs-thread start-route ;
+' vs-mode 43 minigame-code!
+: vs-over ( -- )  false vs-going !  minigame-over ;   \ 0x80102FA4 (src: vs_mode_end)
+this-area ovl $80102FA4 ' vs-over native:
 
 ' look-check ' look-do ' act-check ' act-do  this-area area-rules!
 this-area ' entered ' scene-hook area-hooks!

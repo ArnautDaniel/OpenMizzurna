@@ -51,13 +51,18 @@ message camera-follow ( -- )             \ behind Matthew again, the scene's way
 message camera-fixed ( -- )              \ stay where it is
 message fight-start ( a style b style -- ) \ a fistfight: each the pad's (style 0) or the AI's (2 - 8) (src: fight_start)
 message tail-pace ( -- )                   \ (to the tail) the lookout paces by his door (src: minigame 1)
-message tail-start ( -- )                  \ tailing him begins (src: minigame 2)
+message tail-start ( -- )
+message robber-start ( -- )               \ (to the tail) the robber at the diner's door, then round his loop (src: minigame 18)
+message robber-spoken-to ( -- )          \ talked to: the first time he's off (19), then caught (20)                  \ tailing him begins (src: minigame 2)
 message dog-chase-start ( -- )             \ (to the dog chase) from the start (src: minigame 26's dog_reset)
 message dog-chase-stop ( -- )              \ he's got away: it's over
 message walker-start ( slot node dest speed motion -- )   \ (to the walkers) along the town's footpaths from that node to the
                                           \ destination (one of the first 24), speed a frame, in that motion (src: walker_start)
 message walker-stop ( slot -- )            \ stop walking there, stand (src: walker_remove)
 message flare-on ( slot -- )             \ (to the flare) a flare's glow at their feet, growing (src: ground_flare_draw)
+message rumble-small ( port frames -- )    \ (to the rumble) the pad's small motor for so many of the original's pad frames (-1 for ever; 0 off)
+message rumble-large ( port strength frames -- )   \ its large motor so hard (0 - 255) for so long
+message rumble-stop ( -- )
 message play-sound ( id -- )             \ (to the sound) an effect once: under 100 the common bank's program, else the area's
 message play-sound-at ( id volume -- )  \ the same, at a volume (0 - 127: footsteps further off)
 message loop-sound ( id -- )             \ an effect held, until stopped (src: ambient_start)

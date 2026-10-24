@@ -6,7 +6,7 @@
 \ falls, game over, and ○ or Start runs it from the start. The camera looks down on him. A step at the
 \ original's rate (15 a second indoors); the scene's script decides when he's got away.
 IN: dog-chase
-USING: engine actors messages keys screen areas figures floors matthew townsfolk sound ;
+USING: engine actors messages keys screen areas figures floors matthew townsfolk sound rumble ;
 
 variable chasing
 : chasing? ( -- flag )  chasing @ 0<> ;
@@ -25,6 +25,7 @@ $200 negate constant chase-look-y   $DE2 negate constant chase-dist   $A00 negat
 \ the screen's effects (src: screen_effect)
 10 constant fade-in   14 constant bite-flash   9 constant falling   2 constant game-over-in   3 constant fade-out
 -140 constant bar-x   -80 constant bar-y
+4 constant bite-shake   255 constant bite-strength
 $72 constant bite-sound   $A constant chase-music   \ (the music table's row)
 
 enum: dog-stage  waiting  charging  skidding  backing-off ;
@@ -49,8 +50,8 @@ fvariable due
 : effect ( n -- )  s" effects" actor-named send screen-effect ;
 
 \ ---- the dog ----
-: bitten ( -- )   \ (the pad's rumble: to come)
-    bite-sound sfx  bite-flash effect  bite-damage negate health +!
+: bitten ( -- )   \ src: both motors 4 frames
+    bite-sound sfx  bite-shake bite-strength bite-shake shake  bite-flash effect  bite-damage negate health +!
     health @ 0 <= if  down him !  falling effect  else  staggered him !  then
     backing-off dog !  hurt-frames wait !  0 dog-speed !
     angle-to-him {: a :}  a dog-heading !   \ src: actor_place_apart: it's put that far from him, facing him

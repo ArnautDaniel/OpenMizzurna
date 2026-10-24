@@ -72,14 +72,22 @@ fvariable due
     0 fighter# fx @ 1 fighter# fx @ - s>f  0 fighter# fz @ 1 fighter# fz @ - s>f  fatan2 4096e f* 2e pi f* f/ f>s 4095 and ;
 
 \ ---- the pad ----
-create keys-were 2 cells allot
-: keys-now ( -- held )   \ bits: punch kick dodge right left taunt (the player's pad)
+create keys-were 2 cells allot   create pads-held 2 cells allot   create pads-pressed 2 cells allot
+: first-pad ( -- held )   \ bits: punch kick dodge right left taunt
     pad-circle key-down? 1 and  pad-cross key-down? 2 and or  pad-down key-down? 4 and or
     pad-right key-down? 8 and or  pad-left key-down? 16 and or  pad-select key-down? 32 and or ;
+: second-pad ( -- held )   \ (the second player's: style 1)
+    pad2-circle key-down? 1 and  pad2-cross key-down? 2 and or  pad2-down key-down? 4 and or
+    pad2-right key-down? 8 and or  pad2-left key-down? 16 and or  pad2-select key-down? 32 and or ;
+: keys-now ( port -- held )  if  second-pad  else  first-pad  then ;
 1 constant punch-key   2 constant kick-key   4 constant dodge-key   8 constant right-key   16 constant left-key
 32 constant taunt-key
-variable held   variable pressed
-: read-pad ( -- )  keys-now dup keys-were @ invert and pressed !  dup held !  keys-were ! ;
+variable held   variable pressed   \ (the pad of the fighter acting now)
+: read-port ( port -- )
+    {: n :}  n keys-now {: k :}  k n cells keys-were + @ invert and n cells pads-pressed + !
+    k n cells pads-held + !  k n cells keys-were + ! ;
+: read-pad ( -- )  0 read-port  1 read-port  0 cells pads-held + @ held !  0 cells pads-pressed + @ pressed ! ;
+: use-pad ( port -- )  cells {: k :}  k pads-held + @ held !  k pads-pressed + @ pressed ! ;
 : forward-key ( i -- k )  if  left-key  else  right-key  then ;   \ (the first on the left: forward is right)
 : back-key ( i -- k )  if  right-key  else  left-key  then ;
 
@@ -157,12 +165,18 @@ variable held   variable pressed
 : voice-sound ( m -- id )  {: m :}  s" fight-voices" m exe-u8 sound-base + ;
 
 \ ---- an attack's move-frame (src: attack_resolve) ----
+: felt ( o strength small large -- )   \ a human hurt: their pad shakes (src: fight.c rumble)
+    {: o v sf lf :}  o human? 0= if  exit  then
+    s" rumble" actor-named {: r :}  o style @ sf r send rumble-small  o style @ v lf r send rumble-large ;
+14 constant hurt-flash   8 constant shake-a-damage   2 constant hurt-small   5 constant hurt-large
+255 constant ko-shake   7 constant ko-small   7 constant ko-large
 : lands ( f o i -- )
     {: f o i :}  f move @ {: m :}
+    o human? if  hurt-flash s" effects" actor-named send screen-effect  o m damage shake-a-damage * hurt-small hurt-large felt  then
     1 f combo +!  0 o combo !  o m reaction start-move  m push o pushed !
     m damage {: d :}  d negate o health +!
     streak-victim @ i other = if  d streak +!  else  i other streak-victim !  d streak !  then
-    o health @ 0 <= if  0 o health !  o knocked-out start-move  1 ko !  then ;
+    o health @ 0 <= if  0 o health !  o knocked-out start-move  1 ko !  o ko-shake ko-small ko-large felt  then ;
 : attack ( f o i -- )
     {: f o i :}  f move @ {: m :}
     f move-frame @ m hit-frame <> if  exit  then
@@ -212,6 +226,7 @@ variable held   variable pressed
 : fighter-frame ( i -- )
     {: i :}  i fighter# {: f :}  i other fighter# {: o :}
     f fx @ f was-x !  f fz @ f was-z !
+    f human? if  f style @ use-pad  then   \ (its own pad: the first, or the second's)
     f move-frame @ 0<>  f motion-done? and if  f  f move @ move-next  start-move  then
     f pushed @ ?dup if  f swap negate step  f pushed @ 2/ f pushed !  then
     f move @ move-kind ready = if  f human? if  f i human-input  else  f i ai-input  then  then
@@ -232,7 +247,8 @@ $A constant fight-music   $D constant own-music   \ (rows of the music table)
     ready-move f move !  0 f move-frame !  -1 f last-motion !  f start-x @ f fx !  f start-z @ f fz ! ;
 : begin-fight ( -- )   \ (again from the start after a loss)
     0 fighter# fresh  1 fighter# fresh
-    0 ko !  0 streak !  no-winner fight-winner !  0 lost !  0e due f!  keys-now keys-were !
+    0 ko !  0 streak !  no-winner fight-winner !  0 lost !  0e due f!
+    0 keys-now keys-were !  1 keys-now keys-were cell+ !
     fighting?  0 fighter# style @ styles-own-motions <> or if   \ src: fight_begin's music (again on a retry)
         0 fighter# style @ styles-own-motions = if  own-music  else  fight-music  then  music-row  then
     true fighting !

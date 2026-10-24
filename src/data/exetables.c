@@ -144,6 +144,7 @@ static const AreaTable kAreaTables[] = {
     {"chase-after-stops", 27, 0x8010259C, 3 * 4,
      "after the car chase's won: Dennis's, Wolf's, Rolein's stop (u8 each, by the day from the 28th; src: "
      "ovl027 func_801060BC)"},
+    {"vs-models", 8, 0x8010374C, 36, "the two-player fight's models to pick from: a character kind each (u8; src: vs_model_table)"},
     {"dog-directions", 8, 0x80103484, 16 * 2,
      "the dog chase's d-pad: a heading (s16) for each of its 16 combinations, by bits Up 1, Right 2, Down 4, Left 8 "
      "(src: ovl008 dog_update)"},
@@ -152,6 +153,7 @@ static const AreaTable kAreaTables[] = {
      "the lookout's way: 12 of s32 x, z; u8 what he does there (1 on, 4 look back, 5 look aside, 7 his door), the "
      "next point, the next once he's seen Matthew, his sight's zone"},
     {"tail-zones", 27, 0x80109CA8, 5 * 16, "his sight's zones: s32 x, z, x, z - two corners (src: func_800296F8)"},
+    {"robber-patrol", 27, 0x80109F1C, 8 * 8, "the robber's loop round the town: 8 points of s32 x, z (src: patrol)"},
     {"keypad-code", 27, 0x80101ED0, 4, "the door's code: a button's bit each (0x10 triangle, 0x20 circle, 0x40 cross, 0x80 square)"},
 };
 #define NAREATABLES (int)(sizeof(kAreaTables) / sizeof(kAreaTables[0]))

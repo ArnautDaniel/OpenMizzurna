@@ -6,7 +6,7 @@ A fistfight between two figures (src: fight.c `fight_start` / `fight_update`, th
 ## Messages and facts
 
 - `fight-start ( a style b style )`: a and b (Matthew's slot 0, or a person's) fight; a style is 0 (the pad), 1
-  (a second pad: no input here - it stands) or 2 - 8 (the AI, by its row of the executable's `fight-ai`).
+  (the second pad: rumble.md's port 1) or 2 - 8 (the AI, by its row of the executable's `fight-ai`).
 - Facts: `fighting?`, `fight-winner` (0 the first, 1 the second).
 - The events' op `fight ( a style b style )` (op $169) starts one and waits for its end; its result is the
   winner.

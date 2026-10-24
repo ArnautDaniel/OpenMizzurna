@@ -60,6 +60,7 @@ phase-1 port's files (`../port/src/game/`), which name the decomp's functions; t
 | Walkers ([page](subsystems/walkers.md), built) | figures along the town's footpaths: the stalker's loop | `walker.c`, `carline.c` |
 | Flare ([page](subsystems/flare.md), built) | a flare's glow on the ground (areas 5, 24) | `snow.c` (`ground_flare_draw`) |
 | Car chase ([page](subsystems/car-chase.md), built) | after the bike in his car: the knocks, the crash, the clock | `ovl027.c` (states 20–26) |
+| Rumble ([page](subsystems/rumble.md), built) | the pads' motors | `frame.c` (pad motors) |
 | Minigames | the bar counters | `fight.c`, `qte.c`, `shootout.c`, `counter.c`, `ovl0xx.c` |
 | Saves | saving and loading the story | `cmcard.c`, `cnrev.c` (story_save) |
 | Title | the logo, the title and its menu, the movies, the endings | `opening.c` |

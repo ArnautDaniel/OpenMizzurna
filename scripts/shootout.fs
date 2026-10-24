@@ -7,7 +7,7 @@
 \ and from the start again for ○ or Start. The camera follows the round's own path round the foe; a step at the
 \ original's rate (15 a second indoors). An area describes its shoot-out in a plan.
 IN: shootout
-USING: engine actors messages keys screen areas figures matthew townsfolk events sound ;
+USING: engine actors messages keys screen areas figures matthew townsfolk events sound rumble ;
 
 \ ---- facts ----
 variable shootout-going   \ a shoot-out is on (src: D_800A3578 / D_800A3570)
@@ -45,7 +45,7 @@ end-structure
 12 constant eye-at   16 constant look-at   20 constant dist-at   24 constant turn-at   28 constant frames-at
 32 constant moves-at   0 constant cut   1 constant tween   2 constant turning-up   3 constant turning-down
 1 constant triangle   2 constant square   3 constant cross   4 constant circle
-4 constant burst-frames
+4 constant burst-frames   2 constant shot-kick   255 constant shot-strength   \ (a shot: both motors 2 frames)
 
 variable plan   variable round   variable stage
 enum: shootout-stage  aiming  won-scene  missed-scene  final-scene  lost-scene  game-over ;
@@ -168,8 +168,8 @@ create was-down circle 1+ cells allot   variable pressed   \ (the buttons presse
         round @ 1+ plan @ plan-rounds @ = if  final-scene stage !  true him-shown  then
         this-round round-won @ play-scene  then ;
 : missed ( -- )  missed-scene stage !  this-round round-missed @ play-scene ;
-: fire ( -- )   \ a shot spent: its sound, his shot's motion (the flash and the pad's rumble: to come)
-    -1 shots +!  plan @ plan-shot-sound @ sfx?  plan @ plan-shot-motion @ dup 0< if  drop exit  then
+: fire ( -- )   \ a shot spent: its sound, the pad's kick, his shot's motion (the flash: to come)
+    -1 shots +!  plan @ plan-shot-sound @ sfx?  shot-kick shot-strength shot-kick shake  plan @ plan-shot-motion @ dup 0< if  drop exit  then
     plan @ plan-aimed-motion @ false him send figure-anim ;
 : aim-frame ( -- )
     row-frame  path-frame  aim-camera  foe-faces
