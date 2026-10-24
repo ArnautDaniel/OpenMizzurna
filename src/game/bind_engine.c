@@ -304,6 +304,16 @@ PRIM(p_draw_billboard) {   /* ( image x z bottom top half yaw grey blend -- ) an
         scene3d_quad(sImages[i - 1].t, corner, (float)grey / 128.0f, (int)blend);
     }
 }
+PRIM(p_draw_ground_quad) {   /* ( image x y z half grey blend -- ) a picture lying flat in the world, centred there,
+                              * 2 half across; grey 128: as it is; blend as scene3d_quad's */
+    Cell blend = POP(), grey = POP(), half = POP(), z = POP(), y = POP(), x = POP(), i = POP();
+    float corner[4][3] = {{(float)(x - half), (float)y, (float)(z - half)}, {(float)(x + half), (float)y, (float)(z - half)},
+                          {(float)(x - half), (float)y, (float)(z + half)}, {(float)(x + half), (float)y, (float)(z + half)}};
+
+    if (i >= 1 && i <= sNImages && sImages[i - 1].t.id != 0) {
+        scene3d_quad(sImages[i - 1].t, corner, (float)grey / 128.0f, (int)blend);
+    }
+}
 PRIM(p_behind) { render_behind(POP() != 0); }   /* ( flag -- ) the 2D from now on behind the 3D (the sky) or over it */
 
 /* ---- chance ---- */
@@ -331,7 +341,7 @@ void bind_engine(Forth *f) {
         {"on-tick", p_on_tick}, {"off-tick", p_off_tick}, {"on-draw", p_on_draw}, {"off-draw", p_off_draw},
         {"ticks", p_ticks}, {"dt", p_dt}, {"seconds", p_seconds}, {"step-blend", p_step_blend}, {"pen-color", p_pen_color}, {"pen-scale", p_pen_scale}, {"draw-text", p_draw_text},
         {"draw-rect", p_draw_rect}, {"pen-blend", p_pen_blend}, {"draw-quad", p_draw_quad}, {"screen-size", p_screen_size}, {"char-size", p_char_size}, {"hud", p_hud},
-        {"clear-color", p_clear_color}, {"random", p_random}, {"image", p_image}, {"image-size", p_image_size}, {"draw-image", p_draw_image}, {"behind", p_behind}, {"draw-billboard", p_draw_billboard}, {"screenshot", p_screenshot},
+        {"clear-color", p_clear_color}, {"random", p_random}, {"image", p_image}, {"image-size", p_image_size}, {"draw-image", p_draw_image}, {"behind", p_behind}, {"draw-billboard", p_draw_billboard}, {"draw-ground-quad", p_draw_ground_quad}, {"screenshot", p_screenshot},
         {"screenshot-pending?", p_screenshot_pending}, {"console!", p_console_store}, {"exe-table", p_exe_table}, {"library-file", p_library_file}, {"exe-u8", p_exe_u8}, {"exe-s8", p_exe_s8}, {"exe-s16", p_exe_s16}, {"exe-s32", p_exe_s32},
     };
     Vocab *was = f->m.current, *v = forth_vocab(f, "engine");

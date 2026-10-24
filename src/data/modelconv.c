@@ -414,6 +414,25 @@ static void area_sprites(Job *j, const VramContext *v, const uint8_t *const *ent
     free(image);
 }
 
+/* a flare's glow on the ground (src: snow.c ground_flare_draw), in the areas that light one: in each one's own
+ * textures, as flares/<area>.png */
+static const SkyPiece kGroundFlare = {"ground-flare", 4, 0x380, 0, 0x320, 0xFE, 0x50, 0x10, 24, 24};
+static const int kFlareAreas[] = {5, 24};
+
+static void piece_image(Job *j, const VramContext *v, const SkyPiece *p, const char *path) {
+    uint8_t *image = malloc((size_t)PAGE_TEXELS * PAGE_TEXELS * 4);
+    uint16_t page = (uint16_t)((p->page_x / 64 & 0xF) | (p->page_y / 256 & 1) << 4 | (p->depth == 4 ? 0 : 1) << 7);
+    uint16_t palette = (uint16_t)(p->palette_x / 16 | p->palette_y << 6);
+    int y;
+
+    vram_page_rgba(v, page, palette, j->page);
+    for (y = 0; y < p->h; y++) {
+        memcpy(image + (size_t)y * p->w * 4, j->page + ((size_t)(p->v + y) * PAGE_TEXELS + (size_t)p->u) * 4, (size_t)p->w * 4);
+    }
+    image_file(j, path, image, p->w, p->h);
+    free(image);
+}
+
 static void sky_images(Job *j, const VramContext *v) {
     uint8_t *image = malloc((size_t)PAGE_TEXELS * PAGE_TEXELS * 4);
     size_t i;
@@ -644,6 +663,13 @@ static int run(Job *j, const uint8_t *const *entries, const size_t *sizes, int n
             snprintf(list, sizeof(list), "sprites/%03d.txt", a);
             snprintf(folder, sizeof(folder), "sprites/%03d", a);
             area_sprites(j, v, entries, sizes, n, a, list, folder);
+        }
+        for (i = 0; i < (int)(sizeof(kFlareAreas) / sizeof(kFlareAreas[0])); i++) {
+            if (kFlareAreas[i] == a) {
+                char path[64];
+                snprintf(path, sizeof(path), "flares/%03d.png", a);
+                piece_image(j, v, &kGroundFlare, path);
+            }
         }
         if (a == TOWN_AREA) {   /* the lamps' textures lit */
             lamps_set(v, 1);

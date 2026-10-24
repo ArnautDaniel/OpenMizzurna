@@ -1,7 +1,7 @@
 \ area005.fs - area 5's rules: Wolf's warehouse, the finale (src: ovl005.c; decomp/docs/areas/area05.md). The stay
 \ is one chain of scripts the warp in starts (arrive-80104614): the confrontation, the fight with the driver,
 \ Wolf's flight with Emma, the shoot-out, the last fight, out to the town. Its own C runs the shoot-out alone.
-\ (The flare: to come - the scripts carry on past it.)
+\ The flare (minigame 40) is flare.fs's.
 IN: rules.area005
 USING: engine actors messages events shootout ;
 
@@ -23,4 +23,7 @@ create the-shootout  4 plan-bytes allot   the-shootout 4 plan-bytes erase
 plan!
 : shootout-begin ( -- )  the-shootout s" shootout" actor-named send shootout-start ;   \ 0x8010222C (src: shootout_begin)
 : shootout-on ( -- n )  shooting? 1 and ;                  \ 0x8010224C (src: shootout_active)
+101 constant the-flare-carrier   \ (src: actor 0x65)
+: flare ( -- )  the-flare-carrier s" flare" actor-named send flare-on ;   \ minigame 40
+' flare 40 minigame-code!
 this-area ovl $8010222C ' shootout-begin native:   this-area ovl $8010224C ' shootout-on native:

@@ -189,6 +189,7 @@ are built, each listed here.
 | `random` | `n -- 0..n-1` | chance |
 | `motion` / `motion-frames` / `motion-move` | `addr len -- motion` / `motion -- n` / `motion frame -- dx dy dz` | a character motion from the library and its frames |
 | `draw-figure` | `model motion frame x y z yaw --` | a figure posed in a motion's frame |
+| `draw-ground-quad` | `image x y z half grey blend --` | a picture lying flat in the world, centred there |
 | `part-on-screen` | `model motion frame x y z yaw part -- px py true \| false` | where a part of the posed figure falls in the window, with this frame's camera |
 | `n>str` / `$clear $+ $@` | `n -- addr len` / ... | a number's digits; a string built a piece at a time (prelude) |
 | `exe-u8` / `exe-s8` / `exe-s16` / `exe-s32` | `addr len i -- n` | element i of a table of the executable (0 past its end or with none) |

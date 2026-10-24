@@ -116,6 +116,7 @@ library/
   cdbin/           CD.BIN's 565 entries: folders, PNG, text, the rest as it is (29 MB)
   exe/<name>.bin   the executable's and the areas' tables by name
   xa/TSG/          TSG.XA's channels as FLAC
+  flares/          a flare's glow, cut from the textures of each area that lights one (005.png, 024.png)
   town/            MAP.BIN's 768 tiles: index.txt, a folder per tile (CC-RR/: terrain, objects as glTF; the rest as it is)
   disc/            FILELINK.BIN as it is
   movies/          the five movies: NAME.m2v, NAME.flac, NAME.txt (the STR as it is when built without libavcodec)

@@ -23,7 +23,8 @@ settled
 prologue-done flag-set  tail-armed flag-set  hideout-robbers-caught flag-clear
 
 testing by his door: placed at the first point, pacing to the second
-T{ in-town  lookout-mode @ 0<>  lookout here?  stage @  tail-point @ -> true true on-his-way 1 }T
+: pacing? ( -- flag )  stage @ on-his-way =  stage @ looking-round = or ;   \ (now and then he looks round)
+T{ in-town  lookout-mode @ 0<>  lookout here?  pacing?  tail-point @ -> true true true 1 }T
 testing talked to: his scene, then his way from the third point
 T{ s" tail" actor-named send tail-start  deliver  2 steps  started?  stage @ -> true intro }T
 T{ played-out  2 steps  stage @  tail-point @ -> on-his-way 2 }T

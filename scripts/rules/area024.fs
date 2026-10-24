@@ -208,3 +208,6 @@ variable pulls   variable left-was   variable right-was
 ' look-check ' look-do ' act-check ' act-do  this-area area-rules!
 this-area ' entered ' scene-hook area-hooks!
 this-area ' each-frame area-frame!
+
+: barton's-flare ( -- )  father-barton s" flare" actor-named send flare-on ;   \ minigame 38 (flare.fs)
+' barton's-flare 38 minigame-code!
