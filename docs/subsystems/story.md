@@ -153,6 +153,14 @@ Built on the townsfolk's, Matthew's, the walkers' and traffic's messages:
   (`docs/subsystems/pictures.md`). An event's end hides the small picture, and the big one it showed.
   `item-query` / `item-show` are showing.fs's answers (`docs/subsystems/ring.md`).
 - **Saving.** `memory-card` is the save dialog (`docs/subsystems/saves.md`).
-- **Still stubs:** `prompt`, the hospital's `elevator-doors`, `gesture`, `talk-pose`,
-  `anim-step`, `examine`, `act`, `kill-thread`, `depart-alt`, `go-to-actor`, `place-alt`, and
-  `door-reveal-room`.
+- **The prompt** (op $129): □'s icon and ○'s beside the box (the HUD draws `prompt-left` / `prompt-right`);
+  the event waits for one: ○ answers 1, □ 0.
+- **The hospital's elevator doors** (op $148): in its content areas only, four of its animation list's
+  entries (`elevator-open` / `elevator-close`, from ovl002).
+- **A talk's gesture** (src: event_talk): a motion, then what follows (`gesture-motions`, src D_80012ED4).
+  There is none while sitting, except the seated ones (9–12), and none in a resting pose (src: func_80018F2C),
+  except 8. Barbara has her own for the plain ones.
+- **`depart-alt`** (cmd $56): a labourer off along their stop's route.
+- **Never reached** (no event uses them, so they stay notes): `talk-pose`, `anim-step`, `examine`, `act`,
+  `kill-thread`, `go-to-actor`, `place-alt`, `door-reveal-room`, the sprite counters,
+  `wait-attached-to`.

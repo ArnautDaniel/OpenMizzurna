@@ -308,6 +308,7 @@ $40000 constant too-far-squared   $FFFF constant near-squared
 
 PRIVATE>
 
+: anim-now ( slot -- id next )  person-of moving dup anim @  swap next-anim @ ;   \ (a fact: the motion playing, what follows)
 : person-pose ( slot -- model motion frame x y z heading )   \ as drawn now (a fact: where a part of them is)
     dup model-of {: s m :}  s person-of moving {: mv :}  m  mv clip @  mv frame  s person-now ;
 

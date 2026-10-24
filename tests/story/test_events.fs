@@ -26,8 +26,8 @@ T{ 40 steps  running -> 0 }T
 : answer ( -- )  window-up? stage @ finished = and if  pad-circle true key-hold  then  1 steps  pad-circle false key-hold ;
 : play ( n -- )  0 ?do  answer  loop ;
 
-testing the new-game opening waits for the player's ○ on its lines, then runs to its end
+testing the new-game opening waits for the player's ○ on its lines, then runs to its end, nothing in it unbuilt
 T{ 0 unbuilt-ops !  ' new-game-opening start-event  60e seconds steps  running  window-up? -> 1 true }T
-T{ 120e seconds play  running  window-up?  unbuilt-ops @ 0> -> 0 false true }T
+T{ 120e seconds play  running  window-up?  unbuilt-ops @ -> 0 false 0 }T   \ (every op it uses built)
 
 test-summary

@@ -236,6 +236,7 @@ end-behaviour
 : matthew-pushing? ( -- flag )  pushing @ 0< 0= ;
 : matthew-on-foot? ( -- flag )  on-foot @ 0<> ;
 : matthew-turned? ( -- flag )  turning-to @ 0= ;
+: matthew-anim-now ( -- id next )  moving dup anim @  swap next-anim @ ;   \ (a fact: his motion, what follows)
 : anim-done? ( -- flag )  moving done @  moving anim @ 0< or ;   \ (a fact: the events' wait-anim)
 : draw-matthew ( -- )
     matthew-there? unseen @ 0= and if

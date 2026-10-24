@@ -5,7 +5,7 @@
 \ Each op does its work through its subsystem's messages; an op whose subsystem isn't built yet is a stub
 \ that takes its arguments and notes it (`unbuilt`).
 IN: events
-USING: engine actors messages clock areas window matthew townsfolk traffic doors effects camera fight story-flags
+USING: engine actors messages keys clock areas window matthew townsfolk traffic doors effects camera fight story-flags
     pictures ;
 
 \ ---- the cast: actor slots (decomp/include/actor.h); the others by number (`160 actor`) ----
@@ -218,7 +218,7 @@ variable loaded-pack
 : text-close ( -- )  the-window send window-shut  1 wait ;                      \ $14C
 : text-hold ( -- )  the-window send window-shut  1 wait ;                       \ $13E
 \ talk: a line and the speaker's gesture (src: event_talk; gestures: with the figures)
-: gesture ( a n -- )  2 s" gesture" unbuilt ;
+defer gesture ( a n -- )   \ a talk's gesture (below, with the figures' motions)
 : talk ( a text gesture -- )   \ $128 ...: the line, the gesture with it, then the thread waits for the line
     {: a text g :}  text a 0 0 show  a g gesture  text-pending settle ;   \ (src: event_talk sets wait_msg)
 : talk-to ( a text gesture who -- )   \ $16F / $164: the portrait `who`'s (0: the speaker's)
@@ -227,7 +227,19 @@ variable loaded-pack
 \ ---- answers ----
 : choice ( text kind -- )   \ src $11E: the question; its answer the result
     >r text-bank r> the-window send window-ask  text-pending settle  window-answer @ result! ;
-: prompt ( a b -- )  2 s" prompt" unbuilt  1 result! ;
+variable prompt-left   -1 prompt-left !   variable prompt-right   -1 prompt-right !   \ (facts: the HUD draws them)
+: prompt-shown? ( -- flag )  prompt-left @ 0< 0=  prompt-right @ 0< 0= or ;
+1 constant circle-answer   0 constant square-answer
+variable prompt-circle-was   variable prompt-square-was
+: pressed-now ( key var -- flag )  {: k v :}  k key-down? dup v @ 0= and  swap v ! ;
+: prompt-pressed ( -- answer | -1 )
+    pad-circle prompt-circle-was pressed-now  pad-square prompt-square-was pressed-now  {: c s :}
+    c if  circle-answer exit  then  s if  square-answer exit  then  -1 ;
+: prompt ( left right -- )   \ op $129: □'s icon and ○'s beside the box, until one is pressed: ○ 1, □ 0 (src: the VM)
+    settle  prompt-right !  prompt-left !
+    pad-circle key-down? prompt-circle-was !  pad-square key-down? prompt-square-was !
+    begin  yield  prompt-pressed dup 0< while  drop  repeat  result!
+    -1 prompt-left !  -1 prompt-right ! ;
 : fight ( a style b style -- )   \ op $169: until it's won (src: wait_fight; the result its winner)
     s" fight" actor-named send fight-start  settle  yield
     begin  fighting? while  yield  repeat  fight-winner @ result! ;
@@ -260,7 +272,8 @@ defer shown-item ( a answer -- )
 
 
 
-: depart-alt ( a -- )  1 act-unbuilt ;   \ cmd $56
+: depart-alt ( a -- )   \ cmd $56: off along their stop's route (src: the labourers' CMD_DEPART_ALT)
+    dup scheduled? if  s" townsfolk" actor-named send person-depart  else  1 act-unbuilt  then ;
 
 : go-to-actor ( a x1 -- )  2 act-unbuilt ;   \ cmd $5A
 : place-alt ( a -- )  1 act-unbuilt ;   \ cmd $5E
@@ -298,7 +311,12 @@ variable minigame-busy   \ a code minigame not over yet (src: minigame_id still 
 : minigame-running? ( -- flag )   \ (its thread still that script's; or a code minigame on)
     minigame-busy @ if  true exit  then
     minigame-thread @ dup event-alive? 0= if  drop false exit  then  thread-xt slot @ minigame-running @ = ;
-: elevator-doors ( n n -- )  2 s" elevator-doors" unbuilt ;   \ op $148
+2 constant the-hospital-content
+: elevator-doors ( set open? -- )   \ op $148: the hospital's (by its content area) - four of its objects' motions
+    area @ 0< if  2drop exit  then   \ (src: ovl002 func_80104108)
+    area @ content the-hospital-content <> if  2drop exit  then
+    if  s" elevator-open"  else  s" elevator-close"  then  {: set tab n :}
+    4 0 do  tab n  set 4 * 3 i - +  exe-u8  s" areas" actor-named send play-area-anim  loop ;
 : wait-minigame ( -- )   \ op $149: until the minigame's over
     settle  begin  minigame-running? while  yield  repeat ;
 : rumble ( strength frames -- )   \ op $155: 0x100 the small motor, else the large at that strength
@@ -470,6 +488,30 @@ $39 constant to-diner-stool   $44 constant to-club-stool   $45 constant takes-cl
 : anim ( a id loop -- )  -1 swap anim-then ;   \ cmd $03 (src: actor_anim): play it (looping or not)
 : anim-once ( a id -- )  false anim ;               \ cmd $05: once, from its start
 : anim-then-loop ( a id next -- )  false anim-then ;   \ cmd $06: once, then the next
+\ a talk's gesture (src: event_talk): a motion, then what follows (-1: its last frame held); none while sitting
+\ but the seated ones (9 - 12), none while in a resting pose but 8; Barbara's own for the plain ones
+create gesture-motions   0 , 0 ,   82 , -1 ,   83 , 84 ,   86 , -1 ,   87 , -1 ,   88 , -1 ,   89 , -1 ,   90 , -1 ,
+    79 , 72 ,   2701 , 119 ,   2702 , 2703 ,   2705 , 119 ,   2706 , 119 ,   706 , -1 ,
+14 constant #gestures   2 constant raised-hand   8 constant at-rest-gesture   10 constant seated-nod
+9 constant first-seated   13 constant past-seated   13 constant barbaras-gesture   90 constant barbara-slot
+create resting-motions  68 , 72 , 161 , 167 ,   \ src: D_80080438 (and an area's own below)
+: area-resting ( -- id | -1 )   \ src: func_80018F2C's by the area
+    area @ case  0 of  $13B  endof  2 of  $2E8  endof  29 of  $2E8  endof  30 of  $2E8  endof  16 of  $DAE  endof  -1 swap  endcase ;
+: resting? ( id -- flag )
+    {: id :}  id 0< if  false exit  then   \ (none playing)
+    4 0 do  resting-motions i cells + @ id = if  true unloop exit  then  loop  id area-resting = ;
+: anim-of ( a -- id next )  dup matthew = if  drop matthew-anim-now  else  anim-now  then ;
+: sitting? ( a -- flag )  dup matthew = if  drop matthew-perch 2 =  else  seated?  then ;
+: plain-gesture? ( g -- flag )   \ (not one of the event_talk switch's own: 0, 2, 8, 10)
+    dup 0= over raised-hand = or over at-rest-gesture = or swap seated-nod = or 0= ;
+:noname ( a n -- )
+    {: a g :}  a matthew <> a person? 0= and if  exit  then
+    g 0 #gestures within 0= if  exit  then
+    a sitting?  g first-seated past-seated within 0= and if  exit  then
+    a anim-of resting? swap resting? or  g at-rest-gesture <> and if  exit  then
+    g 0= if  exit  then
+    a barbara-slot =  g plain-gesture? and if  barbaras-gesture  else  g  then  2 cells * gesture-motions + {: row :}
+    a  row @  row cell+ @  false anim-then ; is gesture
 : anim-at ( a id next -- )  false anim-then ;          \ cmd $13: once, then the next (src: actor_anim's next)
 : anim-hold ( a -- )   \ cmd $07: at the motion's end the figure stays where it moved
     dup matthew = if  figure-of send figure-hold exit  then

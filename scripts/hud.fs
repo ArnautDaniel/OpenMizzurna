@@ -4,7 +4,7 @@
 \ to do; the clock top left - the date, the weekday, the time - while it runs; and in the town the corner map,
 \ seen with his heading, his mark on it. The notebook and the map hide it. It only draws.
 IN: hud
-USING: engine actors messages screen clock areas figures matthew driving look ui ring notebook map ;
+USING: engine actors messages screen clock areas figures matthew driving look ui ring notebook map events ;
 
 <PRIVATE
 : ui-picture ( var addr len -- image )   \ ui/<name>.png, loaded once
@@ -18,6 +18,7 @@ USING: engine actors messages screen clock areas figures matthew driving look ui
 \ ---- the prompts (src: prompt_draw, big: the field's place) ----
 variable frames-image   variable icons-image
 20 constant act-x   60 constant look-x   -92 constant prompts-y   48 constant frame-w   24 constant frame-h
+-56 constant asked-act-x   4 constant asked-look-x   -16 constant asked-y   \ (src: prompt_draw's beside the box)
 24 constant icon-in   4 constant icon-down   16 constant icon-size   16 constant second-set   48 constant second-set-v
 3 constant icon-frames   8 constant frames-an-icon-frame
 variable icon-frame   variable icon-count   fvariable due
@@ -27,14 +28,15 @@ variable icon-frame   variable icon-count   fvariable due
         1 icon-count +!  icon-count @ frames-an-icon-frame >= if
             0 icon-count !  icon-frame @ 1+ icon-frames mod icon-frame !  then
     loop ;
-: prompt-frame ( id x u -- )   \ a prompt's frame (dimmed, half see-through, with nothing to do) and its icon
-    {: id x u :}
+: prompt-frame-at ( id x u y -- )   \ a prompt's frame (dimmed, half see-through, with nothing to do) and its icon
+    {: id x u y :}
     id 0< if  blend-ps-half pen-blend  frames-image s" prompt-frames" ui-picture u 0 frame-w frame-h
-        x prompts-y >screen  frame-w scale *  frame-h scale *  draw-image-part  blend-usual pen-blend exit  then
-    frames-image s" prompt-frames" ui-picture u 0 frame-w frame-h x prompts-y part
+        x y >screen  frame-w scale *  frame-h scale *  draw-image-part  blend-usual pen-blend exit  then
+    frames-image s" prompt-frames" ui-picture u 0 frame-w frame-h x y part
     icons-image s" prompt-icons" ui-picture  id icon-size * 255 and
     id second-set < 0= second-set-v and  icon-frame @ icon-size * +  icon-size icon-size
-    x icon-in + prompts-y icon-down + part ;
+    x icon-in + y icon-down + part ;
+: prompt-frame ( id x u -- )  prompts-y prompt-frame-at ;
 : the-prompts ( -- act look )  ring-up? if  ring-act-prompt @ ring-look-prompt @  else  act-prompt @ look-prompt @  then ;
 : draw-prompts ( -- )  the-prompts {: a l :}  a act-x 0 prompt-frame  l look-x frame-w prompt-frame ;
 
@@ -88,7 +90,10 @@ fvariable sin-a   fvariable cos-a
     mx my k -  mx k - my k +  mx k + my k +  mx k + my k +  mark-ink mark-ink mark-ink mark-ink draw-quad
     0 0 0 0 clip-2d ;
 
+: draw-asked ( -- )   \ src: the VM's prompt op: beside the box
+    $FFFFFFFF pen-color  prompt-left @ asked-act-x 0 asked-y prompt-frame-at  prompt-right @ asked-look-x frame-w asked-y prompt-frame-at ;
 : draw-hud ( -- )
+    prompt-shown? if  draw-asked  then
     hud-on? 0= if  exit  then
     $FFFFFFFF pen-color  draw-prompts
     ui-busy? if  exit  then   \ (src: field_update: the clock and the map with the field running)

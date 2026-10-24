@@ -193,6 +193,10 @@ static const AreaTable kAreaTables[] = {
     {"tail-zones", 27, 0x80109CA8, 5 * 16, "his sight's zones: s32 x, z, x, z - two corners (src: func_800296F8)"},
     {"robber-patrol", 27, 0x80109F1C, 8 * 8, "the robber's loop round the town: 8 points of s32 x, z (src: patrol)"},
     {"keypad-code", 27, 0x80101ED0, 4, "the door's code: a button's bit each (0x10 triangle, 0x20 circle, 0x40 cross, 0x80 square)"},
+    {"elevator-open", 2, 0x80102134, 3 * 4,
+     "the hospital's elevator doors opening: per set, four of the area's animation list's entries (u8; src: "
+     "ovl002 func_80104108)"},
+    {"elevator-close", 2, 0x80102140, 3 * 4, "and closing"},
     /* the HUD's prompts for the area's own checks (src: cecheck.c prompt_id: D_80095C7C, by the content area) */
     {"prompts-000", 0, 0x801054F4, PROMPTS * 2, "the prompt (an icon) of the area's check k + 1 (s16 by k)"},
     {"prompts-001", 1, 0x80103D94, PROMPTS * 2, "the prompt (an icon) of the area's check k + 1 (s16 by k)"},
