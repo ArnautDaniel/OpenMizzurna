@@ -1,5 +1,5 @@
 \ the town's frame rules on the game's data (rules/area027.fs): its people about on entering (Lorraine by the
-\ diner her hours, the protesters before the 27th's end); a gas pump with the car by it (○ fills there); the diner
+\ diner her hours, the road block's officer before the 27th's end); a gas pump with the car by it (○ fills there); the diner
 \ robbery outside on the 27th's late morning, once
 USING: tester engine actors messages clock areas keys matthew townsfolk events story-flags driving
     rules.area027 ;
@@ -12,8 +12,8 @@ settled
 : into-town ( -- )  ['] near-the-diner start-event  60 steps  events-stop  true broadcast player-control  deliver ;
 prologue-done flag-set
 
-testing entering at 15:00: Lorraine out by the diner; a protester before the 27th's end
-T{ 25 15 0 at-time  into-town  lorraine-out here?  lorraine-out person-now drop 2drop  protester-1 person-now drop 2drop -> true $5839F $6BA5E }T
+testing entering at 15:00: Lorraine out by the diner; the road block's officer before the 27th's end
+T{ 25 15 0 at-time  into-town  lorraine-out here?  lorraine-out person-now drop 2drop  rules.area027:road-block-officer person-now drop 2drop -> true $5839F $6BA5E }T
 testing at 18:00 she's in again
 T{ 25 18 0 at-time  4 steps  lorraine-out here? -> false }T
 testing a pump: the car in its box, facing along, nearly still, not full - there; full, not

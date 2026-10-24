@@ -41,6 +41,14 @@ with the speaker on one, the shot but no turning, no gesture (0x80096298).
 ## Status
 
 **Built**: who, the layers, one-liners, the characters' story conversations and own lines, the areas' hooks
-(their rules) - `tests/library/test_conversations.fs`. **To come**: showing them items (the item ring: their
-reactions, src CMD_ITEM_QUERY / CMD_ITEM_SHOW), the townspeople's lines by their kind (src func_800300E4), the
-waitresses' and the protesters' lines, gestures, the portrait beside the box.
+(their rules) - `tests/library/test_conversations.fs`; showing them items (showing.fs, ring.md), gestures, the
+portrait beside the box (window.md).
+
+The townspeople (src: func_800300E4, slots $41 - $58 kinds 0 - 23, $71 - $7C the rest): walking, the line for
+their kind and the stop they left - (stop, line) pairs or a line by stop (the executable's `people-lines-<kind>`),
+kind 21 by odd and even stops, kind 15's said by slot $50, kind 16's after a round of 11 - else the passer-by's
+($2724). The farm workers (132 - 134): walking from a stop with a line, one of the first five by its stop mod 5.
+In the town each has its own first (rules/area027.fs, src func_801052D8, the town's `town-<who>-standing` /
+`-walking` tables): by the stop they stand at or left, by threes, odd or even; the workers at the protest its
+scene once (the story's $0C4, Dennis home), else their lines there; the road block's officer one script a day
+(25th - 27th) then its repeat. `tests/library/test_town_talk.fs`.

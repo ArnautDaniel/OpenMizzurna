@@ -206,7 +206,7 @@ variable stalker-due   variable stalking
 
 \ ---- the town's people standing about (src: ovl027 func_801040B0, entering) ----
 $9E constant by-the-church-gate   $9B constant by-the-lake   $3C constant by-the-diner   $6F constant lorraine-out
-$98 constant protester-1   $62 constant protester-2   $60 constant by-the-store
+$98 constant road-block-officer   $62 constant protester-2   $60 constant by-the-store
 : stand ( slot x y z heading -- )
     {: s x y z h :}  s x y z s" townsfolk" actor-named send extra-place  s h 4095 and s" townsfolk" actor-named send person-turn ;
 : away ( slot -- )  0 0 0 s" townsfolk" actor-named send extra-place ;
@@ -217,7 +217,7 @@ $008 22 story-bit constant lorraine-free   $018 14 story-bit constant lorraine-b
     by-the-diner $58417 -4082 $42CF8 $3D4 stand
     0 14 0 17 59 between?  lorraine-free flag?  lorraine-back flag? 0= and or if  lorraine-at-work  else  lorraine-out away  then
     27 23 59 reached? 0= if
-        protester-1 $6BA5E -4138 $36613 $DAC stand   protester-2 $6C535 -4414 $37117 $F50 stand
+        road-block-officer $6BA5E -4138 $36613 $DAC stand   protester-2 $6C535 -4414 $37117 $F50 stand
         protester-2 $58 -1 true s" townsfolk" actor-named send person-anim  then
     clock-time time>hour 9 20 within if  by-the-store $59256 -80 $1F136 -2964 stand  else  by-the-store away  then ;
 : entered-town ( -- )
@@ -296,9 +296,113 @@ $010 13 story-bit constant library-talk-done   $010 21 story-bit constant ride-h
     x guard-at-the-farm = if  $020 story@ $10 or $020 story!  34 minigame  true exit  then
     x guard-at-gate = if  junkyard-guard 0 npc-talk-as-matthew  then  true ;
 ' entry-8010A358 34 minigame-script!   \ (src: area_minigame_start's 34)
+\ ---- talking to someone in the street (src: func_801052D8): their line by the stop they stand at or left, from the
+\ town's tables (the area's text, or the common); none, their own (talk.fs) ----
+7 constant usual   0 constant still   5 constant shrug   6 constant nod-gesture
+: line-said ( msg slot gesture -- handled? )  one-liner true ;
+: by-stop-pairs ( addr len slot gesture -- handled? )   \ (stop, message) pairs, -1 ended (src: func_800429C8)
+    {: t n s g :}  s last-stop {: st :}
+    64 0 do  t n i 2* exe-s16 {: k :}  k -1 = if  leave  then
+        k st = if  t n i 2* 1+ exe-s16 s g line-said  unloop exit  then  loop  false ;
+: by-stop-left ( addr len slot gesture -- handled? )  {: t n s g :}  t n s last-stop exe-s16 s g line-said ;   \ (say_trav)
+: standing-or-walking ( standing len walking len slot -- handled? )   \ two tables, by whether they walk
+    {: a an b bn s :}  s travelling? if  b bn  else  a an  then  s usual by-stop-pairs ;
+: by-threes ( slot msg -- handled? )   \ src: say_mod3: by the stop mod 3, three lines and their gestures
+    {: s m :}  s last-stop 3 mod case
+        0 of  m s nod-gesture line-said  endof   1 of  m 1+ s shrug line-said  endof   m 2 + s still line-said swap  endcase ;
+: odd-or-even ( slot even odd -- handled? )  {: s e o :}  s last-stop 1 and if  o  else  e  then  s still line-said ;
+: first-odd-even ( slot first odd even -- handled? )
+    {: s f o e :}  s last-stop 0= if  f  else  s last-stop 1 and if  o  else  e  then  then  s still line-said ;
+\ the farm workers (src: func_801051DC): at the protest (all three at a protest stop) - its scene once, after the
+\ story's word $0C4 and with Dennis home - else their lines there; walking, their lines on the way
+132 constant first-worker   133 constant second-worker   134 constant third-worker
+$010 7 story-bit constant protest-scene-seen
+: at-the-protest? ( -- flag )   \ src: func_8002D070
+    s" workers-protest-stops" first-worker last-stop exe-u8 1 =
+    first-worker travelling? 0= and  second-worker travelling? 0= and  third-worker travelling? 0= and ;
+: workers-line ( slot -- handled? )
+    {: s :}
+    at-the-protest? if
+        protest-scene-seen flag? 0=  $0C4 story@ 0<> and  dennis 0 at-record? and if
+            ['] entry-8010B81C start-event  protest-scene-seen flag-set  true exit  then
+        s" town-workers-standing"  else
+    first-worker travelling? if  s" town-workers-walking"  else  false exit  then  then
+    first-worker last-stop exe-s16 ?dup 0= if  false exit  then  s usual line-said ;
+\ the road block's officer (src: case 0x98): on the 25th - 27th one of his pack's scripts a day, then its repeat
+$064 constant road-block-talks   3 constant first-day-bit   5 constant first-script
+: road-block-talk ( -- handled? )
+    clock-time time>day {: d :}  d 25 28 within 0= if  true exit  then
+    1 d 25 - first-day-bit + lshift {: b :}  road-block-talks story@ b and 0<> {: seen :}
+    road-block-talks story@ b or road-block-talks story!
+    matthew pack-of {: p :}  road-block-officer p  d 25 - 2* seen 1 and + first-script +  pack-talk  true ;
+$81 constant person-129   $00C constant first-talked-129
+: person-129-talk ( -- handled? )   \ src: case 0x81: Matthew's pack's script 1 once (after the story's $014 or
+    $014 story@ 0<>  $018 story@ 2 and 0<> or  first-talked-129 story@ 0= and if   \ $018 bit 1), then 4
+        1 first-talked-129 story!  person-129 1 npc-talk-as-matthew  true exit  then
+    person-129 4 npc-talk-as-matthew  true ;
+$1F constant isabellas-stop
+: steve-line ( -- handled? )   \ src: func_80105084
+    steve travelling? if  s" town-steve-walking" steve usual by-stop-pairs exit  then
+    steve last-stop 0= if
+        $010 10 story-bit flag? 0=  25 10 1 11 29 between? and if
+            knock-reset  $010 10 story-bit flag-set  ['] entry-8010A654 start-event  true exit  then
+        $CB steve usual line-said exit  then
+    s" town-steve-standing" steve usual by-stop-pairs ?dup if  exit  then
+    steve 0 at-record? if  knock-reset  ['] entry-8010A760 start-event  true exit  then  false ;
+: town-line ( slot -- handled? )
+    {: s :}  s case
+        morgan of  s travelling? if  s last-stop $18 = if  $9D s usual line-said  else  false  then
+            else  s" town-morgan-standing" s usual by-stop-pairs  then  endof
+        robert of  s travelling? if  false  else  s" town-robert-standing" s usual by-stop-pairs  then  endof
+        lidds of  s travelling? 0=  s last-stop 1 = and if  $12B s usual line-said  else  false  then  endof
+        $41 of  s travelling? if  s" town-65-walking" s usual by-stop-left  else  s" town-65-standing" s usual by-stop-pairs  then  endof
+        $42 of  s travelling? if  s" town-66-walking" s usual by-stop-left  else  s" town-66-standing" s usual by-stop-pairs  then  endof
+        $44 of  s travelling? if  s" town-68-walking" s last-stop exe-s16 ?dup if  s usual line-said  else  false  then
+            else  s" town-68-standing" s usual by-stop-pairs  then  endof
+        $45 of  s" town-69-standing" s" town-69-walking" s standing-or-walking  endof
+        $4A of  s travelling? if  s" town-74-walking" s usual by-stop-left  else  false  then  endof
+        $47 of  s travelling? if  s" town-71-walking" s usual by-stop-pairs  else  false  then  endof
+        $48 of  s travelling? if  false  else  s" town-72-standing" s usual by-stop-pairs  then  endof
+        $74 of  s travelling? if  s" town-116-walking" s usual by-stop-left  else  false  then  endof
+        $75 of  s" town-117-standing" s" town-117-walking" s standing-or-walking  endof
+        $78 of  s travelling? if  s $146 $147 $148 first-odd-even  else  false  then  endof
+        $54 of  s" town-84-standing" s" town-84-walking" s standing-or-walking  endof
+        $57 of  s travelling? if  s" town-87-walking" s usual by-stop-left  else  $137 s usual line-said  then  endof
+        $7B of  s travelling? if  s" town-123-walking" s still by-stop-left  else  $16C s still line-said  then  endof
+        $4E of  s travelling? if  s $139 $13A odd-or-even  else  false  then  endof
+        $43 of  s travelling? if  s $13B by-threes  else  false  then  endof
+        $4F of  s travelling? if  s $13E by-threes  else  false  then  endof
+        $4D of  s travelling? if  s $141 $142 odd-or-even  else  false  then  endof
+        $4B of  s travelling? if  s $143 $144 $145 first-odd-even  else  false  then  endof
+        $53 of  s travelling? if  false  else  s" town-83-standing" s usual by-stop-pairs  then  endof
+        $51 of  s travelling? if  false  else  s" town-81-standing" s still by-stop-pairs  then  endof
+        $46 of  s travelling? if  s last-stop 5 = if  $14E s usual line-said  else  false  then
+            else  s" town-70-standing" s usual by-stop-pairs  then  endof
+        person-129 of  person-129-talk  endof
+        mel of  s" town-mel-standing" s" town-mel-walking" s standing-or-walking  endof
+        steve of  steve-line  endof
+        mrs-roland of  knock-reset  ['] entry-8010A6D0 start-event  true  endof
+        cohen of  s travelling? if  false  else  s" town-cohen-standing" s usual by-stop-pairs  then  endof
+        rolein of  s travelling? if  false  else  s last-stop case  20 of  $12C s usual line-said  endof  23 of  $12D s usual line-said  endof
+            false swap  endcase  then  endof
+        first-worker of  s workers-line  endof   second-worker of  s workers-line  endof   third-worker of  s workers-line  endof
+        winona of  s travelling? if  false  else  s last-stop case
+            $C of  26 14 30 reached? if  $C8  else  $50  then  s usual line-said  endof
+            $11 of  $C9 s usual line-said  endof   $2B of  $CA s usual line-said  endof   false swap  endcase  then  endof
+        father-barton of  s travelling? 0=  s last-stop 4 29 within and  s last-stop 3 and 0= and if  $EA s usual line-said  else  false  then  endof
+        dennis of  s" town-dennis-standing" s" town-dennis-walking" s standing-or-walking  endof
+        wolf of  s" town-wolf-standing" s" town-wolf-walking" s standing-or-walking  endof
+        hudson of  s travelling? if  s last-stop $15 = if  $11C s usual line-said  else  false  then
+            else  s last-stop case  13 of  $11A s usual line-said  endof  19 of  $11B s usual line-said  endof  false swap  endcase  then  endof
+        by-the-store of  $16E s shrug line-said  endof
+        isabella of  s travelling? 0=  s last-stop isabellas-stop = and if  $12A s usual line-said  else  false  then  endof
+        road-block-officer of  road-block-talk  endof
+        false swap
+    endcase ;
 : talks-to ( slot -- handled? )
     dup junkyard-guard = if  drop the-guard exit  then
-    dup the-stalker = if  drop 25 minigame  true exit  then  talks-here ;
+    dup the-stalker = if  drop 25 minigame  true exit  then
+    dup talks-here if  drop true exit  then  town-line ;
 ' talks-to this-area area-talk!
 \ each frame (src: func_800185A4's town part): the water's texture animation (0), six frames, a frame every
 \ other of the town's

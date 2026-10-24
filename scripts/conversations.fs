@@ -205,6 +205,44 @@ $2745 constant winona-first   variable winona-met-once
             winona-met-once @ if  ['] exe-80092120  else  true winona-met-once !  ['] exe-80092104  then  start-event exit  then
         winona-first winona plain-gesture one-liner exit  then
     s s" lines-winona" hmm-winona winona plain-gesture own-line ;
+\ ---- the townspeople (src: func_800300E4, the shared handler's EM_TALK): walking, a line by their kind (their
+\ schedule's) and the stop they left; else, or none for it, the passer-by's ----
+$2724 constant passer-by   $41 constant first-people   $71 constant later-people   24 constant later-kinds-from
+$50 constant kind-15-speaker   0 constant still-gesture   4 constant small-gesture
+$285A constant kind-21-even   $285B constant kind-21-odd   $28D9 constant kind-16-line   $28DA constant kind-16-after
+11 constant kind-16-round
+: kind-of-person ( slot -- kind )   \ (src: ovl033's slots by kind: $41.. kinds 0 - 23, $71.. the rest)
+    dup later-people >= if  later-people - later-kinds-from +  else  first-people -  then ;
+: townsperson? ( slot -- flag )
+    dup first-people dup later-kinds-from + within  swap later-people dup 12 + within or ;
+: pair-line ( addr len stop -- msg | -1 )   \ a table of (stop, message) pairs ended by -1 (src: func_800429C8)
+    {: t n st :}  -1  64 0 do
+        t n i 2* exe-s16 {: k :}  k -1 = if  leave  then
+        k st = if  drop  t n i 2* 1+ exe-s16  leave  then  loop ;
+: by-pairs ( addr len stop -- msg )  pair-line dup -1 = if  drop passer-by  then ;
+: by-stop ( addr len stop -- msg )  exe-s16 ?dup 0= if  passer-by  then ;
+: paired-table ( kind -- addr len | 0 0 )
+    case  3 of  s" people-lines-3"  endof   28 of  s" people-lines-28"  endof   19 of  s" people-lines-19"  endof
+        6 of  s" people-lines-6"  endof   18 of  s" people-lines-18"  endof   5 of  s" people-lines-5"  endof
+        7 of  s" people-lines-7"  endof   0 0 rot  endcase ;
+: direct-table ( kind -- addr len | 0 0 )
+    case  4 of  s" people-lines-4"  endof   30 of  s" people-lines-30"  endof   0 0 rot  endcase ;
+: kind-line ( slot kind stop -- msg speaker gesture )
+    {: s k st :}
+    k 21 = if  st 1 and if  kind-21-odd s small-gesture  else  kind-21-even s plain-gesture  then  exit  then
+    k 15 = if  s" people-lines-15" st pair-line dup -1 = if  drop passer-by s usual-gesture
+        else  kind-15-speaker still-gesture  then  exit  then
+    k 16 = if  st kind-16-round mod 1 = if  kind-16-after s plain-gesture  else  kind-16-line s usual-gesture  then  exit  then
+    k paired-table ?dup if  st by-pairs s usual-gesture exit  then  drop
+    k direct-table ?dup if  st by-stop s usual-gesture exit  then  drop
+    passer-by s usual-gesture ;
+: workers-own-line ( slot -- )   \ src: func_8002D10C (the farm workers, 132 - 134)
+    {: s :}  s travelling? if  s" lines-workers" s last-stop exe-s16 if
+        s" lines-workers" s last-stop 5 mod exe-s16 s usual-gesture one-liner exit  then  then
+    passer-by s usual-gesture one-liner ;
+: townsperson-line ( slot -- )
+    {: s :}  s travelling? 0= if  passer-by s usual-gesture one-liner exit  then
+    s  s kind-of-person  s last-stop  kind-line one-liner ;
 PRIVATE>
 
 \ ---- who has which ----
@@ -218,6 +256,9 @@ PRIVATE>
 ' cohens-line cohen default-line!   ' mels-line mel default-line!   ' james-line james default-line!
 ' wolfs-line wolf default-line!   ' lorraines-line rolein default-line!   ' samuels-line samuel default-line!
 ' winonas-line winona default-line!
+: people-lines ( -- )  #slots 0 do  i townsperson? if  ['] townsperson-line i default-line!  then  loop ;
+people-lines
+' workers-own-line 132 default-line!   ' workers-own-line 133 default-line!   ' workers-own-line 134 default-line!
 
 \ ---- the C their scenes call (src: char_talk.c) ----
 : james-off ( -- )  ['] events.main:route-800858AC james start-route ;   \ src: evfn_8002CC24: his own walk
