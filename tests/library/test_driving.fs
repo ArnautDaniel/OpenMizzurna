@@ -40,6 +40,11 @@ testing its pose as he steers: the front wheels turned ten times the steer, lean
 : pose-follows? ( -- turned? leans? spun? )
     his-car car-wheels-now {: spun turned lean :}  turned steer @ 10 * =  lean steer @ negate =  spun 0<> ;
 T{ pose-follows? -> true true true }T
+testing on the ground's slope: tilted as the ground under it says (src: func_8001C264)
+: tilt-as-ground? ( -- flag )
+    his-car car-now drop nip {: x z :}  x z ground-at 0= if  true exit  then  drop
+    his-car car-now nip nip nip 4095 and ground-tilt {: rx rz :}  his-car car-tilt-now  rz =  swap rx = and ;
+T{ tilt-as-ground? -> true }T
 testing □: it slows to a standstill
 T{ pad-square 120 press-for  20 steps  speed @ abs 9 <= -> true }T
 testing ○ near still: out at a door, seen, on his feet

@@ -143,6 +143,7 @@ message car-walk ( car x z speed -- )        \ (to the traffic) a scene drives i
 message car-forward ( car speed -- )         \ (to the traffic) straight on along its heading until idle
 message car-idle ( car -- )                  \ (to the traffic) its scene moves stop
 message car-area ( car area -- )             \ (to the traffic) in that area (a scene's; the town's by default)
+message car-tilt ( car rx rz -- )           \ (to the traffic) tilted so on the ground's slope (src: func_8001C264)
 message car-pose ( car spin steer lean -- ) \ (to the traffic) as he drives it: the wheels on by spin, the front turned by steer, it leans (src: func_80109430)
 message car-anim ( car id next -- )      \ (to the traffic) a motion of its own, then the next held (-1: its last frame; id -1: none)
 message town-door-swing ( slot -- )       \ (to the town) a door's town side swings: its animation slot (src: func_8001A190)

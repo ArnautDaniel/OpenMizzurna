@@ -63,6 +63,7 @@ begin-structure car
   field: x   field: y   field: z   field: heading   \ where it is
   playing +field car-motion   \ a motion of its own (the bike's: shaken, falling - src: actor_anim on it)
   field: wheels-spun   field: wheels-steer   field: car-lean   \ as he drives it (src: func_8001A2F4)
+  field: tilt-x   field: tilt-z   \ on the ground's slope (src: func_8001C264's vehicles)
   field: in-area        \ the area it's in (the town's, unless a scene puts it elsewhere: src actor_set_floor)
   field: going-to?   field: goal-x   field: goal-z   field: going-on?   field: scene-speed   \ a scene's moves
   field: turning?   field: turn-goal   field: turn-step                                     \ (src: actor_update's)
@@ -80,6 +81,7 @@ PRIVATE>
 : car-turned? ( slot -- flag )  car-of turning? @ 0= ;
 : car-scene-on? ( slot -- flag )  car-of {: c :}  c going-to? @  c going-on? @ or  c turning? @ or ;
 : car-in-area ( slot -- area )  car-of in-area @ ;
+: car-tilt-now ( slot -- rx rz )  car-of {: c :}  c tilt-x @  c tilt-z @ ;
 : car-wheels-now ( slot -- spun steer lean )  car-of {: c :}  c wheels-spun @  c wheels-steer @  c car-lean @ ;   \ (a fact: its own motion playing; 0 / -1 none)
 
 <PRIVATE
@@ -209,7 +211,10 @@ PRIVATE>
     c turning? @ if  c turn-step-on  then
     c going-to? @ if  c n go-to-step  then
     c going-on? @ if  c  c scene-speed @ s>f n f* f>s  forward-by  then ;
-: step-car ( c slot -- )  over driving @ if  drive  else  drop scene-step  then ;
+: tilt-on-ground ( c -- )   \ in the town, moving: tilted with the ground under it (src: func_8001C264, tilt on)
+    {: c :}  area @ the-town <> if  exit  then
+    c x @ c z @ ground-at 0= if  exit  then  drop  c heading @ 4095 and ground-tilt  c tilt-z !  c tilt-x ! ;
+: step-car ( c slot -- )  over driving @ if  over tilt-on-ground  drive  else  drop scene-step  then ;
 : car-motions-step ( -- )  #cars 0 do  cars i car * + car-motion advance drop  loop ;
 : traffic-step ( -- )  #cars 0 do  cars i car * +  i first-car +  step-car  loop  car-motions-step ;
 PRIVATE>
@@ -228,8 +233,9 @@ create every-part  64 allot   every-part 64 1 fill
     {: s c :}  s first-wheel {: w :}  c wheels-spun @ 4095 and {: spin :}
     w 0 0 0 spin c wheels-steer @ 0 pose-object   w 1+ 0 0 0 spin c wheels-steer @ 0 pose-object
     w 2 + 0 0 0 spin 0 0 pose-object   w 3 + 0 0 0 spin 0 0 pose-object
-    0 0 0 0 0 0 c car-lean @ pose-object ;
-: posed? ( c -- flag )  dup wheels-spun @ 0<>  over wheels-steer @ 0<> or  swap car-lean @ 0<> or ;
+    0 0 0 0  c tilt-x @  0  c tilt-z @ c car-lean @ +  pose-object ;
+: posed? ( c -- flag )
+    {: c :}  c wheels-spun @ 0<>  c wheels-steer @ 0<> or  c car-lean @ 0<> or  c tilt-x @ 0<> or  c tilt-z @ 0<> or ;
 : draw-car ( slot -- )   \ (posed while a motion of its own is on; his, its wheels as he drives it)
     dup car-of {: s c :}  c shown @ 0= if  exit  then
     s car-model ?dup 0= if  exit  then  {: m :}
@@ -246,6 +252,7 @@ state: traffic-state end-state
 behaviour traffic-runner
   on spawned ( -- )  traffic-reset  self subscribe tick ;
   on tick ( -- )  ui-busy? 0= if  traffic-step  then ;   \ (src: carline.c: none while ui_busy)
+  on car-tilt ( car rx rz -- )  rot car-of {: x z c :}  x c tilt-x !  z c tilt-z ! ;
   on car-pose ( car spin steer lean -- )
     {: n d st ln :}  n car-of {: c :}  d c wheels-spun +!  st c wheels-steer !  ln c car-lean ! ;
   on car-anim ( car id next -- )  rot car-of car-motion {: id nx p :}  id nx false p play ;

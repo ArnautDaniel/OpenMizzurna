@@ -82,6 +82,13 @@ whatever Matthew is doing: `area-every-frame! ( area xt -- )`. What they do:
 
 Tested in `tests/library/test_area_drawn.fs`.
 
+## The ground outdoors
+
+In the forest (but the cabin's scene), the cemetery and the yard (its scene 0) the shell is the ground (src:
+func_80020580, func_8001C3D4): Matthew and those there stand at its height (`ground-follows?`, `shell-ground` -
+the shell's part 0; on the mountain the part by the tile, src mountain_part; the engine's `ground-part`). In the
+town the tiles' terrain is (town.md). Elsewhere a floor's height holds. (`tests/library/test_blocking.fs`.)
+
 ## Status
 
 **Built**: areas indoors drawn with their scenes' objects, the objects' animations, the frames' hooks and

@@ -47,6 +47,12 @@ T{ put-them-on-him  2dup taken?  -rot  4 steps  matthew-now drop nip  apart-from
    -> true true }T
 testing one he pays no heed (the events' ignore-a) isn't in his way
 T{ put-them-on-him  2dup taken?  a-person his-ignore-a !  -rot taken?  -1 his-ignore-a ! -> true false }T
+testing the ground followed outdoors: the town, the cemetery, the forest but the cabin, the yard; indoors not
+T{ 7 0 into  ground-follows?  26 7 into  ground-follows?  26 0 into  ground-follows?  1 0 into  ground-follows?
+   -> true false true false }T
+testing the cemetery's slope from its shell: higher toward the origin's corner, flat further on
+: cemetery-at ( dz -- y )  area-origin {: x y0 z :}  x z rot + shell-ground drop ;
+T{ 7 0 into  0 cemetery-at  2500 cemetery-at  < -> true }T
 T{ 1 0 into -> }T
 
 test-summary

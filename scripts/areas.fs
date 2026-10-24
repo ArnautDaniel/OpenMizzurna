@@ -24,7 +24,8 @@ create path 32 allot
     {: a s n :}  s" cdbin/" path swap move
     a 100 / [char] 0 + path 6 + c!  a 10 / 10 mod [char] 0 + path 7 + c!  a 10 mod [char] 0 + path 8 + c!
     s" _4/" path 9 + swap move  s path 12 + n move  path 12 n + ;
-: meta ( -- addr )  area @ s" 0.bin" area-path library-file drop ;
+create no-meta  64 allot   no-meta 64 erase   \ (no library: an empty table - no heights, cameras, lights)
+: meta ( -- addr )  area @ s" 0.bin" area-path library-file 0= if  drop no-meta  then ;
 : table ( n -- addr )  meta swap 2* + sw@ meta + ;
 : shell-objects ( -- n )  header-table table 8 + c@ ;
 : scene-reverb ( -- type )  reverb-table table scene @ 2* + c@ ;   \ (a fact: src scene_reverb - its depth unused)
@@ -128,6 +129,24 @@ none-turned
 34 constant #areas   15e fconstant hook-indoor-rate   30e fconstant hook-town-rate
 create frame-hooks  #areas cells allot   frame-hooks #areas cells erase
 : area-every-frame! ( area xt -- )  swap cells frame-hooks + ! ;
+
+\ ---- the ground in the outdoor areas: the shell's (src: func_80020580, func_8001C3D4) - the forest but the cabin,
+\ the cemetery, the yard; on the mountain the part by the tile (src: mountain_part, by Matthew's: here the point's) ----
+26 constant forest-area   7 constant forest-cabin-scene   7 constant cemetery-area   8 constant yard-area   8 constant peak-scene
+: ground-follows? ( -- flag )   \ (a fact: the town's ground, or an area's shell's)
+    area @ the-town = if  true exit  then
+    area @ forest-area = if  scene @ forest-cabin-scene <> exit  then
+    area @ cemetery-area = if  true exit  then
+    area @ yard-area =  scene @ 0= and ;
+: mountain-part ( x z -- part )
+    scene @ peak-scene = if  2drop peak-scene exit  then
+    tile-of {: c r :}
+    c 0 = if  r 20 = if  1  else  0  then  exit  then
+    c 1 = if  r 19 = if  2 exit  then  r 20 = if  3  else  0  then  exit  then
+    c 2 = if  r 18 = if  4 exit  then  r 19 = if  5 exit  then  r 20 = if  6  else  0  then  exit  then  0 ;
+: shell-ground ( x z -- y true | false )
+    {: x z :}  area @ forest-area = if  x z mountain-part  else  0  then {: part :}
+    shell @ part x z area-origin ground-part ;
 : shown! ( object flag -- )  s" areas" actor-named send object-shown ;   \ (the hooks' object_show / object_hide)
 fvariable hook-due
 : frames-a-second ( -- f )  area @ the-town = if  hook-town-rate  else  hook-indoor-rate  then ;

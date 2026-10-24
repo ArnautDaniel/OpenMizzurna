@@ -77,6 +77,24 @@ PRIM(p_ground_height) {   /* ( model x z cx cz -- y true | false ) the ground un
         PUSH(0);
     }
 }
+PRIM(p_ground_part) {   /* ( model part x z cx cy cz -- y true | false ) the ground under x z in one part of the
+                          * model standing at cx cy cz (an area's shell: its ground pieces) */
+    Cell cz = POP(), cy = POP(), cx = POP(), z = POP(), x = POP(), part = POP(), m = POP();
+    float pos[3] = {(float)cx, (float)cy, (float)cz}, y;
+
+    if (m >= 1 && m <= sNModels && scene3d_ground_part(sModels[m - 1].m, pos, (int)part, (float)x, (float)z, &y)) {
+        PUSH((Cell)lroundf(y));
+        PUSH(-1);
+    } else {
+        PUSH(0);
+    }
+}
+PRIM(p_ground_tilt) {   /* ( heading -- rx rz ) facing so on the last ground found: tilted with its slope */
+    short rx, rz;
+    scene3d_ground_tilt((int)POP(), &rx, &rz);
+    PUSH(rx);
+    PUSH(rz);
+}
 #define MAX_POSES 64
 static Scene3DObjectPose sPoses[MAX_POSES];   /* the objects the next draw-model-shown moves */
 static int sNPoses;
@@ -272,6 +290,8 @@ void bind_scene(Forth *f) {
     forth_prim(f, "lamp", p_lamp);
     forth_prim(f, "texture-frame", p_texture_frame);
     forth_prim(f, "figure-tilt", p_figure_tilt);
+    forth_prim(f, "ground-part", p_ground_part);
+    forth_prim(f, "ground-tilt", p_ground_tilt);
     forth_prim(f, "texture-frame@", p_texture_frame_shown);
     forth_prim(f, "light-way", p_light_way);
     forth_prim(f, "light-color", p_light_color);

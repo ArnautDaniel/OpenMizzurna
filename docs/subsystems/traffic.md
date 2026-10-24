@@ -69,6 +69,11 @@ to a point facing it (`car-walk`) or straight on (`car-forward`) until idle (`ca
 Facts `car-moving?`, `car-turned?`, `car-scene-on?`, `car-in-area`; the events' wait-stop and wait-turned wait
 on them. While a scene moves his car he's carried in it (driving.fs follows it).
 
+## On the slopes
+
+A car on its way in the town is tilted with the ground under it (src: func_8001C264 with its tilt: the engine's
+`ground-tilt` from the triangle found; `car-tilt-now`).
+
 ## Pushed aside, Mel's bike
 
 - A car on its way pushes Matthew (640) and his car (1024) out of its way in the town: within that room of it

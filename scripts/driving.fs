@@ -84,11 +84,22 @@ create zone-1-blocks  512 , 1317 , 1902 , 2008 ,   4 constant #zone-1-blocks
         h i - probe 0= if  scrape  swerve negate ch +!  h i - unloop exit  then
     probe-step +loop  h ;
 : ground-under ( x z -- y )  ground-at 0= if  cy @  then ;   \ (the town's ground; off it, as it was)
+\ on the ground's slope (src: func_8001BED4: func_8001C264 tilting the car; a jolt - its tilt 0x33 on, or flat and
+\ its height so - bumps the pad; its heading the ground leaves be)
+$33 constant jolt   1 constant bump-small   200 constant bump-strength   1 constant bump-large
+variable tilt-was-x   variable tilt-was-z   variable height-was
+: big? ( d -- flag )  abs jolt >= ;
+: tilt-car ( -- )
+    cx @ cz @ ground-at 0= if  exit  then  drop  ch @ 4095 and ground-tilt {: rx rz :}
+    rx tilt-was-x @ - big?  rz tilt-was-z @ - big? or
+    rx rz + 0=  cy @ height-was @ - big? and  or if  bump-small bump-strength bump-large shake  then
+    rx tilt-was-x !  rz tilt-was-z !  cy @ height-was !
+    his-car rx rz s" traffic" actor-named send car-tilt ;
 : move-car ( -- )
     swerve-way {: h :}  cx @ cz @ {: x z :}
     x z h speed @ along {: nx nz :}  x z h speed @ 2/ along {: hx hz :}
     nx nz hits?  hx hz hits? or  nx nz road-blocked? or if  crashed  0e velocity f!  0 speed ! exit  then
-    nx cx !  nz cz !  nx nz ground-under cy ! ;
+    nx cx !  nz cz !  nx nz ground-under cy !  tilt-car ;
 \ stuck: the car standing in someone's place or a wall, moving (or every 32 frames), goes to the nearest free spot
 \ 100 at a time out to 1400, along x then z (src: func_80106370, cobj.c's check of the car)
 100 constant unstick-step   1500 constant unstick-reach   10 constant moving-enough   32 constant check-every

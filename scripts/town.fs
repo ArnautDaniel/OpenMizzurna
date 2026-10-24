@@ -95,7 +95,10 @@ create all-shown  256 allot   all-shown 256 1 fill
     2dup tile-of 2dup on-map? 0= if  2drop 2drop false exit  then
     {: x z c r :}  c r terrains tile @ ?dup 0= if  false exit  then
     x z  c r tile-centre  ground-height ;
-' town-ground is ground-at
+: ground-anywhere ( x z -- y true | false )   \ the town's; an outdoor area's shell's
+    area @ the-town = if  town-ground exit  then
+    ground-follows? if  shell-ground exit  then  2drop false ;
+' ground-anywhere is ground-at
 
 \ the billboards standing in a tile (the library's town/CC-RR/billboards.txt, town/sprites.txt; billboards.fs)
 : billboards ( col row -- table )  s" billboards.txt" tile-path  s" billboard" records ;

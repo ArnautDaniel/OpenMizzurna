@@ -715,8 +715,11 @@ void scene3d_draw_objects(Model3D *m, const float pos[3], float yaw, const unsig
 }
 
 /* the ground under (x, z) in a model standing at pos, unturned (src: func_80046504: the highest polygon) */
-int scene3d_ground(const Model3D *m, const float pos[3], float x, float z, float *y) {
-    float base[3], p[3] = {x, 0, z}, g[3], best = 0;
+static float sGroundNormal[3];   /* the last ground found: its triangle's normal, in the game's axes */
+
+/* the ground under (x, z): the highest of the model's polygons there (of one node, or all: node -1) */
+static int ground_of(const Model3D *m, const float pos[3], int node, float x, float z, float *y) {
+    float base[3], p[3] = {x, 0, z}, g[3], best = 0, normal[3] = {0, 1, 0};
     int k, t, found = 0;
 
     if (m == NULL || m->positions == NULL) {
@@ -728,6 +731,9 @@ int scene3d_ground(const Model3D *m, const float pos[3], float x, float z, float
         const Primitive *pr = &m->prims[k];
         const float *mw = m->node_world[pr->node];
 
+        if (node >= 0 && pr->node != node) {
+            continue;
+        }
         for (t = 0; t + 2 < pr->count; t += 3) {
             float v[3][3], d, l0, l1, l2, gy;
             int c, j;
@@ -751,6 +757,14 @@ int scene3d_ground(const Model3D *m, const float pos[3], float x, float z, float
             }
             gy = l0 * v[0][1] + l1 * v[1][1] + l2 * v[2][1];
             if (!found || gy > best) {
+                float a[3], b[3];
+                for (j = 0; j < 3; j++) {
+                    a[j] = v[1][j] - v[0][j];
+                    b[j] = v[2][j] - v[0][j];
+                }
+                normal[0] = a[1] * b[2] - a[2] * b[1];
+                normal[1] = a[2] * b[0] - a[0] * b[2];
+                normal[2] = a[0] * b[1] - a[1] * b[0];
                 best = gy;
                 found = 1;
             }
@@ -758,8 +772,37 @@ int scene3d_ground(const Model3D *m, const float pos[3], float x, float z, float
     }
     if (found) {
         *y = -best / WORLD_TO_GLTF;
+        sGroundNormal[0] = normal[0];    /* (glTF's to the game's: y and z the other way) */
+        sGroundNormal[1] = -normal[1];
+        sGroundNormal[2] = -normal[2];
     }
     return found;
+}
+
+int scene3d_ground(const Model3D *m, const float pos[3], float x, float z, float *y) {
+    return ground_of(m, pos, -1, x, z, y);
+}
+
+int scene3d_ground_part(const Model3D *m, const float pos[3], int node, float x, float z, float *y) {
+    return ground_of(m, pos, node, x, z, y);
+}
+
+/* a body facing heading on the last ground found, tilted with it (src: func_800466A4: the normal turned by the
+ * heading, then the angles about x and z; 4096 a turn) */
+void scene3d_ground_tilt(int heading, short *rx, short *rz) {
+    float n[3] = {sGroundNormal[0], sGroundNormal[1], sGroundNormal[2]}, a, c, s, v[3];
+    const float turn = 4096.0f / (2.0f * (float)M_PI);
+
+    if (n[1] < 0) {
+        n[0] = -n[0], n[1] = -n[1], n[2] = -n[2];
+    }
+    a = -(float)heading * 2.0f * (float)M_PI / 4096.0f;
+    c = cosf(a), s = sinf(a);
+    v[0] = c * n[0] + s * n[2];
+    v[1] = n[1];
+    v[2] = -s * n[0] + c * n[2];
+    *rx = (short)lroundf(atan2f(v[2], v[1]) * turn);
+    *rz = (short)(lroundf(atan2f(v[1], v[0]) * turn) - 1024);
 }
 
 void scene3d_draw(Model3D *m, const float pos[3], float yaw, const unsigned char *shown, int nshown) {

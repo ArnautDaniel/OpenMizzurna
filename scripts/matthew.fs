@@ -14,8 +14,9 @@ variable figure
 state: matthew-state end-state
 create moving playing allot   -1 moving anim !
 
-: floor-at ( x z -- y )   \ his floor's height there: in the town the ground (src: func_8001C264), else the floor's
-    area @ the-town = if  ground-at if  exit  then  0 exit  then  2drop  area @ floor @ floor-height ;
+: floor-at ( x z -- y )   \ his floor's height there: the ground where it's followed (src: func_8001C264,
+    ground-follows? if  2dup ground-at if  nip nip exit  then  then   \ func_8001C3D4), else the floor's
+    2drop  area @ the-town = if  0 exit  then  area @ floor @ floor-height ;
 : place ( x y z -- )   \ a height of 0 is "on his floor" (the scripts' set_pos; then the floor holds him)
     {: x y z :}  x  y ?dup 0= if  x z floor-at  then  z  3s>f  area @ floor @ body-place
     false moving hold-move ! ;   \ (put somewhere, a held motion's move no longer carries him)
@@ -117,7 +118,7 @@ $B4 constant crate-ahead            \ the crate before him as he pushes (src: pl
 variable was-x   variable was-y   variable was-z   \ where he stood before his last step (src: player_restore_pos)
 : step-to ( x z -- )   \ his new place across the floor: indoors his height kept, in the town the ground's there
     {: x z :}  self body-pos 3f>s  was-z !  dup was-y !  swap was-x ! {: y :}
-    area @ the-town = if  x z ground-at if  to y  then  then
+    ground-follows? if  x z ground-at if  to y  then  then
     x y z  3s>f  self body-area self body-floor body-place ;
 : push-along ( -- )   \ the crate before him, 0xB4 on; blocked, he stops where he was (src: player_update)
     pushing? 0= if  exit  then

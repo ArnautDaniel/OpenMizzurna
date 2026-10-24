@@ -211,8 +211,8 @@ $1645 constant getting-in      \ the motion of climbing in (the town's own)
 : depart ( slot -- )   \ src: depart: travelling, the stop's route on their own thread
     dup person-of {: s p :}  true p travelling !  s  s current-row stop-route @  broadcast person-departs ;
 : heading-to ( dx dz -- heading )  s>f s>f fswap fatan2 4096e f* 2e pi f* f/ f>s 4095 and ;
-: on-ground ( person -- )   \ in the town, their height the ground's under them (src: func_8001C264)
-    {: p :}  p person-area @ the-town <> if  exit  then
+: on-ground ( person -- )   \ where the ground's followed (the town, an outdoor area's shell: src func_8001C264,
+    {: p :}  p person-area @ area @ <>  ground-follows? 0= or if  exit  then   \ func_8001C3D4), their height its
     p px @ p pz @ ground-at if  p py !  then ;
 : walk-step ( slot -- )   \ src: actor_nav_step, nav_step: a step of their speed toward the goal
     person-of {: p :}  p goal-x @ p px @ -  p goal-z @ p pz @ -  {: dx dz :}

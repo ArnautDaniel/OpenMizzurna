@@ -57,6 +57,10 @@ void scene3d_draw(Model3D *m, const float pos[3], float yaw, const unsigned char
 /* the ground under (x, z) (world units) in a model standing at pos, unturned: the highest of its polygons there -
  * its height to *y (world units, y downward); 0 if none is under it */
 int scene3d_ground(const Model3D *m, const float pos[3], float x, float z, float *y);
+/* the same within one of its parts (node) */
+int scene3d_ground_part(const Model3D *m, const float pos[3], int node, float x, float z, float *y);
+/* a body facing heading on the last ground found, tilted with its slope (rot x, rot z; 4096 a turn) */
+void scene3d_ground_tilt(int heading, short *rx, short *rz);
 
 /* a figure in a frame of a motion: each node's turn (rx, ry, rz; nodes past nturns keep their rest turn) and
  * the root's move this frame (model units: side, up, forward) */
