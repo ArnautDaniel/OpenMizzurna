@@ -25,7 +25,7 @@ variable fuel   full-tank fuel !   \ src: g_fuel (a new game starts full; the ga
 $20 constant probe-step   $200 constant probe-limit   $32 constant swerve   300 constant car-half
 \ getting in (src: func_8004175C: beside the driver's door, facing across the car)
 $1D6 negate constant door-side   $64 negate constant door-forward   $400 constant across
-fvariable velocity   variable steer   variable burned   variable speed
+fvariable velocity   variable steer   variable burned   variable speed   variable held   \ (the pad's not)
 variable cx   variable cz   variable cy   variable ch
 fvariable due
 
@@ -80,14 +80,17 @@ fvariable due
     false at-the-wheel !  0e velocity f!  0 speed !  0 steer !
     x 0 z s" matthew" actor-named send figure-place  0 ch @ 4095 and 0 s" matthew" actor-named send figure-turn
     true s" matthew" actor-named send figure-shown  true s" matthew" actor-named send figure-on-foot
-    0 s" matthew" actor-named send figure-perch  0 -1 true s" matthew" actor-named send figure-anim ;
+    0 s" matthew" actor-named send figure-perch  0 -1 true s" matthew" actor-named send figure-anim
+    broadcast left-the-car ;
 : wheel-frame ( -- )
     steer-wheel  pedals  speed-now speed !
     speed @ if  steer @ ch +!  then
     speed @ abs still-enough <=  pad-circle key-down? and if  free-door dup 0< if  drop  else  get-out exit  then  then
     move-car  show-car ;
 : steps-due ( -- n )  due f@ motion-rate dt f* f+  fdup f>s  dup s>f f-  due f! ;
-: drive-tick ( -- )  driving? 0= if  exit  then  steps-due 0 ?do  driving? if  wheel-frame  then  loop ;
+: drive-tick ( -- )
+    driving? 0= if  exit  then  steps-due  held @ if  drop show-car exit  then
+    0 ?do  driving? if  wheel-frame  then  loop ;
 
 \ ---- in (src: func_8004175C, func_8004301C) ----
 : car-reach? ( -- flag )   \ the car before him, close enough (src: look result 5)
@@ -95,12 +98,12 @@ fvariable due
     his-car car-now drop {: x y z :}  matthew-now {: mx my mz h :}
     mx mz x z distance  matthew radius  his-car radius +  reach-margin +  <
     h  x mx - s>f z mz - s>f fatan2 4096e f* 2e pi f* f/ f>s  talk-angle heading-within?  and ;
-: get-in ( -- handled? )   \ ○ (src: look_execute case 5): beside the door, his scene
-    car-reach? 0= if  false exit  then
+: into-his-car ( -- )   \ beside the door, his scene (src: func_8004175C)
     his-car car-now {: x y z h :}
     x z h door-side door-forward beside {: dx dz :}  dx 0 dz s" matthew" actor-named send figure-place
     0 h across + 4095 and 0 s" matthew" actor-named send figure-turn
-    ['] into-the-car start-event  true ;
+    ['] into-the-car start-event ;
+: get-in ( -- handled? )  car-reach? 0= if  false exit  then  into-his-car  true ;   \ ○ (src: look_execute case 5)
 ' get-in circle-first!
 : at-the-wheel! ( -- )   \ src: func_8004301C (from his scene): driving
     his-car car-now ch !  cz !  cy !  cx !  0e velocity f!  0 steer !  0 burned !  0e due f!
@@ -124,13 +127,19 @@ variable needle   full-tank needle !
 ' draw-driving on-draw
 PRIVATE>
 
-: fill-up ( -- )  full-tank fuel ! ;   \ src: fuel_set(120): the gas station
+: fill-up ( -- )  full-tank fuel ! ;
+: his-car-now ( -- x z heading )  cx @ cz @ ch @ 4095 and ;   \ (a fact: where he has it)
+: put-in-his-car ( -- )  into-his-car ;   \ (the chase's: src func_8004175C)
+: step-out ( -- )  driving? if  free-door 0 max get-out  then ;   \ (src: car_exit from the C: at a free door, else the first)   \ src: fuel_set(120): the gas station
 
 state: driving-state end-state
 behaviour drivers
   on spawned ( -- )  self subscribe tick  self subscribe area-entered ;
   on tick ( -- )  drive-tick ;
-  on area-entered ( area scene -- )  2drop  driving? if  false at-the-wheel !  false s" camera" actor-named send camera-driving  then ;
+  on drive-hold ( flag -- )  held !  0e due f! ;
+  on car-bumped ( -- )  velocity f@ 16e f/ velocity f! ;
+  on car-nudge ( dx dz -- )  cz +!  cx +!  show-car ;
+  on area-entered ( area scene -- )  2drop  false held !  driving? if  false at-the-wheel !  false s" camera" actor-named send camera-driving  then ;
 end-behaviour
 
 : spawn-driving ( -- id )  drivers driving-state s" driving" spawn ;

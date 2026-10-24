@@ -278,7 +278,11 @@ create minigame-codes  #minigames cells allot   minigame-codes #minigames cells 
     dup minigame-xt ?dup if  nip dup minigame-running !  launch-event minigame-thread !  exit  then
     dup minigame-code ?dup if  nip execute exit  then
     1 s" minigame" unbuilt ;
-: minigame-running? ( -- flag )   \ (its thread still that script's)
+variable minigame-busy   \ a code minigame not over yet (src: minigame_id still set: the car chase)
+: minigame-begun ( -- )  true minigame-busy ! ;
+: minigame-over ( -- )  false minigame-busy ! ;
+: minigame-running? ( -- flag )   \ (its thread still that script's; or a code minigame on)
+    minigame-busy @ if  true exit  then
     minigame-thread @ dup event-alive? 0= if  drop false exit  then  thread-xt slot @ minigame-running @ = ;
 : elevator-doors ( n n -- )  2 s" elevator-doors" unbuilt ;   \ op $148
 : wait-minigame ( -- )   \ op $149: until the minigame's over

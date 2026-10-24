@@ -59,6 +59,10 @@ message walker-start ( slot node dest speed motion -- )   \ (to the walkers) alo
 message walker-stop ( slot -- )            \ stop walking there, stand (src: walker_remove)
 message flare-on ( slot -- )             \ (to the flare) a flare's glow at their feet, growing (src: ground_flare_draw)
 message shootout-start ( plan -- )         \ a shoot-out by an area's plan (shootout.fs; src: shootout_begin)
+message drive-hold ( flag -- )           \ (to the driving) the pad leaves the car alone (src: D_800A361C 0: the chase's sweep, its crash)
+message car-bumped ( -- )                 \ (to the driving) a knock: its speed down to a sixteenth (src: the chase's bump)
+message car-nudge ( dx dz -- )            \ (to the driving) the car moved by that (src: the chase's crash slide)
+message left-the-car ( -- )               \ broadcast: Matthew got out of his car (src: car_exit's func_80106980)
 message camera-driving ( flag -- )       \ (to the camera) following the car: its eye higher (src: camera_follow's g_driving)
 message camera-behind ( look-y dist eye-y -- ) \ low behind Matthew, turning as he turns (src: ovl019's duct crawl)
 message camera-reset ( -- )              \ behind Matthew now, where he stands (src: camera_reset)
@@ -130,6 +134,7 @@ message car-hide ( car -- )              \ off the roads
 message car-drive ( car route speed -- ) \ drive the route from its start (speed: units a frame)
 message car-carry ( car route speed -- ) \ the same with someone riding: car-arrived at its end
 message car-place ( car x y z heading -- )   \ there, off its route, standing (Matthew's car as he drives it)
+message car-speed ( car speed -- )        \ its top speed now, on its way (src: carline_set_speed)
 message car-stop ( car -- )              \ stop where it is, riders still in (src: carline_stop)
 message car-arrived ( car -- )           \ broadcast: a car with riders reached its route's end; they get out
 

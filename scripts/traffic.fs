@@ -179,6 +179,7 @@ behaviour traffic-runner
   on car-drive ( car route speed -- )  rot car-of -rot start ;
   on car-carry ( car route speed -- )  rot car-of {: n v c :}  c n v start  c driving @ c carrying ! ;
   on car-stop ( car -- )  car-of false swap driving ! ;
+  on car-speed ( car speed -- )  swap car-of top-speed ! ;
   on car-place ( car x y z heading -- )   \ (Matthew driving it: off its route, where he has it)
     {: n px py pz ph :}  n car-of {: c :}  false c driving !  false c carrying !  true c shown !  -1 c lane-node !
     px c x !  py c y !  pz c z !  ph c heading ! ;

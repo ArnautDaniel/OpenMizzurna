@@ -116,6 +116,9 @@ static const AreaTable kAreaTables[] = {
      "12), look height (16), distance (20), turn (24), frames (28), u8 how it moves to the next (32: 0 cut, 1 "
      "tween, 2 / 3 turning up / down; 0xFF the end) (src: qte.c)"},
     {"shootout-26", 26, 0x80106E84, 3 * SHOOTOUT_ROUND, "the forest's shoot-out: three rounds, as above (src: ovl026)"},
+    {"chase-after-stops", 27, 0x8010259C, 3 * 4,
+     "after the car chase's won: Dennis's, Wolf's, Rolein's stop (u8 each, by the day from the 28th; src: "
+     "ovl027 func_801060BC)"},
     {"dog-directions", 8, 0x80103484, 16 * 2,
      "the dog chase's d-pad: a heading (s16) for each of its 16 combinations, by bits Up 1, Right 2, Down 4, Left 8 "
      "(src: ovl008 dog_update)"},
