@@ -429,3 +429,15 @@ $1BC 1 story-bit constant met-the-clerk   \ (src: +0x1BC bit 1: set at his first
     over busy? if  2drop 0 exit  then
     nip pocket-camera =  met-the-clerk flag? and if  takes-the-film  else  0  then ;  photo-clerk item-answer!
 :noname ( slot answer -- )  nip takes-the-film = if  ['] entry-8010BC6C start-event  then ;  photo-clerk item-shown!
+
+\ ---- Mel sent on to his stop $14 after his scene there (src: ovl027 func_8010656C) ----
+$14 constant mels-next-stop
+this-area ovl $8010656C :noname  mel mels-next-stop goto-stop ; native:
+
+\ ---- the main building's key handed back: with Winona along (or her day set aside), her lines and the key gone
+\ (src: ovl027 func_80106DA4) ----
+26 constant the-main-key
+: hand-the-key-back ( -- )
+    winona going-along?  winona off-schedule? or 0= if  exit  then
+    ['] entry-8010B60C start-event  the-main-key s" items" actor-named send take-item ;
+this-area ovl $80106DA4 ' hand-the-key-back native:

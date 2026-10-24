@@ -410,6 +410,7 @@ this-area ovl $80104188 ' a-late-door native:   this-area ovl $8010434C ' walk-o
 this-area ovl $80104428 ' the-lab-door native:   this-area ovl $8010448C ' cohens-door native:
 this-area ovl $80104524 ' from-downstairs native:   this-area ovl $80104584 ' the-stairs native:
 this-area ovl $801045EC ' cohen-to-his-bed native:   this-area ovl $801045CC ' the-ending native:
+upstairs ovl $801045EC ' cohen-to-his-bed native:   \ (area 29's scripts call it too: its overlay is area 2's)
 
 ' look-check ' look-do ' act-check ' act-do  this-area area-rules!
 ' events.ovl002:entry-8010780C 35 minigame-script!   \ (src: area_minigame_start's 35)

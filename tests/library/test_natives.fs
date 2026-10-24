@@ -27,4 +27,15 @@ T{ winona s" townsfolk" actor-named send person-unlink  deliver  27 0 s" areas" 
    winona 3 1 to-path-node act-command  deliver  winona walking? -> true }T
 T{ events-stop -> }T
 
+testing the town's: Mel on to his stop $14; the main key handed back only with Winona along (her lines, the key gone)
+: town ( address -- )  27 ovl swap native  deliver ;
+T{ 27 12 0 at-time  $8010656C town  mel last-stop -> $14 }T
+26 constant main-key
+: given-key ( -- )  main-key s" items" actor-named send give-item  deliver ;
+T{ events-stop  -1 companion !  given-key  $80106DA4 town  events-running @  main-key has-item? -> 0 true }T
+T{ winona companion !  $80106DA4 town  events-running @ 0>  main-key has-item? -> true false }T
+T{ events-stop  -1 companion ! -> }T
+testing area 29's scripts call area 2's: Cohen to the 28th's stop
+T{ 28 12 0 at-time  29 ovl $801045EC native  deliver  cohen last-stop -> 49 }T
+
 test-summary

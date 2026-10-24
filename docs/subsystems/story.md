@@ -163,7 +163,9 @@ Built on the townsfolk's, Matthew's, the walkers' and traffic's messages:
 - **`depart-alt`** (cmd $56): a labourer off along their stop's route.
 - **The C the events call** (`native`): every one they reach is written now, each with its subsystem:
   the story's (the recap, the day's stops, the diary's pages), the characters' (`conversations.fs`), the
-  phone's, the boat's, the car's, the saves', the fight's, the areas'.
+  phone's, the boat's, the car's, the saves', the fight's, the areas'. All 86 that the scripts name are
+  registered. An area that shares another's overlay registers that area's natives under its own number too
+  (area 29's call to area 2's Cohen-to-his-stop).
 - **Never reached** (no event uses them, so they stay notes): `talk-pose`, `anim-step`, `examine`, `act`,
   `kill-thread`, `go-to-actor`, `place-alt`, `door-reveal-room`, the sprite counters,
   `wait-attached-to`.
