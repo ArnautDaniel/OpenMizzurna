@@ -117,7 +117,8 @@ variable car-frames
 \ the car's pose as he drives (src: func_80109430): leaning into the turn (its roll less the steer), the wheels on
 \ by half the speed a frame, the front turned ten times the steer (the other way backing)
 10 constant wheel-turn
-: pose-car ( -- )
+: pose-car ( -- )   \ (and its lights: on while he drives it)
+    his-car driving? s" traffic" actor-named send car-lights
     his-car  speed @ 2/  steer @ wheel-turn *  speed @ 0< if  negate  then  steer @ negate
     s" traffic" actor-named send car-pose ;
 : show-car ( -- )

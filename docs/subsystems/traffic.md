@@ -85,5 +85,10 @@ A car on its way in the town is tilted with the ground under it (src: func_8001C
 
 ## Status
 
-Built. (The cars move only for their people and the scenes - src carline_start's callers; they have no lights
-of their own.)
+Built. (The cars move only for their people and the scenes - src carline_start's callers.)
+
+## Lights
+
+A car's light parts show at night (16:00 - 7:59) while it's lit (src: func_80017B1C): his car while he drives it
+(`car-lights`), the others while someone rides in them. The parts: 26 and 27 their 7 - 10, 60 its 6 - 9, the bike
+3 - 5, the rest 5 - 8.

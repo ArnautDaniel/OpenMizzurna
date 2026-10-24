@@ -1,5 +1,5 @@
 \ the cars (docs/subsystems/traffic.md), on the game's own data: the library the tests imported
-USING: tester engine actors messages areas matthew traffic traffic.private townsfolk events events.car-routes ;
+USING: tester engine actors messages clock areas matthew traffic traffic.private townsfolk events events.car-routes ;
 39 constant nozz-car
 
 testing who goes with whom (the partners table): Nozz drives car 39, Matthew car 26; slot 4 has none
@@ -73,5 +73,14 @@ T{ a-car 2048 64 turn-to  deliver  a-car car-turned?  60 steps  a-car car-turned
 testing put in another area by a scene (set-floor): its area's (drawn there, not in the town)
 T{ a-car 26 1 set-floor  deliver  a-car car-in-area -> 26 }T
 T{ a-car the-town 1 set-floor  deliver  a-car car-in-area -> the-town }T
+
+testing the lights: his car's at night while he drives it (parts 7 - 10), not by day nor parked; another's while
+\ it carries someone
+: at-time ( day hour minute -- )  date>time s" clock" actor-named send set-time  deliver ;
+: lights? ( slot -- flag )  {: s :}  s s car-of parts-for  s light-parts drop + c@ 0<> ;
+T{ 25 22 0 at-time  26 true the-traffic send car-lights  deliver  26 lights?
+   25 12 0 at-time  26 lights?  25 22 0 at-time  26 false the-traffic send car-lights  deliver  26 lights? -> true false false }T
+T{ 25 22 0 at-time  true nozz-car car-of carrying !  nozz-car lights?  false nozz-car car-of carrying !  nozz-car lights?
+   -> true false }T
 
 test-summary

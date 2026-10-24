@@ -262,7 +262,11 @@ variable controlled
 : draw-person ( slot -- )
     dup model-of {: s m :}  s person-of moving {: mv :}
     s person-of tilt-x @  s person-of leaning-z @ figure-tilt  m  mv clip @  mv frame  s person-now  draw-figure ;
-: draw-townsfolk ( -- )  #slots 0 do  i here? if  i draw-person  then  loop ;
+\ seen only on his floor (src: func_8002A10C: but in the park and the town)
+13 constant the-park
+: on-his-floor? ( slot -- flag )
+    area @ the-park =  area @ the-town = or if  drop true exit  then  person-of on-floor @ floor @ = ;
+: draw-townsfolk ( -- )  #slots 0 do  i here? if  i on-his-floor? if  i draw-person  then  then  loop ;
 ' draw-townsfolk on-draw
 : step-forward ( slot -- )   \ src: actor_update's move_anim: straight on along their heading
     {: s :}  s person-of {: p :}

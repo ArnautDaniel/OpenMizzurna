@@ -3,7 +3,7 @@
 \ along each road's bends, easing their speed and turning toward the way ahead; a car parking takes a free lane
 \ at its parking node. Facts: car-now, car-driving?, car-carrying?, partner-of, beside.
 IN: traffic
-USING: engine actors messages areas figures matthew ui ;
+USING: engine actors messages clock areas figures matthew ui ;
 
 26 constant first-car   35 constant #cars
 181 constant #car-routes
@@ -64,6 +64,7 @@ begin-structure car
   playing +field car-motion   \ a motion of its own (the bike's: shaken, falling - src: actor_anim on it)
   field: wheels-spun   field: wheels-steer   field: car-lean   \ as he drives it (src: func_8001A2F4)
   field: tilt-x   field: tilt-z   \ on the ground's slope (src: func_8001C264's vehicles)
+  field: lights-on      \ his car's while he drives it (src: field_update's func_80017B1C(car, driving))
   field: in-area        \ the area it's in (the town's, unless a scene puts it elsewhere: src actor_set_floor)
   field: going-to?   field: goal-x   field: goal-z   field: going-on?   field: scene-speed   \ a scene's moves
   field: turning?   field: turn-goal   field: turn-step                                     \ (src: actor_update's)
@@ -234,14 +235,29 @@ create every-part  64 allot   every-part 64 1 fill
     w 0 0 0 spin c wheels-steer @ 0 pose-object   w 1+ 0 0 0 spin c wheels-steer @ 0 pose-object
     w 2 + 0 0 0 spin 0 0 pose-object   w 3 + 0 0 0 spin 0 0 pose-object
     0 0 0 0  c tilt-x @  0  c tilt-z @ c car-lean @ +  pose-object ;
+\ the lights (src: func_80017B1C): a car's light parts shown at night (16:00 - 7:59) while it's lit - his while he
+\ drives it, the others while someone rides in them; 26 and 27 their parts 7 - 10, 60 6 - 9, the bike 3 - 5, the
+\ rest 5 - 8
+16 constant lights-from-hour   8 constant lights-to-hour   60 constant van   40 constant bike
+create car-parts  64 allot
+: light-parts ( slot -- first n )
+    dup first-big =  over second-big = or if  drop 7 4 exit  then
+    dup van = if  drop 6 4 exit  then  bike = if  3 3 exit  then  5 4 ;
+: night? ( -- flag )  clock-time time>hour {: h :}  h lights-from-hour >=  h lights-to-hour < or ;
+: lit? ( slot c -- flag )
+    {: s c :}  night? 0= if  false exit  then
+    s first-big = if  c lights-on @  else  c carrying @  then  0<> ;
+: parts-for ( slot c -- addr )   \ every part shown but the lights when not lit
+    {: s c :}  car-parts 64 1 fill  s c lit? if  car-parts exit  then
+    s light-parts {: first n :}  car-parts first + n erase  car-parts ;
 : posed? ( c -- flag )
     {: c :}  c wheels-spun @ 0<>  c wheels-steer @ 0<> or  c car-lean @ 0<> or  c tilt-x @ 0<> or  c tilt-z @ 0<> or ;
 : draw-car ( slot -- )   \ (posed while a motion of its own is on; his, its wheels as he drives it)
     dup car-of {: s c :}  c shown @ 0= if  exit  then
     s car-model ?dup 0= if  exit  then  {: m :}
     c car-motion clip @ ?dup if  m swap c car-motion frame  c x @ c y @ c z @  s car-now nip nip nip  draw-figure exit  then
-    c posed? if  s c pose-wheels  m  c x @  c y @  c z @  s car-now nip nip nip  every-part 64 draw-model-shown exit  then
-    m  c x @  c y @  c z @  s car-now nip nip nip  draw-model ;
+    c posed? if  s c pose-wheels  then
+    m  c x @  c y @  c z @  s car-now nip nip nip  s c parts-for 64 draw-model-shown ;
 : draw-here ( slot -- )  dup car-of in-area @ area @ = if  draw-car  else  drop  then ;
 : draw-cars ( -- )   \ those in the area played (the town's, or one a scene put elsewhere)
     area @ 0< if  exit  then  #cars 0 do  i first-car + draw-here  loop ;
@@ -252,6 +268,7 @@ state: traffic-state end-state
 behaviour traffic-runner
   on spawned ( -- )  traffic-reset  self subscribe tick ;
   on tick ( -- )  ui-busy? 0= if  traffic-step  then ;   \ (src: carline.c: none while ui_busy)
+  on car-lights ( car flag -- )  swap car-of lights-on ! ;
   on car-tilt ( car rx rz -- )  rot car-of {: x z c :}  x c tilt-x !  z c tilt-z ! ;
   on car-pose ( car spin steer lean -- )
     {: n d st ln :}  n car-of {: c :}  d c wheels-spun +!  st c wheels-steer !  ln c car-lean ! ;

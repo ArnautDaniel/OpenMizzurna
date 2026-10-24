@@ -107,6 +107,10 @@ the routes take one (`take-diner-seat`, `take-club-seat`: $3A, $45), walk to its
 `seat-approach`), sit (`sit-diner-seat`, $3B, $46: seated motion $77) and leave it ($48, $49) - messages
 `seat-take`, `seat-sit`, `seat-leave`. A jump in time frees them all.
 
+## Seen
+
+Those on another floor than Matthew's aren't drawn, but in the park and the town (src: func_8002A10C).
+
 ## Elsewhere
 
 Talking to them (talk.md), riding (traffic.md), the models they show (`person-variant`: another kind's, loaded

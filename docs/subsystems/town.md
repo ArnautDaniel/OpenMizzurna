@@ -46,4 +46,4 @@ func_800243F0). 32 x 24 tiles of 19980 world units; tile (col, row)'s centre is 
   police cordon's two road tiles (922, 1022: column + row x 100) on foot but in their zone 0 until the 28th
   03:00 (src: foot_road_block); the car's road blocks (driving.md).
 
-(The cars have no headlights in the original: nothing lights them.)
+(The cars' lights are traffic.md's.)
