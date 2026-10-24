@@ -38,7 +38,7 @@ Z square, V triangle, Q / E L1 / R1, 1 / 3 L2 / R2, Return start, Tab select; a 
 Every change to `master` rebuilds the Linux release: `.github/workflows/release-linux.yml` runs
 `tools/release-linux.sh` in Ubuntu 22.04 and publishes the tarball as the rolling `latest` release (its version
 `<project version>-<date>-<commit>`, the project version from `CMakeLists.txt`); the first build of each project
-version is kept as that version's own release too (`v0.0.2`). It is one
+version is kept as that version's own release too (`v0.0.3`). It is one
 binary (SDL3 and an MPEG-2-only FFmpeg linked in) beside its `scripts/`; unpack it, run `./openmizzurna`, and give
 it your disc. Each start it brings itself up to date with the newest build and runs that (`src/platform/update.c`:
 your library and saves stay; `OM_NO_UPDATE=1` turns it off). The same script makes it on your own machine:

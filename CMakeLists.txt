@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(openmizzurna VERSION 0.0.2 LANGUAGES C)
+project(openmizzurna VERSION 0.0.3 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
