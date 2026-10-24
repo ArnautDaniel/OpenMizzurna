@@ -4,10 +4,14 @@ Mizzurna Falls (PlayStation, Human Entertainment, 1998) rebuilt as a modern prog
 OpenGL 4.6, with the game written in Forth as actors passing messages. The architecture is OpenHuey's (the
 Haunting Ground rebuild), whose Forth system and actor kernel it reuses.
 
-- `../decomp/` is the decompilation of the original and `../port/` its runnable C port (phase 1). Together
-  they are the **specification**: when we need to know what the game does, we read it there.
-- `src-next/` (here) is the new program. The game should feel the same; the code shouldn't look decompiled,
-  and nothing of the PlayStation's hardware survives in it.
+- A decompilation of the original and a runnable C port of it (phase 1) are the **specification**: when we
+  need to know what the game does, we read it there. They aren't part of this repository (they hold the
+  original's code and data); the `src:` notes through the code name the original's functions and addresses.
+- This repository is the new program. The game should feel the same; the code shouldn't look decompiled, and
+  nothing of the PlayStation's hardware survives in it.
+
+None of the game's data is here: you need your own copy of the English disc (a .cue / .bin image). The first
+run imports it once into a library of common formats (`docs/library.md`).
 
 Start with `docs/design.md`, then `docs/actors.md` (the kernel), `docs/forth.md` (the language) and
 `docs/subsystems.md` (the map of the game). The game's data: `docs/library.md`.
@@ -39,3 +43,9 @@ Z square, V triangle, Q / E L1 / R1, 1 / 3 L2 / R2, Return start, Tab select; a 
 | `scripts/` | the game: `prelude.fs` (the language), `game.fs` (where it starts), a file per subsystem |
 | `tests/` | `test_*.fs` the language and kernel (the `forth` tool); `<subsystem>/test_*.fs` the game's, headless |
 | `docs/` | the design, the dialect, the subsystems' pages |
+
+## License
+
+GPL-3.0 (`LICENSE`), as OpenHuey, whose Forth system and actor kernel it reuses. The libraries in
+`src/third_party/` keep their own licenses: stb MIT or public domain, dr_flac public domain or MIT-0, cgltf
+MIT. Mizzurna Falls itself belongs to its rights holders; nothing of it is distributed here.
