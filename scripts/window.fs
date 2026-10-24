@@ -4,7 +4,7 @@
 \ Its state is the window's own (variables: it is the only window), read by its drawing; others read only the
 \ facts window-up? and window-answer.
 IN: window
-USING: engine actors messages keys clock screen effects ;
+USING: engine actors messages keys clock screen effects areas ;
 
 \ ---- the original's screen (320 x 240, the origin at its centre) and the box ----
 -95 constant box-x      40 constant box-y        \ src: msg_init, func_80035BAC(w, -0x5F, 0x28, 0xF0, 0x30)
@@ -34,7 +34,7 @@ variable lines            \ the message's lines
 variable top              \ the first line in the box
 fvariable typed           \ characters shown (of the text)
 fvariable scrolled        \ pixels the lines have moved up (0 .. 16)
-variable speaker   variable palette   variable left
+variable speaker   variable palette   variable left   \ (speaker: the portrait's kind, -1 none)
 fvariable time-left       \ a timed message: seconds before it closes (0: it waits for ○)
 variable choices   variable first-choice   variable cursor
 variable confirm-was   variable up-was   variable down-was
@@ -93,6 +93,14 @@ variable wanted
     count-down ;
 
 \ ---- drawing: the original's screen, scaled to the window ----
+\ the speaker's portrait beside the box (src: func_80014DF8): a cell of the area's sheet
+-156 constant portrait-x   16 constant portrait-y   64 constant portrait-w   80 constant portrait-h
+24 constant sheet-cells   3 constant cell-shorts   \ ({kind, palette x, y} a cell)
+create portrait-images 256 cells allot   portrait-images 256 cells erase
+: sheet-of ( area -- sheet )   \ src: func_80014D18: the areas', the diner's, the forest's, Isabella's building's,
+                               \ the hospital's, the club's
+    case  21 of  1  endof  26 of  2  endof  19 of  3  endof  31 of  3  endof  32 of  3  endof
+        2 of  4  endof  29 of  4  endof  30 of  4  endof  12 of  5  endof  0 swap  endcase ;
 : band ( -- )  band-color pen-color  -160 band-top >screen  screen-w scale *  band-bottom band-top - scale *  draw-rect ;
 : line-y ( k -- y )   \ the box's k-th line, scrolled
     font-line * box-y +  scrolled f@ f>s - ;
@@ -116,8 +124,21 @@ variable wanted
         $FFFFFFFF pen-color  0 font  scale pen-scale
         s" >" cursor-x  cursor @ first-choice @ + font-line * box-y +  >screen font-text
     then ;
+: cell-kind ( cell -- kind )  cell-shorts * {: o :}  s" portrait-tables" o exe-s16 $FF and ;
+: on-sheet? ( kind -- flag )   \ the area's portrait sheet has that kind (src: func_80014D18's tables)
+    {: k :}  area @ sheet-of sheet-cells *  sheet-cells 0 do
+        dup i + cell-kind k = if  drop true unloop exit  then
+    loop  drop false ;
+: portrait-image ( kind -- image )   \ portraits/<kind>.png, loaded once
+    {: k :}  portrait-images k cells + @ ?dup if  exit  then
+    $clear  s" portraits/" $+  k n>str $+  s" .png" $+  $@ image  dup portrait-images k cells + ! ;
+: draw-portrait ( -- )   \ src: func_80014DF8 (kinds $99 and $9C show 1's and $14's)
+    speaker @ dup 0< if  drop exit  then
+    dup $99 = if  drop 1  then  dup $9C = if  drop $14  then  $FF and
+    dup on-sheet? 0= if  drop exit  then
+    portrait-image  $FFFFFFFF pen-color  portrait-x portrait-y >screen  portrait-w scale *  portrait-h scale *  draw-image ;
 : draw-window ( -- )
-    window-up? if  band draw-lines draw-arrow draw-cursor  then ;
+    window-up? if  band draw-portrait draw-lines draw-arrow draw-cursor  then ;
 ' draw-window on-draw
 : on-top ( -- )  ['] draw-window dup off-draw on-draw ;   \ (drawn last: over any screen opened since)
 ' draw-effect-over on-draw   \ (the screen's effects over the window; its +256 ones under it: effects.fs)

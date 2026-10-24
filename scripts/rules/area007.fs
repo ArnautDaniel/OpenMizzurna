@@ -10,7 +10,7 @@ $1D3BD constant at-the-grave-x   $4ADC9 constant at-the-grave-z
 : today ( -- day )  clock-time time>day ;
 : park ( slot -- )  0 0 0 set-pos ;
 : stop-is? ( slot stop -- flag )  over stop-of 0< if  2drop false exit  then  swap person-of at-stop @ = ;
-: bio-21 ( -- )  0 s" a biography known" unbuilt ;   \ (src: g_bio_known bit 21: the bios, to come)
+: bio-21 ( -- )  21 s" notebook" actor-named send learn-bio ;   \ (src: g_bio_known bit 21: Kathy's page)
 
 variable lit-for-day   2 lit-for-day !   \ (2: not yet - neither day nor night)
 \ ---- entering (0x80101F24) ----

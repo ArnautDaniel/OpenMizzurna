@@ -118,7 +118,12 @@ static const ExeTable kTables[] = {
     {"calls-liz", 0x8009A330, 27 * 5, "the same"},
     {"calls-dennis", 0x8009A3B8, 45 * 5, "the same"},
     {"calls-james", 0x8009A49C, 26 * 5, "the same"},
+    /* the speakers' portraits (src: msgbox.c func_80014D18) */
+    {"portrait-tables", 0x8007FF4C, 7 * 24 * 6,
+     "the portrait sheets' cells: {s16 kind, palette x, y} x 24, a sheet: the areas', the diner's, the forest's, "
+     "Isabella's building's, the hospital's, the club's, the common set's"},
     /* the notebook (src: fhbook.c) */
+    {"character-bios", 0x800963C8, 23, "the biography a character's talk makes known (u8, by character: src character_met)"},
     {"notebook-people", 0x8009A828, 24 * 4,
      "the people Matthew may know: u8 the name (the list text), the portrait, the job (the list text), the "
      "biography (063_2)"},

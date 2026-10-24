@@ -3,7 +3,7 @@
 \ nothing keyed hangs up. A number answered by someone becomes known. The story's calls ring at their times;
 \ chosen then, the call is answered
 USING: tester engine actors messages clock areas keys matthew townsfolk events story-flags items ui window floors
-    pictures ring phone phone.private ;
+    pictures ring phone phone.private notebook ;
 
 : steps ( n -- )  0 ?do  1 tick-tasks  actors-frame  loop ;
 : settled ( -- )  10 0 do  deliver  loop  events-stop  deliver ;
@@ -30,7 +30,7 @@ T{ chosen  60 steps  pad-cross tap  #digits @  pad-l1 tap  #digits @ -> 1 0 }T
 T{ pad-l1 tap  step @  60 steps  phone-up?  events-running @ -> putting-away false 0 }T
 
 testing the school's number by day on the 25th: their first answer, and the number known
-T{ numbers-known @ school-known and  high-school call-number  events-running @ 0>  numbers-known @ school-known and 0<>
+T{ numbers-known @ school-known and  high-school call-number  deliver  events-running @ 0>  numbers-known @ school-known and 0<>
    $6B session-c@ -> 0 true true 1 }T
 T{ free -> }T
 testing a number no one has: the wrong number

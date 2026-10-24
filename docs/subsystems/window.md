@@ -44,5 +44,7 @@ since, such as the item ring's).
 
 **Built**: the window, its drawing, the events' text ops. Checked by `tests/window/test_window.fs` (11) and the
 story's tests (a player answering each line); seen on screen (the opening's "Prologue" caption and its first
-lines). **To come**: the speaker's portrait beside the box (the areas' portrait sheets: `func_80014DF8`), the
-arrow's and cursor's sprites, the talk gestures (with the figures), the list font's windows (menus).
+lines). The speaker's portrait is drawn beside the box at (−156, 16), 64 × 80. `window-say`'s portrait is a kind: the
+events give the speaker's (`portrait-of`: an actor's kind, or from $FD a kind itself). It shows when the area's
+sheet has that kind (`portrait-tables`, src: func_80014D18; the pictures are `portraits/<kind>.png`, cut by the
+import from the sheets). **To come**: the arrow's and cursor's sprites, the talk gestures (with the figures), the list font's windows (menus).

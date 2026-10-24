@@ -3,7 +3,8 @@
 \ that number answers by where they are or by the time, from their pack; a number answered by someone becomes
 \ known (the notebook's). The story's calls come in at their times, ringing a while; chosen in the ring then, it
 \ is answered. On foot Matthew takes it out, holds it up and puts it away; in the car or on a stool he only dials.
-\ The phone's state is its own; others read the facts phone-up?, ringing?, in-call? and numbers-known.
+\ The phone's state is its own; others read the facts phone-up?, ringing?, in-call?. The numbers known are the
+\ notebook's.
 IN: phone
 USING: engine actors messages keys screen clock areas figures matthew townsfolk events events.main story-flags
     window ui driving ;
@@ -13,9 +14,6 @@ variable dialling                  \ the dial screen is up
 variable calling                   \ who is calling: 0 no one, a story call-number 1 .. 10 ringing, on-the-line
 variable in-call                   \ talking on it
 255 constant on-the-line
-$80F constant first-numbers        \ known at a new game (src: notebook_init): the sheriff's department, Winona's,
-                                   \ the general store, the hospital, Emma's house
-variable numbers-known   first-numbers numbers-known !   \ a bit each: the notebook's lines from 2 (063_2)
 : phone-up? ( -- flag )  dialling @ 0<> ;
 : ringing? ( -- flag )  calling @ dup 0<>  swap on-the-line <> and ;
 : in-call? ( -- flag )  in-call @ 0<> ;
@@ -41,7 +39,8 @@ variable numbers-known   first-numbers numbers-known !   \ a bit each: the noteb
 5 constant #unanswered   \ a pack's first scripts: no one answering
 : someone? ( k -- flag )   \ src: func_8004C680: script k is none of those
     script-xt {: xt :}  #unanswered 0 do  i script-xt xt = if  false unloop exit  then  loop  true ;
-: known! ( bit -- )  numbers-known @ or numbers-known ! ;
+: known! ( mask -- )   \ (the notebook's: a bit a number)
+    32 0 do  dup 1 i lshift and if  i s" notebook" actor-named send learn-number  then  loop  drop ;
 
 \ the last script each number played (src: D_800F68B0 + $64 ..: the session's): a call-number again plays the other
 $64 constant last-calls   6 constant morgans-last   14 constant morgans-nights   22 constant winonas-last

@@ -25,7 +25,8 @@ message prologue-over ( -- )            \ broadcast: the prologue ended (Matthew
 \ ---- the message window (docs/subsystems/window.md) ----
 \ a text bank: 0..32 an area's, 33 the common text, 34 the list menus' labels, 200+ an event pack's (its CD.BIN entry): engine text-of
 33 constant common-text
-message window-say ( bank id speaker palette secs -- )   \ show a message; secs 0: it waits for ○ (else it closes itself)
+message window-say ( bank id portrait palette secs -- )   \ show a message; the speaker's portrait (a kind, -1 none);
+                                         \ secs 0: it waits for ○ (else it closes itself)
 message window-ask ( bank id kind -- )   \ a question with its answers (kind: src msg_choice)
 message list-open ( id0 id1 id2 id3 id4 id5 id6 -- )   \ (to the list menu) its labels, top first (0: none)
 message list-closed ( answer -- )         \ broadcast: the row picked (0..), or -1 cancelled
@@ -178,3 +179,7 @@ message show-picture ( n -- )            \ (to the pictures) the small picture n
 message hide-picture ( -- )
 message show-big-picture ( left right -- )   \ (to the pictures) the big one above the box: two CD.BIN entries, its
                                              \ halves (0 0: none - src: the VM's cd_picture ops)
+
+\ ---- the notebook (docs/subsystems/notebook.md) ----
+message learn-bio ( bit -- )             \ (to the notebook) a person's page known (src: g_bio_known |= )
+message learn-number ( bit -- )          \ (to the notebook) a phone number known (src: g_phone_known |= )

@@ -491,6 +491,10 @@ static const SkyPiece kUiPieces[] = {
     {"button-square", 4, 0x300, 0, 0x300, 0xFD, 0x70, 0xB0, 16, 16},
     {"button-triangle", 4, 0x300, 0, 0x300, 0xFD, 0x60, 0xB0, 16, 16},
     {"digit-blank", 4, 0x300, 0, 0x300, 0xFD, 0x60, 0xC0, 16, 16},
+    /* the notebook's (src: fhbook.c: the menu's cursor, func_8003E930; the pages' arrows) */
+    {"hand", 4, 0x2C0, 0, 0x2D0, 0xFD, 0x60, 0xB0, 24, 16},
+    {"more-above", 4, 0x300, 0, 0x300, 0xFD, 0xA0, 0xB0, 16, 16},
+    {"more-below", 4, 0x300, 0, 0x300, 0xFD, 0xA0, 0xC0, 16, 16},
 };
 
 static void ui_images(Job *j, const VramContext *v) {
@@ -532,6 +536,91 @@ static void picture_images(Job *j, const VramContext *v) {
         snprintf(path, sizeof(path), "pictures/%u.png", (unsigned)i);
         piece_image(j, v, &p, path);
     }
+}
+
+/* the speakers' portraits (src: msgbox.c func_80014DF8 / func_80014D18, area.c func_80019918): sheets of 64 x 80
+ * cells (8-bit, from VRAM x 0x280, y 0x100: six to a page, three down a column pair), each cell a character kind
+ * with its palette by a table of {s16 kind, palette x, y} x 24. An area's sheet is one picture of all 24
+ * (D_80080550); a few areas' sets patch cells over it, and the common set patches in the main characters (the
+ * notebook's). As portraits/<kind>.png, each kind once. */
+#define PORTRAIT_CELLS 24
+#define PORTRAIT_W 64
+#define PORTRAIT_H 80
+#define PORTRAIT_X 0x280
+#define PORTRAIT_Y 0x100
+#define PORTRAIT_COMMON_SET 0x80080594   /* 9 s16: the common set's CD.BIN entries */
+#define PORTRAIT_COMMON_SET_N 9
+#define PORTRAIT_AREA_SET 0x80080550     /* s16 by area: its own sheet */
+typedef struct PortraitSheet {
+    uint32_t table;   /* its cells' table */
+    uint32_t set;     /* the patches loaded over the area's sheet (s16 x n; 0: the common set) */
+    int n, area;      /* the area whose sheet is under them */
+} PortraitSheet;
+static const PortraitSheet kPortraitSheets[] = {
+    {0x800802AC, 0, 0, 0},             /* the common set over the station's sheet (the notebook's) */
+    {0x8007FF4C, 0, -1, 0},            /* the areas' (the station's sheet alone) */
+    {0x800800FC, 0, -1, 19},
+    {0x8008018C, 0x800805D0, 5, 2},    /* the hospital's */
+    {0x8008021C, 0x800805A8, 4, 12},   /* the club's */
+    {0x8007FFDC, 0x800805B0, 4, 21},   /* the diner's */
+    {0x8008006C, 0x800805DC, 8, 26},   /* the forest's */
+};
+
+static void load_entry(VramContext *v, const uint8_t *const *entries, const size_t *sizes, int n, int e) {
+    if (e > 0 && e < n && entries[e] != NULL) {
+        vram_load_tim(v, entries[e], sizes[e]);
+    }
+}
+
+static void portrait_images(Job *j, VramContext *v, const uint8_t *const *entries, const size_t *sizes, int n,
+                            const uint8_t *exe, size_t exe_n) {
+    const uint8_t *common = exe_at(exe, exe_n, PORTRAIT_COMMON_SET, PORTRAIT_COMMON_SET_N * 2);
+    uint8_t done[256] = {0}, *image = malloc((size_t)PORTRAIT_W * PORTRAIT_H * 4);
+    size_t s;
+    int i, y;
+
+    for (s = 0; s < sizeof(kPortraitSheets) / sizeof(kPortraitSheets[0]) && common != NULL && !j->failed; s++) {
+        const PortraitSheet *ps = &kPortraitSheets[s];
+        const uint8_t *table = exe_at(exe, exe_n, ps->table, PORTRAIT_CELLS * 6);
+        const uint8_t *set = ps->set ? exe_at(exe, exe_n, ps->set, (size_t)ps->n * 2) : NULL;
+        const uint8_t *own = exe_at(exe, exe_n, PORTRAIT_AREA_SET, (size_t)(ps->area + 1) * 2);
+
+        if (table == NULL) {
+            continue;
+        }
+        vram_clear(v);
+        if (own != NULL) {
+            load_entry(v, entries, sizes, n, le16s(own + ps->area * 2));
+        }
+        if (set != NULL) {
+            for (i = 0; i < ps->n; i++) {
+                load_entry(v, entries, sizes, n, le16s(set + i * 2));
+            }
+        } else if (ps->n == 0) {
+            for (i = 0; i < PORTRAIT_COMMON_SET_N; i++) {
+                load_entry(v, entries, sizes, n, le16s(common + i * 2));
+            }
+        }
+        for (i = 0; i < PORTRAIT_CELLS && !j->failed; i++) {
+            int kind = le16s(table + i * 6) & 0xFF, px = le16s(table + i * 6 + 2), py = le16s(table + i * 6 + 4);
+            uint16_t page = (uint16_t)((((i / 6) * 64 + PORTRAIT_X) / 64) | (PORTRAIT_Y / 256) << 4 | 1 << 7);
+            int u = ((i / 3) & 1) * PORTRAIT_W, vv = (i % 3) * PORTRAIT_H;
+            char path[64];
+
+            if (done[kind]) {
+                continue;
+            }
+            done[kind] = 1;
+            vram_page_rgba(v, page, (uint16_t)(px / 16 | py << 6), j->page);
+            for (y = 0; y < PORTRAIT_H; y++) {
+                memcpy(image + (size_t)y * PORTRAIT_W * 4, j->page + ((size_t)(vv + y) * PAGE_TEXELS + (size_t)u) * 4,
+                       (size_t)PORTRAIT_W * 4);
+            }
+            snprintf(path, sizeof(path), "portraits/%d.png", kind);
+            image_file(j, path, image, PORTRAIT_W, PORTRAIT_H);
+        }
+    }
+    free(image);
 }
 
 static void sky_images(Job *j, const VramContext *v) {
@@ -805,6 +894,9 @@ static int run(Job *j, const uint8_t *const *entries, const size_t *sizes, int n
             }
             model_free(&m);
         }
+    }
+    if (!j->failed) {
+        portrait_images(j, v, entries, sizes, n, exe, exe_n);   /* (its own contexts: after the areas') */
     }
     free(ms.list);
     free(v);

@@ -71,8 +71,12 @@ create takings  #slots cells allot   takings #slots cells erase           \ □:
 : taken-by! ( xt slot -- )  cells takings + ! ;
 : look-at-it ( slot -- handled? )  dup cells examinings + @ ?dup if  execute  else  drop false  then ;
 : take-it ( slot -- handled? )  dup cells takings + @ ?dup if  execute  else  drop false  then ;
+: met ( slot -- )   \ src: character_met: talking to someone makes their page in the notebook known
+    {: s :}  s character-index {: k :}
+    k 0< 0= if  s" character-bios" k exe-u8  else  s 101 = if  23  else  s 111 = if  22  else  exit  then  then  then
+    dup 24 < if  s" notebook" actor-named send learn-bio  else  drop  then ;
 : talk-with ( slot -- )   \ src: actor_talk_start
-    {: s :}
+    {: s :}  s met
     s their-talks if  exit  then
     area @ cells area-talks + @ ?dup if  s swap execute if  exit  then  then
     s cells default-lines + @ ?dup if  s swap execute exit  then

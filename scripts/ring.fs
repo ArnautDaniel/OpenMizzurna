@@ -9,8 +9,8 @@ IN: ring
 USING: engine actors messages keys screen clock areas figures matthew window items talk showing ui driving
     shootout story-flags events events.main ;
 
-variable up
-: ring-up? ( -- flag )  up @ 0<> ;
+variable ring-open
+: ring-up? ( -- flag )  ring-open @ 0<> ;
 
 <PRIVATE
 \ ---- the items: the executable's table, in the ring's order (src: D_80095B48) ----
@@ -75,12 +75,12 @@ variable circle   variable cross   variable square   variable triangle
     s" sound" actor-named send stop-stream
     matthew-actor send figure-idle
     s" ui" actor-named send ui-lock
-    true up !  false key-list? !  0 sel !  0 turn !  false reading !   \ (src: always the first: SAVED stays 0)
+    true ring-open !  false key-list? !  0 sel !  0 turn !  false reading !   \ (src: always the first: SAVED stays 0)
     0 answer !  -1 faced !  name-now  0e due f! ;
 : show-list ( key? -- )   \ src: ring.c show_list (each list from its first)
     key-list? !  0 sel !  0 turn !  0 answer !  name-now ;
 : chosen ( item who -- )   \ closed on an item (-1 none), shown to someone (-1: for use)
-    false up !  unlock  broadcast ring-chosen ;
+    false ring-open !  unlock  broadcast ring-chosen ;
 
 \ ---- choosing (src: cui.c ui_update, fhbook.c item_use) ----
 : use-mels-note ( -- )   \ (the diary's 23rd read: the first time, its own)

@@ -54,10 +54,9 @@ Matthew's cell phone (src: `ftel.c`, `cui.c` `phone_incoming_update`). `scripts/
 
 ## Facts and messages
 
-- Facts: `phone-up?`, `ringing?`, `in-call?`, `numbers-known` (starts as $80F).
+- Facts: `phone-up?`, `ringing?`, `in-call?`. A number answered is sent to the notebook (`learn-number`).
 - The phone hears `ring-chosen` for the item 0.
 
 ## Status
 
 **Built:** dialling, every number, the story's calls, answering and hanging up.
-**To come:** the notebook (which reads `numbers-known`).

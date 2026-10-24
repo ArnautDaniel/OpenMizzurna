@@ -140,9 +140,10 @@ create liz-walking  13 , 122 ,  14 , 124 ,  20 , 127 ,  21 , 129 ,  26 , 132 ,  
     start-event ;
 : door-a ( -- )  ['] events.ovl016:entry-80104464 with-her-or-not ;
 : door-b ( -- )  ['] events.ovl016:entry-80104418 with-her-or-not ;
-: the-archive ( -- )   \ 0x80103024: once, after a bio's known (the bios: to come)
+: the-archive ( -- )   \ 0x80103024: once, after a talk of her (+0x74): her page in the notebook (bit 20)
     used-newspaper-archive flag? 0=  $074 story@ 0<> and if
-        used-newspaper-archive flag-set  ['] events.ovl016:entry-801035C4 start-event exit  then
+        used-newspaper-archive flag-set  ['] events.ovl016:entry-801035C4 start-event
+        20 s" notebook" actor-named send learn-bio exit  then
     ['] events.ovl016:entry-80104038 start-event ;
 : flag-30 ( -- )  1 $030 story! ;   \ 0x8010316C
 : unknown-2D620 ( -- )  0 s" func_8002D620" unbuilt ;   \ 0x8010317C (not understood yet)

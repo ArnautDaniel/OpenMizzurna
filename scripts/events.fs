@@ -186,8 +186,12 @@ variable loaded-pack
     loaded-pack @ swap pack-ids - ;
 : the-window ( -- id )  s" window" actor-named ;
 3 constant phone-palette   \ (the other end of a telephone: src phone_say, 3)
+: portrait-of ( who -- kind | -1 )   \ the speaker's portrait: an actor's kind, or from $FD a kind itself
+    dup 0< if  exit  then  dup $FD >= if  exit  then
+    dup matthew = if  drop 0 exit  then
+    dup figure? if  kind-of exit  then  drop -1 ;
 : show ( text speaker palette secs -- )
-    {: text who pal secs :}  text text-bank who pal secs the-window send window-say ;
+    {: text who pal secs :}  text text-bank who portrait-of pal secs the-window send window-say ;
 : text-pending ( -- )  thread 0< 0= if  true thread thread-text slot !  then ;
 : settle ( -- )   \ an event's waits first let its message close (src: the VM's wait_msg, checked first; the
                   \ ops that wait for their line - "...-wait", say-n, phone-say - settle at once: they slept a frame)

@@ -49,7 +49,7 @@ phase-1 port's files (`../port/src/game/`), which name the decomp's functions; t
 | Counter ([page](subsystems/counter.md), the diner) | sitting at a bar's counter: leaning, calling the barman, ordering | `counter.c`, the overlays |
 | Phone ([page](subsystems/phone.md), built) | dialling, calls, who calls when | `ftel.c`, `cui.c` |
 | Pictures ([page](subsystems/pictures.md), built) | the small picture beside the message box, the big one above it | `ccdtim.c` |
-| Notebook | the people and numbers Matthew knows | `fhbook.c` |
+| Notebook ([page](subsystems/notebook.md), built) | the people and numbers Matthew knows | `fhbook.c` |
 | Map | the town map, places known | `mapscreen.c` |
 | HUD | the clock and fuel on screen, prompts | `hud.c`, `hudprim.c` |
 | Weather | snow, the sky, the day's light | `snow.c`, `sky.c`, `clock.c` |

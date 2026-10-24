@@ -58,6 +58,7 @@ enum: look-action  nothing-here  2 photo  5 shelves goods nozz-at-counter radio 
 \ ---- □: the act check (0x8010292C) and its actions (0x80102B00) ----
 enum: act-action  do-nothing the-bed  3 the-shower the-books  10 take-the-key  13 buy-cigarettes  15 take-lighter
   17 take-letter  19 read-flyer ;
+16 constant garage-number   \ (the notebook's: the auto garage)
 : act-check ( zone check -- action )
     case
         23 of  drop  1 has-item? if  do-nothing  else  take-the-key  then  exit  endof
@@ -94,6 +95,7 @@ enum: act-action  do-nothing the-bed  3 the-shower the-books  10 take-the-key  1
         take-letter of  ['] events.ovl001:entry-80105488 start-event  isabellas-letter s" items" actor-named send give-item
             got-isabella-letter flag-set  endof
         read-flyer of  0 flyer-seen !  read-garage-flyer flag-toggle  ['] events.ovl001:entry-80103C80 start-event
+            garage-number s" notebook" actor-named send learn-number
             ( the phone learns the garage's number: the phone )  endof
         drop run-rows 0
     endcase ;
