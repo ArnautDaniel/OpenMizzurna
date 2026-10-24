@@ -15,6 +15,8 @@ get_filename_component(SCRIPT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/scripts" ABSOLUTE
 if(OM_RELEASE)
     set(SCRIPT_DIR "")
 endif()
+# the release's version (tools/release-linux.sh sets it): set, the program updates itself on start (update.c)
+set(OM_VERSION "" CACHE STRING "the release's version (empty: no updates)")
 
 # ---- the Forth system and the actor kernel (no SDL: the forth tool and the language tests) ----
 add_library(forth STATIC src/forth/forth.c)
@@ -71,11 +73,11 @@ add_executable(openmizzurna
     src/render/render.c src/render/scene3d.c
     src/game/bind_engine.c src/game/text.c src/game/bind_scene.c src/game/roads.c src/game/records.c src/game/snow.c src/game/console.c
     src/game/bind_audio.c src/audio/audio.c src/audio/seq.c src/audio/xa.c src/game/movie.c
-    src/platform/library.c src/core/files.c)
+    src/platform/library.c src/platform/update.c src/core/files.c)
 target_link_libraries(openmizzurna PRIVATE omdata)
 target_include_directories(openmizzurna PRIVATE src/third_party)
 target_link_libraries(openmizzurna PRIVATE forth mactor SDL3::SDL3 m)
-target_compile_definitions(openmizzurna PRIVATE "OM_SCRIPT_DIR=\"${SCRIPT_DIR}\"")
+target_compile_definitions(openmizzurna PRIVATE "OM_SCRIPT_DIR=\"${SCRIPT_DIR}\"" "OM_VERSION=\"${OM_VERSION}\"")
 
 # the game's own tests: tests/<subsystem>/test_*.fs, run headless inside the game
 file(GLOB GAME_TESTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/*/test_*.fs")

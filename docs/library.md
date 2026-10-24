@@ -7,7 +7,8 @@ the library. (OpenHuey's design, `docs/library-and-mods.md` there, adapted to Mi
 
 With no library, OpenMizzurna shows a **disc picker** (an SDL file dialog): the player chooses their disc image.
 The import then runs on a thread of its own with a progress window (the file at hand, how much is done;
-closing it cancels). `openmizzurna --import <disc.cue>` does the same from a command line.
+closing it cancels). `openmizzurna --import <disc.cue>` does the same from a command line. If the system's file
+dialog fails, it says why and points there.
 
 - **Accepted**: a raw image - `.cue` with its `.bin`, or a lone `.bin` (2352-byte sectors, MODE2). The music
   (TSG.XA) and the movies (.STR) are CD-XA form 2 sectors, which a 2048-byte `.iso` doesn't keep: such an image

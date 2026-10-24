@@ -7,6 +7,7 @@
 # an older system, it runs on newer ones (glibc is the floor).
 #
 #   tools/release-linux.sh [version]      -> build-release-linux/openmizzurna-<version>-linux-x86_64.tar.gz
+#                                            (and, for the updater, version.txt and the same tarball by a fixed name)
 #
 # Needs a C compiler, CMake, Ninja, make, curl, and SDL3's build dependencies (the X11 / Wayland / sound headers
 # it builds its backends against). FFmpeg is configured without assembly, so no nasm.
@@ -54,7 +55,7 @@ fi
 # ---- the program ----
 build="$out/build"
 PKG_CONFIG_PATH="$prefix/lib/pkgconfig" cmake -S "$here" -B "$build" -G Ninja -DCMAKE_BUILD_TYPE=Release \
-    -DOM_RELEASE=ON -DOM_STATIC_FFMPEG=ON -DCMAKE_PREFIX_PATH="$prefix"
+    -DOM_RELEASE=ON -DOM_STATIC_FFMPEG=ON -DCMAKE_PREFIX_PATH="$prefix" -DOM_VERSION="$version"
 cmake --build "$build" -j "$jobs"
 
 # the tests that need neither the disc nor a GPU: the language and the actor kernel
@@ -79,4 +80,25 @@ OpenMizzurna is GPL-3.0 (../LICENSE). Built into it:
 - stb, dr_flac (public domain or MIT), cgltf (MIT): their notices are in the source, src/third_party/.
 EOF
 tar czf "$out/$name.tar.gz" -C "$out" "$name"
+# for the updater (src/platform/update.c): the version, and the package under a name that doesn't change
+cp "$out/$name.tar.gz" "$out/openmizzurna-linux-x86_64.tar.gz"
+echo "$version" > "$out/version.txt"
+
+# the updater, tried: an install of this package told a newer one is published (this same package) replaces its
+# program and scripts and keeps the player's saves (the new program then runs: without a display it stops there)
+check="$out/update-check"
+rm -rf "$check" && mkdir -p "$check/install/saves" "$check/server"
+tar xzf "$out/$name.tar.gz" -C "$check/install" --strip-components=1
+echo kept > "$check/install/saves/slot"
+rm -rf "$check/install/scripts/game.fs"   # (the update brings it back)
+cp "$out/openmizzurna-linux-x86_64.tar.gz" "$check/server/"
+echo "$version-next" > "$check/server/version.txt"
+said=$(cd "$check/install" && OM_UPDATE_URL="file://$check/server/" OM_HOME="$check/home" SDL_VIDEO_DRIVER=dummy \
+    SDL_AUDIO_DRIVER=dummy ./openmizzurna --frames 1 2>&1 || true)
+case "$said" in *"updating $version to $version-next"*) ;; *) echo "the updater didn't update: $said"; exit 1 ;; esac
+[ -f "$check/install/scripts/game.fs" ] && [ "$(cat "$check/install/saves/slot")" = kept ] \
+    && [ ! -e "$check/install/.update" ] || { echo "the updater left the install wrong"; exit 1; }
+rm -rf "$check"
+echo "the updater: fine"
+
 echo "$out/$name.tar.gz"

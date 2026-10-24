@@ -519,20 +519,25 @@ static void screen(const char *title, const char *line1, const char *line2, floa
     platform_swap();
 }
 
+enum { PICK_WAITING = 0, PICK_CHOSEN = 1, PICK_CANCELLED = -1, PICK_FAILED = -2 };
 typedef struct Pick {
-    SDL_AtomicInt state;   /* 0 waiting, 1 chosen, -1 cancelled */
+    SDL_AtomicInt state;
     char path[1024];
+    char why[256];   /* (failed: the dialog's error) */
 } Pick;
 
-static void SDLCALL picked(void *user, const char *const *files, int filter) {
+static void SDLCALL picked(void *user, const char *const *files, int filter) {   /* (files NULL: an error) */
     Pick *p = user;
 
     (void)filter;
-    if (files != NULL && files[0] != NULL) {
-        snprintf(p->path, sizeof(p->path), "%s", files[0]);
-        SDL_SetAtomicInt(&p->state, 1);
+    if (files == NULL) {
+        snprintf(p->why, sizeof(p->why), "%s", SDL_GetError());
+        SDL_SetAtomicInt(&p->state, PICK_FAILED);
+    } else if (files[0] == NULL) {
+        SDL_SetAtomicInt(&p->state, PICK_CANCELLED);
     } else {
-        SDL_SetAtomicInt(&p->state, -1);
+        snprintf(p->path, sizeof(p->path), "%s", files[0]);
+        SDL_SetAtomicInt(&p->state, PICK_CHOSEN);
     }
 }
 
@@ -543,7 +548,7 @@ static int pick_and_import(const char *reason) {
         {"All files", "*"},
     };
     char said[1500];
-    Input in;
+    Input in = {0};   /* (platform_poll sets quit, never clears it) */
 
     snprintf(said, sizeof(said), "%s", reason);
     for (;;) {
@@ -554,7 +559,7 @@ static int pick_and_import(const char *reason) {
 
         memset(&pick, 0, sizeof(pick));
         SDL_ShowOpenFileDialog(picked, &pick, platform_window(), kFilters, 2, NULL, false);
-        while (SDL_GetAtomicInt(&pick.state) == 0) {
+        while (SDL_GetAtomicInt(&pick.state) == PICK_WAITING) {
             platform_poll(&in);
             if (in.quit) {
                 return 0;
@@ -562,7 +567,12 @@ static int pick_and_import(const char *reason) {
             screen("Choose your Mizzurna Falls disc", said, "(a .cue / .bin image of the English version)", -1.0f);
             SDL_Delay(16);
         }
-        if (SDL_GetAtomicInt(&pick.state) < 0) {
+        if (SDL_GetAtomicInt(&pick.state) == PICK_FAILED) {
+            fprintf(stderr, "openmizzurna: the file dialog failed (%s); import from the command line instead: "
+                            "openmizzurna --import <disc.cue>\n", pick.why);
+            return 0;
+        }
+        if (SDL_GetAtomicInt(&pick.state) == PICK_CANCELLED) {
             return 0;
         }
         im = calloc(1, sizeof(*im));

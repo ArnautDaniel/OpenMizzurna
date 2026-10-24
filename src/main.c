@@ -7,6 +7,8 @@
  *     --test file.fs    run a test file after the scripts, headless, and exit with its status
  *     --import disc.cue the disc imported into the library, then out
  *
+ * A release build first brings itself up to date (platform/update.c).
+ *
  * The game's data is the library (platform/library.c, docs/library.md): on the first run, with no library, the
  * player picks their disc and it is imported.
  *
@@ -20,6 +22,7 @@
 #include "audio/audio.h"
 #include "kernel/mactor.h"
 #include "platform/library.h"
+#include "platform/update.h"
 #include "platform/platform.h"
 #include "render/render.h"
 
@@ -153,6 +156,9 @@ int main(int argc, char **argv) {
     }
     if (opt.import != NULL) {
         return library_import_from(opt.import) ? 0 : 1;
+    }
+    if (!opt.hidden && opt.test == NULL && opt.nevals == 0) {   /* (played, not a tool's run) */
+        update_on_start(argv);
     }
     if (!platform_open("OpenMizzurna", 1280, 960, opt.hidden) || !render_init()) {
         return 1;
