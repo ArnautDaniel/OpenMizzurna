@@ -21,7 +21,7 @@
 #define MNAME_MAX 31
 
 /* the kernel's own message kinds */
-enum { MK_TICK, MK_FRAME_END, MK_SPAWNED, MK_KILLED, MK_HELD_TICK, MK_KERNEL_KINDS };
+enum { MK_TICK, MK_FRAME_END, MK_SPAWNED, MK_KILLED, MK_HELD_TICK, MK_ACTOR_FAILED, MK_START_OVER, MK_KERNEL_KINDS };
 
 typedef struct MBehaviour MBehaviour;
 

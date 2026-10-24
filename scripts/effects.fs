@@ -101,6 +101,7 @@ behaviour screen-effects
   on tick ( -- )  run-frames ;
   on screen-effect ( n -- )  start ;
   on effect-level ( from to -- )  iris-target !  iris !  radii ;
+  on start-over ( -- )  no-effect kind !  0 frames-left ! ;   \ (after an error: no effect, none waited for)
 end-behaviour
 
 : spawn-effects ( -- id )  screen-effects effects-state s" effects" spawn ;

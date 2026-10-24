@@ -124,6 +124,66 @@ static int parse_kind(Forth *f, const char *what) {
     return k;
 }
 
+/* ---- failures: a handler's error or a task's, told to the errors actor (`errors-to`) ---- */
+#define FAILURES_KEPT 32   /* the latest, for the errors actor to read (a record's number names it) */
+typedef struct Failure {
+    long number;            /* 0: none */
+    int actor;              /* the actor whose handler failed; -1: a task */
+    char who[MNAME_MAX + 6];    /* its name ("task <name>" for a task's) */
+    char what[MNAME_MAX + 1];   /* the message it was handling ("" for a task's) */
+    char error[256];
+    char chain[1024];       /* the words running */
+    long frame;
+} Failure;
+static Failure sFailures[FAILURES_KEPT];
+static long sFailuresTold;
+static int sErrorsActor = -1;
+
+static void enqueue(int from, int to, int kind, const Cell *args, int n);
+
+/* recorded, and the errors actor told (actor-failed); not its own: those are only said */
+static void report_failure(Forth *f, int actor, const char *who, const char *what) {
+    Failure *r;
+    Cell number;
+
+    if (sErrorsActor < 0 || !sActors[sErrorsActor].used || actor == sErrorsActor) {
+        return;
+    }
+    number = ++sFailuresTold;
+    r = &sFailures[number % FAILURES_KEPT];
+    r->number = number;
+    r->actor = actor;
+    snprintf(r->who, sizeof(r->who), "%s", who);
+    snprintf(r->what, sizeof(r->what), "%s", what);
+    snprintf(r->error, sizeof(r->error), "%s", f->error);
+    snprintf(r->chain, sizeof(r->chain), "%s", f->error_chain);
+    r->frame = sFrame;
+    enqueue(actor, sErrorsActor, MK_ACTOR_FAILED, &number, 1);
+}
+
+static void task_failed(Forth *f, Task *t) {
+    char who[MNAME_MAX + 6];
+
+    snprintf(who, sizeof(who), "task %.*s", MNAME_MAX, t->name);
+    report_failure(f, -1, who, "");
+}
+
+static Failure *failure_arg(Forth *f) {   /* ( number -- ) the record (an empty one once it is gone) */
+    static Failure gone = {.actor = -1};
+    Cell number = forth_pop(f);
+    Failure *r = &sFailures[(number > 0 ? number : 0) % FAILURES_KEPT];
+
+    return number > 0 && r->number == number ? r : &gone;
+}
+PRIM(p_errors_to) { Cell id = POP(); sErrorsActor = (int)id; }   /* ( id -- ) failures told to it (nobody: none) */
+PRIM(p_failure_actor) { PUSH(failure_arg(f)->actor); }           /* ( n -- id ) nobody: a task's */
+PRIM(p_failure_frame) { PUSH(failure_arg(f)->frame); }
+static void push_text(Forth *f, const char *s) { PUSH(s); PUSH(strlen(s)); }
+PRIM(p_failure_who) { push_text(f, failure_arg(f)->who); }       /* ( n -- addr len ) */
+PRIM(p_failure_what) { push_text(f, failure_arg(f)->what); }
+PRIM(p_failure_error) { push_text(f, failure_arg(f)->error); }
+PRIM(p_failure_chain) { push_text(f, failure_arg(f)->chain); }
+
 /* ---- the queue ---- */
 
 static void enqueue(int from, int to, int kind, const Cell *args, int n) {
@@ -253,6 +313,7 @@ static void dispatch(Forth *f, const HMessage *m) {
         if (!f->quiet) {   /* (a repeat: nor where it was) */
             forth_printf(f, "  (in %s's `on %s`, behaviour %s)\n", a->name, sKinds[m->kind].name, a->beh->name);
         }
+        report_failure(f, m->to, a->name, sKinds[m->kind].name);
     } else if (f->t->sp != sp0 || f->t->fp != fp0) {
         forth_printf(f, "%s's `on %s` left %d cells and %d floats on the stacks\n", a->name,
                      sKinds[m->kind].name, f->t->sp - sp0, f->t->fp - fp0);
@@ -339,6 +400,7 @@ void mactor_reset(void) {
     sSelf = sSender = -1;
     sFrame = 0;
     sDeadLetters = 0;
+    sErrorsActor = -1;
 }
 
 /* ---- the words ---- */
@@ -964,6 +1026,9 @@ void bind_mactor(Forth *f) {
         {"(subscribe)", p_subscribe_rt, 0}, {"(unsubscribe)", p_unsubscribe_rt, 0},
         {"subscribe", p_subscribe, 1}, {"unsubscribe", p_unsubscribe, 1},
         {"behaviour", p_behaviour, 0}, {"extends", p_extends, 0}, {"on", p_on, 0},
+        {"errors-to", p_errors_to, 0}, {"failure-actor", p_failure_actor, 0}, {"failure-frame", p_failure_frame, 0},
+        {"failure-who", p_failure_who, 0}, {"failure-what", p_failure_what, 0}, {"failure-error", p_failure_error, 0},
+        {"failure-chain", p_failure_chain, 0},
         {"end-behaviour", p_end_behaviour, 0}, {"become", p_become, 0},
         {"state:", p_state, 0}, {"field", p_field, 0}, {"end-state", p_end_state, 0},
         {"spawn", p_spawn, 0}, {"kill", p_kill, 0}, {"self", p_self, 0}, {"enter", p_enter, 0}, {"leave-actor", p_leave, 0}, {"sender", p_sender, 0},
@@ -993,17 +1058,23 @@ void bind_mactor(Forth *f) {
         }
     }
     forth_constant(f, "nobody", -1);
+    forth_constant(f, "actors-max", MACTOR_MAX);
     if (sNKinds == 0) {
         kind_new("tick", 4, 0);
         kind_new("frame-end", 9, 0);
         kind_new("spawned", 7, 0);
         kind_new("killed", 6, 0);
         kind_new("held-tick", 9, 0);
+        kind_new("actor-failed", 12, 1);
+        kind_new("start-over", 10, 0);
     }
     forth_constant(f, "tick", MK_TICK);
     forth_constant(f, "frame-end", MK_FRAME_END);
     forth_constant(f, "spawned", MK_SPAWNED);
     forth_constant(f, "killed", MK_KILLED);
     forth_constant(f, "held-tick", MK_HELD_TICK);
+    forth_constant(f, "actor-failed", MK_ACTOR_FAILED);
+    forth_constant(f, "start-over", MK_START_OVER);
+    f->task_failed = task_failed;
     forth_set_current(f, saved);
 }

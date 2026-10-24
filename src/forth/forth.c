@@ -115,8 +115,8 @@ void forth_set_output(Forth *f, OutputFn out, void *ctx) {
     f->out_ctx = ctx;
 }
 
-#define ERROR_REPEATS_SAID 300
-#define BACKTRACE_BYTES 1024   /* (a repeated error's count: each 300, ten seconds of frames) */
+#define ERROR_REPEATS_SAID 300   /* (a repeated error's count: each 300, ten seconds of frames) */
+#define BACKTRACE_BYTES 1024
 
 _Noreturn void forth_error(Forth *f, const char *fmt, ...) {
     va_list ap;
@@ -125,10 +125,14 @@ _Noreturn void forth_error(Forth *f, const char *fmt, ...) {
     vsnprintf(f->error, sizeof(f->error), fmt, ap);
     va_end(ap);
     f->quiet = 0;
+    f->error_chain[0] = 0;
+    if (f->silent <= 0) {
+        forth_backtrace(f, f->error_chain, sizeof(f->error_chain));
+    }
     if (f->silent > 0) {
         /* inside `catch`: the caller decides what to say */
     } else {
-        char line[sizeof(f->said) + 300], chain[BACKTRACE_BYTES];
+        char line[sizeof(f->said) + 300];
 
         f->errors++;
         if (f->nsrc > 0) {
@@ -151,8 +155,8 @@ _Noreturn void forth_error(Forth *f, const char *fmt, ...) {
             snprintf(f->said, sizeof(f->said), "%s", f->error);
             f->repeats = 0;
             forth_printf(f, "\n%s\n", line);
-            if (forth_backtrace(f, chain, sizeof(chain)) > 0) {
-                forth_printf(f, "  in %s\n", chain);
+            if (f->error_chain[0]) {
+                forth_printf(f, "  in %s\n", f->error_chain);
             }
         }
     }
@@ -2301,6 +2305,9 @@ static void task_turn(Forth *f, Task *t) {
     if (setjmp(jb) != 0) {
         forth_printf(f, "task %d (%s) stopped by the error\n", t->id, t->name);
         t->state = TASK_DONE;
+        if (f->task_failed != NULL) {
+            f->task_failed(f, t);
+        }
     } else {
         f->catch = &jb;
         if (f->depth < NESTING_MAX) {

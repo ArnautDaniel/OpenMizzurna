@@ -105,6 +105,31 @@ end-behaviour
 greedy counter-state s" g" spawn constant g
 T{ 11 22  3 g send ping  deliver -> 11 22 }T
 
+testing a failure told to the errors-to actor: who, the message, the error, the words running
+actors-reset
+variable told
+behaviour catcher
+  on actor-failed ( r -- )  told ! ;
+end-behaviour
+behaviour faulty
+  on ping ( n -- )  drop  0 @ drop ;   \ (an error: a null address)
+end-behaviour
+catcher counter-state s" catcher" spawn constant ct   ct errors-to
+faulty counter-state s" faulty" spawn constant fy
+T{ 0 fy send ping  deliver  told @ failure-actor  told @ failure-who s" faulty" s=  told @ failure-what s" ping" s= -> fy true true }T
+T{ told @ failure-error s" null address" s=  told @ failure-chain s" faulty:on ping" s= -> true true }T
+testing the errors actor's own failure isn't told to it (it would fail again and again)
+behaviour clumsy-catcher
+  on actor-failed ( r -- )  1 told +!  0 @ drop ;
+end-behaviour
+clumsy-catcher counter-state s" clumsy" spawn constant cc   cc errors-to   0 told !
+T{ 0 fy send ping  deliver  deliver  told @ -> 1 }T
+testing nobody told: a failure is only said
+nobody errors-to   0 told !
+T{ 0 fy send ping  deliver  told @ -> 0 }T
+testing a record gone (32 are kept): empty
+T{ 99999 failure-who nip  99999 failure-actor -> 0 nobody }T
+
 testing a handler's name in the call chain: its behaviour and message
 actors-reset
 create traced 64 allot   variable traced-n

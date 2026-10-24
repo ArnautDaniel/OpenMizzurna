@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 Engine gEngine;
 
@@ -350,6 +351,50 @@ static void save_path(Forth *f, char *buf, size_t size) {   /* ( name len -- ) *
     const char *s = (const char *)POP();
     snprintf(buf, size, "%s%s%.*s", library_home(), SAVES_DIR, (int)n, s);
 }
+/* ---- the errors' log (errors.fs): beside the saves, a fresh one when it has grown large ---- */
+#define ERRORS_LOG "errors.log"
+#define ERRORS_LOG_OLD "errors.old.log"
+#define ERRORS_LOG_LIMIT (1024L * 1024)   /* bytes: then the next run starts another, the last kept as the old */
+#ifndef OM_VERSION
+#define OM_VERSION ""
+#endif
+
+PRIM(p_errors_log) {   /* ( addr len -- ) a line of the errors' log (this run's first: a heading before it) */
+    static int started;
+    Cell len = POP();
+    const char *s = (const char *)POP();
+    char path[1200];
+    FILE *fp;
+
+    snprintf(path, sizeof(path), "%s" ERRORS_LOG, library_home());
+    if (!started) {
+        char old[1200], when[64];
+        time_t now = time(NULL);
+        long size = 0;
+
+        if ((fp = fopen(path, "rb")) != NULL) {
+            fseek(fp, 0, SEEK_END);
+            size = ftell(fp);
+            fclose(fp);
+        }
+        if (size > ERRORS_LOG_LIMIT) {
+            snprintf(old, sizeof(old), "%s" ERRORS_LOG_OLD, library_home());
+            remove(old);
+            rename(path, old);
+        }
+        strftime(when, sizeof(when), "%Y-%m-%d %H:%M:%S", localtime(&now));
+        if ((fp = fopen(path, "a")) != NULL) {
+            fprintf(fp, "--- %s, openmizzurna %s\n", when, OM_VERSION[0] ? OM_VERSION : "(a developer's build)");
+            fclose(fp);
+        }
+        started = 1;
+    }
+    if ((fp = fopen(path, "a")) != NULL) {
+        fprintf(fp, "%.*s\n", (int)len, s);
+        fclose(fp);
+    }
+}
+
 PRIM(p_save_file) {   /* ( addr len name len -- flag ) written whole (the folder made) */
     char path[1200], dir[1100];
     Cell len, addr;
@@ -486,7 +531,7 @@ void bind_engine(Forth *f) {
         {"on-tick", p_on_tick}, {"off-tick", p_off_tick}, {"on-draw", p_on_draw}, {"off-draw", p_off_draw},
         {"ticks", p_ticks}, {"dt", p_dt}, {"seconds", p_seconds}, {"step-blend", p_step_blend}, {"pen-color", p_pen_color}, {"pen-scale", p_pen_scale}, {"draw-text", p_draw_text},
         {"draw-rect", p_draw_rect}, {"pen-blend", p_pen_blend}, {"draw-quad", p_draw_quad}, {"screen-size", p_screen_size}, {"char-size", p_char_size}, {"hud", p_hud},
-        {"clear-color", p_clear_color}, {"random", p_random}, {"image", p_image}, {"image-size", p_image_size}, {"draw-image", p_draw_image}, {"draw-image-quad", p_draw_image_quad}, {"draw-image-part", p_draw_image_part}, {"clip-2d", p_clip}, {"reboot", p_reboot}, {"movie-open", p_movie_open}, {"movie-advance", p_movie_advance}, {"movie-draw", p_movie_draw}, {"movie-close", p_movie_close}, {"save-file", p_save_file}, {"load-file", p_load_file}, {"draw-image-quad-part", p_draw_image_quad_part}, {"behind", p_behind}, {"pad-rumble", p_pad_rumble}, {"draw-billboard", p_draw_billboard}, {"draw-ground-quad", p_draw_ground_quad}, {"screenshot", p_screenshot},
+        {"clear-color", p_clear_color}, {"random", p_random}, {"image", p_image}, {"image-size", p_image_size}, {"draw-image", p_draw_image}, {"draw-image-quad", p_draw_image_quad}, {"draw-image-part", p_draw_image_part}, {"clip-2d", p_clip}, {"reboot", p_reboot}, {"movie-open", p_movie_open}, {"movie-advance", p_movie_advance}, {"movie-draw", p_movie_draw}, {"movie-close", p_movie_close}, {"save-file", p_save_file}, {"errors-log", p_errors_log}, {"load-file", p_load_file}, {"draw-image-quad-part", p_draw_image_quad_part}, {"behind", p_behind}, {"pad-rumble", p_pad_rumble}, {"draw-billboard", p_draw_billboard}, {"draw-ground-quad", p_draw_ground_quad}, {"screenshot", p_screenshot},
         {"screenshot-pending?", p_screenshot_pending}, {"console!", p_console_store}, {"exe-table", p_exe_table}, {"library-file", p_library_file}, {"exe-u8", p_exe_u8}, {"exe-s8", p_exe_s8}, {"exe-s16", p_exe_s16}, {"exe-s32", p_exe_s32},
     };
     Vocab *was = f->m.current, *v = forth_vocab(f, "engine");

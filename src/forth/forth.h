@@ -183,6 +183,8 @@ struct Forth {
     jmp_buf *catch;         /* where an error unwinds to */
     int silent;             /* inside `catch`: errors are not printed */
     char error[256];        /* the last error message */
+    char error_chain[1024]; /* the words running when it was raised (forth_backtrace; not inside `catch`) */
+    void (*task_failed)(Forth *f, Task *t);   /* told of a task stopped by an error (the actor kernel's) */
     char said[256];         /* the last error message printed */
     long repeats;           /* times it came again since, not printed */
     int quiet;              /* the error being raised is a repeat (not printed: nor what callers add) */

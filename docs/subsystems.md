@@ -62,6 +62,7 @@ phase-1 port's files (`../port/src/game/`), which name the decomp's functions; t
 | Flare ([page](subsystems/flare.md), built) | a flare's glow on the ground (areas 5, 24) | `snow.c` (`ground_flare_draw`) |
 | Car chase ([page](subsystems/car-chase.md), built) | after the bike in his car: the knocks, the crash, the clock | `ovl027.c` (states 20–26) |
 | Rumble ([page](subsystems/rumble.md), built) | the pads' motors | `frame.c` (pad motors) |
+| Errors ([page](subsystems/errors.md), built) | every failure logged (`errors.log`); the actor that failed asked to start over | - (the engine's own) |
 
 ## Order of work
 

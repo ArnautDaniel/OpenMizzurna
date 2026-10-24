@@ -47,7 +47,17 @@ A handler runs with its message's arguments on the stack, and must consume them.
 doesn't, or it fails, the kernel names the actor and handler, and puts the stacks (data,
 return, float) back as they were. A message the behaviour (and its parents) doesn't handle is
 dropped, and the kernel counts it and reports it once per behaviour and kind (`.unhandled`).
-The kernel's own messages (`tick`, `frame-end`, `spawned`, `killed`, `held-tick`) are dropped quietly.
+The kernel's own messages (`tick`, `frame-end`, `spawned`, `killed`, `held-tick`, `actor-failed`,
+`start-over`) are dropped quietly.
+
+**Failures.** A handler that fails (and a task stopped by an error) is also told, as a record, to the actor
+named by `errors-to ( id -- )` (`nobody`: none): `actor-failed ( record -- )`, from the actor that failed. The
+record holds `failure-actor ( r -- id )` (`nobody` for a task's), `failure-who`, `failure-what` (the message it
+was handling), `failure-error`, `failure-chain` (the words running) - each `( r -- addr len )` - and
+`failure-frame`; the latest 32 are kept (an older one reads empty). The errors actor's own failures are only
+said, never told to it. `start-over ( -- )` is the message an actor that can put itself right handles: the
+errors actor (`docs/subsystems/errors.md`) sends it. Its state isn't wiped: what the actor keeps is its own to
+reset (most keep it in their vocabulary's variables).
 
 `become ( behaviour -- )` switches the current actor to another behaviour from the next
 message on.
@@ -109,7 +119,7 @@ void mactor_reset(void);
 ```
 
 The engine sends some messages itself. The first kinds are the kernel's: `tick`, `frame-end`,
-`spawned`, `killed`. The subsystems' own are declared in `scripts/messages.fs`
+`spawned`, `killed`, `held-tick`, `actor-failed`, `start-over`. The subsystems' own are declared in `scripts/messages.fs`
 (`tick`, `frame-end`, `entered-room`, ...).
 
 Tests: `tests/test_actors.fs` (`ctest`).

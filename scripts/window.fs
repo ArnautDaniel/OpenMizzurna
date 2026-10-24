@@ -58,11 +58,10 @@ variable wanted
     palette ! speaker !  text-of  2047 min dup text-len !  text swap move
     count-lines lines !  0 top !  0e typed f!  0e scrolled f!  -1 window-answer !
     box-x left !  true window-up !  typing stage !  pad-circle key-down? confirm-was ! ;
-: shut ( -- )
-    stage @ closed <> if
-        closed stage !  false window-up !  text-shown clock-id send release-clock
-        window-answer @ broadcast window-closed
-    then ;
+: closing ( -- )   \ (whatever it was doing)
+    closed stage !  false window-up !  text-shown clock-id send release-clock
+    window-answer @ broadcast window-closed ;
+: shut ( -- )  stage @ closed <> if  closing  then ;
 
 \ ---- a window-step of it ----
 : page-end ( -- offset )   \ where the box is full (the start of the line after it), or the text's end
@@ -167,6 +166,7 @@ behaviour message-window
     r@ 1 = r@ 2 = or if  r@ 1+ choices !  0 first-choice !  else  2 choices !  1 first-choice !  then  r> drop
     text-shown clock-id send hold-clock ;
   on window-shut ( -- )  shut ;
+  on start-over ( -- )  closing ;   \ (after an error: shut, the clock let go, whoever waits told)
 end-behaviour
 
 : spawn-window ( -- id )  message-window window-state s" window" spawn ;
