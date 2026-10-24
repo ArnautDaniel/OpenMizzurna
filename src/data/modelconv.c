@@ -515,6 +515,10 @@ static const SkyPiece kUiPieces[] = {
     /* the fight's (src: hp_bar_draw, ovl033_func_80101FBC): the fighters' names over their health bars, 80 x 8
      * each, ten down (the executable's `fight-icons` gives a style's; the other minigames name theirs) */
     {"fight-names", 4, 0x300, 0, 0x300, 0xFB, 0, 0x60, 80, 80},
+    /* the message window's (src: func_80033588, msg_choice_cursor, func_80033278): the answers' cursor, the
+     * page-wait arrow (seven 8 x 8 frames down) */
+    {"cursor", 4, 0x2C0, 0, 0x2D0, 0xFD, 0x40, 0xB0, 16, 16},
+    {"page-arrow", 4, 0x2C0, 0, 0x2D0, 0xFD, 0xE8, 0x80, 8, 56},
     /* the shoot-outs' (src: qte_draw_targets): a hit target's burst, four 16 x 16 frames across */
     {"burst", 4, 0x300, 0, 0x300, 0xFD, 0x60, 0xC0, 64, 16},
 };

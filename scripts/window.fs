@@ -115,14 +115,24 @@ create portrait-images 256 cells allot   portrait-images 256 cells erase
             else  2drop  then
         else  drop  then
     loop ;
-: draw-arrow ( -- )   \ (blinking: the original's animated arrow sprite, a mark here)
-    stage @ page-full = ticks 8 / 2 mod 0= and if
-        $FFFFFFFF pen-color  arrow-x arrow-y >screen  scale 4 * dup draw-rect
+\ the arrow and the cursor: the UI's sprites (ui/page-arrow.png: seven 8 x 8 frames down, a frame each of the
+\ game's; ui/cursor.png 16 x 16), opaque
+8 constant arrow-size   7 constant arrow-frames   16 constant cursor-size   2 constant ticks-a-frame   \ (30 a second)
+variable arrow-image   variable cursor-image
+: window-picture ( var addr len -- image )   \ ui/<name>.png, loaded once
+    {: v a n :}  v @ ?dup if  exit  then  $clear  s" ui/" $+  a n $+  s" .png" $+  $@ image  dup v ! ;
+: draw-part ( image u v w h x y -- )   \ at the original's place and size
+    {: im u v w h x y :}  $FFFFFFFF pen-color  blend-ps-solid pen-blend
+    im u v w h  x y >screen  w scale *  h scale *  draw-image-part  blend-usual pen-blend ;
+: draw-arrow ( -- )   \ (src: func_80033278: its frame steps each game frame)
+    stage @ page-full = if
+        arrow-image s" page-arrow" window-picture  0  ticks ticks-a-frame / arrow-frames mod arrow-size *  arrow-size arrow-size
+        arrow-x arrow-y draw-part
     then ;
-: draw-cursor ( -- )
+: draw-cursor ( -- )   \ (src: msg_choice_cursor)
     stage @ asking = if
-        $FFFFFFFF pen-color  0 font  scale pen-scale
-        s" >" cursor-x  cursor @ first-choice @ + font-line * box-y +  >screen font-text
+        cursor-image s" cursor" window-picture  0 0 cursor-size cursor-size
+        cursor-x  cursor @ first-choice @ + font-line * box-y +  draw-part
     then ;
 : cell-kind ( cell -- kind )  cell-shorts * {: o :}  s" portrait-tables" o exe-s16 $FF and ;
 : on-sheet? ( kind -- flag )   \ the area's portrait sheet has that kind (src: func_80014D18's tables)

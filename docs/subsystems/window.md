@@ -16,8 +16,8 @@ is up, the clock stands still.
 | the band behind it | dark, y 37 .. 89, the screen's width (`func_80015DCC`) | black at 56% |
 | typing | 4 glyphs a frame at 15 frames a second | 60 characters a second |
 | scrolling | 2 pixels a frame | 30 pixels a second, a line at a time, after ○ (a reading: the original's page-wait) |
-| the arrow | at (129, 87), animated | a blinking mark (its sprite: to come) |
-| a question | text at x -79, the cursor at -95 on the answer's row (`msg_choice`) | the same; the cursor a `>` (its sprite: to come) |
+| the arrow | at (129, 87), animated | the same: seven 8 x 8 frames, a frame each of the game's (`ui/page-arrow.png`) |
+| a question | text at x -79, the cursor at -95 on the answer's row (`msg_choice`) | the same; the cursor its 16 x 16 sprite (`ui/cursor.png`) |
 | the font | the dialogue font (033_4/5/3), a glyph its own width (the 2021 patch), lines 16 apart | the same, from the library (`font-text`) |
 | colour | "raise": which of the font's palettes (3: a voice on the telephone) | `font-palette` |
 
@@ -47,4 +47,5 @@ story's tests (a player answering each line); seen on screen (the opening's "Pro
 lines). The speaker's portrait is drawn beside the box at (−156, 16), 64 × 80. `window-say`'s portrait is a kind: the
 events give the speaker's (`portrait-of`: an actor's kind, or from $FD a kind itself). It shows when the area's
 sheet has that kind (`portrait-tables`, src: func_80014D18; the pictures are `portraits/<kind>.png`, cut by the
-import from the sheets). **To come**: the arrow's and cursor's sprites, the talk gestures (with the figures), the list font's windows (menus).
+import from the sheets). The arrow's and the cursor's sprites; the talk gestures (events.fs). The list font's
+windows are the list menus' (list-menu.md).

@@ -20,7 +20,7 @@ variable menu-answer   still-open menu-answer !   \ the row picked (0..), cancel
 16 constant rows-x   24 constant rows-y   16 constant row-h
 6 constant special-row   120 constant special-y  \ the seventh row, under its own heading
 34 constant list-bank   1 constant list-font   0 constant list-palette
-0 constant cursor-x                             \ (left of the rows: the original's cursor sprite there)
+0 constant cursor-x                             \ (left of the rows: the cursor sprite)
 \ src: the quad's corner colours, half see-through (the PlayStation's half: half the screen, half the colour)
 $AAAA6E80 constant board-top-left   $647D0F80 constant board-top-right
 $87D26E80 constant board-bottom-left   $12693480 constant board-bottom-right
@@ -52,6 +52,13 @@ variable up-was   variable down-was   variable pick-was   variable cancel-was
     0 0 at  board-w 0 at  0 board-h at  board-w board-h at
     board-top-left board-top-right board-bottom-left board-bottom-right draw-quad ;
 : label ( id x y -- )  {: id x y :}  list-bank id text-of  x y at font-text ;
+\ the cursor: the UI's sprite (ui/cursor.png, 16 x 16, src: func_80047D70's D_800F6B48), opaque
+16 constant cursor-size   variable cursor-image
+: the-cursor ( -- )
+    cursor-image @ 0= if  s" ui/cursor.png" image cursor-image !  then
+    $FFFFFFFF pen-color  blend-ps-solid pen-blend
+    cursor-image @  0 0 cursor-size cursor-size  cursor-x cursor @ row-y at  cursor-size scale *  dup  draw-image-part
+    blend-usual pen-blend ;
 : draw-menu ( -- )
     menu-up? 0= if  exit  then
     board
@@ -59,7 +66,7 @@ variable up-was   variable down-was   variable pick-was   variable cancel-was
     title-label title-x title-y label
     #labels @ #rows = if  special-label rows-x special-y label  then
     #rows 0 do  labels i cells + @ ?dup if  rows-x i row-y label  then  loop
-    0 font  s" >" cursor-x cursor @ row-y at font-text ;
+    the-cursor ;
 ' draw-menu on-draw
 PRIVATE>
 

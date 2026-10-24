@@ -24,5 +24,4 @@ answers; the form `D_800995D4`). `scripts/list-menu.fs`, the actor `list-menu`.
 
 ## Status
 
-Built; the cursor is a ">" in the dialogue font (the original's is a picture on the UI sheet, as the window's
-choices' - both to come with that sheet).
+Built; the cursor is the UI's 16 x 16 sprite (`ui/cursor.png`), as the window's choices'.
