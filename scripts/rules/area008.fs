@@ -1,7 +1,7 @@
 \ area008.fs - area 8's rules: the junkyard and its bus (src: ovl008.c; decomp/docs/areas/area08.md;
 \ port/src/game/ovl008.c): a figure on the bus at one point of the story, the seat to look at and then search,
-\ getting off the bus, the minigame that is a script alone, the dog chase (minigame 26: dog-chase.fs). (Minigame 43,
-\ the two-player viewer: to come.)
+\ getting off the bus, the minigame that is a script alone, the dog chase (minigame 26: dog-chase.fs), the two-player fight
+\ (minigame 43: each picks a model, then they fight).
 IN: rules.area008
 USING: engine actors messages keys clock story-flags townsfolk events look talk areas dog-chase ;
 

@@ -136,6 +136,13 @@ message person-through-door ( slot door room flip stage -- )   \ out of that doo
                                           \ stage: the area they're shown in (-1: the room's own)
 message person-attach ( slot route speed -- )   \ get in their car: it drives that route, they ride (src: cmd 0x2C)
 message person-get-in ( slot -- )         \ climb into their car (src: cmd 0x42)
+message car-put ( car x y z -- )           \ (to the traffic) a scene puts it there, its heading kept
+message car-heading ( car heading -- )      \ (to the traffic) a scene turns it so at once
+message car-turning ( car heading speed -- ) \ (to the traffic) toward that heading at the speed a frame (0: at once)
+message car-walk ( car x z speed -- )        \ (to the traffic) a scene drives it to there, facing it
+message car-forward ( car speed -- )         \ (to the traffic) straight on along its heading until idle
+message car-idle ( car -- )                  \ (to the traffic) its scene moves stop
+message car-area ( car area -- )             \ (to the traffic) in that area (a scene's; the town's by default)
 message car-pose ( car spin steer lean -- ) \ (to the traffic) as he drives it: the wheels on by spin, the front turned by steer, it leans (src: func_80109430)
 message car-anim ( car id next -- )      \ (to the traffic) a motion of its own, then the next held (-1: its last frame; id -1: none)
 message town-door-swing ( slot -- )       \ (to the town) a door's town side swings: its animation slot (src: func_8001A190)

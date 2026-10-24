@@ -60,6 +60,15 @@ it on a route, gets in and rides; at the route's end they get out beside their s
 - At a stop: their car is parked (`car-at`), hidden or stopped; a stop where they ride sets their car on its way
   (unless it is already carrying them).
 
+## A scene's moves
+
+The events' actor commands work on the cars too (src: the same commands on a car actor, actor_update moving
+it): placed (`car-put`, its heading kept), turned at once (`car-heading`) or at a speed (`car-turning`), driven
+to a point facing it (`car-walk`) or straight on (`car-forward`) until idle (`car-idle`), its own motion
+(`car-anim`), and put in another area (`car-area`, from set-floor: drawn where it is - the town's by default).
+Facts `car-moving?`, `car-turned?`, `car-scene-on?`, `car-in-area`; the events' wait-stop and wait-turned wait
+on them. While a scene moves his car he's carried in it (driving.fs follows it).
+
 ## Pushed aside, Mel's bike
 
 - A car on its way pushes Matthew (640) and his car (1024) out of its way in the town: within that room of it

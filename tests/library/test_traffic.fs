@@ -18,7 +18,6 @@ testing the road graph from the library
 T{ roads-ready?  0 road-node -> true 373695 -4000 281926 2 0 }T
 
 testing a car parked at a route's start: at its first node (the lane's first car: no offset), not driving
-: the-traffic ( -- id )  s" traffic" actor-named ;
 : x-z ( x y z -- x z )  nip ;
 T{ nozz-car 7 the-traffic send car-park  deliver  nozz-car car-driving? -> false }T
 T{ nozz-car car-now drop x-z -> 81 road-node 2drop x-z }T
@@ -59,5 +58,20 @@ testing Mel on his bike: his partner, he rides it - there, its way, seen
 T{ 40 360000 310000 car-at  mel 40 the-townsfolk send person-partner  deliver  1 tick-tasks actors-frame
    mel person-now drop nip  mel here? -> 360000 310000 true }T
 T{ mel the-townsfolk send person-unlink  deliver -> }T
+
+testing a scene's moves on a car (the events' ops): put there, its heading kept; turned; driven to a point
+32 constant a-car
+: steps ( n -- )  0 ?do  1 tick-tasks  actors-frame  loop ;
+: car-xz ( car -- x z )  car-now drop nip ;
+T{ a-car 300000 0 300000 set-pos  deliver  a-car car-xz  a-car car-shown? -> 300000 300000 true }T
+T{ a-car 0 1024 0 set-rot  deliver  a-car car-now nip nip nip -> 1024 }T
+T{ a-car 300000 302000 100 the-traffic send car-walk  deliver  a-car car-moving? -> true }T
+T{ 100 steps  a-car car-xz  a-car car-moving? -> 300000 302000 false }T
+testing straight on until idle; turning at a speed (wait-turned waits for it)
+T{ a-car 50 walk-motion go-forward  deliver  10 steps  a-car car-xz nip 302000 >  a-car idle  deliver  a-car car-moving? -> true false }T
+T{ a-car 2048 64 turn-to  deliver  a-car car-turned?  60 steps  a-car car-turned?  a-car car-now nip nip nip -> false true 2048 }T
+testing put in another area by a scene (set-floor): its area's (drawn there, not in the town)
+T{ a-car 26 1 set-floor  deliver  a-car car-in-area -> 26 }T
+T{ a-car the-town 1 set-floor  deliver  a-car car-in-area -> the-town }T
 
 test-summary

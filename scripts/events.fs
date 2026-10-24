@@ -358,58 +358,73 @@ defer door-sound ( kind -- )   \ op $176 (door-sounds.fs)
 : figure-of ( slot -- id )  matthew = if  s" matthew" actor-named  else  -1  then ;
 : person? ( slot -- flag )  dup matthew <> swap figure? and ;   \ (the townsfolk's: scheduled, or an extra)
 : the-townsfolk ( -- id )  s" townsfolk" actor-named ;
+: the-traffic ( -- id )  s" traffic" actor-named ;
 : set-pos ( a x y z -- )   \ cmd $01 (src: actor_set_pos)
     {: a x y z :}
     a matthew = if  x y z a figure-of send figure-place exit  then
     a scheduled? if  a x z the-townsfolk send person-place exit  then
     a person? if  a x y z the-townsfolk send extra-place exit  then
+    a car? if  a x y z the-traffic send car-put exit  then
     a x y z 4 act-unbuilt ;
 : set-rot ( a rx ry rz -- )   \ cmd $02
     {: a rx ry rz :}
     a matthew = if  rx ry rz a figure-of send figure-turn exit  then
     a person? if  a ry the-townsfolk send person-turn  a rx rz the-townsfolk send person-tilt exit  then
+    a car? if  a ry the-traffic send car-heading exit  then
     a rx ry rz 4 act-unbuilt ;
 30 constant walk-pace   80 constant run-pace     \ units a frame (src: actor_command_default's walk_to, path_to)
 1 constant walk-motion   5 constant run-motion
 : walk-with ( a x z speed motion -- )
     {: a x z v m :}
     a matthew = if  x z v m a figure-of send figure-walk exit  then
-    a person? if  a x z v m the-townsfolk send person-walk  else  a x z 3 act-unbuilt  then ;
+    a person? if  a x z v m the-townsfolk send person-walk exit  then
+    a car? if  a x z v the-traffic send car-walk exit  then   \ (src: walk_to on a car: driven there)
+    a x z 3 act-unbuilt ;
 : walk-to ( a x z -- )  walk-pace walk-motion walk-with ;                    \ cmd $08
 : run-to ( a x z -- )  run-pace run-motion walk-with ;                       \ cmd $47
 : walk-to-ex ( a x z motion speed -- )  $FFFF and swap walk-with ;           \ cmd $0F
 : go-forward ( a speed motion -- )   \ straight on along their heading until idle
     {: a v m :}
     a matthew = if  v m a figure-of send figure-forward exit  then
-    a person? if  a v m the-townsfolk send person-forward  else  a v m 3 act-unbuilt  then ;
+    a person? if  a v m the-townsfolk send person-forward exit  then
+    a car? if  a v the-traffic send car-forward exit  then
+    a v m 3 act-unbuilt ;
 : walk-forward ( a speed -- )  walk-motion go-forward ;                     \ cmd $0A
 : move-forward ( a motion speed -- )  swap go-forward ;                     \ cmd $10
 : idle ( a -- )   \ cmd $0C
     dup matthew = if  figure-of send figure-idle exit  then
-    dup person? if  the-townsfolk send person-idle  else  1 act-unbuilt  then ;
+    dup person? if  the-townsfolk send person-idle exit  then
+    dup car? if  the-traffic send car-idle exit  then
+    1 act-unbuilt ;
 : turn-figure ( a heading speed -- )   \ toward the heading at the speed a game frame (0: at once)
     {: a h v :}
     a matthew = if  h v a figure-of send figure-turning exit  then
-    a person? if  a h v the-townsfolk send person-turning  else  a h v 3 act-unbuilt  then ;
+    a person? if  a h v the-townsfolk send person-turning exit  then
+    a car? if  a h v the-traffic send car-turning exit  then
+    a h v 3 act-unbuilt ;
 : turn-to ( a heading speed -- )  turn-figure ;   \ cmd $11 (src: actor_turn_to_heading)
 : set-floor ( a area floor -- )   \ cmd $12 (src: actor_set_floor: Matthew's, and one going along with him too)
-    nip {: a f :}
+    {: a ar f :}
     a matthew = if  f s" matthew" actor-named send figure-floor
         following? if  companion @ f the-townsfolk send person-floor  then  exit  then
-    a person? if  a f the-townsfolk send person-floor  else  a f 2 act-unbuilt  then ;
+    a person? if  a f the-townsfolk send person-floor exit  then
+    a car? if  a ar the-traffic send car-area exit  then   \ (a car: the area it's in)
+    a f 2 act-unbuilt ;
 : arrive ( a -- )   \ cmd $1E
     dup scheduled? if  the-townsfolk send person-arrive  else  1 act-unbuilt  then ;
 : goto-stop ( a stop -- )   \ cmd $5D
     over scheduled? if  the-townsfolk send person-goto-stop  else  2 act-unbuilt  then ;
 : set-stop ( a stop travelling -- )   \ cmd $43: their stop, not placed (-1: off their schedule, with Matthew)
     rot dup scheduled? if  -rot the-townsfolk send person-set-stop  else  -rot 3 act-unbuilt  then ;
-: moving? ( a -- flag )  dup matthew = if  drop matthew-walking?  else  walking?  then ;
+: moving? ( a -- flag )
+    dup matthew = if  drop matthew-walking? exit  then  dup car? if  car-moving? exit  then  walking? ;
 : wait-stop ( a -- )   \ $10D: until they stop walking (src: the VM's wait_move)
-    settle  dup matthew = over person? or 0= if  drop exit  then
+    settle  dup matthew = over person? or  over car? or 0= if  drop exit  then
     begin  yield  dup moving? 0= until  drop ;
-: turned? ( a -- flag )  dup matthew = if  drop matthew-turned?  else  person-turned?  then ;
+: turned? ( a -- flag )
+    dup matthew = if  drop matthew-turned? exit  then  dup car? if  car-turned? exit  then  person-turned? ;
 : wait-turned ( a -- )   \ op $112: until they face the way they turn to (src: the VM's wait_turn)
-    settle  dup matthew = over person? or 0= if  drop exit  then
+    settle  dup matthew = over person? or  over car? or 0= if  drop exit  then
     begin  yield  dup turned? until  drop ;
 
 \ ---- riding (docs/subsystems/traffic.md) ----
@@ -540,6 +555,7 @@ $4C constant to-path-node   $50 constant into-their-car   30 constant path-pace 
     {: a id nx lp :}
     a matthew = if  id nx lp a figure-of send figure-anim exit  then
     a person? if  a id nx lp the-townsfolk send person-anim exit  then
+    a car? if  a id nx the-traffic send car-anim exit  then   \ (a car's own motion: the bike's)
     a id nx lp 4 act-unbuilt ;
 : anim ( a id loop -- )  -1 swap anim-then ;   \ cmd $03 (src: actor_anim): play it (looping or not)
 : anim-once ( a id -- )  false anim ;               \ cmd $05: once, from its start

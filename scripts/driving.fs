@@ -132,8 +132,12 @@ variable car-frames
     move-car  unstick-car  show-car
     speed @ abs key-per-speed / idle-key + s" sound" actor-named send engine-pitch ;
 : steps-due ( -- n )  due f@ motion-rate dt f* f+  fdup f>s  dup s>f f-  due f! ;
+: follow-the-scene ( -- )   \ a scene moving his car: its place is the scene's, he's carried in it
+    his-car car-now ch !  cz !  cy !  cx !
+    cx @ cy @ cz @ s" matthew" actor-named send figure-place  0 ch @ 4095 and 0 s" matthew" actor-named send figure-turn ;
 : drive-tick ( -- )
-    driving? 0= if  exit  then  steps-due  held @ if  drop show-car exit  then
+    driving? 0= if  exit  then  his-car car-scene-on? if  follow-the-scene exit  then
+    steps-due  held @ if  drop show-car exit  then
     0 ?do  driving? if  wheel-frame  then  loop ;
 
 \ ---- in (src: func_8004175C, func_8004301C) ----

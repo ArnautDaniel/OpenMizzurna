@@ -63,6 +63,9 @@ begin-structure car
   field: x   field: y   field: z   field: heading   \ where it is
   playing +field car-motion   \ a motion of its own (the bike's: shaken, falling - src: actor_anim on it)
   field: wheels-spun   field: wheels-steer   field: car-lean   \ as he drives it (src: func_8001A2F4)
+  field: in-area        \ the area it's in (the town's, unless a scene puts it elsewhere: src actor_set_floor)
+  field: going-to?   field: goal-x   field: goal-z   field: going-on?   field: scene-speed   \ a scene's moves
+  field: turning?   field: turn-goal   field: turn-step                                     \ (src: actor_update's)
 end-structure
 create cars  #cars car * allot
 : car-of ( slot -- c )  first-car - car * cars + ;
@@ -73,6 +76,10 @@ PRIVATE>
 : car-carrying? ( slot -- flag )  car-of carrying @ 0<> ;
 : car-shown? ( slot -- flag )  car-of shown @ 0<> ;
 : car-motion-now ( slot -- id )  car-of car-motion anim @ ;
+: car-moving? ( slot -- flag )  car-of {: c :}  c going-to? @  c going-on? @ or ;   \ (facts: a scene's moves)
+: car-turned? ( slot -- flag )  car-of turning? @ 0= ;
+: car-scene-on? ( slot -- flag )  car-of {: c :}  c going-to? @  c going-on? @ or  c turning? @ or ;
+: car-in-area ( slot -- area )  car-of in-area @ ;
 : car-wheels-now ( slot -- spun steer lean )  car-of {: c :}  c wheels-spun @  c wheels-steer @  c car-lean @ ;   \ (a fact: its own motion playing; 0 / -1 none)
 
 <PRIVATE
@@ -180,8 +187,29 @@ PRIVATE>
     0e c along f!  v c top-speed !  0e c speed f!  true c driving !  c bends @ 2 - c lane-turn ! ;
 : traffic-reset ( -- )
     cars #cars car * erase
-    #cars 0 do  cars i car * +  -1 over lane-node !  drop  loop ;
-: step-car ( c slot -- )  over driving @ if  drive  else  2drop  then ;
+    #cars 0 do  cars i car * +  -1 over lane-node !  the-town swap in-area !  loop ;
+\ ---- a scene's moves (src: the actor commands on a car: walk_to, move_forward, turn_to, idle - actor_update) ----
+: scene-moving? ( c -- flag )  dup going-to? @  over going-on? @ or  swap turning? @ or ;
+: forward-by ( c d -- )   \ along its heading
+    {: c d :}  c heading @ s>f 2e f* pi f* 4096e f/ {: F: a :}
+    c x @ s>f a fsin d s>f f* f+ f>s c x !  c z @ s>f a fcos d s>f f* f+ f>s c z ! ;
+: heading-to ( c x z -- h )   \ (its locals not named x, z: the fields')
+    {: c tx tz :}  tx c x @ - s>f  tz c z @ - s>f  fatan2 full-turn s>f f* 2e pi f* f/ f>s full-turn 1- and ;
+: turn-step-on ( c -- )   \ toward its goal by its step, the shortest way (0: at once)
+    {: c :}  c turn-goal @ c heading @ - full-turn 1- and {: d :}  d full-turn 2/ > if  d full-turn -  else  d  then {: dd :}
+    c turn-step @ 0=  dd abs c turn-step @ <= or if  c turn-goal @ c heading !  false c turning? ! exit  then
+    c heading @  dd 0< if  c turn-step @ -  else  c turn-step @ +  then  full-turn 1- and c heading ! ;
+: go-to-step ( c n -- )   \ facing its goal, a step on; there: stopped
+    {: c F: n :}  c c goal-x @ c goal-z @ heading-to c heading !
+    c goal-x @ c x @ - s>f fdup f*  c goal-z @ c z @ - s>f fdup f* f+ fsqrt {: F: left :}
+    c scene-speed @ s>f n f* {: F: d :}
+    left d f<= if  c goal-x @ c x !  c goal-z @ c z !  false c going-to? ! exit  then  c d f>s forward-by ;
+: scene-step ( c -- )
+    {: c :}  game-frames {: F: n :}
+    c turning? @ if  c turn-step-on  then
+    c going-to? @ if  c n go-to-step  then
+    c going-on? @ if  c  c scene-speed @ s>f n f* f>s  forward-by  then ;
+: step-car ( c slot -- )  over driving @ if  drive  else  drop scene-step  then ;
 : car-motions-step ( -- )  #cars 0 do  cars i car * + car-motion advance drop  loop ;
 : traffic-step ( -- )  #cars 0 do  cars i car * +  i first-car +  step-car  loop  car-motions-step ;
 PRIVATE>
@@ -208,7 +236,9 @@ create every-part  64 allot   every-part 64 1 fill
     c car-motion clip @ ?dup if  m swap c car-motion frame  c x @ c y @ c z @  s car-now nip nip nip  draw-figure exit  then
     c posed? if  s c pose-wheels  m  c x @  c y @  c z @  s car-now nip nip nip  every-part 64 draw-model-shown exit  then
     m  c x @  c y @  c z @  s car-now nip nip nip  draw-model ;
-: draw-cars ( -- )  area @ the-town = if  #cars 0 do  i first-car + draw-car  loop  then ;
+: draw-here ( slot -- )  dup car-of in-area @ area @ = if  draw-car  else  drop  then ;
+: draw-cars ( -- )   \ those in the area played (the town's, or one a scene put elsewhere)
+    area @ 0< if  exit  then  #cars 0 do  i first-car + draw-here  loop ;
 ' draw-cars on-draw
 PRIVATE>
 
@@ -226,6 +256,18 @@ behaviour traffic-runner
   on car-stop ( car -- )  car-of false swap driving ! ;
   on car-speed ( car speed -- )  swap car-of top-speed ! ;
   on car-switch ( car route -- )  route-of swap car-of switch-route ! ;
+  on car-put ( car x y z -- )   \ there, its heading kept (src: actor_set_pos on a car: a scene's)
+    {: n px py pz :}  n car-of {: c :}  false c driving !  true c shown !  px c x !  py c y !  pz c z ! ;
+  on car-heading ( car heading -- )  swap car-of {: h c :}  h full-turn 1- and c heading !  false c turning? ! ;
+  on car-turning ( car heading speed -- )
+    rot car-of {: h v c :}  h full-turn 1- and c turn-goal !  v c turn-step !  true c turning? !  false c driving ! ;
+  on car-walk ( car x z speed -- )
+    {: n gx gz v :}  n car-of {: c :}  gx c goal-x !  gz c goal-z !  v c scene-speed !  true c going-to? !
+    false c going-on? !  false c driving !  true c shown ! ;
+  on car-forward ( car speed -- )
+    swap car-of {: v c :}  v c scene-speed !  true c going-on? !  false c going-to? !  false c driving ! ;
+  on car-idle ( car -- )  car-of {: c :}  false c going-to? !  false c going-on? ! ;
+  on car-area ( car area -- )  swap car-of in-area ! ;
   on car-place ( car x y z heading -- )   \ (Matthew driving it: off its route, where he has it)
     {: n px py pz ph :}  n car-of {: c :}  false c driving !  false c carrying !  true c shown !  -1 c lane-node !
     px c x !  py c y !  pz c z !  ph c heading ! ;
