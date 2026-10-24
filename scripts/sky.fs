@@ -138,10 +138,12 @@ $2A7 constant east   $6A7 constant west
 
 \ where there's a sky (src: func_800204C8, and the town's own drawing): the cemetery, the forest but the cabin, the
 \ yard, the lake, the north shore outside, the park, the town
+9 constant lake-area   13 constant park-area   10 constant north-shore-area   0 constant outside-scene
 : sky-here? ( -- flag )
     area @ case
-        7 of  true  endof   9 of  true  endof   13 of  true  endof   27 of  true  endof
-        26 of  scene @ 7 <>  endof   8 of  scene @ 0=  endof   10 of  scene @ 0=  endof
+        cemetery-area of  true  endof   lake-area of  true  endof   park-area of  true  endof   the-town of  true  endof
+        forest-area of  scene @ forest-cabin-scene <>  endof
+        yard-area of  scene @ outside-scene =  endof   north-shore-area of  scene @ outside-scene =  endof
         false swap
     endcase ;
 : draw-sky ( -- )

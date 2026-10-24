@@ -416,11 +416,24 @@ defer door-sound ( kind -- )   \ op $176 (door-sounds.fs)
     over scheduled? if  the-townsfolk send person-goto-stop  else  2 act-unbuilt  then ;
 : set-stop ( a stop travelling -- )   \ cmd $43: their stop, not placed (-1: off their schedule, with Matthew)
     rot dup scheduled? if  -rot the-townsfolk send person-set-stop  else  -rot 3 act-unbuilt  then ;
+: xz-heading ( x y z heading -- x z heading )  {: x y z h :}  x z h ;
+: where-is ( a -- x z heading true | false )   \ anyone's place: Matthew, a person, a car
+    dup matthew = if  drop matthew-now xz-heading true exit  then
+    dup person? if  person-now xz-heading true exit  then
+    dup car? if  car-now xz-heading true exit  then
+    drop false ;
 : moving? ( a -- flag )
     dup matthew = if  drop matthew-walking? exit  then  dup car? if  car-moving? exit  then  walking? ;
-: wait-stop ( a -- )   \ $10D: until they stop walking (src: the VM's wait_move)
+\ the VM's wait_move gives up on one who stays put (blocked) for 75 of the original's frames all told
+75 constant stuck-frames
+: moved? ( a x z -- flag )  rot where-is 0= if  2drop false exit  then  drop {: x z nx nz :}  nx x <>  nz z <> or ;
+: here-now ( a -- x z )  where-is if  drop  else  0 0  then ;
+: wait-stop ( a -- )   \ $10D: until they stop walking, or have been stuck too long (src: the VM's wait_move)
     settle  dup matthew = over person? or  over car? or 0= if  drop exit  then
-    begin  yield  dup moving? 0= until  drop ;
+    {: a :}  a here-now {: x z :}  stuck-frames frames {: limit :}  0 {: stuck :}
+    begin  yield  a moving? 0= if  exit  then
+        a x z moved? 0= if  stuck 1+ to stuck  then  a here-now to z to x
+    stuck limit >= until ;
 : turned? ( a -- flag )
     dup matthew = if  drop matthew-turned? exit  then  dup car? if  car-turned? exit  then  person-turned? ;
 : wait-turned ( a -- )   \ op $112: until they face the way they turn to (src: the VM's wait_turn)
@@ -428,12 +441,6 @@ defer door-sound ( kind -- )   \ op $176 (door-sounds.fs)
     begin  yield  dup turned? until  drop ;
 
 \ ---- riding (docs/subsystems/traffic.md) ----
-: xz-heading ( x y z heading -- x z heading )  {: x y z h :}  x z h ;
-: where-is ( a -- x z heading true | false )   \ anyone's place: Matthew, a person, a car
-    dup matthew = if  drop matthew-now xz-heading true exit  then
-    dup person? if  person-now xz-heading true exit  then
-    dup car? if  car-now xz-heading true exit  then
-    drop false ;
 \ who stands in Matthew's way (src: player_probe_blocked, actor_overlaps_point: actors 26 - 60, the town's cars and
 \ props - within his radius and theirs, theirs halved to their sides)
 26 constant first-in-the-way   61 constant past-in-the-way
@@ -592,9 +599,9 @@ create resting-motions  68 , 72 , 161 , 167 ,   \ src: D_80080438 (and an area's
     dup person? if  the-townsfolk send person-hold exit  then
     1 act-unbuilt ;
 : anim-finished? ( a -- flag )  dup matthew = if  drop anim-done?  else  person-anim-done?  then ;
-: wait-anim ( a -- )   \ $103: until its motion has played (src: the VM's wait_anim)
-    settle  dup matthew = over person? or 0= if  drop exit  then
-    begin  yield  dup anim-finished? until  drop ;
+: wait-anim ( a -- )   \ $103: until its motion has played, or while they walk to a point (src: the VM's wait_anim:
+    settle  dup matthew = over person? or 0= if  drop exit  then          \ anim_done, or ACTOR_F_NAV)
+    begin  yield  dup anim-finished?  over moving? or until  drop ;
 
 \ ---- doors (docs/subsystems/doors.md) ----
 \ Matthew steps through a door from the room he is in (src: func_80045008: put at its spot on his side, turned,

@@ -26,4 +26,11 @@ T{ 0.001e seconds -> 1 }T
 T{ 0e seconds -> 0 }T
 T{ dt 30e f* 1e f- fabs 1e-9 f< -> true }T
 
+testing the models and motions loaded: no fixed count (more than 512 names asked for, each its own number)
+600 constant many
+: nth-name ( i -- addr len )  $clear  s" no-such/" $+  n>str $+  $@ ;
+: ask-motions ( -- n )  0  many 0 do  i nth-name motion drop  1+  loop ;
+: ask-models ( -- n )  0  many 0 do  i nth-name model drop  1+  loop ;
+T{ ask-motions  ask-models  0 nth-name motion  0 nth-name model -> many many 0 0 }T
+
 test-summary

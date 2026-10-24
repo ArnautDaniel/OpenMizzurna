@@ -146,7 +146,8 @@ create liz-walking  13 , 122 ,  14 , 124 ,  20 , 127 ,  21 , 129 ,  26 , 132 ,  
         20 s" notebook" actor-named send learn-bio exit  then
     ['] events.ovl016:entry-80104038 start-event ;
 : flag-30 ( -- )  1 $030 story! ;   \ 0x8010316C
-: liz-asked ( -- ) ;   \ 0x8010317C (src: func_8002D620, Liz at her place - its answer unused: nothing)
+0 constant lidds-first-place   \ (her place 0: src D_8001167C's first)
+: lidds-at-first-place? ( -- n )  lidds lidds-first-place at-record? 1 and ;   \ 0x8010317C (src: func_8002D620, its answer the script's)
 \ Winona and Robert to the day's stop, the 26th - 28th (src: evfn_80047B7C, D_80098E50 / D_80098E54)
 create winonas-day-stop  16 , 22 , 28 ,   create roberts-day-stop  6 , 8 , 12 ,
 : day-stop ( table -- stop )  clock-time time>day 26 - 0 max 2 min cells + @ ;
@@ -156,7 +157,7 @@ create winonas-day-stop  16 , 22 , 28 ,   create roberts-day-stop  6 , 8 , 12 ,
 this-area ovl $80102DF8 ' main-door native:   this-area ovl $80102EA8 ' a-book native:
 this-area ovl $80102F5C ' door-a native:   this-area ovl $80102FC0 ' door-b native:
 this-area ovl $80103024 ' the-archive native:   this-area ovl $8010316C ' flag-30 native:
-this-area ovl $8010317C ' liz-asked native:   this-area ovl $8010319C ' off-she-goes native:
+this-area ovl $8010317C ' lidds-at-first-place? native:   this-area ovl $8010319C ' off-she-goes native:
 ' events.ovl016:entry-80103704 11 minigame-script!   ' events.ovl016:entry-80103888 12 minigame-script!
 ' events.ovl016:entry-8010390C 16 minigame-script!
 

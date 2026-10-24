@@ -14,7 +14,7 @@ The player (src: `player.c`, `player_misc.c`): his body in the world, his figure
   frame in its motion (`figure-walk`; standing at the end), `walk-forward` straight on until `idle`
   (`figure-forward`, `figure-idle`); `turn-to`, `turn-by`, `face` turn him a speed a game frame, its sign the
   way (`figure-turning`; 0 at once). `wait-stop` / `wait-turned` wait on the facts `matthew-walking?` /
-  `matthew-turned?`. On a stool: `take-diner-seat` takes it (the townsfolk keep the stools), `sit-diner-seat`
+  `matthew-turned?` (a walk he's stuck on is given up after 75 game frames, as for everyone). On a stool: `take-diner-seat` takes it (the townsfolk keep the stools), `sit-diner-seat`
   puts him on it.
 - On a stool the pad isn't his: `figure-on-foot` (false) stops his walking (src: the pad's field mode; the
   counter: `docs/subsystems/counter.md`); the fact `matthew-on-foot?`.

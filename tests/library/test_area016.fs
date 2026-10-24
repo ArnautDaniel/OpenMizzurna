@@ -49,4 +49,9 @@ testing the halves: far (past the middle) shows object 2, near object 1
 T{ 26 12 0 at-time  in-the-library  $23668 100 + at-z  halves-shown -> 0 1 }T
 T{ $23668 100 - at-z  halves-shown -> 1 0 }T
 
+testing the script's question at $8010317C: whether Liz is at her first place, an answer of 0 or 1 (src: func_8002D620)
+: asked ( -- n )  this-area ovl $8010317C find-native execute ;
+T{ asked  dup 0=  swap 1 = or -> true }T
+T{ asked  lidds lidds-first-place at-record? 1 and = -> true }T
+
 test-summary

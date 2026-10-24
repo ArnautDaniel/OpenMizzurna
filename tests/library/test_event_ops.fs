@@ -49,4 +49,22 @@ T{ ' drop-it start-event  4 steps  the-gun townsfolk.private:held? -> false }T
 testing the elevator doors: nothing outside the hospital
 T{ 1 1 elevator-doors  unbuilt-ops @ -> unbuilt-ops @ }T
 
+testing a walk that gets him nowhere (at no speed: as if blocked) is given up on after 75 frames all told (src:
+\ the VM's wait_move)
+$55014 constant by-his-bed-x   $4638C constant by-his-bed-z   2000 constant a-way-on   0 constant no-speed
+: to-his-room ( -- )  1 0 by-his-bed-x by-his-bed-z 0 0 warp ;
+variable gave-up
+: nowhere ( -- )  matthew by-his-bed-x a-way-on + by-his-bed-z walk-motion no-speed walk-to-ex  matthew wait-stop
+    true gave-up ! ;
+T{ ' to-his-room start-event  60 steps  events-stop  false gave-up !  ' nowhere start-event  100 steps
+   gave-up @  matthew moving? -> false true }T
+T{ 60 steps  gave-up @  matthew-now drop nip drop -> true by-his-bed-x }T
+T{ events-stop -> }T
+testing waiting on his motion while he walks to a point doesn't wait (src: wait_anim: ACTOR_F_NAV)
+variable anim-waited
+: walking-wait ( -- )  matthew by-his-bed-x a-way-on + by-his-bed-z walk-motion no-speed walk-to-ex  matthew wait-anim
+    true anim-waited ! ;
+T{ false anim-waited !  ' walking-wait start-event  4 steps  anim-waited @ -> true }T
+T{ events-stop  s" matthew" actor-named send figure-idle  deliver -> }T
+
 test-summary

@@ -15,13 +15,35 @@
 #define PRIM(name) static void name(Forth *f, Word *w)
 #define POP() forth_pop(f)
 #define PUSH(x) forth_push(f, (Cell)(x))
-#define MAX_MODELS 512
-
-static struct {
+/* the models and motions loaded, numbered from 1; the tables grow as more are asked for (the library holds more
+ * than any fixed count: a long game reaches many of them) */
+typedef struct {
     char path[160];
     Model3D *m;
-} sModels[MAX_MODELS];
-static int sNModels;
+} ModelSlot;
+static ModelSlot *sModels;
+static int sNModels, sModelRoom;
+
+static int room_for(void **table, int *room, int need, size_t size) {   /* 0: out of memory */
+    void *grown;
+    int n;
+
+    if (need <= *room) {
+        return 1;
+    }
+    n = *room > 0 ? *room * 2 : 256;
+    while (n < need) {
+        n *= 2;
+    }
+    grown = realloc(*table, (size_t)n * size);
+    if (grown == NULL) {
+        return 0;
+    }
+    memset((char *)grown + (size_t)*room * size, 0, (size_t)(n - *room) * size);
+    *table = grown;
+    *room = n;
+    return 1;
+}
 
 PRIM(p_model) {   /* ( addr len -- model ) a model from the library (0: none there) */
     Cell len = POP();
@@ -38,8 +60,8 @@ PRIM(p_model) {   /* ( addr len -- model ) a model from the library (0: none the
     }
     for (i = 0; i < sNModels && sModels[i].path[0] != 0; i++) {   /* (a slot forgotten, or a new one) */
     }
-    if (i == MAX_MODELS) {
-        forth_error(f, "model: too many models");
+    if (!room_for((void **)&sModels, &sModelRoom, i + 1, sizeof(*sModels))) {
+        forth_error(f, "model: out of memory");
     }
     snprintf(sModels[i].path, sizeof(sModels[i].path), "%s", path);
     sModels[i].m = model3d_load(path);
@@ -128,14 +150,14 @@ PRIM(p_camera) {   /* ( x y z yaw dist eye-y look-y h -- ) the game's camera (sc
 
     scene3d_camera(target, (float)yaw, (float)dist, (float)eye_y, (float)look_y, (float)h);
 }
-#define MAX_MOTIONS 512
 #define MAX_PARTS 64
-static struct {
+typedef struct {
     char path[160];
     Motion m;
     int ok;
-} sMotions[MAX_MOTIONS];
-static int sNMotions;
+} MotionSlot;
+static MotionSlot *sMotions;
+static int sNMotions, sMotionRoom;
 
 PRIM(p_motion) {   /* ( addr len -- motion ) a character's motion from the library (its .motion.txt; 0: none) */
     Cell len = POP();
@@ -152,8 +174,8 @@ PRIM(p_motion) {   /* ( addr len -- motion ) a character's motion from the libra
             return;
         }
     }
-    if (sNMotions == MAX_MOTIONS) {
-        forth_error(f, "motion: too many motions");
+    if (!room_for((void **)&sMotions, &sMotionRoom, sNMotions + 1, sizeof(*sMotions))) {
+        forth_error(f, "motion: out of memory");
     }
     snprintf(sMotions[sNMotions].path, sizeof(sMotions[sNMotions].path), "%s", path);
     text = files_read(path, &n);
@@ -218,6 +240,7 @@ PRIM(p_draw_figure) {   /* ( model motion frame x y z yaw -- ) a figure posed in
 
     sTiltX = sTiltZ = 0;
     if (m < 1 || m > sNModels) {
+        scene3d_tag(-1);   /* (the tag was this figure's: no other draw takes it) */
         return;
     }
     if (mt == NULL || mt->frames <= 0) {

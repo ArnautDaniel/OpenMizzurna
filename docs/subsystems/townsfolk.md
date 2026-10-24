@@ -58,7 +58,9 @@ stepping-out motion ($3F / $40) and the thread waits for it.
 Everyone's motions play, seen or not: a route waits on them wherever its person is.
 `person-away` puts someone between stops, out of sight until their next (src: travelling = 1: the hospital's
 attack). Motions: `anim-once` ($05), `anim-then-loop` ($06), `anim-at` ($13) play one once then the next; a
-`wait-anim` ends when the first has played (src: actor_anim's next).
+`wait-anim` ends when the first has played, or at once while they walk to a point (src: actor_anim's next;
+the VM's wait_anim). `wait-stop` gives up on a walker who hasn't moved for 75 game frames all told (src: the
+VM's wait_move: blocked).
 Turning (src: actor_turn_by / _to_heading / _to_actor, actor_update's turn): `turn-to`, `turn-by` (degrees),
 `face` turn them a speed a game frame toward the heading, its sign the way (`person-turning`); `wait-turned`
 waits on `person-turned?`.
