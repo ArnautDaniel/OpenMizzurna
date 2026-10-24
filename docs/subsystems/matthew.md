@@ -67,6 +67,12 @@ of his lengths (0x78) ahead is undone, turn and all; motions 0x1006 moving, 0x10
 aims; seen again on entering an area. His perch 4: in the car (driving.md). A step that would put him on a solid
 billboard (a tree, a lamp post: `solid-billboard?`, src: player_update's billboard_blocked) is not taken.
 
+## Unstuck
+
+Standing where he can't be with control on foot - in a wall, or someone's place (a person on his floor within his
+radius and theirs, a car or prop of 26 - 60) - he's moved to the nearest free place, 25 at a time out to 475, x
+first on some frames, z on the others (src: cobj.c's unstick; `taken?`, events.fs). (`tests/library/test_blocking.fs`.)
+
 ## Elsewhere
 
 Looking and acting (look.md), doors (doors.md), the floors' walls, zones and heights (floors.fs), the car

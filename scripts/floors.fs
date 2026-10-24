@@ -75,6 +75,8 @@ defer solid-billboard? ( x z -- flag )   \ a solid billboard there (src: billboa
 :noname ( x z -- flag )  2drop false ; is solid-billboard?
 defer in-the-way? ( x z -- flag )   \ someone or a car standing there, in his way (src: player_probe_blocked: events.fs)
 :noname ( x z -- flag )  2drop false ; is in-the-way?
+defer taken? ( x z -- flag )   \ someone or something standing there at all (src: func_80041928: events.fs)
+:noname ( x z -- flag )  2drop false ; is taken?
 \ the police cordon (src: foot_road_block, car_road_block): two road tiles (column + row x 100) closed but in their
 \ zone 0 until the 28th 03:00
 100 constant tile-row-key   922 constant cordon-a   1022 constant cordon-b

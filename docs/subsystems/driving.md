@@ -49,11 +49,10 @@ Matthew driving his car (slot 26) in the town (src: ovl027 `car_update`, cevcon.
 
 ## Status
 
-Built (`tests/library/test_driving.fs`, the pumps `test_town_frame.fs`). To come:
-- other people and cars in the way;
-- the pad's rumble (its scrapes and crash sound, its engine held and pitched by the speed: sound.md);
-- a passenger getting in (`into-the-car-with`);
-- the car's lean and wheels (`func_80109430`);
-- unsticking it (`func_80106370`).
+Built (`tests/library/test_driving.fs`, the pumps `test_town_frame.fs`): with the scrapes' and crashes' rumble
+and sounds, the engine's tones, a passenger (in at the second seat, out with him), and unsticking (src:
+func_80106370: standing in a wall or someone's place - people and cars don't stop it otherwise - moving, or every
+32 frames, it goes to the nearest free spot 100 at a time out to 1400, x then z). To come: the car's lean into a
+turn and its wheels turning (`func_80109430`: the model's wheel parts).
 
 The boat is boat.md's.

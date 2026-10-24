@@ -11,8 +11,8 @@ USING: tester engine actors messages clock areas keys matthew townsfolk events w
 settled
 : press ( key -- )  dup true key-hold  2 steps  false key-hold  2 steps ;
 106 constant the-robber
-: in-the-hideout ( -- )
-    events-stop  28 0 s" areas" actor-named send enter-area  deliver
+: in-the-hideout ( -- )   \ (placed as a scene places them: he isn't the player's meanwhile)
+    events-stop  28 0 s" areas" actor-named send enter-area  deliver  false broadcast player-control  deliver
     1 s" matthew" actor-named send figure-floor  575529 0 221563 s" matthew" actor-named send figure-place
     the-robber 575529 250 - 0 221563 set-pos  deliver  2 steps ;
 : still-fight ( -- )  matthew 0 the-robber 1 fight ;   \ (the other the second pad's: it stands)

@@ -89,6 +89,20 @@ create zone-1-blocks  512 , 1317 , 1902 , 2008 ,   4 constant #zone-1-blocks
     x z h speed @ along {: nx nz :}  x z h speed @ 2/ along {: hx hz :}
     nx nz hits?  hx hz hits? or  nx nz road-blocked? or if  crashed  0e velocity f!  0 speed ! exit  then
     nx cx !  nz cz !  nx nz ground-under cy ! ;
+\ stuck: the car standing in someone's place or a wall, moving (or every 32 frames), goes to the nearest free spot
+\ 100 at a time out to 1400, along x then z (src: func_80106370, cobj.c's check of the car)
+100 constant unstick-step   1500 constant unstick-reach   10 constant moving-enough   32 constant check-every
+variable car-frames
+: car-stuck? ( x z -- flag )  2dup hits? if  2drop true exit  then  taken? ;
+: car-to ( x z -- moved? )  2dup car-stuck? if  2drop false exit  then  cz !  cx !  true ;
+: car-around ( d -- moved? )
+    {: d :}  cx @ cz @ {: x z :}
+    x d + z car-to if  true exit  then  x d - z car-to if  true exit  then
+    x z d + car-to if  true exit  then  x z d - car-to ;
+: unstick-car ( -- )
+    1 car-frames +!  speed @ abs moving-enough <  car-frames @ check-every mod 0<> and if  exit  then
+    cx @ cz @ car-stuck? 0= if  exit  then
+    unstick-reach unstick-step do  i car-around if  leave  then  unstick-step +loop ;
 : show-car ( -- )
     his-car cx @ cy @ cz @ ch @ 4095 and s" traffic" actor-named send car-place
     cx @ cy @ cz @ s" matthew" actor-named send figure-place  0 ch @ 4095 and 0 s" matthew" actor-named send figure-turn ;
@@ -108,7 +122,7 @@ create zone-1-blocks  512 , 1317 , 1902 , 2008 ,   4 constant #zone-1-blocks
     speed @ if  steer @ ch +!  then
     speed @ abs still-enough <=  pad-circle key-down? and  at-a-pump @ 0= and if   \ (at a pump ○ fills: the town's)
         free-door dup 0< if  drop  else  get-out exit  then  then
-    move-car  show-car
+    move-car  unstick-car  show-car
     speed @ abs key-per-speed / idle-key + s" sound" actor-named send engine-pitch ;
 : steps-due ( -- n )  due f@ motion-rate dt f* f+  fdup f>s  dup s>f f-  due f! ;
 : drive-tick ( -- )

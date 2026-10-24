@@ -184,9 +184,23 @@ variable crawl-shown
         x y z self body-area self body-floor body-place  h body-turn  crawl-still-motion crawl-shown !  then
     crawl-shown @ show ;
 
+\ standing where he can't be - in a wall, or someone's place - he's moved out: the nearest free place 25 at a
+\ time out to 475, along x first on some frames, z on the others (src: cobj.c's unstick, func_80042B8C)
+25 constant unstick-step   500 constant unstick-reach   8 constant x-first-frames
+: stuck? ( x z -- flag )  2dup open? 0= if  2drop true exit  then  taken? ;
+: try-there ( x z -- moved? )  2dup stuck? if  2drop false exit  then  step-to true ;
+: try-x ( x z d -- moved? )  {: x z d :}  x d + z try-there if  true exit  then  x d - z try-there ;
+: try-z ( x z d -- moved? )  {: x z d :}  x z d + try-there if  true exit  then  x z d - try-there ;
+: try-around ( x z d -- moved? )
+    {: x z d :}  ticks 2/ x-first-frames and if
+        x z d try-x if  true exit  then  x z d try-z
+    else  x z d try-z if  true exit  then  x z d try-x  then ;
+: unstick ( -- )
+    self body-pos 3f>s nip {: x z :}  x z stuck? 0= if  exit  then
+    unstick-reach unstick-step do  x z i try-around if  leave  then  unstick-step +loop ;
 : control ( -- )
     controlled @ 0= self body? 0= or  window-up? or  on-foot @ 0= or if  exit  then   \ (src: field_update: not while ui_busy)
-    steer pace stand walk ;
+    steer pace stand walk  unstick ;
 
 PRIVATE>
 

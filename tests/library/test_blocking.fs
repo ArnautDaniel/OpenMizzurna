@@ -13,6 +13,7 @@ prologue-done flag-set
 30 constant someone   300000 constant spot-x   300000 constant spot-z
 : put ( x z -- )  {: x z :}  someone x 0 z 0 s" traffic" actor-named send car-place  deliver ;
 : reach ( -- r )  matthew radius-of  someone radius-of + ;
+: apart-from ( x z x' z' -- d )  rot - s>f fdup f*  - s>f fdup f* f+ fsqrt f>s ;
 
 testing a car standing there is in his way; well away, not
 T{ 25 12 0 at-time  the-town 0 into  spot-x spot-z put  spot-x spot-z in-the-way?  spot-x 5000 + spot-z in-the-way? -> true false }T
@@ -33,6 +34,17 @@ T{ 26 12 0 at-time  17 13 tile-mid cordoned? -> false }T
 testing the car's road blocks: a front's tile blocks in its zone 0, elsewhere not
 T{ 3 2 tile-mid tile-key  17 13 tile-mid road-blocked? -> 203 false }T
 T{ 14 3 tile-mid road-blocked?  14 3 tile-mid car-zone 0= = -> true }T
+testing stuck in someone's place on foot (with control): moved out to the nearest free place
+: him-at ( x z -- )  {: x z :}  x 0 z s" matthew" actor-named send figure-place  deliver ;
+: spot-of ( slot -- x z )  person-now drop nip ;
+$55014 constant by-his-bed-x   $4638C constant by-his-bed-z   \ (his room's: where a new game wakes him)
+: to-his-room ( -- )  1 0 by-his-bed-x by-his-bed-z 0 0 warp ;
+T{ ' to-his-room start-event  60 steps  events-stop  true broadcast player-control  deliver  matthew-there? -> true }T
+$46 constant a-person
+: put-them-on-him ( -- x z )   \ where he stands (free), someone else too
+    matthew-now drop nip {: x z :}  a-person x 0 z s" townsfolk" actor-named send extra-place  deliver  x z ;
+T{ put-them-on-him  2dup taken?  -rot  4 steps  matthew-now drop nip  apart-from  matthew radius-of a-person radius-of + >=
+   -> true true }T
 T{ 1 0 into -> }T
 
 test-summary

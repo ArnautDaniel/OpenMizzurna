@@ -20,8 +20,18 @@ T{ 0 into  0 -1 -1 4 first-prompt  0 -1 -1 0 first-prompt -> 7 -1 }T
 testing the areas with a table: the station's, not the warehouse's
 T{ 0 has-prompts?  5 has-prompts? -> true false }T
 testing with control, by the station's cabinet: something to do with ○ (none without control)
+1024 constant toward-the-cabinet   \ (its zone's centre is in a wall: he stands just off it, facing it)
+: in-zone? ( x z index -- flag )  {: x z k :}  x z 1 zone-hit drop k = ;
+: fits? ( x z index -- flag )  {: x z k :}  x z k in-zone?  x z 1 blocked? 0= and ;
+: free-in-zone ( index -- x z )   \ a point of that zone (floor 1) not in a wall: out from its centre
+    {: k :}  k 0 0 1 zone-centre {: cx cz :}
+    1000 25 do
+        cx i + cz k fits? if  cx i + cz unloop exit  then   cx i - cz k fits? if  cx i - cz unloop exit  then
+        cx cz i + k fits? if  cx cz i + unloop exit  then   cx cz i - k fits? if  cx cz i - unloop exit  then
+    25 +loop  cx cz ;
 T{ events-stop  true broadcast player-control  deliver
-   3 0 0 1 zone-centre 0 swap s" matthew" actor-named send figure-place  deliver  2 steps  look-prompt @ 0< 0= -> true }T
+   3 free-in-zone 0 swap s" matthew" actor-named send figure-place  0 toward-the-cabinet 0 s" matthew" actor-named send figure-turn
+   deliver  2 steps  look-prompt @ 0< 0= -> true }T
 T{ false broadcast player-control  deliver  2 steps  look-prompt @  act-prompt @ -> -1 -1 }T
 testing the ring's: ○ reads whenever there's an item; □ with no one to show it to, none
 T{ true broadcast player-control  deliver  pad-triangle tap  ring-up?  ring-look-prompt @  ring-act-prompt @ -> true 3 -1 }T

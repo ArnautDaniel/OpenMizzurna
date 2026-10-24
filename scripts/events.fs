@@ -437,6 +437,22 @@ $1A1 constant side-from   $4BF constant side-span   $9A0 constant other-side-fro
 : anyone-in-the-way? ( x z -- flag )
     {: x z :}  past-in-the-way first-in-the-way do  x z i one-in-the-way? if  true unloop exit  then  loop  false ;
 ' anyone-in-the-way? is in-the-way?
+\ and taken at all (src: func_80041928): those, or a person here on his floor within his radius and theirs - in
+\ his car its own place left out (the car is what stands there)
+26 constant his-own-car   182 constant #actors
+: person-there? ( x z slot -- flag )
+    {: x z s :}  s person? 0= if  false exit  then  s here? 0= if  false exit  then
+    s person-of on-floor @ floor @ <> if  false exit  then
+    s person-now drop nip {: bx bz :}
+    x bx - s>f fdup f*  z bz - s>f fdup f* f+ fsqrt f>s  matthew radius-of s radius-of + < ;
+: taken-at? ( x z -- flag )
+    {: x z :}
+    first-in-the-way 1 do  x z i person-there? if  true unloop exit  then  loop
+    past-in-the-way first-in-the-way do
+        i his-own-car =  matthew-perch perch-in-car = and 0= if
+            x z i one-in-the-way? if  true unloop exit  then  then  loop
+    #actors past-in-the-way do  x z i person-there? if  true unloop exit  then  loop  false ;
+' taken-at? is taken?
 : turn-by ( a degrees speed -- )   \ cmd $09: from the way they face (src: actor_turn_by)
     {: a d v :}  a where-is 0= if  exit  then  nip nip {: h :}
     a  h d figures:degrees>heading +  figures:full-circle 1- and  v turn-figure ;
