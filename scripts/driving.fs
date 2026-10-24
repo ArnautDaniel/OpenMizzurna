@@ -103,16 +103,23 @@ variable car-frames
     1 car-frames +!  speed @ abs moving-enough <  car-frames @ check-every mod 0<> and if  exit  then
     cx @ cz @ car-stuck? 0= if  exit  then
     unstick-reach unstick-step do  i car-around if  leave  then  unstick-step +loop ;
+\ the car's pose as he drives (src: func_80109430): leaning into the turn (its roll less the steer), the wheels on
+\ by half the speed a frame, the front turned ten times the steer (the other way backing)
+10 constant wheel-turn
+: pose-car ( -- )
+    his-car  speed @ 2/  steer @ wheel-turn *  speed @ 0< if  negate  then  steer @ negate
+    s" traffic" actor-named send car-pose ;
 : show-car ( -- )
     his-car cx @ cy @ cz @ ch @ 4095 and s" traffic" actor-named send car-place
-    cx @ cy @ cz @ s" matthew" actor-named send figure-place  0 ch @ 4095 and 0 s" matthew" actor-named send figure-turn ;
+    cx @ cy @ cz @ s" matthew" actor-named send figure-place  0 ch @ 4095 and 0 s" matthew" actor-named send figure-turn
+    pose-car ;
 
 \ ---- out (src: car_exit, car_can_exit: the seats' points around it) ----
 : door ( i -- x z )  seat {: sd fw :}  cx @ cz @ ch @ 4095 and sd fw beside ;
 : free-door ( -- i | -1 )  -1  #seats 0 do  i door wall? 0= if  drop i leave  then  loop ;
 : get-out ( i -- )
     door {: x z :}  false s" camera" actor-named send camera-driving
-    false at-the-wheel !  0e velocity f!  0 speed !  0 steer !
+    false at-the-wheel !  0e velocity f!  0 speed !  0 steer !  pose-car   \ (the front straight, upright)
     x 0 z s" matthew" actor-named send figure-place  0 ch @ 4095 and 0 s" matthew" actor-named send figure-turn
     true s" matthew" actor-named send figure-shown  true s" matthew" actor-named send figure-on-foot
     0 s" matthew" actor-named send figure-perch  0 -1 true s" matthew" actor-named send figure-anim

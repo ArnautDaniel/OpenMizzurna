@@ -52,7 +52,9 @@ Matthew driving his car (slot 26) in the town (src: ovl027 `car_update`, cevcon.
 Built (`tests/library/test_driving.fs`, the pumps `test_town_frame.fs`): with the scrapes' and crashes' rumble
 and sounds, the engine's tones, a passenger (in at the second seat, out with him), and unsticking (src:
 func_80106370: standing in a wall or someone's place - people and cars don't stop it otherwise - moving, or every
-32 frames, it goes to the nearest free spot 100 at a time out to 1400, x then z). To come: the car's lean into a
-turn and its wheels turning (`func_80109430`: the model's wheel parts).
+32 frames, it goes to the nearest free spot 100 at a time out to 1400, x then z), and its pose (src:
+func_80109430, func_8001A2F4: it leans against the steer; its wheels - the model's parts 3 - 6, 1 - 4 on the
+smaller cars - turn on by half the speed a frame, the front two turned ten times the steer, the other way
+backing; traffic's `car-pose`, `car-wheels-now`).
 
 The boat is boat.md's.

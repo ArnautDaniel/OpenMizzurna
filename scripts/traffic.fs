@@ -62,6 +62,7 @@ begin-structure car
   field: switch-route   \ another route it turns onto at that route's first node (0: none; src: loop_node, cmd 0x37)
   field: x   field: y   field: z   field: heading   \ where it is
   playing +field car-motion   \ a motion of its own (the bike's: shaken, falling - src: actor_anim on it)
+  field: wheels-spun   field: wheels-steer   field: car-lean   \ as he drives it (src: func_8001A2F4)
 end-structure
 create cars  #cars car * allot
 : car-of ( slot -- c )  first-car - car * cars + ;
@@ -71,7 +72,8 @@ PRIVATE>
 : car-driving? ( slot -- flag )  car-of driving @ 0<> ;
 : car-carrying? ( slot -- flag )  car-of carrying @ 0<> ;
 : car-shown? ( slot -- flag )  car-of shown @ 0<> ;
-: car-motion-now ( slot -- id )  car-of car-motion anim @ ;   \ (a fact: its own motion playing; 0 / -1 none)
+: car-motion-now ( slot -- id )  car-of car-motion anim @ ;
+: car-wheels-now ( slot -- spun steer lean )  car-of {: c :}  c wheels-spun @  c wheels-steer @  c car-lean @ ;   \ (a fact: its own motion playing; 0 / -1 none)
 
 <PRIVATE
 5 constant speed-ease          \ a frame, toward its top speed
@@ -190,10 +192,21 @@ create car-models  #cars cells allot   car-models #cars cells erase
 : car-model ( slot -- model )   \ its kind's model, loaded when first drawn
     dup first-car - cells car-models + {: s at :}
     at @ 0= if  s kind-model model at !  then  at @ ;
-: draw-car ( slot -- )   \ (posed while a motion of its own is on)
+\ the wheels (src: func_8001A2F4: cars 26 and 27 their objects 3 - 6, the others 1 - 4; the first two the front's)
+26 constant first-big   27 constant second-big   3 constant big-wheels   1 constant small-wheels
+create every-part  64 allot   every-part 64 1 fill
+: first-wheel ( slot -- object )  dup first-big =  swap second-big = or if  big-wheels  else  small-wheels  then ;
+: pose-wheels ( slot c -- )
+    {: s c :}  s first-wheel {: w :}  c wheels-spun @ 4095 and {: spin :}
+    w 0 0 0 spin c wheels-steer @ 0 pose-object   w 1+ 0 0 0 spin c wheels-steer @ 0 pose-object
+    w 2 + 0 0 0 spin 0 0 pose-object   w 3 + 0 0 0 spin 0 0 pose-object
+    0 0 0 0 0 0 c car-lean @ pose-object ;
+: posed? ( c -- flag )  dup wheels-spun @ 0<>  over wheels-steer @ 0<> or  swap car-lean @ 0<> or ;
+: draw-car ( slot -- )   \ (posed while a motion of its own is on; his, its wheels as he drives it)
     dup car-of {: s c :}  c shown @ 0= if  exit  then
     s car-model ?dup 0= if  exit  then  {: m :}
     c car-motion clip @ ?dup if  m swap c car-motion frame  c x @ c y @ c z @  s car-now nip nip nip  draw-figure exit  then
+    c posed? if  s c pose-wheels  m  c x @  c y @  c z @  s car-now nip nip nip  every-part 64 draw-model-shown exit  then
     m  c x @  c y @  c z @  s car-now nip nip nip  draw-model ;
 : draw-cars ( -- )  area @ the-town = if  #cars 0 do  i first-car + draw-car  loop  then ;
 ' draw-cars on-draw
@@ -203,6 +216,8 @@ state: traffic-state end-state
 behaviour traffic-runner
   on spawned ( -- )  traffic-reset  self subscribe tick ;
   on tick ( -- )  ui-busy? 0= if  traffic-step  then ;   \ (src: carline.c: none while ui_busy)
+  on car-pose ( car spin steer lean -- )
+    {: n d st ln :}  n car-of {: c :}  d c wheels-spun +!  st c wheels-steer !  ln c car-lean ! ;
   on car-anim ( car id next -- )  rot car-of car-motion {: id nx p :}  id nx false p play ;
   on car-park ( car route -- )  swap car-of {: n c :}  false c driving !  false c carrying !  c n 0 start ;
   on car-hide ( car -- )  car-of {: c :}  false c driving !  false c carrying !  false c shown !  0 c x !  0 c z ! ;

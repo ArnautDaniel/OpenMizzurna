@@ -136,6 +136,7 @@ message person-through-door ( slot door room flip stage -- )   \ out of that doo
                                           \ stage: the area they're shown in (-1: the room's own)
 message person-attach ( slot route speed -- )   \ get in their car: it drives that route, they ride (src: cmd 0x2C)
 message person-get-in ( slot -- )         \ climb into their car (src: cmd 0x42)
+message car-pose ( car spin steer lean -- ) \ (to the traffic) as he drives it: the wheels on by spin, the front turned by steer, it leans (src: func_80109430)
 message car-anim ( car id next -- )      \ (to the traffic) a motion of its own, then the next held (-1: its last frame; id -1: none)
 message town-door-swing ( slot -- )       \ (to the town) a door's town side swings: its animation slot (src: func_8001A190)
 message person-passenger ( slot car seat -- ) \ (to the townsfolk) in that car, to get out by that seat (src: car_enter_with_passenger)

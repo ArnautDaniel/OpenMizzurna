@@ -36,6 +36,10 @@ testing steering: right turns it while it moves (from its place again)
     car-heading ch !  car-x cx !  car-z cz !  0e velocity f!  0 steer ! ;
 : steer-right ( n -- )  pad-cross true key-hold  pad-right true key-hold  steps  pad-cross false key-hold  pad-right false key-hold ;
 T{ in-again  his-car car-now nip nip nip  10 steer-right  his-car car-now nip nip nip = -> false }T
+testing its pose as he steers: the front wheels turned ten times the steer, leaning against it, the wheels on
+: pose-follows? ( -- turned? leans? spun? )
+    his-car car-wheels-now {: spun turned lean :}  turned steer @ 10 * =  lean steer @ negate =  spun 0<> ;
+T{ pose-follows? -> true true true }T
 testing □: it slows to a standstill
 T{ pad-square 120 press-for  20 steps  speed @ abs 9 <= -> true }T
 testing ○ near still: out at a door, seen, on his feet
