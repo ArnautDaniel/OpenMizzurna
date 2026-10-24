@@ -39,7 +39,7 @@ $90624 constant caretaker-x   $64F0 negate constant caretaker-y   $206BA constan
     club-come-here-often-seen flag? 0= and if
         church-repentant-thugs-seen flag-set  ['] events.ovl024:entry-80104878 start-event  exit  then
     missing-now? if
-        church-winona-missing-seen flag-toggle  ['] events.ovl024:entry-80104C6C start-event
+        church-winona-missing-seen flag-toggle  ['] events.ovl024:entry-80104C6C start-event  event-lock
         the-caretaker 0 0 0 set-pos  father-barton 0 0 0 set-pos  1 locked-in !  then ;
 \ scene 0's two object sets: from the 25th 14:00 the later one (src: load_area's, kept while here; func_80103820)
 $14 constant before-set   $15 constant later-set
@@ -175,8 +175,8 @@ create for-the-lost-lines  1 , 228 ,  12 , 228 ,  23 , 228 ,  34 , 228 ,  45 , 2
 : to-the-basement ( -- )   \ 0x80103674
     barton-gone story@ if  ['] events.ovl024:entry-801061C8  else  ['] events.ovl024:entry-80104580  then  start-event ;
 : the-old-story-heard ( -- )  heard-the-old-story flag-toggle ;   \ 0x801036D4
-: barton-gone! ( -- )   \ 0x80103708
-    father-barton barton-gone-stop goto-stop  1 barton-gone story! ;
+: barton-gone! ( -- )   \ 0x80103708 (the world goes on)
+    father-barton barton-gone-stop goto-stop  event-unlock  1 barton-gone story! ;
 : off-the-crate ( -- )  the-crate crate-cancel ;   \ 0x80103740
 : into-the-nave ( -- )   \ 0x80103760: shut late, and around the meeting
     clock-time time>hour 22 >=  25 12 54 13 59 between? or if  ['] events.ovl024:entry-80105F5C  else  ['] events.ovl024:entry-80105F18  then

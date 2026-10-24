@@ -74,8 +74,8 @@ remembered the next visit); the morning hunt - his walk away on an even minute a
 far, running, lingering: his words), his signs (○), each leg's deadline, the run back to the cabin with the bear
 after him; the cabin door, the shell box (○ then □); closing time, the ways in and out (zones), the waterfall
 meeting at its time; the last evening's way chosen on arriving and its places; the shoot-out in the cabin
-(`shootout.md`); the last scenes end in the endings' movies (title.md), the ambience is sound.md's. (The events'
-lock is the area's own for now.)
+(`shootout.md`); the last scenes end in the endings' movies (title.md), the ambience is sound.md's; the events'
+lock held from the hideout's last evening, the hunt's mauling and the lake path, until the bear's shot.
 Area 28's (`scripts/rules/area028.fs`, the hideout cabin; `tests/library/test_area028.fs`): the closed door (□: a
 first knock, then the later ones), the call its scene makes.
 Area 24's (`scripts/rules/area024.fs`, the church; `tests/library/test_area024.fs`): the crate (its place by the
@@ -93,8 +93,8 @@ Area 19's (`scripts/rules/area019.fs`, the apartment building - 31 and 32 its gr
 doors (○: the keyhole when it's time, or in when open; □: knocking at two), the mailboxes, the duct cover's
 lines, the duct itself (the crawl, minigame 41: the pad drives him), the way out of the far room (the chase,
 minigame 22, out to the town), two rooms shown by the zones he walks into, a room's two sets of things by the
-story, who says what, two talk hooks; the stalker in the town after the chase (minigame 24, rules/area027.fs).
-(The events' lock is the area's own for now.)
+story, who says what, two talk hooks; the stalker in the town after the chase (minigame 24, rules/area027.fs); the
+events' lock (the clock held) from her room seen or the duct crawled, until the mistake's scene or leaving.
 Area 17's (`scripts/rules/area017.fs`, the school's main building; `tests/library/test_area017.fs`): with a
 companion along (off her schedule) she leads the way up on her own thread - Matthew stays the player's - and waits
 at the locker; ○ there opens it (items taken and given), the desk after it, the way out not without her, closing

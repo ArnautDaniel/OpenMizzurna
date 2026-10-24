@@ -19,7 +19,7 @@ $71B16 constant landing-x   $7129C constant landing-z   240 constant landing-rea
 : each-frame ( -- )   \ src: func_80102014
     the-crate crate-step
     inside-begun flag?  landing-done flag? 0= and  near-the-landing? and if
-        landing-done flag-toggle  32 minigame  then ;   \ (src: and event_unlock - the lock: to come)
+        landing-done flag-toggle  32 minigame  event-unlock  then ;
 
 \ ---- the crate: ○ takes hold, □ climbs (src: the crate's handler, cmd 0x31 / 0x32: this area's push and climb) ----
 : push-it ( slot -- true )  drop the-crate crate-push  true ;
@@ -29,7 +29,7 @@ $71B16 constant landing-x   $7129C constant landing-z   240 constant landing-rea
 \ ---- the C its rows and events call ----
 : the-cabin-window ( -- )   \ 0x80101FA0: once its time has come, the scene inside (minigame 31); else a peep
     inside-begun flag? 0=  cabin-known flag? and if
-        inside-begun flag-set  the-crate crate-cancel  31 minigame exit  then   \ (src: and event_lock)
+        inside-begun flag-set  event-lock  the-crate crate-cancel  31 minigame exit  then
     ['] events.ovl010:entry-801026E8 start-event ;
 : off-the-crate ( -- )  the-crate crate-cancel ;   \ 0x801024AC
 this-area ovl $80101FA0 ' the-cabin-window native:   this-area ovl $801024AC ' off-the-crate native:

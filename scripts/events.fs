@@ -82,7 +82,17 @@ variable picture-thread   -1 picture-thread !   \ the event that showed the big 
 : start-route ( xt actor -- )   \ src: event_thread_start on the actor's own thread: Matthew stays the player's
     dup end-route  #event-threads #threads free-thread {: xt a i :}
     i 0< abort" no free route thread"  xt a i begin-thread ;
-: events-reset ( -- )  #event-threads 0 do  0 i thread-task slot !  loop  0 events-running !  false control-given ! ;
+\ the events' lock (src: event_lock / event_unlock, a count): while it's on the clock stands - and with it the
+\ townsfolk's minutes - a scene keeping the world as it is (hiding, a rescue, the last evening)
+variable event-locks
+: event-locked? ( -- flag )  event-locks @ 0> ;
+: event-lock ( -- )  1 event-locks +!  events-locked s" clock" actor-named send hold-clock ;
+: event-unlock ( -- )
+    event-locks @ 0> if  -1 event-locks +!  then
+    event-locked? 0= if  events-locked s" clock" actor-named send release-clock  then ;
+: events-reset ( -- )   \ (src: events_reset: the lock off too)
+    #event-threads 0 do  0 i thread-task slot !  loop  0 events-running !  false control-given !
+    event-locks @ if  0 event-locks !  events-locked s" clock" actor-named send release-clock  then ;
 : events-stop ( -- )   \ every running event ended now (a tool: the console, tests); the routes go on
     #event-threads 0 do  i thread-task slot @ ?dup if  forth:kill  then  loop
     events-reset  no-control release  true broadcast player-control ;

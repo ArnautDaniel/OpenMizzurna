@@ -1,5 +1,5 @@
 \ the last of the events' ops on the game's data (scripts/events.fs): the prompt (□'s and ○'s icons beside the
-\ box until one is pressed: ○ 1, □ 0); the hospital's elevator doors (four of its objects' motions, in its
+\ box until one is pressed: ○ 1, □ 0); the events' lock (the clock held); the hospital's elevator doors (four of its objects' motions, in its
 \ content areas only); a talk's gestures (a motion and what follows; none sitting but the seated ones; Barbara
 \ her own); a labourer off along their stop's route; Matthew through a door
 USING: tester engine actors messages clock areas keys matthew townsfolk events story-flags ;
@@ -35,6 +35,11 @@ T{ 1 into  events-stop  false walked !  ' through start-event  2 steps  walked @
 T{ 300 steps  walked @ -> true }T
 T{ events-stop  deliver -> }T
 
+testing the events' lock: the clock stands while it's on, counted; reset with the events
+: lock-held? ( -- flag )  1 events-locked lshift clock-holds @ and 0<> ;   \ (its own reason, among the others)
+T{ events-stop  deliver  event-lock  deliver  event-locked?  lock-held? -> true true }T
+T{ event-lock  event-unlock  deliver  event-locked?  event-unlock  deliver  event-locked?  lock-held? -> true false false }T
+T{ event-lock  deliver  events-stop  deliver  event-locked?  lock-held? -> false false }T
 testing the elevator doors: nothing outside the hospital
 T{ 1 1 elevator-doors  unbuilt-ops @ -> unbuilt-ops @ }T
 

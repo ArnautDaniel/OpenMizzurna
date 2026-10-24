@@ -31,7 +31,7 @@ $1D4 constant meeting-day   $1D8 constant meeting-hour   $1DC constant meeting-m
 : before? ( day h m -- flag )  date>time clock-time > ;
 
 \ ---- this visit (src: the overlay's locals D_80107860 ..) ----
-variable exits-locked      \ src: event_lock (the last evening: no way out)
+variable exits-locked      \ src: event_lock's places (the last evening: no way out; the events' lock with it)
 variable deeper            \ src: D_80107880: past the path in (region 15)
 variable closing-done      \ src: D_80107868
 variable evening-placed    \ src: D_80107890
@@ -104,7 +104,7 @@ create bear-stride  gait allot   5518 bear-stride gait-motion !
 $DBD5 constant marker-x   $659DB constant marker-z   $C08 constant marker-heading
 : routes ( -- )   \ the last evening, once the hideout's found: the exits locked, the way it goes
     entered-wolf-hideout flag?  final-evening? and 0= if  exit  then
-    1 exits-locked !
+    1 exits-locked !  event-lock
     bad-ending-route flag?  31 23 30 before? 0= or if  exit  then
     visited-james-house story@ 0=  church-james-scene-seen story@ 0= or  got-bear-necklace flag? 0= or if
         bad-ending-route flag-toggle  ['] events.ovl026:entry-80106E54 start-event  the-deputy 0 0 0 set-pos  then
@@ -255,7 +255,7 @@ $8842 constant cabin-gun-x   $63A23 constant cabin-gun-z
         the-walks-end of
             -1 walk-end-wait +!  cohen apart reached-him <  walk-end-wait @ 0= or if
                 ['] events.ovl026:entry-8010640C hunt-scene  mauled hunt !  then  endof
-        mauled of  hunt-done? if  the-run hunt !  1 exits-locked !  then  endof
+        mauled of  hunt-done? if  the-run hunt !  1 exits-locked !  event-lock  then  endof
         the-run of  run-for-it  endof
         way-blocked of  hunt-done? if  the-run hunt !  then  endof
         the-late-run of  the-bear-chases
@@ -285,7 +285,7 @@ $3E25 constant waterfall-x   $677CC constant waterfall-z   $708 constant waterfa
 : the-ways ( -- )   \ the zones he walks into: out, the path in, back
     at-zone nip case
         the-way-out of  exits-locked @ if  no-way-out  else  ['] events.ovl026:entry-80106324 start-event  then  endof
-        the-path-in of  deeper @ 0= if  1 deeper !  final-evening? if  1 exits-locked !  then  then  endof
+        the-path-in of  deeper @ 0= if  1 deeper !  final-evening? if  1 exits-locked !  event-lock  then  then  endof
         the-path-back of  deeper @ if  final-evening? if  no-way-out  else  0 deeper !  then  then  endof
     endcase ;
 : meeting-time? ( -- flag )   \ from the time it was set for, the hour after
@@ -445,7 +445,7 @@ $1599 constant gun-up   90 constant bear-health   3 constant a-hit   18 constant
 30 constant third-swipe   0 constant bear-pool   9 constant after-the-bear-stop
 create the-shootout  3 plan-bytes allot   the-shootout 3 plan-bytes erase
 : bear-shot ( -- )   \ src: func_801043AC: the hunters to the cabin
-    0 exits-locked !  hunt-thread @ kill-event  after-the-shootout hunt !
+    0 exits-locked !  event-unlock  hunt-thread @ kill-event  after-the-shootout hunt !
     ['] events.ovl026:entry-801064C4 start-event
     cohen after-the-bear-stop goto-stop  nozz after-the-bear-stop goto-stop  bear-down flag-toggle ;
 : plan! ( -- )

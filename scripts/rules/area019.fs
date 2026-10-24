@@ -58,11 +58,11 @@ enum: look-action  nothing-here  the-keyhole  the-mistake  3 unused-3  4 unused-
     endcase ;
 : the-mistake-scene ( -- )   \ 0x80102744
     photo-talk-done @ 0= if  exit  then
-    isabella-mistake-scene-seen flag-toggle  ['] events.ovl019:entry-80104DC8 start-event ;
+    isabella-mistake-scene-seen flag-toggle  ['] events.ovl019:entry-80104DC8 start-event  event-unlock ;
 : look-do ( action -- )
     case
         the-keyhole of
-            isabellas-room-seen flag-toggle  ['] events.ovl019:entry-80103D1C start-event  1 by-the-keyhole !  endof
+            isabellas-room-seen flag-toggle  ['] events.ovl019:entry-80103D1C start-event  event-lock  1 by-the-keyhole !  endof
         the-mistake of  the-mistake-scene  endof
         read-the-mailboxes of
             mailbox-read @ if  ['] events.ovl019:entry-80106460  else  1 mailbox-read !  ['] events.ovl019:entry-80106428  then
@@ -137,7 +137,7 @@ $138 negate constant crawl-look-y   $38C negate constant crawl-dist   $208 negat
     isabella shut-in-record at-record? 0= or  wolf wolf-away-record at-record? or if
         ['] events.ovl019:entry-801037A4 start-event exit  then
     the-lighter has-item? 0= if  ['] events.ovl019:entry-8010369C start-event exit  then
-    crawled-air-duct flag-toggle  the-crate crate-cancel  ['] events.ovl019:entry-801036FC start-event ;
+    crawled-air-duct flag-toggle  the-crate crate-cancel  ['] events.ovl019:entry-801036FC start-event  event-lock ;
 create cover-scenes  ' events.ovl019:entry-801037D0 , ' events.ovl019:entry-801037E4 , ' events.ovl019:entry-801037F8 ,
 2 constant last-cover-line
 : the-cover ( -- )   \ 0x80102888: three lines, the last again
@@ -145,7 +145,7 @@ create cover-scenes  ' events.ovl019:entry-801037D0 , ' events.ovl019:entry-8010
     cover-lines @ last-cover-line < if  1 cover-lines +!  then ;
 : out-of-her-room ( -- )   \ 0x80102934: open; or in by the duct: out, and the chase; or locked
     her-room-open flag? if  ['] events.ovl019:entry-80106110 start-event exit  then
-    by-the-keyhole @ 0= if  isabella-room-locked-in flag-toggle  ['] events.ovl019:entry-80103804 start-event exit  then
+    by-the-keyhole @ 0= if  isabella-room-locked-in flag-toggle  event-unlock  ['] events.ovl019:entry-80103804 start-event exit  then
     ['] events.ovl019:entry-80103834 start-event ;
 $4AEF4 constant left-x   $4B0 negate constant left-y   $4AA04 constant left-z   181 constant what-was-left
 : the-far-room ( -- )   \ 0x80102A04: once, after the crawl

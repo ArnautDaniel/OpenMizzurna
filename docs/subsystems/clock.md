@@ -68,5 +68,7 @@ hour and the town's street lamps (src: `func_800234B4`, `func_800243F0`) - weath
 ## Status
 
 **Built** (`scripts/clock.fs`): the time words, the actor, its messages. Checked by
-`tests/clock/test_clock.fs`. Nothing holds or releases it yet but the story's stop (the subsystems that do are
-to come).
+`tests/clock/test_clock.fs`. What holds it (`clock-hold`): the story stopped (before the prologue ends), an event
+running, Matthew not the player's, a screen up (the ring, the notebook, the map), a text shown, the phone up, the
+events' lock (src: event_lock: hiding, a rescue, the last evening - events.fs's `event-lock` / `event-unlock`, a
+count).

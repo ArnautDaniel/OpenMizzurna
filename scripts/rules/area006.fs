@@ -36,8 +36,8 @@ variable must-hide   variable warned
 : take-diary ( slot -- true )
     park  ['] events.ovl006:entry-801022CC start-event  diary-item give  got-emmas-diary flag-set  true ;
 27 constant the-27th   20 constant still-out   \ (before the 27th, his stop before 20: out on the road)
-: someone-coming ( -- )   \ 0x80102124: before the 27th he'll be coming: hide (src: and event_lock - to come)
-    clock-time time>day the-27th < if  1 must-hide +!  then ;
+: someone-coming ( -- )   \ 0x80102124: before the 27th he'll be coming: hide, the world held
+    clock-time time>day the-27th < if  1 must-hide +!  event-lock  then ;
 : take-note ( slot -- true )
     park
     clock-time time>day the-27th <  mel person-of at-stop @ still-out < and if  ['] events.ovl006:entry-80102418
@@ -52,8 +52,8 @@ variable must-hide   variable warned
 : the-closet ( -- )   \ 0x80102164: a place to hide when it's needed
     must-hide @ if  0 must-hide !  ['] events.ovl006:entry-80102618  else  ['] events.ovl006:entry-801022AC  then
     start-event ;
-: the-way-out ( -- )   \ 0x801021A8: not with someone coming
-    must-hide @ if  ['] events.ovl006:entry-8010230C  else  ['] events.ovl006:entry-801025C8  then  start-event ;
+: the-way-out ( -- )   \ 0x801021A8: not with someone coming (out: the world goes on)
+    must-hide @ if  ['] events.ovl006:entry-8010230C  else  event-unlock  ['] events.ovl006:entry-801025C8  then  start-event ;
 this-area ovl $80102094 ' closet-doors-open native:   this-area ovl $801020DC ' closet-doors-shut native:
 this-area ovl $80102164 ' the-closet native:   this-area ovl $801021A8 ' the-way-out native:
 
