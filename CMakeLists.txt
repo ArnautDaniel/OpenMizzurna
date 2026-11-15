@@ -90,7 +90,9 @@ foreach(t ${GAME_TESTS})
     get_filename_component(name "${t}" NAME_WE)
     if(NOT sub STREQUAL "vocabs" AND NOT sub STREQUAL "library")
         add_test(NAME ${sub}_${name} COMMAND openmizzurna --test "${t}")
-        set_tests_properties(${sub}_${name} PROPERTIES ENVIRONMENT "SDL_AUDIO_DRIVER=dummy")
+        # (a home of their own with no library: the game's data, imported beside the build to play, mustn't change them)
+        set_tests_properties(${sub}_${name} PROPERTIES
+            ENVIRONMENT "SDL_AUDIO_DRIVER=dummy;OM_HOME=${CMAKE_BINARY_DIR}/test-no-library")
     endif()
 endforeach()
 

@@ -19,6 +19,9 @@ are built, each listed here.
 | `ticks` | `-- n` | simulation steps since start (for tools; game logic uses real time) |
 | `dt` | `F: -- seconds` | a step's length (1/30 by default) |
 | `seconds` | `F: s -- steps` | real time as steps, for `wait` (`0.5e seconds wait`); at least one for any time |
+| `heading-toward` | `dx dz -- heading` | the way of (dx, dz) in the original's angles (4096 a turn, 0 .. 4095; src: ratan2) |
+| `step-along` | `x z heading dist -- x' z'` | dist along a heading: x by its sine, z by its cosine, each cut toward 0 (src: actor_step) |
+| `distance-to` | `x z x' z' -- dist` | how far apart two points are across the ground, whole units cut toward 0 (src: actor_dist_to_point) |
 | `step-blend` | `F: -- 0..1` | how far the display is between the last step and the next (drawing only) |
 | `on-draw`, `off-draw` | `xt --` | run a word every frame to draw 2D |
 | `pen-color`, `pen-scale` | `rgba --`, `n --` | colour (0xRRGGBBAA) and text size for the drawing words |
@@ -68,6 +71,7 @@ are built, each listed here.
 | `bank-load` ... `audio-record` | | the sound's words: docs/subsystems/sound.md |
 | `draw-ground-quad` | `image x y z half grey blend --` | a picture lying flat in the world, centred there |
 | `part-on-screen` | `model motion frame x y z yaw part -- px py true \| false` | where a part of the posed figure falls in the window, with this frame's camera |
+| `part-at` | `model motion frame part -- x y z true \| false` | where a part of the figure posed so (motion 0: at rest) stands from the model's origin (world units, y down, unturned) |
 | `n>str` / `$clear $+ $@` | `n -- addr len` / ... | a number's digits; a string built a piece at a time (prelude) |
 | `exe-u8` / `exe-s8` / `exe-s16` / `exe-s32` | `addr len i -- n` | element i of a table of the executable (0 past its end or with none) |
 | `library-file` | `addr len -- addr n` | a library file's bytes (read once, kept - as many as are asked for); `0 0` if none |

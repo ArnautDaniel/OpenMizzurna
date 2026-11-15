@@ -33,4 +33,7 @@ testing the models and motions loaded: no fixed count (more than 512 names asked
 : ask-models ( -- n )  0  many 0 do  i nth-name model drop  1+  loop ;
 T{ ask-motions  ask-models  0 nth-name motion  0 nth-name model -> many many 0 0 }T
 
+testing distance-to: across the ground, whole units cut toward 0 (src: actor_dist_to_point)
+T{ 0 0 3 4 distance-to  10 10 7 6 distance-to  0 0 1 1 distance-to -> 5 5 1 }T
+
 test-summary

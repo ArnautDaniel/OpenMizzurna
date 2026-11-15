@@ -229,6 +229,31 @@ PRIM(p_seconds) {   /* ( F: seconds -- steps ) as whole steps, at least one for 
 }
 PRIM(p_step_blend) { forth_fpush(f, gEngine.step_blend); }   /* ( F: -- 0..1 ) (drawing) */
 
+/* ---- the original's angles: 4096 a turn, a heading's x along its sine and z along its cosine (src: rsin, rcos,
+ * ratan2) - the sums the scripts did by hand ---- */
+#define FULL_TURN 4096
+PRIM(p_heading_toward) {   /* ( dx dz -- heading ) the way of (dx, dz), 0 .. 4095 (src: ratan2(dx, dz)) */
+    Cell dz = POP(), dx = POP();
+    double a = atan2((double)dx, (double)dz) * FULL_TURN / (2.0 * M_PI);
+
+    PUSH((Cell)a & (FULL_TURN - 1));
+}
+PRIM(p_step_along) {   /* ( x z heading dist -- x' z' ) dist that way from (x, z), each part cut toward 0 (src:
+                        * actor_step: x += dist * rsin(h) / 4096) */
+    Cell d = POP(), h = POP(), z = POP(), x = POP();
+    double a = (double)h * 2.0 * M_PI / FULL_TURN;
+
+    PUSH(x + (Cell)(sin(a) * (double)d));
+    PUSH(z + (Cell)(cos(a) * (double)d));
+}
+PRIM(p_distance_to) {   /* ( x z x' z' -- dist ) how far apart across the ground, whole units cut toward 0 (src:
+                        * actor_dist_to_point's SquareRoot0 of dx^2 + dz^2) */
+    Cell z2 = POP(), x2 = POP(), z = POP(), x = POP();
+    double dx = (double)(x2 - x), dz = (double)(z2 - z);
+
+    PUSH((Cell)sqrt(dx * dx + dz * dz));
+}
+
 /* ---- 2D (inside an on-draw hook), in window pixels ---- */
 PRIM(p_pen_color) { gEngine.pen = (uint32_t)POP(); }   /* ( rgba -- ) */
 PRIM(p_pen_scale) { gEngine.pen_scale = (int)POP(); }   /* ( n -- ) */
@@ -546,6 +571,9 @@ void bind_engine(Forth *f) {
             w->flags |= WORD_IMMEDIATE;   /* (a key name compiled as a number) */
         }
     }
+    forth_set_effect(f, forth_prim(f, "heading-toward", p_heading_toward), "( dx dz -- heading )");
+    forth_set_effect(f, forth_prim(f, "step-along", p_step_along), "( x z heading dist -- x' z' )");
+    forth_set_effect(f, forth_prim(f, "distance-to", p_distance_to), "( x z x' z' -- dist )");
     bind_text(f);   /* (the text and fonts: text.c) */
     bind_scene(f);  /* (the 3D: bind_scene.c) */
     bind_roads(f);  /* (the roads: roads.c) */
