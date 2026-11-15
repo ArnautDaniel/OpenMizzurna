@@ -29,7 +29,7 @@ T{ events-stop  this-area 0 s" areas" actor-named send enter-area  deliver  2 st
    43 minigame  4 steps  minigame-running?  0 picker# picked @ -> true 0 }T
 T{ pad-up tap  pad-up tap  pad2-down tap  0 picker# picked @  1 picker# picked @ -> 2 35 }T
 T{ pad-circle tap  pad2-circle tap  0 picker# chosen @ 0<>  1 picker# chosen @ 0<> -> true true }T
-T{ 60 steps  fighting? -> true }T
+T{ 90 steps  fighting? -> true }T   \ (21 game frames settled, at 15 a second, then the scene)
 testing enough: it's over
 T{ vs-over  events-stop  minigame-running? -> false }T
 

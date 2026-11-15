@@ -212,16 +212,19 @@ $98 constant road-block-officer   $62 constant protester-2   $60 constant by-the
 : away ( slot -- )  0 0 0 s" townsfolk" actor-named send extra-place ;
 $008 22 story-bit constant lorraine-free   $018 14 story-bit constant lorraine-back
 : lorraine-at-work ( -- )  lorraine-out $5839F -4082 $430B8 $F18 stand ;
+variable road-block-up   \ (the officer and the protester at the road block)
+variable thugs-placed    \ (Father Barton's thugs outside the club)
+variable onlookers-out   \ (the onlookers by the Roland residence)
 : people-about ( -- )
     by-the-church-gate $561DA -4082 $3E3B0 0 stand   by-the-lake $73337 0 $6539A -952 stand
     by-the-diner $58417 -4082 $42CF8 $3D4 stand
     0 14 0 17 59 between?  lorraine-free flag?  lorraine-back flag? 0= and or if  lorraine-at-work  else  lorraine-out away  then
-    27 23 59 reached? 0= if
+    27 23 59 reached? 0= dup road-block-up ! if
         road-block-officer $6BA5E -4138 $36613 $DAC stand   protester-2 $6C535 -4414 $37117 $F50 stand
         protester-2 $58 -1 true s" townsfolk" actor-named send person-anim  then
     clock-time time>hour 9 20 within if  by-the-store $59256 -80 $1F136 -2964 stand  else  by-the-store away  then ;
 : entered-town ( -- )
-    people-about  entered  false stalking !  the-stalker end-route
+    0 thugs-placed !  0 onlookers-out !  people-about  entered  false stalking !  the-stalker end-route
     stalker-due @ if  0 stalker-due !  24 minigame  then ;
 
 \ ---- every frame (src: ovl027_func_801044E0) ----
@@ -232,10 +235,10 @@ variable last-minute   -1 last-minute !
     0 18 0 18 0 between? if  lorraine-out away  then ;
 $020 16 story-bit constant emma-missing-a   $020 17 story-bit constant emma-missing-b
 $1A26B constant emmas-x   $D0C2 constant emmas-z   $1C21 constant emmas-reach
-: distance-to ( x z -- d )  matthew-now drop nip {: x z mx mz :}  mx x - s>f fdup f*  mz z - s>f fdup f* f+ fsqrt f>s ;
+: from-him ( x z -- d )  matthew-now drop nip distance-to ;   \ (how far he is from the point)
 : where-is-emma ( -- )   \ src: too far from her house while she's missing: back, and his line
     emma-missing-a flag?  emma-missing-b flag? 0= and 0= if  exit  then
-    emmas-x emmas-z distance-to emmas-reach < if  exit  then
+    emmas-x emmas-z from-him emmas-reach < if  exit  then
     matthew-was s" matthew" actor-named send figure-place  ['] entry-8010A9BC start-event ;   \ (src: player_restore_pos)
 \ the gas pumps (src: driving: not full, nearly still, facing along, inside one of the two pumps' boxes)
 110 constant tank-full-enough   $15 constant fill-prompt
@@ -258,7 +261,7 @@ $01C 11 story-bit constant robbery-outside-seen   $01C 10 story-bit constant rob
 : robbery-outside ( -- )
     27 11 30 12 30 between? 0= if  exit  then
     robbery-outside-seen flag?  robbery-inside-seen flag? or if  exit  then
-    diner-x diner-z distance-to diner-reach < 0= if  exit  then
+    diner-x diner-z from-him diner-reach < 0= if  exit  then
     robbery-outside-seen flag-set  ['] entry-8010A7C4 start-event ;
 \ the walk-in tiles (src: the tile he's on, the zone he's in) and Winona's drop-offs at the gas station
 100 constant tile-row-key
@@ -284,9 +287,41 @@ $010 13 story-bit constant library-talk-done   $010 21 story-bit constant ride-h
     k gas-station-tile =  z 1 = and if  winona-dropped exit  then
     k cemetery-tile =  z 0= and if  cemetery-gate open? if  ['] entry-8010A9C8 start-event  then  exit  then
     k forest-tile =  z 0= and if  forest-path open? if  ['] entry-8010AA20 start-event  then  then ;
-: town-frame ( -- )
-    lorraine-hours
-    ui-busy? if  exit  then
+\ Father Barton and the thugs outside Club Wolves: his night come (+0x18 bit 9), their scene not yet (bit 11), him
+\ standing by the club within sight: the three placed there; Matthew close by on foot: the scene
+$018 9 story-bit constant thugs-night   $018 11 story-bit constant thugs-scene-seen
+$72137 constant club-front-x   $479C3 constant club-front-z   $71122 constant club-corner-x   $47127 constant club-corner-z
+$4268 constant in-sight   $4B0 constant thugs-close   136 constant first-thug   137 constant second-thug
+: barton-by-the-club? ( -- flag )   \ src: func_8002B84C
+    father-barton club-corner-x club-corner-z stands-at?  father-barton club-front-x club-front-z stands-at? or ;
+: thug ( slot x z heading motion -- )
+    {: s x z h m :}  s x 0 z h stand  s m -1 true s" townsfolk" actor-named send person-anim ;
+: the-thugs ( -- )
+    thugs-night flag? 0=  thugs-scene-seen flag? or  father-barton travelling? or if  exit  then
+    club-front-x club-front-z from-him {: d :}  d in-sight < 0= if  exit  then
+    barton-by-the-club?  thugs-placed @ 0= and if
+        1 thugs-placed !
+        father-barton club-front-x 0 club-front-z set-pos  father-barton 0 $C4E 0 set-rot  father-barton $56 1 anim
+        first-thug $72051 $47C25 $AF0 negate $52 thug   second-thug $71FCF $479AF $38E $58 thug  then
+    father-barton club-front-x club-front-z stands-at?  driving? 0= and  d thugs-close < and if
+        thugs-scene-seen flag-set  ['] entry-8010BBBC start-event  then ;
+: thugs-gone ( -- )   \ him gone from the club: the two with him
+    thugs-placed @  in-control? and  barton-by-the-club? 0= and if
+        first-thug away  second-thug away  0 thugs-placed !  then ;
+\ the onlookers by the Roland residence, the 26th 14:35 - 16:34, within sight of it
+$2B5D5 constant rolands-x   $66126 constant rolands-z   129 constant onlooker-1   126 constant onlooker-2   130 constant onlooker-3
+: the-onlookers ( -- )
+    26 14 35 16 34 between? {: now :}
+    now  onlookers-out @ 0= and  rolands-x rolands-z from-him in-sight < and if
+        1 onlookers-out !
+        onlooker-1 $2A6F5 $65BBA $230 $16 thug  onlooker-2 $2A3D5 $65BA6 $1EA $52 thug  onlooker-3 $2A30D $65D04 $258 $58 thug
+        exit  then
+    onlookers-out @  now 0= and if  onlooker-1 away  onlooker-2 away  onlooker-3 away  0 onlookers-out !  then ;
+: road-block-lifted ( -- )   \ on the 28th the road block goes
+    road-block-up @  28 0 0 reached? and if  road-block-officer away  protester-2 away  0 road-block-up !  then ;
+: town-frame ( -- )   \ (src: Lorraine's hours, the club, the onlookers and the road block whoever has the pad; the
+    lorraine-hours  the-thugs  thugs-gone  the-onlookers  road-block-lifted   \ rest with Matthew the player's)
+    in-control? 0= if  exit  then
     where-is-emma
     driving? if  pumps-check exit  then
     false s" driving" actor-named send car-at-pump

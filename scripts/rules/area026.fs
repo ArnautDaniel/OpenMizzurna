@@ -22,9 +22,9 @@ $09C 2 story-bit constant ritual-known          \ (src: +0x9C bit 2)
 $1D4 constant meeting-day   $1D8 constant meeting-hour   $1DC constant meeting-minute   \ (the minute: a byte)
 
 : matthew-near? ( x z d -- flag )   \ within d of the point
-    {: x z d :}  matthew-now drop nip {: mx mz :}  mx x - s>f fdup f*  mz z - s>f fdup f* f+ fsqrt  d s>f f< ;
+    {: x z d :}  matthew-now drop nip  x z distance-to  d < ;
 : apart ( slot -- d )   \ from Matthew
-    person-now drop nip {: x z :}  matthew-now drop nip {: mx mz :}  mx x - s>f fdup f*  mz z - s>f fdup f* f+ fsqrt f>s ;
+    person-now drop nip  matthew-now drop nip  distance-to ;
 : back ( -- )  matthew-was s" matthew" actor-named send figure-place ;   \ src: player_restore_pos
 : final-evening? ( -- flag )   \ 12/31 from 20:00
     clock-time  31 20 0 date>time >= ;
@@ -208,7 +208,7 @@ variable cohen-striding
     x 0= if   \ a motion of his
         cohen-stop  cohen z  z crouch-motion = if  crouched-motion  else  -1  then  false anim-then
         hunt @ resume-at !  waiting-motion hunt !  1 route-point +!  exit  then
-    cohen person-now drop nip  z - s>f fdup f*  x - s>f fdup f* f+ fsqrt  point-near s>f f< 0= if  true keep-up exit  then
+    cohen person-now drop nip  x z distance-to  point-near < 0= if  true keep-up exit  then
     1 route-point +!
     route-point @ case
         first-leg-end of  cohen-stop  at-the-first-stop hunt !  ['] events.ovl026:entry-801063CC hunt-scene  0 hurried !  1 leg !  endof
@@ -281,11 +281,12 @@ $3E25 constant waterfall-x   $677CC constant waterfall-z   $708 constant waterfa
     then
     tree-x tree-z tree-near matthew-near? if  at-the-tree  then ;
 : no-way-out ( -- )  back  ['] events.ovl026:entry-80106304 start-event ;
-: the-ways ( -- )   \ the zones he walks into: out, the path in, back
+: the-ways ( -- out? )   \ the zones he walks into: out (the frame's last word), the path in, back
     at-zone nip case
-        the-way-out of  exits-locked @ if  no-way-out  else  ['] events.ovl026:entry-80106324 start-event  then  endof
-        the-path-in of  deeper @ 0= if  1 deeper !  final-evening? if  1 exits-locked !  event-lock  then  then  endof
-        the-path-back of  deeper @ if  final-evening? if  no-way-out  else  0 deeper !  then  then  endof
+        the-way-out of  exits-locked @ if  no-way-out  else  ['] events.ovl026:entry-80106324 start-event  then  true  endof
+        the-path-in of  deeper @ 0= if  1 deeper !  final-evening? if  1 exits-locked !  event-lock  then  then  false  endof
+        the-path-back of  deeper @ if  final-evening? if  no-way-out  else  0 deeper !  then  then  false  endof
+        false swap
     endcase ;
 : meeting-time? ( -- flag )   \ from the time it was set for, the hour after
     meeting-day story@  meeting-hour story@  meeting-minute story-c@  meeting-hour story@ 1+  meeting-minute story-c@ between? ;
@@ -299,10 +300,11 @@ $3E25 constant waterfall-x   $677CC constant waterfall-z   $708 constant waterfa
     exits-locked @ 0=  closing-done @ 0= and  deeper @ and  31 20 0 20 29 between? and if
         1 closing-done !  ['] events.ovl026:entry-80106294 start-event  0 deeper !  then
     evening-placed @ 0=  final-evening? and if  1 evening-placed !  place-deputy  then
+    in-control? 0= if  deadline hunt-step exit  then   \ (src: the hunt whoever has the pad; the rest his)
     final-evening? if  the-last-evening  then
-    events-running @ if  exit  then
-    the-ways  events-running @ if  exit  then
-    the-meeting  deadline  hunt-step ;
+    in-control? if  the-ways if  exit  then  then
+    in-control? if  the-meeting  then
+    deadline  hunt-step ;
 
 \ ---- ○ (0x801031C0 / 0x80103524) ----
 1 constant the-tracks-zone   5 constant the-trunk-zone

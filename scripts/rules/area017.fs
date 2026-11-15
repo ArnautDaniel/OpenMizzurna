@@ -40,7 +40,7 @@ $5C47F constant far-east-x   $58FD3 constant far-west-x
     x far-west-x <= if  far-west-wing exit  then
     far-middle ;
 : closing ( -- )
-    closing-done @  leading? or  0 17 59 22 59 between? 0= or if  exit  then
+    in-control? 0=  closing-done @ or  leading? or  0 17 59 22 59 between? 0= or if  exit  then   \ (src: Matthew the player's)
     scene @ {: sc :}
     sc the-classroom = if  ['] events.ovl017:entry-801038C8
     else  sc 3 u< 0= if  exit  then  sc cells closing-floors + @  wing cells + @  then

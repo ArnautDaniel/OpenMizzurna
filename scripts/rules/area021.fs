@@ -107,11 +107,11 @@ $50179 constant near-morgans-x   $42125 constant near-morgans-z   22 constant mo
 : by-morgan? ( -- flag )   \ Matthew past the table Morgan sits at
     matthew-now drop nip {: x z :}  x near-morgans-x >  z near-morgans-z > and ;
 : robbery ( xt -- )   \ src: robbery: he and Morgan off their stools
-    diner-robbery-seen flag-toggle  counter-off
+    diner-robbery-seen flag-toggle  at-the-counter? if  counter-off  then
     morgan seated? if  morgan s" townsfolk" actor-named send seat-leave  then  start-event ;
 : each-frame ( -- )   \ src: func_801036B0: the counter, then func_80103C64's times
-    menu-up? if  exit  then
-    diner-counter counter-step  events-running @ if  exit  then
+    menu-up?  in-control? 0= or if  exit  then   \ (src: all with Matthew the player's)
+    diner-counter counter-step  in-control? 0= if  exit  then
     closing-done @ 0=  closing? and if  1 closing-done !  ['] events.ovl021:entry-80104D4C start-event exit  then
     diner-robbery-seen flag? if  exit  then
     scene @ the-back <>  27 11 30 11 59 between? and if  ['] events.ovl021:entry-80106DF0 robbery exit  then

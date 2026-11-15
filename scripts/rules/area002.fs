@@ -135,6 +135,7 @@ $19942 constant exit-x   $56C66 constant exit-z   $7E4 negate constant exit-head
     matthew-xz {: x z :}  x $18A87 > if  ['] events.ovl002:entry-80104CB8 exit  then
     z $56D2C > if  ['] events.ovl002:entry-80104C68  else  ['] events.ovl002:entry-80104C90  then ;
 : closing ( -- )   \ 21:55 - 22:59 here (19:55 upstairs): shown out, by room
+    in-control? 0= if  exit  then   \ (src: each with Matthew the player's)
     here-area this-area =  closing-done @ 0= and  0 21 55 22 59 between? and if
         1 closing-done !
         scene @ case
@@ -163,16 +164,17 @@ $19942 constant exit-x   $56C66 constant exit-z   $7E4 negate constant exit-head
     hospital-barbara-intro-seen flag? and  barbara-invited flag? 0= and if
         barbara-invited flag-set  ['] events.ovl002:entry-801077E8 start-event exit  then
     guard-wounded-due?  floor @ 2 = and if
-        x $18D4D - dup *  z $5612C - dup * + s>f fsqrt f>s 400 < if
+        x z $18D4D $5612C distance-to 400 < if
             hospital-wounded-guard-seen flag-toggle  ['] events.ovl002:entry-80105358 start-event  then
     then ;
-: timed ( -- )  closing  events-running @ if  exit  then  on-the-way ;
+: timed ( -- )  closing  in-control? 0= if  exit  then  on-the-way ;
 $18B5F constant hall-x0   $18EFB constant hall-x1   $56D91 constant hall-z0   $570CA constant hall-z1
 : in-the-hall? ( -- flag )   \ floor 1, the walk off where Morgan waits (the prologue)
     matthew-xz {: x z :}  floor @ 1 =  x hall-x0 > and  x hall-x1 < and  z hall-z0 > and  z hall-z1 < and ;
 : each-frame ( -- )
     attacked? if   \ after the attack the way out is shut; he stays
         zone dup 0< 0= swap dup 2 < swap the-exit = or and if  back exit  then  timed exit  then
+    in-control? 0= if  timed exit  then   \ (src: the ways out with Matthew the player's)
     may-leave? if
         zone case
             left-doors of  left-doors open-doors  endof

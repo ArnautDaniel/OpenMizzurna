@@ -53,8 +53,8 @@ variable half-shown   -1 half-shown !
     scene @ 0<> if  exit  then
     matthew-now drop nip nip $23668 > {: far? :}  far? half-shown @ = if  exit  then  far? half-shown !
     2 far? s" areas" actor-named send object-shown  1 far? 0= s" areas" actor-named send object-shown ;
-: each-frame ( -- )
-    the-crate crate-step  halves  closing
+: each-frame ( -- )   \ (src: the crate and the halves always; closing and the teacher with Matthew the player's)
+    the-crate crate-step  halves  in-control? 0= if  exit  then  closing
     teacher-here @ 0=  14 4 at-minute? and if  ['] events.ovl016:entry-80103B88 start-event  1 teacher-here ! exit  then
     teacher-here @  18 1 at-minute? and if  ['] events.ovl016:entry-80103B98 start-event  0 teacher-here !  then ;
 

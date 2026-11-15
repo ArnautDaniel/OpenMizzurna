@@ -116,16 +116,16 @@ variable closed-up   variable shouted
     open-till-hour open-till-minute between? ;
 : by-the-stairs? ( -- flag )
     matthew-now drop nip {: x z :}  shout-x0 x <  x shout-x1 < and  shout-z0 z < and  z shout-z1 < and ;
-: each-frame ( -- )
-    at-zone nip the-front-door = if
+: each-frame ( -- )   \ (src: the door and the closing with Matthew the player's; the line and the shout always)
+    in-control?  at-zone nip the-front-door = and if
         prologue-done flag? if  ['] events.ovl001:entry-80103D0C start-event exit  then  held-back  then
     prologue-done flag? 0=  matthew-now drop nip nip prologue-line-z <= and if  held-back  then
-    closed-up @ 0=  scene @ matthews-room = and  closing-time? and if
+    in-control?  closed-up @ 0= and  scene @ matthews-room = and  closing-time? and if
         1 closed-up !  ['] events.ovl001:entry-801038A4 start-event exit  then
     prologue-done flag? 0=  shouted @ 0= and  by-the-stairs? and if
         1 shouted !  ['] events.ovl001:entry-80104438 start-event  then ;
-: entered ( -- )   \ src: map_reveal(13) and the area's first-time counters; its two props placed (the figures)
-    13 map-reveal  forget-firsts  0 cigarettes-asked !  0 lighter-seen !  0 closed-up !  0 shouted ! ;
+: entered ( -- )   \ src: map_reveal(13) and the area's first-time counters (the cigarettes asked about and the
+    13 map-reveal  forget-firsts  0 closed-up !  0 shouted ! ;   \ lighter seen stay); its two props placed (the figures)
 : scene-hook ( scene -- )   \ Morgan's morning visit before the prologue ends; after it, once, Dr. James's
     matthews-room <> if  exit  then
     prologue-done flag? 0= if  ['] events.ovl001:entry-80104514 start-event exit  then
@@ -138,24 +138,39 @@ create nozz-standing   \ Nozz at a stop: its line (src: D_80103DFC)
   0 , 168 ,  2 , 169 ,  4 , 170 ,  9 , 171 ,  10 , 173 ,  11 , 175 ,  15 , 176 ,  18 , 177 ,  19 , 179 ,  20 , 181 ,
   23 , 182 ,  24 , 184 ,  25 , 186 ,  28 , 187 ,  29 , 189 ,  30 , 191 ,  32 , 192 ,  33 , 194 ,  34 , 196 ,
   36 , 197 ,  37 , 199 ,  38 , 201 ,  -1 ,
-create nozz-leaving    \ and leaving it (src: D_80103E58)
+create nozz-leaving    \ and walking from it (src: D_80103E58)
   9 , 172 ,  10 , 174 ,  18 , 178 ,  19 , 180 ,  23 , 183 ,  24 , 185 ,  28 , 188 ,  29 , 190 ,  32 , 193 ,  33 , 195 ,
   36 , 198 ,  37 , 200 ,  -1 ,
-: nozz-talks ( -- handled? )   \ (until the routes, Nozz is never between stops: his standing lines)
-    nozz-standing nozz stop-of a-line-by-stop  dup 0< if  drop false exit  then
-    nozz 7 one-liner  true ;
-: talks-here ( slot -- handled? )
+: their-stop ( slot -- stop )  person-of at-stop @ ;   \ (walking: the one they left)
+: nozz-talks ( -- handled? )
+    nozz travelling? if  nozz-leaving  else  nozz-standing  then  nozz their-stop a-line-by-stop
+    dup 0< if  drop false exit  then  nozz 7 one-liner  true ;
+create person-80-lines  1 , 244 ,  5 , 244 ,  9 , 244 ,  13 , 244 ,  -1 ,                       \ src: D_80103E8C
+create person-81-lines  6 , 245 ,  17 , 245 ,  28 , 245 ,  39 , 245 ,  50 , 245 ,  61 , 245 ,  72 , 245 ,  -1 ,   \ D_80103EA0
+create winona-lines  8 , $CA ,  25 , $CB ,  31 , $CC ,  37 , $CD ,  -1 ,
+$50 constant person-80   $51 constant person-81
+: line-at ( slot stop msg gesture -- handled? )   \ their line, standing at that stop
+    {: s st msg g :}  s st standing-at? 0= if  false exit  then  msg s g one-liner  true ;
+: line-by-stop ( table slot gesture -- handled? )   \ standing: their stop's line, if the table has one
+    {: t s g :}  s travelling? if  false exit  then  t s their-stop a-line-by-stop
+    dup 0< if  drop false exit  then  s g one-liner  true ;
+: talks-here ( slot -- handled? )   \ src: func_80102D60
     case
         nozz of  nozz-talks  endof
-        ( Morgan, James, Winona, Lidds, the townspeople 80 and 81, Isabella: their lines by their stops - with them )
+        james of  james $40 $CE 1 line-at  endof
+        winona of  winona-lines winona 7 line-by-stop  endof
+        lidds of  lidds $29 $CF 7 line-at  endof
+        person-80 of  person-80-lines person-80 0 line-by-stop  endof
+        person-81 of  person-81-lines person-81 0 line-by-stop  endof
+        isabella of  isabella $21 $D0 1 line-at  endof
         false swap
     endcase ;
 ' talks-here this-area area-talk!
 
 \ ---- the C its events call (ovl001's evfn_*) ----
+: evening? ( -- flag )  0 17 30 23 59 between?  0 0 0 7 0 between? or ;   \ (17:30 - 7:00)
 : nozz-greets ( -- )   \ 0x80103204: by the time of day
-    clock-time time>hour dup 17 >= swap 7 < or if  ['] events.ovl001:entry-80103D38  else  ['] events.ovl001:entry-80105090  then
-    start-event ;
+    evening? if  ['] events.ovl001:entry-80103D38  else  ['] events.ovl001:entry-80105090  then  start-event ;
 : room-or-shop ( -- )  prologue-done flag? if  ['] events.ovl001:entry-801050CC  else  ['] events.ovl001:entry-80105A50  then
     start-event ;   \ 0x80103328
 : prologue-done? ( -- n )  prologue-done flag? 1 and ;   \ 0x801032B0 (its answer the result)

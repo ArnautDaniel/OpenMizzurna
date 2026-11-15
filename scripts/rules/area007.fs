@@ -38,9 +38,9 @@ variable lit-for-day   2 lit-for-day !   \ (2: not yet - neither day nor night)
     day-lights? dup lit-for-day @ = if  drop exit  then  dup lit-for-day !  {: day? :}
     1 day? s" areas" actor-named send object-shown  2 day? 0= s" areas" actor-named send object-shown ;
 : each-frame ( -- )
-    lighting
     visitor-there?  clock-time time>hour 20 = and if  grave-visitor park  then
-    at-zone drop outside-the-grounds = if  ['] events.ovl007:entry-80102844 start-event exit  then
+    in-control?  at-zone drop outside-the-grounds = and if   \ (src: with Matthew the player's; the scenes always)
+        ['] events.ovl007:entry-80102844 start-event exit  then
     kathy-funeral-seen flag? 0=  clock-time 26 9 30 date>time = and if
         kathy-funeral-seen flag-set  bio-21  ['] events.ovl007:entry-801027D8 start-event exit  then
     cemetery-mel-meeting-overheard flag? 0=  mel $F stop-is? and if
@@ -91,3 +91,4 @@ this-area ovl $801026C8 ' mel-with-his-car native:   this-area ovl $801026EC ' m
 
 this-area ' entered ' scene-hook area-hooks!
 this-area ' each-frame area-frame!
+this-area ' lighting area-every-frame!   \ (src: func_80102700 before drawing - an arrival's scene lit too)

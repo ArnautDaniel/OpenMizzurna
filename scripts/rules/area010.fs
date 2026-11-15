@@ -15,7 +15,7 @@ $71B16 constant landing-x   $7129C constant landing-z   240 constant landing-rea
 : entered ( -- )  19 map-reveal  the-crate forget-crate ;
 : scene-hook ( scene -- )  drop ;
 : near-the-landing? ( -- flag )
-    matthew-now drop {: x y z :}  x landing-x - dup *  z landing-z - dup * + s>f fsqrt f>s landing-reach < ;
+    matthew-now drop nip  landing-x landing-z distance-to landing-reach < ;
 : each-frame ( -- )   \ src: func_80102014
     the-crate crate-step
     inside-begun flag?  landing-done flag? 0= and  near-the-landing? and if

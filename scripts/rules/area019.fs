@@ -18,15 +18,16 @@ $008 9 story-bit constant letter-waiting       \ (area 1's mailbox then)
 2 constant wolf-away-record   8 constant shut-in-record   \ (their schedule records: src func_80033138, func_8002C250)
 2 constant answers-at-time    \ (minutes before she leaves, at the least)
 
-\ ---- this visit (src: D_8010662C the mailboxes read, D_80106634 in by the keyhole, D_80106630 the photo's talk
-\ done, D_80106638 the duct cover's lines) ----
+\ ---- this visit (src: D_8010662C the mailboxes read, D_80106634 in by the keyhole, D_80106638 the duct cover's
+\ lines; D_80106630 the photo's talk done - for the run) ----
 variable mailbox-read   variable by-the-keyhole   variable photo-talk-done   variable cover-lines
 
 $4AC00 constant photo-x   $5AA negate constant photo-y   $4B264 constant photo-z
 : entered ( -- )   \ src: func_801023B8
     10 map-reveal
     the-photo this-area 2 set-floor  the-photo photo-x photo-y photo-z set-pos  the-photo $400 $3F8 negate 0 set-rot
-    0 mailbox-read !  0 by-the-keyhole !  0 photo-talk-done !  0 cover-lines !  the-crate forget-crate ;
+    0 mailbox-read !  0 by-the-keyhole !  0 cover-lines !  the-crate forget-crate ;   \ (the photo's talk stays done:
+                                                                                    \ src D_80106630 isn't cleared)
 
 \ ---- her room's two sets of things, by the story (src: func_8010310C) ----
 4 constant her-room   $19 constant her-room-then   $1A constant her-room-now

@@ -68,7 +68,7 @@ $5111C constant drink-at-x   $6B1F3 constant drink-at-z
     today 28 31 within 0= if  exit  then
     lake-winona-scene-seen flag-toggle  item-22 s" items" actor-named send give-item
     ['] events.ovl009:entry-80103CA8 start-event ;
-: each-frame ( -- )  menu-up? if  exit  then  lake-counter counter-step ;
+: each-frame ( -- )  menu-up?  in-control? 0= or if  exit  then  lake-counter counter-step ;   \ (src: func_80103624)
 
 \ ---- talking here (0x8010203C) ----
 create winona-lines  $12 , $48 ,  $18 , $49 ,  30 , $4A ,  36 , $4B ,  -1 ,

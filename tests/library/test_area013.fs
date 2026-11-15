@@ -28,4 +28,9 @@ testing by day on floor 1, its first row of lights; by night its fourth
 T{ 26 12 0 at-time  in-the-park  played-out  2 steps  lights-row @ -> 0 }T
 T{ 26 22 0 at-time  2 steps  lights-row @ -> 3 }T
 
+testing the lights are set while a scene holds him (src: func_801027FC before drawing)
+T{ events-stop  this-area 0 s" areas" actor-named send enter-area  deliver  take-control  3 steps  lights-row @ 0< 0=
+   -> true }T
+T{ events-stop -> }T
+
 test-summary

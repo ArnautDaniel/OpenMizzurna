@@ -19,4 +19,8 @@ T{ prologue-done flag-set  26 12 0 at-time  in-his-room  26 18 0 at-time  closed
    -> 0 1 true }T
 T{ events-stop  true broadcast player-control  deliver  4 steps  events-running @ -> 0 }T
 
+testing Nozz's greeting: the evening one from 17:30 (not 17:00) to 07:00
+T{ 26 17 0 at-time  evening?  26 17 30 at-time  evening?  27 6 59 at-time  evening?  27 7 1 at-time  evening?
+   -> false true true false }T
+
 test-summary

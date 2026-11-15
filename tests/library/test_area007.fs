@@ -34,4 +34,9 @@ testing walking out at the edge (zone 0): out to the town
 T{ events-stop  26 12 0 at-time  in-the-cemetery  inside  2 steps  at-the-edge  2 steps  started?  played-out  area @
    -> true the-town }T
 
+testing the lighting is set whoever has the pad (src: func_80102700 before drawing)
+T{ 26 12 0 date>time s" clock" actor-named send set-time  deliver  in-the-cemetery  2 lit-for-day !  take-control  3 steps
+   lit-for-day @ -> true }T
+T{ events-stop -> }T
+
 test-summary

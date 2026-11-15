@@ -68,4 +68,7 @@ T{ matthew this-area 2 set-floor  deliver  floor @  matthew-now 2drop nip  this-
 testing Dennis's line at a stop of his; Isabella's silence
 T{ in-the-building  dennis talks-here  isabella talks-here -> true true }T
 
+testing the photo's talk stays done when he comes back (src: D_80106630 isn't cleared on entering)
+T{ 1 photo-talk-done !  in-the-building  photo-talk-done @ -> 1 }T
+
 test-summary

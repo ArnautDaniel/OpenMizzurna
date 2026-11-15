@@ -59,4 +59,14 @@ T{ pad-square 3 held  until-the-menu  2 row  400 answering  pad-square 3 held  6
 testing closing time, 01:58 - 02:59: once a visit
 T{ 27 2 10 at-time  in-club  started?  closing-done @ -> true 1 }T
 
+testing the fan's arrival at 21:30 starts once, though he's in only at its end; 00:00 is never a time (the fan stays)
+T{ 26 21 29 at-time  in-club  events-stop  0 fan-on !  0 fan-coming !  26 21 30 at-time
+   staff  events-running @  staff  events-running @  fan-coming @ -> 1 1 1 }T
+T{ events-stop  0 fan-coming !  1 fan-on !  27 0 0 at-time  staff  fan-on @  events-running @ -> 1 0 }T
+
+testing the timetable runs while a scene holds him (src: the per-frame hook from event_threads_update)
+T{ events-stop  26 21 29 at-time  in-club  events-stop  0 fan-on !  0 fan-coming !  take-control  26 21 30 at-time
+   4 steps  fan-coming @ -> 1 }T
+T{ events-stop -> }T
+
 test-summary

@@ -15,9 +15,10 @@ $41900 constant on-his-bench-x
 
 \ ---- he's here (src: D_80103D7C) 14:05 - 17:00, 23:05 - 23:59, 00:00 - 00:59 ----
 variable he's-here
+variable lights-row   -1 lights-row !   \ (the lights' row set: -1 none yet)
 : his-hours? ( -- flag )  0 14 5 17 0 between?  0 23 5 23 59 between? or  0 0 0 0 59 between? or ;
 : entered ( -- )
-    8 map-reveal  his-hours? he's-here !
+    8 map-reveal  -1 lights-row !  his-hours? he's-here !
     he's-here @ if  ['] events.ovl013:entry-801028FC  else  ['] events.ovl013:entry-8010293C  then  start-event ;
 : scene-hook ( scene -- )  drop ;
 
@@ -27,7 +28,6 @@ create light-rows   \ src: D_80103D34 (three by day, three by night)
   1 c, 0 c, 0 c, 1 c, 1 c, 1 c, 0 c, 0 c, 0 c, 0 c, 0 c, 0 c,   0 c, 0 c, 0 c, 0 c, 0 c, 0 c, 1 c, 1 c, 1 c, 1 c, 0 c, 0 c,
   0 c, 0 c, 0 c, 0 c, 0 c, 0 c, 1 c, 0 c, 1 c, 1 c, 1 c, 0 c,   0 c, 0 c, 0 c, 0 c, 0 c, 0 c, 1 c, 0 c, 0 c, 1 c, 1 c, 1 c,
 12 constant lights-a-row   6 constant first-light
-variable lights-row   -1 lights-row !
 : light-row ( -- row )   \ his floor's, by day; three on by night
     clock-time minutes/day mod  7 60 *  16 60 * 29 + 1+  within if  floor @ 1-  else  floor @ 2 +  then ;
 : lights ( -- )
@@ -35,8 +35,8 @@ variable lights-row   -1 lights-row !
     lights-a-row 0 do  i first-light +  r i + c@ 0<>  s" areas" actor-named send object-shown  loop ;
 
 \ ---- each frame (0x80102670): he comes at 14:04 and 23:00, goes at 17:01 and 01:00 ----
-: each-frame ( -- )
-    lights
+: each-frame ( -- )   \ (src: both with Matthew the player's)
+    in-control? 0= if  exit  then
     he's-here @ 0=  14 4 at-minute?  23 0 at-minute? or and if
         ['] events.ovl013:entry-80102958 start-event  1 he's-here ! exit  then
     he's-here @  17 1 at-minute?  1 0 at-minute? or and if
@@ -103,3 +103,4 @@ this-area ovl $8010274C ' lesson-learned native:
 
 this-area ' entered ' scene-hook area-hooks!
 this-area ' each-frame area-frame!
+this-area ' lights area-every-frame!   \ (src: func_801027FC before drawing - his arrival's scene lit too)

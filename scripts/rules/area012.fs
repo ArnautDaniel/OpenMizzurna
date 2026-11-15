@@ -10,7 +10,8 @@ USING: engine actors messages clock story-flags townsfolk events look talk areas
 99 constant bouncer   112 constant fan   111 constant loretta   69 constant person-69
 : today ( -- day )  clock-time time>day ;
 : minute-of-day ( -- m )  clock-time minutes/day mod ;
-: at-minute? ( hour minute -- flag )  swap 60 * +  minute-of-day = ;   \ src: event_time_is (any day)
+: at-minute? ( hour minute -- flag )   \ src: event_time_is (any day; 00:00 of any day never: its "no time")
+    2dup or 0= if  2drop false exit  then  swap 60 * +  minute-of-day = ;
 
 \ ---- the story's words this area keeps (src: the story block; not named yet) ----
 $024 constant first-show-day   $025 constant fan-fight-day   $026 constant show-cancelled-day   \ (bytes)
@@ -25,6 +26,7 @@ $018 16 story-bit constant loretta-call         \ (call 7 answered: Loretta at C
 \ ---- the night's places (src: func_80103B94) ----
 variable bouncer-on   variable show-done   variable on-stage   variable met-james   variable fan-on
 variable closing-done   variable church-said   variable show-thread
+variable fan-coming   \ (his arrival's scene under way: it says he's here only at its end - not started twice)
 2 constant at-the-club   \ (Isabella's record: here - src func_8002C1F4)
 4 constant james-at-the-club   0 constant wolf-at-the-bar   $10 constant here-tonight   \ (their records)
 : isabella-here? ( -- flag )  isabella at-the-club at-record? ;
@@ -120,18 +122,21 @@ $720C1 constant counter-middle-x   $46C49 constant counter-middle-z
 : entered ( -- )
     17 map-reveal  -1 show-thread !  forget-counter  forget-orders
     0 met-james !  0 church-said !  0 show-done !  0 closing-done !  0 fan-on !  0 on-stage !  0 bouncer-on !
+    0 fan-coming !
     tonight  confrontation ;
 0 constant the-bar
+12 constant james-page
 : scene-hook ( scene -- )   \ James's first meeting, Wolf introduced
     the-bar <> if  exit  then
     club-james-meeting-seen flag? 0=  james james-at-the-club at-record? and  wolf wolf-at-the-bar at-record? and
     today 28 < and if
-        ['] events.ovl012:entry-801060E8 start-event  1 met-james !  club-james-meeting-seen flag-toggle  then ;
+        ['] events.ovl012:entry-801060E8 start-event  1 met-james !  club-james-meeting-seen flag-toggle
+        james-page s" notebook" actor-named send learn-bio  then ;   \ (src: g_bio_known bit 12: his page)
 : staff ( -- )   \ the bouncer on at 22:00 and off at 23:30, the fan in at 21:30 and out at midnight
     bouncer-on @ 0= if  22 0 at-minute? if  ['] events.ovl012:entry-80099120 start-event  1 bouncer-on !  then  then
     bouncer-on @ if  23 30 at-minute? if  ['] events.ovl012:entry-80099154 start-event  0 bouncer-on !  then  then
-    fan-on @ 0= if  21 30 at-minute? if  ['] events.ovl012:entry-8009917C start-event  then  then
-    fan-on @ if  0 0 at-minute? if  0 fan-on !  ['] events.ovl012:entry-800991DC start-event  then  then
+    fan-on @ fan-coming @ or 0= if  21 30 at-minute? if  1 fan-coming !  ['] events.ovl012:entry-8009917C start-event  then  then
+    fan-on @ if  0 0 at-minute? if  0 fan-on !  ['] events.ovl012:entry-800991DC start-event  then  then   \ (never: 00:00)
     22 0 at-minute? if  loretta park  then ;
 : the-show ( -- )   \ in the bar, on his feet: Isabella's show at 22:30, its end at 23:00
     matthew seated?  scene @ the-bar <> or if  exit  then
@@ -144,11 +149,10 @@ $720C1 constant counter-middle-x   $46C49 constant counter-middle-z
             ['] events.ovl012:entry-8010769C start-event  5 time-skip  today show-cancelled-day story-c!
         then  1 show-done !
     then ;
-: each-frame ( -- )   \ src: func_80103FE8
-    menu-up? if  exit  then
-    club-counter counter-step  events-running @ control-given @ 0= and if  exit  then
-    fan-fight-day on-day? 0= if  staff the-show  then
-    closing-done @ 0=  0 1 58 2 59 between? and if
+: each-frame ( -- )   \ src: func_80103FE8: the timetable whoever has the pad; the counter, the show and closing
+    menu-up? 0=  in-control? and if  club-counter counter-step  then   \ with Matthew the player's
+    fan-fight-day on-day? 0= if  staff  in-control? if  the-show  then  then
+    in-control?  closing-done @ 0= and  0 1 58 2 59 between? and if
         1 closing-done !  scene @ 3 < if  ['] events.ovl012:entry-801052D0 start-event  then  then ;
 
 \ ---- talking here (0x801043CC): a line of the area's by where they are ----
@@ -245,7 +249,7 @@ create barton-tonight  13 , 17 , 21 , 25 , 29 ,   \ src: D_80105354: Father Bart
 ' bouncer-talks bouncer conversation!   ' fan-talks fan conversation!   ' loretta-talks loretta conversation!
 
 \ ---- the C its events call (ovl012's) ----
-: fan-arrived ( -- )  1 fan-on ! ;   \ 0x80104F0C
+: fan-arrived ( -- )  1 fan-on !  0 fan-coming ! ;   \ 0x80104F0C
 $194 negate constant counter-top   $46B81 constant served-z
 : on-the-bar ( -- )   \ 0x801037E8: the order before his stool
     at-club matthew seat-of nip seat-spot 2drop drop {: x :}  the-prop @ x counter-top served-z set-pos ;

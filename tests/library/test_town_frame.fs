@@ -24,4 +24,9 @@ T{ 27 11 45 at-time
    diner-x 0 diner-z s" matthew" actor-named send figure-place  deliver  4 steps
    robbery-outside-seen flag?  events-running @ 0> -> true true }T
 
+testing the road block goes on the 28th, whoever has the pad (src: ovl027_func_801044E0)
+T{ 27 23 58 at-time  into-town  rules.area027:road-block-officer here?  take-control  28 0 1 at-time  4 steps
+   rules.area027:road-block-officer here?  rules.area027:road-block-up @ -> true false 0 }T
+T{ events-stop  true broadcast player-control  deliver -> }T
+
 test-summary

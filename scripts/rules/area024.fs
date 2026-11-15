@@ -66,8 +66,8 @@ $91706 constant letter-x   $663A negate constant letter-y   $1F5B7 constant lett
 \ ---- each frame (0x80102C68): the crate; out of the meeting at its time; closing time ----
 : crate-step-here ( -- )  the-crate crate-state @ placing = if  crate-home  then  the-crate crate-step ;
 : meeting-soon? ( -- flag )  25 12 57 12 59 between? ;
-: each-frame ( -- )
-    crate-step-here
+: each-frame ( -- )   \ (src: the crate always; the rest with Matthew the player's)
+    crate-step-here  in-control? 0= if  exit  then
     shown-out @ 0=  meeting-soon? and  scene @ 0= and  matthew-perch 1 <> and if
         1 shown-out !  ['] events.ovl024:entry-80104408 start-event exit  then
     closing-done @  0 20 0 20 59 between? 0= or if  exit  then
@@ -81,7 +81,7 @@ enum: look-action  nothing-here  up-the-stairs ;
 $91126 constant stairs-x   $1FE81 constant stairs-z   200 constant stairs-near
 $281 constant stairs-heading-from   $5C4 constant stairs-heading-to
 : at-the-stairs? ( -- flag )
-    matthew-now {: x y z h :}  x stairs-x - s>f fdup f*  z stairs-z - s>f fdup f* f+ fsqrt stairs-near s>f f<
+    matthew-now {: x y z h :}  x z stairs-x stairs-z distance-to stairs-near <
     h 4095 and stairs-heading-from stairs-heading-to within and ;
 : look-check ( zone check -- action )
     nip 0< 0=  floor @ 0<> or if  nothing-here exit  then
@@ -212,7 +212,7 @@ variable pulls   variable left-was   variable right-was
 ' the-rope-minigame 17 minigame-script!
 
 ' look-check ' look-do ' act-check ' act-do  this-area area-rules!
-this-area ' church-drawn area-every-frame!
+this-area ' church-drawn area-every-frame!   \ (the bell: sound.fs's area ambience)
 : leaving ( -- )  the-crate crate-cancel ;   \ src: func_801036B4: off the crate
 this-area ' leaving area-leave!
 this-area ' entered ' scene-hook area-hooks!

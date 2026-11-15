@@ -77,7 +77,8 @@ enum: act-action  nothing-to-do  3 take-the-key  play-the-floppy  5 unused-5  ta
     the-washroom = if
         the-prop-19 3 2 set-floor  the-prop-19 $2BB43 $170C negate $6773C set-pos  the-prop-19 0 0 0 set-rot
     else  the-prop-19 0 0 0 set-pos  then ;
-: each-frame ( -- )
+: each-frame ( -- )   \ (src: both with Matthew the player's)
+    in-control? 0= if  exit  then
     heading-home-said @ 0=  0 20 55 23 59 between? and if
         1 heading-home-said !  ['] events.ovl003:entry-80102CB4 start-event exit  then
     roland-break-in-scene-seen flag? 0=  $014 story@ 0= and  26 14 30 15 0 between? and if

@@ -23,7 +23,7 @@ variable closing-done
 : scene-hook ( scene -- )  drop ;
 0 constant the-shop   1 constant the-back
 : each-frame ( -- )   \ 22:00 - 22:59 (not later: Robert's "open 24 hours"), once a visit: the attendant sends him out
-    closing-done @  0 22 0 22 59 between? 0= or if  exit  then
+    in-control? 0=  closing-done @ or  0 22 0 22 59 between? 0= or if  exit  then   \ (src: Matthew the player's)
     1 closing-done !
     scene @ case
         the-shop of  ['] events.ovl018:entry-801021E0 start-event  endof

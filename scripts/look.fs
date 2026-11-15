@@ -91,7 +91,8 @@ variable zone-prompt   variable check-prompt   \ the matched row's hint (src: th
 begin-structure rules
   field: look-check-xt   field: look-do-xt   field: act-check-xt   field: act-do-xt
   field: on-enter     field: on-scene     \ the area's hooks: entered ( -- ), a scene ( scene -- )
-  field: on-frame     \ and each step while Matthew is the player's ( -- ) (src: the overlay's per-frame hook)
+  field: on-frame     \ and each game frame, a scene running or not ( -- ) (src: the overlay's per-frame hook; one
+                      \ that wants Matthew the player's asks in-control?)
   field: on-leave     \ left for another area ( -- ) (src: the overlay's clean-up as it goes)
 end-structure
 create area-rules  #content-areas rules * allot   area-rules #content-areas rules * erase
@@ -101,6 +102,9 @@ create area-rules  #content-areas rules * allot   area-rules #content-areas rule
     rules-of {: lc ld ac ad r :}  lc r look-check-xt !  ld r look-do-xt !  ac r act-check-xt !  ad r act-do-xt ! ;
 : area-hooks! ( area enter scene -- )  rot rules-of {: e sc r :}  e r on-enter !  sc r on-scene ! ;
 : hook ( xt|0 -- )  ?dup if  execute  then ;
+fvariable frame-due
+: frame-hook ( -- )   \ the area's per-frame hook, once a game frame (src: func_8003F6EC from event_threads_update)
+    frame-due frames-due 0 ?do  area @ content rules-of on-frame @ hook  loop ;
 : area-frame! ( area xt -- )  swap rules-of on-frame ! ;
 : area-leave! ( area xt -- )  swap rules-of on-leave ! ;
 variable area-was   -1 area-was !   \ (the content area last entered: its clean-up as another is entered)
@@ -162,17 +166,18 @@ variable pad-taken   \ a frame hook took the pad this step (src: the pad's field
 : take-pad ( -- )  true pad-taken ! ;
 : has-control? ( -- flag )   \ Matthew the player's (src: player_has_control: no event holding him)
     controlled @ 0<>  events-running @ 0=  control-given @ or and ;
-: watch ( -- )
-    pad-circle circle-was pressed  pad-square square-was pressed  {: o s :}
+: in-control? ( -- flag )   \ Matthew the player's, the pad the field's (src: player_has_control, !ui_busy): what a
+    has-control? field-pad? and ;   \ frame hook asks before a prompt, a pad read, a scene from where he stands
+: watch ( -- )   \ the area's frame hook every game frame, a scene running or not (src: func_8003F6EC from
+    pad-circle circle-was pressed  pad-square square-was pressed  {: o s :}   \ event_threads_update); then ○ and □
     no-prompts
-    has-control? 0=  area @ 0< or  matthew-there? 0= or if  exit  then
-    field-pad? 0= if  exit  then   \ (a screen up: the pad is its own)
-    matthew-perch perch-in-car = if   \ (driving: the car has the pad; the area's frame still - src: ovl027's tick)
-        area @ content rules-of on-frame @ hook  exit  then
-    prompts
+    area @ 0<  matthew-there? 0= or  ui-busy? or if  exit  then   \ (the pause, a menu: the world stands - the clock too)
     events-running @ {: before :}   \ (an event that gave him back: he acts as the player - src: player_has_control)
-    false pad-taken !  area @ content rules-of on-frame @ hook
+    false pad-taken !  frame-hook
+    in-control? 0= if  exit  then
+    matthew-perch perch-in-car = if  exit  then   \ (driving: the car has the pad)
     events-running @ before >  pad-taken @ or if  exit  then   \ (the hook may have started one, or have the pad)
+    prompts
     o if  press-circle exit  then
     s if  press-square  then ;
 

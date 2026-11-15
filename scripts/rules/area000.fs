@@ -133,7 +133,8 @@ $020 1 story-bit constant minigame-30-begun   \ (src: +0x20 bit 1)
 $1F8 constant minigame-30-a   $1FC constant minigame-30-b   $200 0 story-bit constant minigame-30-c
 : minigame-30? ( -- flag )   \ src: func_80102584: once its three conditions are met
     minigame-30-begun flag? 0=  minigame-30-a story@ 0<> and  minigame-30-b story@ 0<> and  minigame-30-c flag? and ;
-: each-frame ( -- )   \ (the computer's screens: the map's - map.fs)
+: each-frame ( -- )   \ (the computer's screens: the map's - map.fs); src: all with Matthew the player's
+    in-control? 0= if  exit  then
     minigame-30? if  minigame-30-begun flag-set  30 minigame exit  then
     at-zone drop counter-zone = if
         matthew-was matthew-actor send figure-place  ['] events.ovl000:entry-80107DC8 start-event exit  then

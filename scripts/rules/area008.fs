@@ -64,7 +64,7 @@ begin-structure picker
   field: picked   field: chosen   field: up-was   field: down-was   field: ok-was
 end-structure
 create pickers  picker 2 * allot
-variable vs-going   variable vs-wait
+variable vs-going   variable vs-wait   fvariable vs-due   \ (vs-wait: game frames both have settled)
 : picker# ( i -- p )  picker * pickers + ;
 : edge ( down? addr -- new? )  {: d a :}  d a @ 0= and  d a ! ;
 : show-pick ( slot p -- )  picked @ {: k :}  s" vs-models" k exe-u8 actor-model ;
@@ -74,12 +74,12 @@ variable vs-going   variable vs-wait
     dn key-down? p down-was edge if  p picked @ 1- dup 0< if  drop #vs-models 1-  then  p picked !  then
     ok key-down? p ok-was edge if  s nod nodded 1 anim-then  true p chosen !  then
     s p show-pick ;
-: fresh-picks ( -- )  pickers picker 2 * erase  0 vs-wait ! ;
+: fresh-picks ( -- )  pickers picker 2 * erase  0 vs-wait !  0e vs-due f! ;
 : picking ( -- done? )
     first-fighter 0 picker# pad-up pad-down pad-circle pick-step
     second-fighter 1 picker# pad2-up pad2-down pad2-circle pick-step
     0 picker# chosen @  1 picker# chosen @ and 0= if  false exit  then
-    1 vs-wait +!  vs-wait @ settle-frames >= ;
+    vs-due frames-due vs-wait +!  vs-wait @ settle-frames >= ;   \ (src: 21 of the original's frames)
 : vs-loop ( -- )   \ (its own thread: Matthew the player's no more than the scene lets him)
     begin  vs-going @ while
         fresh-picks  begin  yield  picking  vs-going @ 0= or until

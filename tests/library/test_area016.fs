@@ -14,7 +14,7 @@ settled
     pad-circle swap key-hold  1 steps  pad-circle false key-hold ;
 : played-out ( -- )  10000 0 do  reply  started? 0= if  leave  then  loop ;
 : press ( key -- )  dup true key-hold  2 steps  false key-hold  2 steps ;
-: in-the-library ( -- )  events-stop  this-area 0 s" areas" actor-named send enter-area  deliver  2 steps  played-out ;
+: in-the-library ( -- )  events-stop  this-area 0 s" areas" actor-named send enter-area  deliver  2 steps  played-out  2 steps ;   \ (then a game frame: the hook's)
 : put-him ( x z -- )  0 swap s" matthew" actor-named send figure-place  deliver ;
 : before-the-crate ( -- )   \ 200 short of it (-z), facing it (+z)
     the-crate-slot person-now drop nip {: x z :}  x z 200 - put-him  0 0 0 s" matthew" actor-named send figure-turn

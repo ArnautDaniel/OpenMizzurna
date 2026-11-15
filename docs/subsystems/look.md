@@ -37,9 +37,15 @@ club's show ended, off a stool or a crate, the deputy's walk ended and his refus
 
 Facts it keeps for the rules: `zone-answer` / `check-answer` (what the tables gave), `zone-match` / `check-match`
 (their rows to run: `run-rows`). The areas' hooks (`area-hooks!`: entering, a scene) run on `area-entered` /
-`scene-shown`; an area's frame hook (`area-frame!`, src: the overlay's per-frame hook) runs each step while
-Matthew is the player's and no event runs, before ○ and □ (it may start one: then they wait; or `take-pad`:
-the pad is its own this step - a stool's keys).
+`scene-shown`; an area's frame hook (`area-frame!`, src: the overlay's per-frame hook, `func_8003F6EC` from
+`event_threads_update`) runs once a game frame whether or not a scene holds Matthew - as the original's, which
+runs every frame but paused; ours stands while a menu or the pause is up (`ui-busy?`: the clock stands then too).
+What in a hook wants him the player's (the original's `player_has_control`, a prompt, a pad read, a scene from
+where he stands) asks `in-control?` (`has-control?` with the pad the field's) itself; the rest - a club's
+timetable, a timed scene with its own once-flag, the forest's hunt, the town's people about - runs on through
+scenes, and each scene it starts is guarded so it can't start twice. Then, with him the player's and not
+driving, ○ and □ (the hook may have started a scene: then they wait; or `take-pad`: the pad is its own this
+step - a stool's keys).
 
 Things before him: ○ on an actor that has an examining (`examined-by!`, src: the handler's CMD_EXAMINE when it
 answers cmd 0x31 with 6) runs it, else talking; □ on one with a taking (`taken-by!`, CMD_ACT, cmd 0x32's 4) runs
@@ -113,8 +119,8 @@ shown by where he is, three minigames that are scripts, the companion leaving hi
 stops).
 Area 13's (`scripts/rules/area013.fs`, the park; `tests/library/test_area013.fs`): the old man there by the hour,
 talking to him (a character pack's scripts), his lessons (the one reached: a minigame that's a script), who says
-what, a night scene once, the way down with or without a companion, the lights by floor and time of day, the
-lesson's fuel (the car's).
+what, a night scene once, the way down with or without a companion, the lights by floor and time of day (a draw
+hook, as area 7's: his arrival's scene, which entering always starts, lit), the lesson's fuel (the car's).
 Area 11's (`scripts/rules/area011.fs`, the inn's room; `tests/library/test_area011.fs`): a scene the first time
 in, the crate, a thing to take once found.
 Area 10's (`scripts/rules/area010.fs`, the north-shore cabin; `tests/library/test_area010.fs`): the crate
@@ -128,7 +134,8 @@ twice then searched, getting off the bus, a figure there at its point in the sto
 fight, again or enough).
 Area 7's (`scripts/rules/area007.fs`, the cemetery; `tests/library/test_area007.fs`): its two timed scenes (on
 arriving or as they come), a visitor at a grave, walking out of the grounds, who says what, Father Barton's talk
-here, the day's and the night's lights (`object-shown`, to the areas), the C its events call.
+here, the day's and the night's lights (`object-shown`, to the areas; a draw hook, `area-every-frame!` - set
+whoever has the pad, an arrival's scene lit too), the C its events call.
 Area 6's (`scripts/rules/area006.fs`, Astin Farm; `tests/library/test_area006.fs`): the two things in the room to
 take, the warning when its owner heads home, the closet and the way out, the closet's doors.
 Area 5 (`scripts/rules/area005.fs`; `tests/library/test_area005.fs`): one chain of scripts from the warp in to the
@@ -149,7 +156,8 @@ Lidds, Cohen and Morgan; the C its events call; the bulletin board's recap, the 
 ending its last scene calls.
 Area 12's (`scripts/rules/area012.fs`, Club Wolves; `tests/library/test_area012.fs`): who's there by the hour
 (the bouncer 21:58 - 23:25, the fan 21:28 - 23:55, Loretta after her call), the nightly timetable (the bouncer on
-and off, the fan in and out), Isabella's show at 22:30 (or her cancelling it) and its end at 23:00, James's first
+and off, the fan in at 21:30 - his arrival's scene started once, though it says he's in only at its end - and
+never out: src event_time_is takes 00:00 for no time), Isabella's show at 22:30 (or her cancelling it) and its end at 23:00, James's first
 meeting, Mel's confrontation, closing at 01:58; the bar's stools and ordering from Wolf; who says what; the
 conversations of Wolf, James, Mel, the bouncer, the fan and Loretta here; the two fights (the events' op,
 fight.md) and the prompt (the events' op, hud.md).
@@ -166,7 +174,14 @@ has no zone tables. Its rows mostly run the town's C: the buildings' doors (docs
 Entering it (src: ovl027 func_801040B0) its people about are placed: by the church gate, the lake, the diner;
 Lorraine out by the diner 14:00 - 17:59 (or when the story frees her); the two protesters until the 27th's end;
 one by the store 9:00 - 19:59. Every frame (src: ovl027_func_801044E0; at the wheel too):
+whoever has the pad:
 - Lorraine's hours: at 14:00 out by the diner, at 18:00 in again;
+- Father Barton's night outside Club Wolves (+0x18 bit 9, until its scene, bit 11): him standing by the club in
+  sight, he and two thugs placed there; Matthew close on foot, their scene (once); him gone, they go too;
+- the onlookers by the Roland residence, the 26th 14:35 - 16:34, once he's within sight of it;
+- the road block lifted on the 28th;
+
+with Matthew the player's:
 - while the story has a girl missing, too far from her house he's turned back, with his line;
 - at the wheel, the gas pumps (driving.md);
 - on foot: the robbery outside the diner (the 27th 11:30 - 12:30, near it, once, unless seen inside); the
