@@ -178,6 +178,9 @@ void console_draw(const Console *c, int w, int h) {
     if (!c->open) {
         return;
     }
+    if (rows > CONSOLE_LINES) {   /* (a very tall window: no more than the log holds) */
+        rows = CONSOLE_LINES;
+    }
     render_rect(0, 0, (float)w, (rows + 1) * lh + 8, 0x101418E0);
     y = 4;
     for (i = rows - 1; i >= 1; i--) {   /* the log's last lines, oldest at the top */

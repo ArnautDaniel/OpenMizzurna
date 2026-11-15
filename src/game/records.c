@@ -74,15 +74,11 @@ static void read_table(Table *t, const char *path, const char *word) {
 }
 
 PRIM(p_records) {   /* ( path len word len -- table ) the file's lines that start with the word; 0: no such file */
-    Cell wl = POP();
-    const char *ws = (const char *)POP();
-    Cell pl = POP();
-    const char *ps = (const char *)POP();
     char key[192], path[160], word[32];
     int i;
 
-    snprintf(path, sizeof(path), "%.*s", (int)pl, ps);
-    snprintf(word, sizeof(word), "%.*s", (int)wl, ws);
+    engine_string(f, word, sizeof(word));
+    engine_string(f, path, sizeof(path));
     snprintf(key, sizeof(key), "%s|%s", path, word);
     for (i = 0; i < sNTables; i++) {
         if (strcmp(sTables[i].key, key) == 0) {

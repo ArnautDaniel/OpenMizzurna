@@ -397,7 +397,7 @@ static void area_sprites(Job *j, const VramContext *v, const uint8_t *const *ent
         int w = le16s(e), h = le16s(e + 2), u = le16s(e + 4), vv = le16s(e + 6);
         uint16_t page = (uint16_t)(e[8] | e[9] << 8), palette = (uint16_t)(e[10] | e[11] << 8);
 
-        if (w <= 0 || h <= 0 || u + w > PAGE_TEXELS || w > PAGE_TEXELS || h > PAGE_TEXELS) {
+        if (w <= 0 || h <= 0 || u < 0 || u + w > PAGE_TEXELS || w > PAGE_TEXELS || h > PAGE_TEXELS) {
             w = h = 1, u = vv = 0;   /* (an entry that isn't a picture: a point, so its rows keep their numbers) */
         }
         k += (size_t)snprintf(text + k, cap - k, "sprite %d size %d %d full-bright %d blend %d\n", i, w, h,
@@ -724,24 +724,14 @@ static void title_images(Job *j, VramContext *v, const uint8_t *const *entries, 
 }
 
 static void sky_images(Job *j, const VramContext *v) {
-    uint8_t *image = malloc((size_t)PAGE_TEXELS * PAGE_TEXELS * 4);
     size_t i;
-    int y;
 
     for (i = 0; i < sizeof(kSky) / sizeof(kSky[0]) && !j->failed; i++) {
-        const SkyPiece *p = &kSky[i];
-        uint16_t page = (uint16_t)((p->page_x / 64 & 0xF) | (p->page_y / 256 & 1) << 4 | (p->depth == 4 ? 0 : 1) << 7);
-        uint16_t palette = (uint16_t)(p->palette_x / 16 | p->palette_y << 6);
         char path[64];
 
-        vram_page_rgba(v, page, palette, j->page);
-        for (y = 0; y < p->h; y++) {
-            memcpy(image + (size_t)y * p->w * 4, j->page + ((size_t)(p->v + y) * PAGE_TEXELS + (size_t)p->u) * 4, (size_t)p->w * 4);
-        }
-        snprintf(path, sizeof(path), "sky/%s.png", p->name);
-        image_file(j, path, image, p->w, p->h);
+        snprintf(path, sizeof(path), "sky/%s.png", kSky[i].name);
+        piece_image(j, v, &kSky[i], path);
     }
-    free(image);
 }
 
 static int cut(Job *j, const VramContext *v, const char *name) {
@@ -1021,7 +1011,7 @@ static int run(Job *j, const uint8_t *const *entries, const size_t *sizes, int n
         if (f->kind != MODEL_STREAMED || !read_found(f, &m)) {
             continue;
         }
-        if (entries[f->texture_entry] != NULL &&
+        if (f->texture_entry < n && entries[f->texture_entry] != NULL &&
             streamed_context(v, &m, entries[f->texture_entry], sizes[f->texture_entry], exe, exe_n)) {
             char dir[160];
 

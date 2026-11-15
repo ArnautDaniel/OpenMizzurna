@@ -61,8 +61,11 @@ size_t vab_body_size(const uint8_t *vh) {
     return total > own ? total - own : 0;
 }
 
-int vab_sample_count(const uint8_t *vh) { return le16(vh + 22); }
-size_t vab_sample_bytes(const uint8_t *vh, int i) { return (size_t)le16(vh + sizes_at(vh) + i * 2) * VH_SIZE_UNIT; }
+/* (no more than the size table holds: its entry 0 is unused) */
+int vab_sample_count(const uint8_t *vh) { int n = le16(vh + 22); return n < VAB_SAMPLES ? n : VAB_SAMPLES - 1; }
+size_t vab_sample_bytes(const uint8_t *vh, int i) {
+    return i >= 0 && i < VAB_SAMPLES ? (size_t)le16(vh + sizes_at(vh) + i * 2) * VH_SIZE_UNIT : 0;
+}
 
 /* ---- the header as text ---- */
 typedef struct Out {
@@ -276,7 +279,7 @@ static int tone_line(uint8_t *vh, char *at, char *why, size_t nwhy) {
 }
 
 static int program_line(uint8_t *vh, char *at, char *why, size_t nwhy) {
-    long p, v[3];
+    long p, v[3] = {0};
     uint8_t *e;
     char *key;
 
@@ -501,6 +504,7 @@ int16_t *vab_wav_read(const uint8_t *wav, size_t n, long *frames, long *loop_sta
         if (memcmp(wav + at, "data", 4) == 0) {
             long i;
             count = (long)(len / 2);
+            free(pcm);   /* (a second data chunk: the last one counts) */
             pcm = malloc(sizeof(int16_t) * (size_t)(count + 1));
             for (i = 0; i < count; i++) {
                 pcm[i] = (int16_t)le16(wav + at + 8 + i * 2);
@@ -510,6 +514,9 @@ int16_t *vab_wav_read(const uint8_t *wav, size_t n, long *frames, long *loop_sta
             *loop_start = (long)le32(wav + at + 8 + 36 + 8);
         }
         at += 8 + len + (len & 1);
+    }
+    if (*loop_start >= count) {   /* (a loop starting past the end: none) */
+        *loop_start = -1;
     }
     *frames = count;
     return pcm;

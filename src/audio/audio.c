@@ -33,7 +33,7 @@ void au_unlock(void) { if (sLock) SDL_UnlockMutex(sLock); }
 
 static uint16_t le16(const uint8_t *p) { return (uint16_t)(p[0] | p[1] << 8); }
 
-static void read_programs(AuBank *b, const uint8_t *vh) {
+static void read_programs(AuBank *b, const uint8_t *vh, size_t vhn) {
     int p, k = 0, t;
 
     b->volume = vh[VH_VOLUME];
@@ -44,6 +44,9 @@ static void read_programs(AuBank *b, const uint8_t *vh) {
 
         if (pa[0] == 0) {
             continue;
+        }
+        if (VH_HEADER + AU_PROGRAMS * VH_PROGRAM + (size_t)(k + 1) * AU_TONES * VH_TONE > vhn) {
+            break;   /* (more programs with tones than the header has tone blocks for: a damaged bank) */
         }
         pr->ntones = pa[0] > AU_TONES ? AU_TONES : pa[0];
         pr->volume = pa[1];
@@ -91,7 +94,7 @@ int au_bank_load(int slot, const char *bank_text, const char *samples) {
         free(vh);
         return 0;
     }
-    read_programs(b, vh);
+    read_programs(b, vh, vhn);
     for (i = 1; i <= count && i < AU_SAMPLES; i++) {   /* (sample 0 is none) */
         uint8_t *wav;
         size_t wn = 0;

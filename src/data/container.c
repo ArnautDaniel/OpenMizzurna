@@ -76,7 +76,9 @@ uint8_t *container_build(const ContainerPart *parts, int n, size_t tail, size_t 
         total = (i > 0 ? aligned(total) : total) + parts[i].size;
     }
     total += tail;
-    out = calloc(1, total);
+    if ((out = calloc(1, total)) == NULL) {
+        return NULL;
+    }
     put32(out, (uint32_t)n);
     for (i = 0; i < n; i++) {
         put32(out + HEADER + i * PART_ENTRY, (uint32_t)pos);

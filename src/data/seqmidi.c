@@ -14,6 +14,9 @@
 #define MIDI_CLOCKS_A_CLICK 24
 #define MIDI_32NDS_A_QUARTER 8
 #define INDEX_FORMAT "om-sep 1"
+#define CARRIED_TAG "running-status-after-tempo"
+#define SONY_TEMPO_BYTES 5   /* FF 51 and the tempo's three bytes (no length byte) */
+#define MIDI_TEMPO_BYTES 6   /* FF 51 03 and the tempo's three bytes */
 
 static uint32_t be(const uint8_t *p, int n) {
     uint32_t v = 0;
@@ -71,19 +74,19 @@ int sep_sequences(const uint8_t *d, size_t n) {
     return k;
 }
 
-/* the length of a variable-length number at p */
+/* the length of a variable-length number at p (no further than end) */
 static size_t varlen_size(const uint8_t *p, const uint8_t *end) {
     size_t k = 0;
     while (p + k < end && (p[k] & 0x80)) {
         k++;
     }
-    return k + 1;
+    return p + k < end ? k + 1 : k;
 }
 
-/* the running status while scanning (carried_after_tempo) */
-static unsigned sRun;
-static void run_status_set(unsigned s) { sRun = s; }
-static unsigned run_status_get(void) { return sRun; }
+/* are there n bytes at p before end? */
+static int fits(const uint8_t *p, const uint8_t *end, size_t n) {
+    return p <= end && (size_t)(end - p) >= n;
+}
 
 /* a channel message's data bytes */
 static int data_bytes(unsigned status) {
@@ -98,6 +101,7 @@ static void carried_after_tempo(const uint8_t *d, size_t n, int i, char *out, si
     const uint8_t *ev, *end;
     int tempos = 0, after = 0;
     size_t o = 0;
+    unsigned run = 0;
 
     out[0] = 0;
     if (!sequence_at(d, n, i, &at)) {
@@ -114,10 +118,10 @@ static void carried_after_tempo(const uint8_t *d, size_t n, int i, char *out, si
         }
         status = ev[k];
         if (status == META) {
-            if (ev[k + 1] != META_TEMPO) {
+            if (!fits(ev + k, end, SONY_TEMPO_BYTES) || ev[k + 1] != META_TEMPO) {
                 break;
             }
-            k += 5;
+            k += SONY_TEMPO_BYTES;
             after = 1;
             tempos++;
             continue;
@@ -127,9 +131,9 @@ static void carried_after_tempo(const uint8_t *d, size_t n, int i, char *out, si
         }
         if (status & 0x80) {
             k += 1 + (size_t)data_bytes(status);
-            run_status_set(status);
+            run = status;
         } else {
-            k += (size_t)data_bytes(run_status_get());
+            k += (size_t)data_bytes(run);
         }
         after = 0;
     }
@@ -170,17 +174,20 @@ uint8_t *sep_to_midi(const uint8_t *d, size_t n, int i, size_t *size) {
         }
         status = ev[k];
         if (status == META) {
-            unsigned type = ev[k + 1];
+            unsigned type = fits(ev + k, end, 2) ? ev[k + 1] : 0;
 
-            if (type == META_TEMPO) {   /* Sony's has no length byte */
+            if (type == META_TEMPO && fits(ev + k, end, SONY_TEMPO_BYTES)) {   /* Sony's has no length byte */
                 put(&track, "\xFF\x51\x03", 3);
                 put(&track, ev + k + 2, 3);
-                k += 5;
+                k += SONY_TEMPO_BYTES;
                 after_tempo = 1;
                 continue;
             }
             put(&track, ev + k, (size_t)(end - (ev + k)));   /* (the end, FF 2F 00) */
             break;
+        }
+        if (!fits(ev + k, end, (status & 0x80 ? 1 : 0) + (size_t)data_bytes(status & 0x80 ? status : run))) {
+            break;   /* (a damaged sequence: its last event cut short) */
         }
         if (status & 0x80) {
             run = status;
@@ -210,14 +217,17 @@ uint8_t *sep_to_midi(const uint8_t *d, size_t n, int i, size_t *size) {
 
 char *sep_index_text(const uint8_t *d, size_t n, const char *comment, size_t *size) {
     int count = sep_sequences(d, n), i, k;
-    char *s = malloc((size_t)count * 600 + 512), carried[512];
-    size_t at;
+    char *s = malloc((size_t)count * 600 + 512 + strlen(comment)), carried[512];
+    size_t at = 0;
 
+    if (s == NULL) {
+        return NULL;
+    }
     k = sprintf(s, "\\ %s\n%s\nversion %u\nsequences %d\n", comment, INDEX_FORMAT, be(d + 4, 2), count);
     for (i = 0; i < count; i++) {
         sequence_at(d, n, i, &at);
         carried_after_tempo(d, n, i, carried, sizeof(carried));
-        k += sprintf(s + k, "sequence %d id %u%s%s\n", i, be(d + at, 2), carried[0] ? " running-status-after-tempo" : "", carried);
+        k += sprintf(s + k, "sequence %d id %u%s%s\n", i, be(d + at, 2), carried[0] ? " " CARRIED_TAG : "", carried);
     }
     *size = (size_t)k;
     return s;
@@ -274,10 +284,10 @@ static int midi_back(const uint8_t *m, size_t n, Buf *out, unsigned id, const ch
         }
         status = t[k];
         if (status == META) {
-            if (t[k + 1] == META_TEMPO && t[k + 2] == 3) {
+            if (fits(t + k, end, MIDI_TEMPO_BYTES) && t[k + 1] == META_TEMPO && t[k + 2] == 3) {
                 put(&ev, "\xFF\x51", 2);
                 put(&ev, t + k + 3, 3);
-                k += 6;
+                k += MIDI_TEMPO_BYTES;
                 after_tempo = 1;
                 tempos++;
                 continue;
@@ -291,6 +301,11 @@ static int midi_back(const uint8_t *m, size_t n, Buf *out, unsigned id, const ch
             }
             run = status;
             k++;
+        }
+        if (!fits(t + k, end, (size_t)data_bytes(run))) {
+            snprintf(why, nwhy, "a sequence's MIDI file has an event cut short");
+            free(ev.d);
+            return 0;
         }
         put(&ev, t + k, (size_t)data_bytes(run));
         k += (size_t)data_bytes(run);
@@ -341,10 +356,11 @@ uint8_t *sep_from_folder(const char *folder, SepReadFn read, void *ctx, size_t *
             return NULL;
         }
         eol = strchr(line + 1, '\n');
-        tag = strstr(line + 1, "running-status-after-tempo");
+        tag = strstr(line + 1, CARRIED_TAG);
         if (tag != NULL && (eol == NULL || tag < eol)) {
-            size_t len = (size_t)((eol != NULL ? eol : tag + strlen(tag)) - (tag + 26));
-            snprintf(carried, sizeof(carried), "%.*s", (int)len, tag + 26);
+            const char *list = tag + strlen(CARRIED_TAG);
+            size_t len = (size_t)((eol != NULL ? eol : list + strlen(list)) - list);
+            snprintf(carried, sizeof(carried), "%.*s", (int)len, list);
         }
         snprintf(path, sizeof(path), "%s/%u.mid", folder, i);
         mid = read(ctx, path, &mn);

@@ -4,6 +4,7 @@
 #include "stb_image.h"
 #include "stb_image_write.h"
 
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,6 +14,7 @@ unsigned char *stbi_zlib_compress(unsigned char *data, int data_len, int *out_le
 
 #define COLOR_TYPE_INDEXED 3
 #define ZLIB_QUALITY 8
+#define MAX_SIDE 16384   /* (the library's pictures are far smaller: a larger one is damaged) */
 
 typedef struct Buffer {
     uint8_t *data;
@@ -137,7 +139,7 @@ static int paeth(int a, int b, int c) {
 uint8_t *png_read_indexed(const uint8_t *file, size_t n, int *w, int *h, int *depth) {
     size_t pos = 8, zn = 0;
     uint8_t *zdata = NULL, *idx = NULL;
-    int width = 0, height = 0, bits = 0, type = -1, raw_n = 0, row_bytes, x, y;
+    int width = 0, height = 0, bits = 0, type = -1, interlaced = 0, raw_n = 0, row_bytes, x, y;
     char *raw;
     uint8_t *prev, *cur;
 
@@ -152,12 +154,19 @@ uint8_t *png_read_indexed(const uint8_t *file, size_t n, int *w, int *h, int *de
             break;
         }
         if (memcmp(type_at, "IHDR", 4) == 0 && len >= 13) {
-            width = (int)be32(data);
-            height = (int)be32(data + 4);
+            width = be32(data) <= MAX_SIDE ? (int)be32(data) : 0;
+            height = be32(data + 4) <= MAX_SIDE ? (int)be32(data + 4) : 0;
             bits = data[8];
             type = data[9];
+            interlaced = data[12] != 0;
         } else if (memcmp(type_at, "IDAT", 4) == 0) {
-            zdata = realloc(zdata, zn + len);
+            uint8_t *more = realloc(zdata, zn + len + 1);
+
+            if (more == NULL) {
+                free(zdata);
+                return NULL;
+            }
+            zdata = more;
             memcpy(zdata + zn, data, len);
             zn += len;
         } else if (memcmp(type_at, "IEND", 4) == 0) {
@@ -165,14 +174,15 @@ uint8_t *png_read_indexed(const uint8_t *file, size_t n, int *w, int *h, int *de
         }
         pos += 12 + len;
     }
-    if (type != COLOR_TYPE_INDEXED || (bits != 4 && bits != 8) || width <= 0 || height <= 0 || zdata == NULL) {
+    if (type != COLOR_TYPE_INDEXED || (bits != 4 && bits != 8) || interlaced || width <= 0 || height <= 0 ||
+        zdata == NULL || zn > INT_MAX) {
         free(zdata);
         return NULL;
     }
     raw = stbi_zlib_decode_malloc((const char *)zdata, (int)zn, &raw_n);
     free(zdata);
     row_bytes = (width * bits + 7) / 8;
-    if (raw == NULL || raw_n < (row_bytes + 1) * height) {
+    if (raw == NULL || (size_t)raw_n < (size_t)(row_bytes + 1) * (size_t)height) {
         free(raw);
         return NULL;
     }

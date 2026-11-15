@@ -35,16 +35,23 @@ int model_is(const uint8_t *d, size_t n) {
     return t + TMD_HEADER <= n && le32(d + t) == TMD_ID;
 }
 
+#define POLYGON_HEADER 4   /* output length, input length (words), flags, mode */
+#define MAX_POLYGON_WORDS 16
+
 static int read_polygon(ModelPolygon *p, const uint8_t *pk, size_t avail, size_t *len) {
-    unsigned ilen = pk[1], k, w = 0, halves = 0, i;
-    const uint8_t *words = pk + 4;
-    uint16_t half[32];
+    unsigned ilen, k, w = 0, halves = 0, i, colors, needed;
+    const uint8_t *words = pk + POLYGON_HEADER;
+    uint16_t half[2 * MAX_POLYGON_WORDS] = {0};
 
     memset(p, 0, sizeof(*p));
+    if (avail < POLYGON_HEADER) {
+        return 0;
+    }
+    ilen = pk[1];
     p->flag = pk[2];
     p->mode = pk[3];
-    *len = 4 + (size_t)ilen * 4;
-    if (*len > avail || p->mode >> 5 != MODE_POLYGON || ilen > 16) {
+    *len = POLYGON_HEADER + (size_t)ilen * 4;
+    if (*len > avail || p->mode >> 5 != MODE_POLYGON || ilen > MAX_POLYGON_WORDS) {
         return 0;
     }
     p->corners = p->mode & MODE_QUAD ? 4 : 3;
@@ -53,6 +60,12 @@ static int read_polygon(ModelPolygon *p, const uint8_t *pk, size_t avail, size_t
     p->semi_transparent = (p->mode & MODE_SEMI) != 0;
     p->lit = !(p->flag & FLAG_UNLIT);
     p->double_sided = (p->flag & FLAG_DOUBLE_SIDED) != 0;
+    /* (its words: the uvs, the colours, then the normals' and vertices' indices, two to a word) */
+    colors = p->lit && p->textured ? 0 : (p->flag & FLAG_GRADATION) || (p->gouraud && !p->lit) ? (unsigned)p->corners : 1;
+    needed = p->lit && p->gouraud ? 2 * (unsigned)p->corners : p->lit ? 1 + (unsigned)p->corners : (unsigned)p->corners;
+    if ((p->textured ? (unsigned)p->corners : 0) + colors + (needed + 1) / 2 > ilen) {
+        return 0;
+    }
     if (p->textured) {   /* a word a corner: u, v, then the palette (corner 0) and the texture page (corner 1) */
         for (k = 0; k < (unsigned)p->corners; k++, w++) {
             uint32_t x = le32(words + w * 4);
@@ -66,7 +79,7 @@ static int read_polygon(ModelPolygon *p, const uint8_t *pk, size_t avail, size_t
         }
     }
     if (!(p->lit && p->textured)) {   /* colours: one, or one a corner (gradation, or unlit gouraud) */
-        p->colors = (p->flag & FLAG_GRADATION) || (p->gouraud && !p->lit) ? p->corners : 1;
+        p->colors = (int)colors;
         for (k = 0; k < (unsigned)p->colors; k++, w++) {
             memcpy(p->color[k], words + w * 4, 3);
         }
@@ -145,26 +158,29 @@ static int read_tmd(Model *m, const uint8_t *d, size_t n, size_t t) {
     size_t base;
     int i, k;
 
-    m->nobjects = (int)le32(d + t + 8);
     base = t + TMD_HEADER;   /* (offsets count from the object table) */
-    if (base + (size_t)m->nobjects * TMD_OBJECT > n) {
+    if (le32(d + t + 8) > (n - base) / TMD_OBJECT) {
         model_free(m);
         return 0;
     }
+    m->nobjects = (int)le32(d + t + 8);
     m->objects = calloc((size_t)m->nobjects + 1, sizeof(ModelObject));
     for (i = 0; i < m->nobjects; i++) {
         const uint8_t *e = d + base + i * TMD_OBJECT;
         ModelObject *o = &m->objects[i];
         size_t vt = base + le32(e), nt = base + le32(e + 8), pt = base + le32(e + 16);
+        uint32_t nvertices = le32(e + 4), nnormals = le32(e + 12), npolygons = le32(e + 20);
 
-        o->nvertices = (int)le32(e + 4);
-        o->nnormals = (int)le32(e + 12);
-        o->npolygons = (int)le32(e + 20);
-        o->scale = (int32_t)le32(e + 24);
-        if (vt + (size_t)o->nvertices * 8 > n || nt + (size_t)o->nnormals * 8 > n || pt > n) {
+        /* (every count within the data: a polygon is at least its header) */
+        if (vt > n || nt > n || pt > n || nvertices > (n - vt) / 8 || nnormals > (n - nt) / 8 ||
+            npolygons > (n - pt) / POLYGON_HEADER) {
             model_free(m);
             return 0;
         }
+        o->nvertices = (int)nvertices;
+        o->nnormals = (int)nnormals;
+        o->npolygons = (int)npolygons;
+        o->scale = (int32_t)le32(e + 24);
         o->vertices = calloc((size_t)o->nvertices + 1, sizeof(*o->vertices));
         o->normals = calloc((size_t)o->nnormals + 1, sizeof(*o->normals));
         o->polygons = calloc((size_t)o->npolygons + 1, sizeof(ModelPolygon));

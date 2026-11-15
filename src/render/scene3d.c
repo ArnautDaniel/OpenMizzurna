@@ -260,8 +260,15 @@ static Tex *texture_entry(const char *path) {   /* a texture asked for (loaded t
         }
     }
     if (S.ntex == S.captex) {
-        S.captex = S.captex ? S.captex * 2 : TEXTURES_AT_FIRST;
-        S.tex = realloc(S.tex, sizeof(Tex) * (size_t)S.captex);
+        int cap = S.captex ? S.captex * 2 : TEXTURES_AT_FIRST;
+        Tex *grown = realloc(S.tex, sizeof(Tex) * (size_t)cap);
+
+        if (grown == NULL) {   /* (out of memory: the texture missing, the ones held kept) */
+            static Tex none = {"", {0, 0, 0}, 1, 0, 0};
+            return &none;
+        }
+        S.tex = grown;
+        S.captex = cap;
     }
     file = files_read(path, &n);
     rgba = file != NULL ? png_read_rgba(file, n, &w, &h) : NULL;
@@ -408,6 +415,14 @@ Model3D *model3d_load(const char *path) {
     }
     data->buffers[0].data = binary;
     data->buffers[0].data_free_method = cgltf_data_free_method_none;
+    if (cgltf_validate(data) != cgltf_result_success) {   /* (every accessor and index within the data, no node its own
+                                                          * ancestor: a damaged or hand-made model is refused) */
+        fprintf(stderr, "scene3d: %s isn't a whole glTF\n", path);
+        free(binary);
+        cgltf_free(data);
+        free(json);
+        return NULL;
+    }
 
     m = calloc(1, sizeof(*m));
     m->nmaterials = (int)data->materials_count;

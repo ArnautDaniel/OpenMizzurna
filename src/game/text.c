@@ -11,6 +11,7 @@
 #include "engine.h"
 
 #include "../core/files.h"
+#include "../data/mfo.h"
 #include "../data/png.h"
 #include "../render/render.h"
 
@@ -29,6 +30,7 @@
 #define ENTRY_BANKS 1000       /* from here: any CD.BIN entry's, by 1000 + the entry */
 #define ENTRY_KINDS 5          /* CD.BIN: 5 entries a group */
 #define MAX_FILES 512          /* (the disc has some 120 banks) */
+#define MAX_ID 65535           /* a message's id at most (a bank's are 16-bit) */
 
 /* ---- text files ---- */
 typedef struct TextFile {
@@ -80,6 +82,9 @@ static TextFile *text_file(int bank) {
     for (p = d; *p; p = strchr(p, '\n') ? strchr(p, '\n') + 1 : p + strlen(p)) {
         if (p[0] == '#') {
             int id = atoi(p + 1);
+            if (id < 0 || id > MAX_ID) {   /* (a damaged file's: not a message) */
+                continue;
+            }
             if (id >= t->ids) {
                 int was = t->ids;
                 t->ids = id + 64;
@@ -104,7 +109,9 @@ static const char *text_message(int bank, int id, size_t *len) {
         return NULL;
     }
     free(sMessage);
-    sMessage = malloc(strlen(t->data + t->at[id]) + 1);
+    if ((sMessage = malloc(strlen(t->data + t->at[id]) + 1)) == NULL) {
+        return NULL;
+    }
     for (p = t->data + t->at[id]; *p && !(p[0] == '#' && (p == t->data || p[-1] == '\n')); p++) {
         if (p[0] == '\\' && p[1] != 0 && p[1] != '\n') {   /* \\ \{ \} \# */
             sMessage[n++] = *++p;
@@ -164,6 +171,8 @@ static GameFont *font_get(int which) {
     if (txt == NULL || g->index == NULL || clut == NULL || cw != PALETTE_COLORS) {
         free(txt);
         free(clut);
+        free(g->index);
+        g->index = NULL;
         return NULL;
     }
     g->palettes = ch < MAX_PALETTES ? ch : MAX_PALETTES;
@@ -195,7 +204,7 @@ static GpuTexture font_texture(GameFont *g, int palette) {
         size_t i;
 
         for (i = 0; i < (size_t)g->atlas_w * g->atlas_h; i++) {
-            memcpy(rgba + i * 4, g->clut[palette][g->index[i] & 15], 4);
+            memcpy(rgba + i * 4, g->clut[palette][g->index[i] % PALETTE_COLORS], 4);
             if (rgba[i * 4 + 3] != 0) {
                 rgba[i * 4 + 3] = 255;   /* (the font's colours are solid; the value 0 is clear) */
             }
@@ -259,7 +268,7 @@ static void font_draw(GameFont *g, const char *s, int n, float x, float y, float
             cx = x;
             y += LINE_GAP * scale;
         } else if (c < g->glyphs) {
-            int col = c % 16, row = c / 16;   /* (16 glyphs a row in the atlas: data/mfo.h) */
+            int col = c % MFO_ATLAS_COLUMNS, row = c / MFO_ATLAS_COLUMNS;
             float u = (float)(col * g->cell_w), v = (float)(row * g->cell_h);
             render_image_uv(t, cx, y, g->width[c] * scale, g->height[c] * scale, u / t.w, v / t.h,
                             (u + g->width[c]) / t.w, (v + g->height[c]) / t.h, rgba);

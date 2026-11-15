@@ -20,6 +20,7 @@
 #endif
 
 #if defined(__linux__)
+#include <errno.h>
 #include <spawn.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -44,6 +45,9 @@ static int run(char *const argv[]) {
         return 0;
     }
     while (waitpid(pid, &status, 0) < 0) {
+        if (errno != EINTR) {
+            return 0;
+        }
     }
     return WIFEXITED(status) && WEXITSTATUS(status) == 0;
 }

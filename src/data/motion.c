@@ -175,8 +175,15 @@ int motion_from_text(Motion *m, const char *s, size_t n, char *why, size_t nwhy)
         if (strcmp(line, "om-motion 1") == 0 || strcmp(line, "om-prop-motion 1") == 0) {
             got_format = 1;
             m->prop = line[3] == 'p';
-        } else if (sscanf(line, "parts %d", &m->parts) == 1 || sscanf(line, "stride %d", &m->parts) == 1 ||
-                   sscanf(line, "frames %d", &m->frames) == 1) {
+        } else if (strncmp(line, "parts ", 6) == 0 || strncmp(line, "stride ", 7) == 0 || strncmp(line, "frames ", 7) == 0) {
+            if (m->move != NULL ||   /* (the frames are laid out by then) */
+                (sscanf(line, "parts %d", &m->parts) != 1 && sscanf(line, "stride %d", &m->parts) != 1 &&
+                 sscanf(line, "frames %d", &m->frames) != 1)) {
+                snprintf(why, nwhy, "a motion's parts and frames come once, before its frames");
+                free(copy);
+                motion_free(m);
+                return 0;
+            }
         } else if (strncmp(line, "frame ", 6) == 0) {
             char *at = line + 6, *end;
             int i, p, k;

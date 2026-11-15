@@ -48,6 +48,17 @@ long text_find_block(const uint8_t *d, size_t n) {
     return -1;
 }
 
+/* the u16 at off + i * 2 in an MDD's table at `table` (offsets from the block's start + 4), if it is in the block */
+static int mdd_u16(const uint8_t *d, size_t n, uint32_t table, size_t i, unsigned *v) {
+    size_t at = 4 + (size_t)table + i * 2;
+
+    if (at + 2 > n) {
+        return 0;
+    }
+    *v = le16(d + at);
+    return 1;
+}
+
 static int decode_mdd(TextBlock *b, const uint8_t *d, size_t n) {
     uint32_t w[MDD_WORDS];
     const uint8_t *base = d + 4;
@@ -60,20 +71,25 @@ static int decode_mdd(TextBlock *b, const uint8_t *d, size_t n) {
         w[i] = le32(d + i * 4);
     }
     for (i = MDD_INDEX; i < MDD_WORDS; i += i < MDD_ZERO ? 1 : 2) {
-        if (w[i] + 4 > n) {
+        if ((size_t)w[i] + 4 > n) {
             return 0;
         }
+    }
+    /* (every message's index entry and start bit in the block) */
+    if (w[MDD_COUNT] > (n - 4 - w[MDD_INDEX]) / 4 || w[MDD_COUNT] > n - 4 - w[MDD_START_BIT]) {
+        return 0;
     }
     b->n = (int)w[MDD_COUNT];
     b->messages = calloc((size_t)b->n + 1, sizeof(TextMessage));
     for (m = 0; m < b->n; m++) {
         const uint8_t *entry = base + w[MDD_INDEX] + m * 4, *p;
-        int len = le16(entry + 2), used = base[w[MDD_START_BIT] + m], node = 0;
+        int len = le16(entry + 2), used = base[w[MDD_START_BIT] + m];
+        unsigned node = 0;
         uint8_t cur;
         TextMessage *msg = &b->messages[m];
 
         p = base + w[MDD_BITS] + le16(entry);
-        if (p >= d + n) {
+        if (p >= d + n || used > 8) {
             return 0;
         }
         cur = (uint8_t)(*p++ << used);
@@ -92,9 +108,16 @@ static int decode_mdd(TextBlock *b, const uint8_t *d, size_t n) {
             bit = cur & 0x80;
             cur = (uint8_t)(cur << 1);
             used++;
-            node = le16(base + (bit ? w[MDD_ONE] : w[MDD_ZERO]) + node * 2);
+            if (!mdd_u16(d, n, bit ? w[MDD_ONE] : w[MDD_ZERO], node, &node)) {
+                return 0;
+            }
             if (node >= MDD_LEAF_FLAG) {
-                msg->codes[msg->n++] = le16(base + w[MDD_LEAVES] + (node - MDD_LEAF_FLAG) * 2);
+                unsigned code;
+
+                if (!mdd_u16(d, n, w[MDD_LEAVES], node - MDD_LEAF_FLAG, &code)) {
+                    return 0;
+                }
+                msg->codes[msg->n++] = (uint16_t)code;
                 node = 0;
             }
         }

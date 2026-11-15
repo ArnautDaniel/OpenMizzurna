@@ -76,7 +76,7 @@ uint8_t *roads_from_text(RoadsKind kind, const char *s, size_t n, size_t *len) {
         if (line[0] == '#') {
             continue;
         }
-        if (sscanf(line, kind == ROADS_NODES ? "nodes %zu" : "points %zu", &count) == 1) {
+        if (d == NULL && sscanf(line, kind == ROADS_NODES ? "nodes %zu" : "points %zu", &count) == 1) {
             d = calloc(count, size);
             ok = 1;
         } else if (d != NULL && kind == ROADS_NODES &&

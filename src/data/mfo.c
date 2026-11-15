@@ -12,6 +12,7 @@
 #define PALETTE_ENTRY 8
 #define PALETTE_COLORS 16
 #define GLYPH_ENTRY 8
+#define TEXT_LINE 80   /* room for a line of the font's text (but the comment's) */
 
 static uint16_t le16(const uint8_t *p) { return (uint16_t)(p[0] | p[1] << 8); }
 static uint32_t le32(const uint8_t *p) { return p[0] | p[1] << 8 | p[2] << 16 | (uint32_t)p[3] << 24; }
@@ -68,13 +69,14 @@ int mfo_convert(const uint8_t *d, size_t n, const char *name, const char *what, 
     Font f;
     int i, x, y, rows, w, ok;
     uint8_t *idx, *pal, *clut, *png;
-    size_t len, cap = 65536;
+    size_t len, cap;
     char path[320], *txt;
     int k;
 
     if (!parse(&f, d, n)) {
         return 0;
     }
+    cap = TEXT_LINE * (8 + (size_t)f.palettes + (size_t)f.glyphs) + strlen(what);
     rows = (f.glyphs + MFO_ATLAS_COLUMNS - 1) / MFO_ATLAS_COLUMNS;
     w = MFO_ATLAS_COLUMNS * f.cell_w;
     idx = calloc((size_t)w * rows * f.cell_h, 1);
@@ -171,7 +173,13 @@ uint8_t *mfo_rebuild(const char *name, MfoReadFn read, void *ctx, size_t *size) 
         } else if (sscanf(line, "glyphs %d", &a) == 1) {
             glyphs = a;
         } else if (sscanf(line, "size %zu", &nn) == 1) {
+            if (out != NULL || nn < HEADER || cw <= 0 || ch <= 0 || palettes < 0 || glyphs < 0 ||
+                HEADER + (size_t)palettes * PALETTE_ENTRY > nn) {
+                ok = 0;   /* (the cells and counts come first, and once) */
+                break;
+            }
             n = nn;
+            glyph_table = HEADER + (size_t)palettes * PALETTE_ENTRY;
             out = calloc(n, 1);
             memcpy(out, "MFO", 4);
             out[4] = (uint8_t)cw, out[5] = (uint8_t)ch, out[6] = (uint8_t)u0, out[7] = (uint8_t)u1;
@@ -179,7 +187,7 @@ uint8_t *mfo_rebuild(const char *name, MfoReadFn read, void *ctx, size_t *size) 
             put16(out + 14, (uint32_t)palettes);
         } else if (sscanf(line, "palette %d at %u", &i, &off) == 2) {
             size_t at2 = HEADER + (size_t)palettes * PALETTE_ENTRY + off;
-            if (out == NULL || i >= cl_h || at2 + PALETTE_COLORS * 2 > n) {
+            if (out == NULL || i < 0 || i >= palettes || i >= cl_h || at2 + PALETTE_COLORS * 2 > n) {
                 ok = 0;
                 break;
             }
@@ -194,7 +202,7 @@ uint8_t *mfo_rebuild(const char *name, MfoReadFn read, void *ctx, size_t *size) 
             int x, y, row = (a + 1) / 2, ox = (i % MFO_ATLAS_COLUMNS) * cw, oy = (i / MFO_ATLAS_COLUMNS) * ch;
             uint8_t *g, *bm;
 
-            if (out == NULL || i >= glyphs) {
+            if (out == NULL || i < 0 || i >= glyphs || a < 0 || b < 0) {
                 ok = 0;
                 break;
             }
@@ -203,7 +211,7 @@ uint8_t *mfo_rebuild(const char *name, MfoReadFn read, void *ctx, size_t *size) 
                 bitmaps = glyph_table + (size_t)glyphs * GLYPH_ENTRY;
             }
             g = out + glyph_table + i * GLYPH_ENTRY;
-            if (bitmaps + off + (size_t)row * b > n || ox + a > aw || oy + b > ah) {
+            if (bitmaps > n || bitmaps + off + (size_t)row * b > n || ox + a > aw || oy + b > ah) {
                 ok = 0;
                 break;
             }

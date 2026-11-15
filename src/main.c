@@ -78,7 +78,7 @@ static int parse_options(int argc, char **argv, Options *o) {
 /* the scripts' folder: $OM_SCRIPTS, else the one this build was made from, else scripts/ beside the program */
 static const char *script_dir(void) {
     static char dir[1024];
-    const char *env = getenv("OM_SCRIPTS");
+    const char *env = getenv("OM_SCRIPTS"), *base;
 
     if (env != NULL) {
         return env;
@@ -86,7 +86,8 @@ static const char *script_dir(void) {
     if (OM_SCRIPT_DIR[0]) {
         return OM_SCRIPT_DIR;
     }
-    snprintf(dir, sizeof(dir), "%sscripts", SDL_GetBasePath());
+    base = SDL_GetBasePath();
+    snprintf(dir, sizeof(dir), "%sscripts", base != NULL ? base : "./");
     return dir;
 }
 

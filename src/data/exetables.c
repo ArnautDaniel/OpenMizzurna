@@ -11,8 +11,8 @@
 
 #define AREA_CODE_LOAD_ADDRESS 0x80101ED0u   /* an area's code file (its overlay) in the running program */
 
-#define AREA_TABLE (34 * 2)
-#define STOPS 99   /* a schedule's stops at most (src: the handlers' bounds) */   /* an s16 an area */
+#define AREA_TABLE (34 * 2)   /* an s16 an area */
+#define STOPS 99   /* a schedule's stops at most (src: the handlers' bounds) */
 #define HOURS 24
 #define HOUR_RGB (HOURS * 3)       /* u8 red, green, blue tables */
 #define HOUR_XYZ (HOURS * 3 * 2)   /* s16 x, y, z tables */

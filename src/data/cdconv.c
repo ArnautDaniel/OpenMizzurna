@@ -17,6 +17,7 @@
 #include <string.h>
 
 #define INDEX_FORMAT "om-container 1"
+#define INDEX_LINE 64         /* room for index.txt's header, and for a part's line but its file's name */
 #define MODEL_MAGIC 0x88FA   /* a model (SPL: its parts, then a TMD) starts with this u16 */
 
 typedef enum { PART_EMPTY, PART_FOLDER, PART_IMAGE, PART_TEXT, PART_BANK, PART_SEQUENCES, PART_MODEL, PART_FONT, PART_RAW } PartKind;
@@ -154,17 +155,25 @@ static int convert_part(const char *base, const char *what, const uint8_t *d, si
         return 1;
     case PART_FOLDER: {
         Container c;
-        char index[32768], sub[600], subfile[320];
-        int i, k;
+        char sub[600], subfile[320], *index;
+        size_t nindex;
+        int i, k, ok;
 
         container_parse(&c, d, n);
-        k = snprintf(index, sizeof(index), "%s\nparts %d\ntail %zu\n", INDEX_FORMAT, c.n, c.tail);
+        nindex = INDEX_LINE + (size_t)c.n * (INDEX_LINE + sizeof(subfile));   /* (a line a part, its file's name the longest) */
+        index = malloc(nindex);
+        if (index == NULL) {
+            snprintf(why, nwhy, "%s: out of memory", base);
+            return 0;
+        }
+        k = snprintf(index, nindex, "%s\nparts %d\ntail %zu\n", INDEX_FORMAT, c.n, c.tail);
         for (i = 0; i < c.n; i++) {
             char sub_what[300];
 
             snprintf(sub, sizeof(sub), "%s/%d", base, i);
             snprintf(sub_what, sizeof(sub_what), "%s, part %d", what, i);
             if (!convert_part(sub, sub_what, c.parts[i].data, c.parts[i].size, write, ctx, subfile, sizeof(subfile), why, nwhy)) {
+                free(index);
                 return 0;
             }
             {
@@ -174,7 +183,7 @@ static int convert_part(const char *base, const char *what, const uint8_t *d, si
                 if (is_motion) {
                     motion_free(&mo);
                 }
-                k += snprintf(index + k, sizeof(index) - (size_t)k, "part %d %s %s\n", i,
+                k += snprintf(index + k, nindex - (size_t)k, "part %d %s %s\n", i,
                               is_motion ? "motion"
                               : kind_of(c.parts[i].data, c.parts[i].size) == PART_RAW &&
                                         billboards_part(sub, c.parts[i].data, c.parts[i].size) ? "billboards"
@@ -185,7 +194,9 @@ static int convert_part(const char *base, const char *what, const uint8_t *d, si
         }
         snprintf(path, sizeof(path), "%s/index.txt", base);
         snprintf(file, nfile, "%s/", leaf);
-        return write(ctx, path, (const uint8_t *)index, (size_t)k);
+        ok = write(ctx, path, (const uint8_t *)index, (size_t)k);
+        free(index);
+        return ok;
     }
     case PART_IMAGE: {
         Tim t;
@@ -220,7 +231,7 @@ static int convert_part(const char *base, const char *what, const uint8_t *d, si
 
         snprintf(path, sizeof(path), "%s.sep/index.txt", base);
         snprintf(file, nfile, "%s.sep/", leaf);
-        ok = write(ctx, path, (const uint8_t *)index, len);
+        ok = index != NULL && write(ctx, path, (const uint8_t *)index, len);
         free(index);
         for (i = 0; ok && i < count; i++) {
             uint8_t *mid = sep_to_midi(d, n, i, &len);
@@ -328,7 +339,7 @@ int cdconv_body(const char *name, const uint8_t *vb, size_t n, const uint8_t *vh
         pcm = vab_decode_sample(vb + at, bytes, &frames, &loop);
         wav = vab_wav(pcm, frames, VAB_RATE, loop, &len);
         snprintf(path, sizeof(path), "cdbin/%s.samples/%d.wav", name, i);
-        ok = write(ctx, path, wav, len);
+        ok = wav != NULL && write(ctx, path, wav, len);
         snprintf(line, sizeof(line), "sample %d bytes %zu frames %ld loop %ld\n", i, bytes, frames, loop);
         k += snprintf(list + k, 64 * 1024 - (size_t)k, "%s", line);
         free(pcm);
@@ -508,7 +519,7 @@ static int check_part(const char *base, const uint8_t *d, size_t n, CdconvReadFn
 
         container_parse(&c, d, n);
         rebuilt = container_build(c.parts, c.n, c.tail, &rebuilt_n);   /* (the layout: the same bytes) */
-        ok = rebuilt_n == n && memcmp(rebuilt, d, n) == 0;
+        ok = rebuilt != NULL && rebuilt_n == n && memcmp(rebuilt, d, n) == 0;
         free(rebuilt);
         if (!ok) {
             snprintf(why, nwhy, "%s: the container doesn't lay out as the game's", base);

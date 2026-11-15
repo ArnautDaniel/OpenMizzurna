@@ -17,6 +17,7 @@ are built, each listed here.
 | `key-hold` | `scancode flag --` | hold a key from a script (demos, tests) |
 | `on-tick`, `off-tick` | `xt --` | run a word every tick |
 | `ticks` | `-- n` | simulation steps since start (for tools; game logic uses real time) |
+| `run-tick` | `--` | a step as the main loop runs one: the tick hooks, the tasks, the actors' frame (tests) |
 | `dt` | `F: -- seconds` | a step's length (1/30 by default) |
 | `seconds` | `F: s -- steps` | real time as steps, for `wait` (`0.5e seconds wait`); at least one for any time |
 | `heading-toward` | `dx dz -- heading` | the way of (dx, dz) in the original's angles (4096 a turn, 0 .. 4095; src: ratan2) |

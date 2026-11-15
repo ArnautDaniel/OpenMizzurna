@@ -113,7 +113,7 @@ static int describe(const char *name, char *sound, size_t nsound) {
         sscanf(line, "rate %lf", &M.rate);
         sscanf(line, "frames %d", &M.frames);
         sscanf(line, "delay %lf", &M.delay);
-        if (strncmp(line, "sound ", 6) == 0) {
+        if (strncmp(line, "sound ", 6) == 0 && strcmp(line + 6, "none") != 0) {   /* (none: a silent movie) */
             snprintf(sound, nsound, "movies/%s", line + 6);
         }
     }
@@ -147,7 +147,8 @@ int movie_open(const char *name, float volume) {
     M.f = av_frame_alloc();
     M.p = av_packet_alloc();
     M.rgba = malloc((size_t)M.w * M.h * 4);
-    if (M.x == NULL || M.ps == NULL || avcodec_open2(M.x, M.codec, NULL) < 0) {
+    if (M.x == NULL || M.ps == NULL || M.f == NULL || M.p == NULL || M.rgba == NULL ||
+        avcodec_open2(M.x, M.codec, NULL) < 0) {
         M.open = 1;
         movie_close();
         return 0;
@@ -155,6 +156,8 @@ int movie_open(const char *name, float volume) {
     M.open = 1;
     if (sound[0]) {
         au_flac_play(sound, volume);
+    } else {
+        au_xa_stop();   /* (a silent movie: the stream it would have played stops all the same) */
     }
     return 1;
 }

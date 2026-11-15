@@ -45,6 +45,7 @@ static struct {
     int loc_ps;
     int w, h;
     uint8_t *last_frame;   /* for render_screenshot: read back at render_end when asked */
+    int shot_w, shot_h;    /* its size (the window's then) */
     int want_shot;
 } R;
 
@@ -383,7 +384,11 @@ void render_end(void) {
     if (R.want_shot) {   /* (read back now: after the swap the back buffer is undefined) */
         free(R.last_frame);
         R.last_frame = malloc((size_t)R.w * R.h * 4);
-        glReadnPixels(0, 0, R.w, R.h, GL_RGBA, GL_UNSIGNED_BYTE, R.w * R.h * 4, R.last_frame);
+        R.shot_w = R.w;
+        R.shot_h = R.h;
+        if (R.last_frame != NULL) {
+            glReadnPixels(0, 0, R.w, R.h, GL_RGBA, GL_UNSIGNED_BYTE, R.w * R.h * 4, R.last_frame);
+        }
         R.want_shot = 0;
     }
 }
@@ -397,23 +402,26 @@ static void write_to_file(void *ctx, void *data, int n) {
 /* the picture is read back at the next render_end: call it, run a frame, then call it again to write */
 int render_screenshot(const char *path) {
     uint8_t *flipped;
-    int y, ok;
+    int y, ok, w = R.shot_w, h = R.shot_h;   /* (the frame's size when it was read: the window may have changed) */
 
     if (R.last_frame == NULL) {
         R.want_shot = 1;
         return 0;
     }
-    flipped = malloc((size_t)R.w * R.h * 4);
-    for (y = 0; y < R.h; y++) {   /* (GL's rows go up from the bottom) */
-        memcpy(flipped + (size_t)y * R.w * 4, R.last_frame + (size_t)(R.h - 1 - y) * R.w * 4, (size_t)R.w * 4);
+    flipped = malloc((size_t)w * h * 4);
+    if (flipped == NULL) {
+        return 0;
     }
-    for (y = 0; y < R.w * R.h; y++) {   /* (opaque, as the screen shows it: blending leaves alpha below 1) */
+    for (y = 0; y < h; y++) {   /* (GL's rows go up from the bottom) */
+        memcpy(flipped + (size_t)y * w * 4, R.last_frame + (size_t)(h - 1 - y) * w * 4, (size_t)w * 4);
+    }
+    for (y = 0; y < w * h; y++) {   /* (opaque, as the screen shows it: blending leaves alpha below 1) */
         flipped[y * 4 + 3] = 255;
     }
     {
         FILE *out = fopen(path, "wb");
 
-        ok = out != NULL && stbi_write_png_to_func(write_to_file, out, R.w, R.h, 4, flipped, R.w * 4) != 0;
+        ok = out != NULL && stbi_write_png_to_func(write_to_file, out, w, h, 4, flipped, w * 4) != 0;
         if (out != NULL) {
             ok = fclose(out) == 0 && ok;
         }

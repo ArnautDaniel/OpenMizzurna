@@ -93,8 +93,10 @@ static SDL_EnumerationResult remove_one(void *user, const char *dir, const char 
     (void)user;
     snprintf(path, sizeof(path), "%s%s", dir, name);
     if (SDL_GetPathInfo(path, &info) && info.type == SDL_PATHTYPE_DIRECTORY) {
-        strcat(path, "/");
-        SDL_EnumerateDirectory(path, remove_one, NULL);
+        char sub[1201];
+
+        snprintf(sub, sizeof(sub), "%s/", path);
+        SDL_EnumerateDirectory(sub, remove_one, NULL);
     }
     SDL_RemovePath(path);
     return SDL_ENUM_CONTINUE;
@@ -578,6 +580,11 @@ static int pick_and_import(const char *reason) {
         im = calloc(1, sizeof(*im));
         snprintf(im->disc, sizeof(im->disc), "%s", pick.path);
         t = SDL_CreateThread(import_thread, "import", im);
+        if (t == NULL) {
+            fprintf(stderr, "openmizzurna: can't start the import (%s)\n", SDL_GetError());
+            free(im);
+            return 0;
+        }
         while (SDL_GetAtomicInt(&im->finished) == 0) {
             int total = SDL_GetAtomicInt(&im->total_bytes_k);
             char line[300];

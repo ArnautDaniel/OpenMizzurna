@@ -140,6 +140,10 @@ Disc *disc_open(const char *path, char *why, size_t nwhy) {
         snprintf(bin, sizeof(bin), "%s", path);
     }
     d = calloc(1, sizeof(*d));
+    if (d == NULL) {
+        snprintf(why, nwhy, "out of memory");
+        return NULL;
+    }
     d->bin = fopen(bin, "rb");
     if (d->bin == NULL) {
         snprintf(why, nwhy, "can't read %s", bin);
@@ -223,7 +227,7 @@ uint8_t *disc_read_all(Disc *d, const char *path, size_t *size) {
         return NULL;
     }
     buf = malloc(disc_file_bytes(e) + 1);
-    if (!disc_read(d, e, buf)) {
+    if (buf == NULL || !disc_read(d, e, buf)) {
         free(buf);
         return NULL;
     }

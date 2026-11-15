@@ -301,6 +301,9 @@ int str_frame(const StrMovie *m, int i, uint8_t *y, uint8_t *cb, uint8_t *cr) {
             memcpy(bs + (size_t)chunk * CHUNK, hd + 32, CHUNK);
         }
     }
+    if (chunks > MAX_CHUNKS) {   /* (a damaged sector's count: no more than the frame's buffer holds) */
+        chunks = MAX_CHUNKS;
+    }
     if (size > chunks * CHUNK) {
         size = chunks * CHUNK;
     }

@@ -11,17 +11,12 @@
 #define FULL 127.0f
 #define MS 1000.0f
 
-static void path_of(Forth *f, char *buf, size_t size) {   /* ( addr len -- ) */
-    Cell n = POP();
-    const char *s = (const char *)POP();
-    snprintf(buf, size, "%.*s", (int)n, s);
-}
 
 PRIM(p_bank_load) {   /* ( text len samples len slot -- flag ) a bank: its header's text, its samples' folder */
     Cell slot = POP();
     char text[200], samples[200];
-    path_of(f, samples, sizeof(samples));
-    path_of(f, text, sizeof(text));
+    engine_string(f, samples, sizeof(samples));
+    engine_string(f, text, sizeof(text));
     PUSH(au_bank_load((int)slot, text, samples) ? -1 : 0);
 }
 PRIM(p_bank_free) { au_bank_free((int)POP()); }   /* ( slot -- ) */
@@ -48,7 +43,7 @@ PRIM(p_reverb_type) { PUSH(au_reverb_type()); }   /* ( -- type ) */
 PRIM(p_sep_load) {   /* ( folder len bank -- sep | -1 ) */
     Cell bank = POP();
     char folder[200];
-    path_of(f, folder, sizeof(folder));
+    engine_string(f, folder, sizeof(folder));
     PUSH(au_sep_load(folder, (int)bank));
 }
 PRIM(p_sep_free) { au_sep_free((int)POP()); }   /* ( sep -- ) */
@@ -68,7 +63,7 @@ PRIM(p_xa_playing) { PUSH(au_xa_playing() ? -1 : 0); }   /* ( -- flag ) */
 PRIM(p_audio_record) {   /* ( path len frames -- flag ) the mixer on, its output into a WAV file (development) */
     Cell frames = POP();
     char path[300];
-    path_of(f, path, sizeof(path));
+    engine_string(f, path, sizeof(path));
     PUSH(au_record(path, (int)frames) ? -1 : 0);
 }
 PRIM(p_audio_run) { au_run((int)POP()); }   /* ( frames -- ) the mixer on by that many 44.1 kHz frames (no device: tests) */

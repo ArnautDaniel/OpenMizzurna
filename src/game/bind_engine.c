@@ -25,7 +25,7 @@ Engine gEngine;
 #define POP() forth_pop(f)
 #define PUSH(x) forth_push(f, (Cell)(x))
 
-static char *cstring(Forth *f, char *buf, size_t size) {   /* ( addr len -- ) into buf */
+char *engine_string(Forth *f, char *buf, size_t size) {   /* ( addr len -- ) into buf */
     Cell len = POP();
     const char *s = (const char *)POP();
 
@@ -192,7 +192,7 @@ PRIM(p_library_file) {   /* ( addr len -- addr n ) a library file's bytes (kept:
     char path[160];
     LibraryFile *e;
 
-    cstring(f, path, sizeof(path));
+    engine_string(f, path, sizeof(path));
     e = library_file(f, path);
     PUSH(e->data);
     PUSH(e->size);
@@ -205,22 +205,35 @@ static void hook_add(Forth *f, Word **list, int *n, Word *xt) {
     }
     list[(*n)++] = xt;
 }
-static void hook_remove(Word **list, int *n, Word *xt) {
+/* the hook being run in each list (-1: none): a hook taken off at or before it moves it back, so the one after
+ * isn't skipped (a hook may take itself, or another, off while it runs) */
+static int sTickAt = -1, sDrawAt = -1;
+
+static void hook_remove(Word **list, int *n, Word *xt, int *at) {
     int i;
 
     for (i = 0; i < *n; i++) {
         if (list[i] == xt) {
             memmove(list + i, list + i + 1, sizeof(*list) * (size_t)(*n - i - 1));
             (*n)--;
+            if (i <= *at) {
+                (*at)--;
+            }
             return;
         }
     }
 }
 PRIM(p_on_tick) { hook_add(f, gEngine.tick_hooks, &gEngine.ntick_hooks, (Word *)POP()); }
-PRIM(p_off_tick) { hook_remove(gEngine.tick_hooks, &gEngine.ntick_hooks, (Word *)POP()); }
+PRIM(p_off_tick) { hook_remove(gEngine.tick_hooks, &gEngine.ntick_hooks, (Word *)POP(), &sTickAt); }
 PRIM(p_on_draw) { hook_add(f, gEngine.draw_hooks, &gEngine.ndraw_hooks, (Word *)POP()); }
-PRIM(p_off_draw) { hook_remove(gEngine.draw_hooks, &gEngine.ndraw_hooks, (Word *)POP()); }
+PRIM(p_off_draw) { hook_remove(gEngine.draw_hooks, &gEngine.ndraw_hooks, (Word *)POP(), &sDrawAt); }
 PRIM(p_ticks) { PUSH(gEngine.ticks); }
+PRIM(p_run_tick) {   /* ( -- ) a step of the engine's, as the main loop runs one: the tick hooks, tasks, actors (tests) */
+    if (sTickAt >= 0) {
+        forth_error(f, "run-tick: a tick is being run");
+    }
+    engine_tick(&gEngine);
+}
 PRIM(p_dt) { forth_fpush(f, 1.0 / STEPS_PER_SECOND); }   /* ( F: -- seconds ) a step's length */
 PRIM(p_seconds) {   /* ( F: seconds -- steps ) as whole steps, at least one for any time > 0 (for `wait`) */
     Float s = forth_fpop(f);
@@ -286,7 +299,7 @@ PRIM(p_char_size) {
     PUSH((Cell)render_text_width((float)gEngine.pen_scale, 1));
     PUSH((Cell)render_line_height((float)gEngine.pen_scale));
 }
-PRIM(p_hud) { cstring(f, gEngine.hud, sizeof(gEngine.hud)); }   /* ( addr len -- ) a line at the bottom */
+PRIM(p_hud) { engine_string(f, gEngine.hud, sizeof(gEngine.hud)); }   /* ( addr len -- ) a line at the bottom */
 PRIM(p_clear_color) {   /* ( F: r g b -- ) */
     gEngine.clear[2] = (float)forth_fpop(f);
     gEngine.clear[1] = (float)forth_fpop(f);
@@ -298,7 +311,7 @@ PRIM(p_exe_table) {   /* ( addr len -- addr n ) a table of the executable by nam
     char name[64], path[96];
     LibraryFile *e;
 
-    cstring(f, name, sizeof(name));
+    engine_string(f, name, sizeof(name));
     snprintf(path, sizeof(path), "exe/%s.bin", name);
     e = library_file(f, path);
     PUSH(e->data);
@@ -314,14 +327,12 @@ static struct {
 static int sNImages;
 
 PRIM(p_image) {   /* ( addr len -- image ) a picture from the library (a PNG); 0 if it isn't there */
-    Cell len = POP();
-    const char *s = (const char *)POP();
     char path[160];
     size_t n;
     uint8_t *file, *rgba;
     int i, iw = 0, ih = 0;
 
-    snprintf(path, sizeof(path), "%.*s", (int)len, s);
+    engine_string(f, path, sizeof(path));
     for (i = 0; i < sNImages; i++) {
         if (strcmp(sImages[i].path, path) == 0) {
             PUSH(sImages[i].t.id != 0 ? i + 1 : 0);
@@ -372,9 +383,10 @@ PRIM(p_draw_image_quad_part) {   /* ( image u v w h x0 y0 x1 y1 x2 y2 x3 y3 -- )
 /* the player's own files (saves): <home>/saves/<name> */
 #define SAVES_DIR "saves/"
 static void save_path(Forth *f, char *buf, size_t size) {   /* ( name len -- ) */
-    Cell n = POP();
-    const char *s = (const char *)POP();
-    snprintf(buf, size, "%s%s%.*s", library_home(), SAVES_DIR, (int)n, s);
+    char name[256];
+
+    engine_string(f, name, sizeof(name));
+    snprintf(buf, size, "%s%s%s", library_home(), SAVES_DIR, name);
 }
 /* ---- the errors' log (errors.fs): beside the saves, a fresh one when it has grown large ---- */
 #define ERRORS_LOG "errors.log"
@@ -391,6 +403,9 @@ PRIM(p_errors_log) {   /* ( addr len -- ) a line of the errors' log (this run's 
     char path[1200];
     FILE *fp;
 
+    if (len < 0) {
+        forth_error(f, "errors-log: a string of %ld characters", (long)len);
+    }
     snprintf(path, sizeof(path), "%s" ERRORS_LOG, library_home());
     if (!started) {
         char old[1200], when[64];
@@ -428,6 +443,9 @@ PRIM(p_save_file) {   /* ( addr len name len -- flag ) written whole (the folder
 
     save_path(f, path, sizeof(path));
     len = POP(), addr = POP();
+    if (len < 0) {
+        forth_error(f, "save-file: %ld bytes", (long)len);
+    }
     snprintf(dir, sizeof(dir), "%s%s", library_home(), SAVES_DIR);
     SDL_CreateDirectory(dir);
     fp = fopen(path, "wb");
@@ -444,6 +462,9 @@ PRIM(p_load_file) {   /* ( addr max name len -- n | -1 ) up to max bytes read; -
 
     save_path(f, path, sizeof(path));
     max = POP(), addr = POP();
+    if (max < 0) {
+        forth_error(f, "load-file: room for %ld bytes", (long)max);
+    }
     fp = fopen(path, "rb");
     if (fp == NULL) {
         PUSH(-1);
@@ -455,11 +476,10 @@ PRIM(p_load_file) {   /* ( addr max name len -- n | -1 ) up to max bytes read; -
 /* the movies (movie.h) */
 #define FULL_VOLUME 127.0f
 PRIM(p_movie_open) {   /* ( name len volume -- flag ) movies/<name>: its pictures from now, its sound playing */
-    Cell vol = POP(), n = POP();
-    const char *s = (const char *)POP();
+    Cell vol = POP();
     char name[64];
 
-    snprintf(name, sizeof(name), "%.*s", (int)n, s);
+    engine_string(f, name, sizeof(name));
     PUSH(movie_open(name, (float)vol / FULL_VOLUME) ? -1 : 0);
 }
 PRIM(p_movie_advance) { PUSH(movie_advance(1.0 / STEPS_PER_SECOND)); }   /* ( -- frame ) a step on: -1 before, -2 over */
@@ -546,7 +566,7 @@ PRIM(p_random) {   /* ( n -- 0..n-1 ) (a xorshift; seeded once from the clock) *
 }
 
 /* ---- tools ---- */
-PRIM(p_screenshot) { cstring(f, gEngine.screenshot, sizeof(gEngine.screenshot)); }   /* ( addr len -- ) */
+PRIM(p_screenshot) { engine_string(f, gEngine.screenshot, sizeof(gEngine.screenshot)); }   /* ( addr len -- ) */
 PRIM(p_screenshot_pending) { PUSH(gEngine.screenshot[0] ? -1 : 0); }
 PRIM(p_console_store) { gEngine.console.open = POP() != 0; }   /* ( flag -- ) */
 
@@ -554,7 +574,7 @@ void bind_engine(Forth *f) {
     static const struct { const char *name; Code code; } kWords[] = {
         {"key:", p_key_name}, {"key-down?", p_key_down}, {"key-pressed?", p_key_pressed}, {"key-hold", p_key_hold},
         {"on-tick", p_on_tick}, {"off-tick", p_off_tick}, {"on-draw", p_on_draw}, {"off-draw", p_off_draw},
-        {"ticks", p_ticks}, {"dt", p_dt}, {"seconds", p_seconds}, {"step-blend", p_step_blend}, {"pen-color", p_pen_color}, {"pen-scale", p_pen_scale}, {"draw-text", p_draw_text},
+        {"ticks", p_ticks}, {"run-tick", p_run_tick}, {"dt", p_dt}, {"seconds", p_seconds}, {"step-blend", p_step_blend}, {"pen-color", p_pen_color}, {"pen-scale", p_pen_scale}, {"draw-text", p_draw_text},
         {"draw-rect", p_draw_rect}, {"pen-blend", p_pen_blend}, {"draw-quad", p_draw_quad}, {"screen-size", p_screen_size}, {"char-size", p_char_size}, {"hud", p_hud},
         {"clear-color", p_clear_color}, {"random", p_random}, {"image", p_image}, {"image-size", p_image_size}, {"draw-image", p_draw_image}, {"draw-image-quad", p_draw_image_quad}, {"draw-image-part", p_draw_image_part}, {"clip-2d", p_clip}, {"reboot", p_reboot}, {"movie-open", p_movie_open}, {"movie-advance", p_movie_advance}, {"movie-draw", p_movie_draw}, {"movie-close", p_movie_close}, {"save-file", p_save_file}, {"errors-log", p_errors_log}, {"load-file", p_load_file}, {"draw-image-quad-part", p_draw_image_quad_part}, {"behind", p_behind}, {"pad-rumble", p_pad_rumble}, {"draw-billboard", p_draw_billboard}, {"draw-ground-quad", p_draw_ground_quad}, {"screenshot", p_screenshot},
         {"screenshot-pending?", p_screenshot_pending}, {"console!", p_console_store}, {"exe-table", p_exe_table}, {"library-file", p_library_file}, {"exe-u8", p_exe_u8}, {"exe-s8", p_exe_s8}, {"exe-s16", p_exe_s16}, {"exe-s32", p_exe_s32},
@@ -586,34 +606,30 @@ void bind_engine(Forth *f) {
 }
 
 void engine_tick(Engine *e) {
-    int i;
-
-    for (i = 0; i < e->ntick_hooks; i++) {
-        Word *hook = e->tick_hooks[i];
+    for (sTickAt = 0; sTickAt < e->ntick_hooks; sTickAt++) {
+        Word *hook = e->tick_hooks[sTickAt];
 
         if (forth_call(e->forth, hook) != 0) {   /* (a hook that errs is taken off) */
             forth_printf(e->forth, "the tick hook %s failed and was removed\n", hook->name);
-            hook_remove(e->tick_hooks, &e->ntick_hooks, hook);
-            i--;
+            hook_remove(e->tick_hooks, &e->ntick_hooks, hook, &sTickAt);
         }
     }
+    sTickAt = -1;
     forth_run_tasks(e->forth);
     mactor_frame(e->forth);
     e->ticks++;
 }
 
 void engine_draw_2d(Engine *e) {
-    int i;
-
-    for (i = 0; i < e->ndraw_hooks; i++) {
-        Word *hook = e->draw_hooks[i];
+    for (sDrawAt = 0; sDrawAt < e->ndraw_hooks; sDrawAt++) {
+        Word *hook = e->draw_hooks[sDrawAt];
 
         if (forth_call(e->forth, hook) != 0) {
             forth_printf(e->forth, "the draw hook %s failed and was removed\n", hook->name);
-            hook_remove(e->draw_hooks, &e->ndraw_hooks, hook);
-            i--;
+            hook_remove(e->draw_hooks, &e->ndraw_hooks, hook, &sDrawAt);
         }
     }
+    sDrawAt = -1;
     if (e->hud[0]) {
         float s = 2.0f, y = (float)e->height - render_line_height(s) - 8.0f;
         render_text(8.0f, y, s, 0xFFFFFFFF, e->hud, (int)strlen(e->hud));

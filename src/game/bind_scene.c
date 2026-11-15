@@ -46,12 +46,10 @@ static int room_for(void **table, int *room, int need, size_t size) {   /* 0: ou
 }
 
 PRIM(p_model) {   /* ( addr len -- model ) a model from the library (0: none there) */
-    Cell len = POP();
-    const char *s = (const char *)POP();
     char path[160];
     int i;
 
-    snprintf(path, sizeof(path), "%.*s", (int)len, s);
+    engine_string(f, path, sizeof(path));
     for (i = 0; i < sNModels; i++) {
         if (sModels[i].path[0] != 0 && strcmp(sModels[i].path, path) == 0) {
             PUSH(sModels[i].m != NULL ? i + 1 : 0);
@@ -161,14 +159,12 @@ static MotionSlot *sMotions;
 static int sNMotions, sMotionRoom;
 
 PRIM(p_motion) {   /* ( addr len -- motion ) a character's motion from the library (its .motion.txt; 0: none) */
-    Cell len = POP();
-    const char *s = (const char *)POP();
     char path[160], why[128];
     size_t n;
     uint8_t *text;
     int i;
 
-    snprintf(path, sizeof(path), "%.*s", (int)len, s);
+    engine_string(f, path, sizeof(path));
     for (i = 0; i < sNMotions; i++) {
         if (strcmp(sMotions[i].path, path) == 0) {
             PUSH(sMotions[i].ok ? i + 1 : 0);

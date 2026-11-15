@@ -36,4 +36,20 @@ T{ ask-motions  ask-models  0 nth-name motion  0 nth-name model -> many many 0 0
 testing distance-to: across the ground, whole units cut toward 0 (src: actor_dist_to_point)
 T{ 0 0 3 4 distance-to  10 10 7 6 distance-to  0 0 1 1 distance-to -> 5 5 1 }T
 
+testing a tick hook that takes itself off: the hook after it still runs that tick
+variable hooked
+variable leaving
+: leave-hook ( -- )  leaving @ off-tick ;
+: count-hook ( -- )  1 hooked +! ;
+' leave-hook leaving !
+T{ 0 hooked !  ' leave-hook on-tick  ' count-hook on-tick  run-tick  hooked @ -> 1 }T
+T{ run-tick  hooked @  ' count-hook off-tick -> 2 }T
+
+testing a name given with a negative length, or too long for the word, is an error (not read past its end)
+: negative-model ( -- )  s" models/x.gltf" drop -1 model drop ;
+create long-name 1000 allot
+: long-motion ( -- )  long-name 1000 motion drop ;
+: negative-records ( -- )  s" x.txt" s" node" drop -5 records drop ;
+T{ ' negative-model catch  ' long-motion catch  ' negative-records catch -> -1 -1 -1 }T
+
 test-summary

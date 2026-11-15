@@ -45,7 +45,9 @@ uint8_t *cdbin_unpack(const uint8_t *packed, size_t n, size_t *size) {
         return NULL;
     }
     want = be32(packed + 4);
-    dst = malloc(want + 1);
+    if ((dst = malloc(want + 1)) == NULL) {
+        return NULL;
+    }
     while (in < n) {
         int c = (int8_t)packed[in++];
 
@@ -96,7 +98,9 @@ uint8_t *cdbin_entry(const Cdbin *t, const uint8_t *cdbin, size_t cdbin_size, in
     if (e->size >= PACK_HEADER && memcmp(cdbin + e->offset, PACK_MAGIC, 4) == 0) {
         return cdbin_unpack(cdbin + e->offset, e->size, size);
     }
-    copy = malloc(e->size);
+    if ((copy = malloc(e->size)) == NULL) {
+        return NULL;
+    }
     memcpy(copy, cdbin + e->offset, e->size);
     *size = e->size;
     return copy;

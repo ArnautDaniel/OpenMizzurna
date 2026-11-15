@@ -44,7 +44,7 @@ static void *read_list(const char *path, const char *count_fmt, size_t size, int
         }
         if (items == NULL && sscanf(line, count_fmt, &count) == 1 && count > 0) {
             items = calloc((size_t)count, size);
-            *n = count;
+            *n = items != NULL ? count : 0;
         } else if (items != NULL) {
             item(line, items, *n);
         }
