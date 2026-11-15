@@ -1,11 +1,12 @@
 \ rumble.fs - the pads' motors (docs/subsystems/rumble.md; src: frame.c pad_read_port's motors, cevent's op $155).
 \ A pad has two: the small, on or off, and the large at a strength (0 - 255); each runs for so many of the
-\ original's pad frames (60 a second; -1: until told otherwise) and then stops.
+\ original's frames (its pads read once a game frame, at the frame's end: game-frames; -1: until told otherwise)
+\ and then stops.
 IN: rumble
-USING: engine actors messages settings ;
+USING: engine actors messages settings areas ;
 
 <PRIVATE
-2 constant #ports   60e fconstant pad-frames
+2 constant #ports
 begin-structure motors
   ffield: small-left   ffield: large-left   field: large-strength
 end-structure
@@ -13,8 +14,8 @@ create ports  motors #ports * allot   ports motors #ports * erase
 : port# ( n -- p )  motors * ports + ;
 : running? ( F: left -- flag )  f0= 0= ;
 : wear ( p -- )   \ a tick off each running motor (-1: on for ever)
-    {: p :}  p small-left f@ f0> if  p small-left f@ dt pad-frames f* f- 0e fmax p small-left f!  then
-    p large-left f@ f0> if  p large-left f@ dt pad-frames f* f- 0e fmax p large-left f!  then ;
+    {: p :}  p small-left f@ f0> if  p small-left f@ game-frames f- 0e fmax p small-left f!  then
+    p large-left f@ f0> if  p large-left f@ game-frames f- 0e fmax p large-left f!  then ;
 : drive ( n -- )
     dup port# {: n p :}  p wear
     vibration? 0= if  n false 0 pad-rumble exit  then   \ (the title's menu: vibration off)

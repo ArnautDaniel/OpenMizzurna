@@ -39,7 +39,7 @@ create buildings columns rows * cells allot   buildings columns rows * cells era
 \ 45 animation slots: a door's town side starts its slot - the slot's object of its tile plays the common props'
 \ motion once through (the executable's `town-door-motions`); the tiles with slots (`town-animated-tiles`: column,
 \ row, first slot, count). Three signs keep moving: two turning, one swinging.
-45 constant #town-slots   23 constant #animated-tiles   30e fconstant town-frames-a-second
+45 constant #town-slots   23 constant #animated-tiles
 create slot-motion  #town-slots cells allot   create slot-frame  #town-slots floats allot
 : slot-motion@ ( k -- motion | 0 )  cells slot-motion + @ ;
 : still-slots ( -- )  #town-slots 0 do  0 i cells slot-motion + !  loop ;
@@ -51,7 +51,7 @@ still-slots
     {: k :}  k slot-motion-id prop-motion  k cells slot-motion + !  0e k floats slot-frame + f! ;
 : slot-step ( k -- )   \ (src: once through, then still)
     {: k :}  k slot-motion@ ?dup 0= if  exit  then  {: m :}
-    k floats slot-frame + f@ town-frames-a-second dt f* f+  fdup k floats slot-frame + f!
+    k floats slot-frame + f@ game-frames f+  fdup k floats slot-frame + f!
     f>s m motion-frames >= if  0 k cells slot-motion + !  then ;
 : slots-step ( -- )  #town-slots 0 do  i slot-step  loop ;
 : tile-entry ( i -- col row first count )
@@ -65,9 +65,11 @@ still-slots
     tile-entry {: c r ec er first n :}  ec c =  er r = and if  first n + first ?do  i pose-town-slot  loop  then ;
 : pose-slots ( col row -- )  {: c r :}  #animated-tiles 0 do  c r i pose-entry  loop ;
 \ the signs (object 2 of their tiles): (16, 12) and (20, 7) turning $1E a frame; (17, 13) swinging - its turns
-\ about x and z each $14 a frame between -$50 and $50, its bob 4 up and 2 down between 0 and $14, hung at $EB0
+\ about x and z each $14 a frame between -$50 and $50, its bob 4 up and 2 down between 0 and $14, hung $EB0 up (in
+\ the objects' places' units; its rest is its tile's place for it, 1440 up, four of those to one of the tile's)
 2 constant sign-object   $1E constant sign-turn-step   $14 constant swing-step   $50 constant swing-reach
-4 constant bob-up   2 constant bob-down   $14 constant bob-reach   $EB0 constant swing-height   1440 constant swing-rest
+4 constant bob-up   2 constant bob-down   $14 constant bob-reach   $EB0 constant swing-height
+1440 constant swing-rest   4 constant places-a-tile-unit
 begin-structure swinger
   field: sw-now   field: sw-way
 end-structure
@@ -84,7 +86,8 @@ variable sign-turn
     {: c r :}
     c 16 =  r 12 = and  c 20 =  r 7 = and or if  sign-object 0 0 0 0 sign-turn @ 0 pose-object  then
     c 17 =  r 13 = and if
-        sign-object 0  swing-height swing-rest - bob sw-now @ -  0  swing-x sw-now @  0  swing-z sw-now @  pose-object  then ;
+        bob sw-now @ swing-height -  swing-rest places-a-tile-unit * +  {: down :}   \ (src: obj y = bob - $EB0)
+        sign-object 0 down 0  swing-x sw-now @  0  swing-z sw-now @  pose-object  then ;
 create all-shown  256 allot   all-shown 256 1 fill
 \ the police cordon (src: func_80107D64): on tiles 22,9 and 22,10 its parts come down by the day and hour - part 1
 \ from the 25th 18:00 (row 9) and the 26th 18:00 (row 10), part 2 from the 27th 03:00 (9) and 18:00 (10) - and all
@@ -174,10 +177,12 @@ create lamps-lit  #lamps allot   lamps-lit #lamps erase
     loop ;
 PRIVATE>
 
+fvariable town-due
 state: town-state end-state
 behaviour the-town-runner
   on spawned ( -- )  self subscribe area-entered  self subscribe tick ;
-  on tick ( -- )  area @ the-town = if  stream  lamps-step  slots-step  signs-step  then ;
+  on tick ( -- )   \ (the lamps and the signs a game frame at a time: src ovl027's frame)
+    area @ the-town = if  stream  slots-step  town-due frames-due 0 ?do  lamps-step  signs-step  loop  then ;
   on town-door-swing ( slot -- )  swing-slot ;
   on area-entered ( area scene -- )  drop the-town <> if  leave-town  then ;
 end-behaviour

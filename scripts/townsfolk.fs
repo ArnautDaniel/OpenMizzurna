@@ -180,7 +180,8 @@ $1645 constant getting-in      \ the motion of climbing in (the town's own)
 : park-car ( slot row -- )   \ their car where the stop leaves it (src: actor_apply_placement's partner lines)
     {: s r :}  s partner-of {: c :}  c 0= if  exit  then
     r stop-car @ {: line :}
-    line 0= if  c to-traffic send car-stop  exit  then
+    line 0= if  c car-carrying? if  c to-traffic send car-stop  then  exit  then   \ (src: func_80029680: only one
+                                                                                 \  they rode stops; the rest go on)
     line 0< if  c to-traffic send car-hide  else  c line to-traffic send car-park  then ;
 : take-seat ( slot bar seat -- )   \ src: seat_*_take (-1: the first free)
     {: s b n :}  n 0< if  b free-seat to n  then  n 0< if  exit  then
@@ -211,7 +212,7 @@ $1645 constant getting-in      \ the motion of climbing in (the town's own)
     dup person-of {: s p :}  p at-stop @ 1+ p #stops @ 1- min p at-stop !  s place-at-stop ;
 : depart ( slot -- )   \ src: depart: travelling, the stop's route on their own thread
     dup person-of {: s p :}  true p travelling !  s  s current-row stop-route @  broadcast person-departs ;
-: heading-to ( dx dz -- heading )  s>f s>f fswap fatan2 4096e f* 2e pi f* f/ f>s 4095 and ;
+: heading-to ( dx dz -- heading )  heading-toward ;
 : on-ground ( person -- )   \ where the ground's followed (the town, an outdoor area's shell: src func_8001C264,
     {: p :}  p person-area @ area @ <>  ground-follows? 0= or if  exit  then   \ func_8001C3D4), their height its
     p px @ p pz @ ground-at if  p py !  then ;
@@ -219,9 +220,9 @@ $1645 constant getting-in      \ the motion of climbing in (the town's own)
     person-of {: p :}  p goal-x @ p px @ -  p goal-z @ p pz @ -  {: dx dz :}
     p stride @ s>f game-frames f*  {: F: v :}
     dx abs s>f v f<  dz abs s>f v f< and if   \ (there: they stand)
-        p goal-x @ p px !  p goal-z @ p pz !  0 p walking !  0 -1 true p moving play  exit
+        p goal-x @ p px !  p goal-z @ p pz !  0 p walking !  p stride-motion @ p moving walk-over  exit
     then
-    dx dz heading-to {: h :}  h p heading-now !
+    dx dz heading-to {: h :}  h p stride-motion @ walk-facing p heading-now !
     h s>f 2e f* pi f* 4096e f/ {: F: a :}
     p px @ s>f  a fsin v f* f+ f>s p px !   p pz @ s>f  a fcos v f* f+ f>s p pz !
     p on-ground ;
@@ -378,7 +379,7 @@ behaviour townsfolk
     swap person-of {: f p :}  f p on-floor !  p person-area @ f floor-height p py ! ;
   on person-walk ( slot x z speed motion -- )
     {: s x z v m :}  s person-of {: p :}  x p goal-x !  z p goal-z !  v p stride !  m p stride-motion !
-    true p walking !  s m -1 true show ;
+    true p walking !  m p moving walk-motion! ;
   on seat-take ( slot bar seat -- )  take-seat ;
   on seat-sit ( slot -- )  sit ;
   on seat-leave ( slot -- )  leave-seat ;
@@ -400,9 +401,12 @@ behaviour townsfolk
   on person-away ( slot -- )  person-of {: p :}  true p travelling !  0 p walking !  -1 p person-area ! ;
   on person-unlink ( slot -- )  person-of 0 swap riding ! ;
   on person-partner ( slot car -- )  swap person-of riding ! ;   \ src: func_80029B20: their car their partner again
-  on person-idle ( slot -- )  dup person-of {: p :}  0 p walking !  0 p forward !  0 -1 true show ;
+  on person-stop ( slot -- )  person-of {: p :}  0 p walking !  0 p forward ! ;
+  on person-idle ( slot -- )   \ src: cmd 0x0C: actor_anim(a, 0, 0, -1) - standing, once, held
+    dup person-of {: p :}  0 p walking !  0 p forward !  0 -1 false show ;
   on person-forward ( slot speed motion -- )  rot person-of {: v m p :}  v p forward !  m p forward-motion ! ;
   on person-anim ( slot id next loop -- )  show ;
+  on person-anim-then ( slot id queued loop next -- )  {: s id q lp nx :}  id q lp nx  s person-of moving play-queued ;
   on person-hold ( slot -- )  person-of moving true swap hold-move ! ;
   on person-arrive ( slot -- )  arrive ;
   on person-goto-stop ( slot stop -- )  goto-stop ;

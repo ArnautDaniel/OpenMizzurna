@@ -16,7 +16,9 @@ The town map screen (src: `mapscreen.c`). `scripts/map.fs`, the actor `map`.
 - **His arrow.** A triangle at his place (x / 1998 − 150, 104 − z / 2497), turned with his heading. While he
   drives it is the car's. Its red pulses between $10 and $7F, 6 a game frame.
 - **The hand.**
-  - The d-pad moves it 2 a game frame (8 with △ or ○ held) within (−144, −96)..(136, 88).
+  - The d-pad moves it 2 a frame (8 with △ or ○ held) within (−144, −96)..(136, 88). The screen's frames are its
+    own: it sets the pacing to 1 while up (src: mapscreen.c - VSync(1), a light screen, 60 a second) and puts the
+    game's back as it closes, so the hand and the pulse step at 60 a second (`map-rate`), not the game's 15.
   - R1 and L1 jump it to the next and the one before of the places shown, onto the icon.
   - Over an icon, the place's name (CD.BIN 034_3's text: text bank 1000 + the entry) shows in a dark bar at
     (−8, 64).

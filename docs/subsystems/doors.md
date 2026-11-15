@@ -61,6 +61,15 @@ back, they come through the door the other way and greet him: the line by who it
 facing him (`door-hold`, $53; `person-at-door`); they go back in (their parting line, through the door, to their
 stop) after 255 frames, when he's 501 away, or when they're about to leave. One knock at a time.
 
+## Going through one that opens before him
+
+A door of the area being played on the room shown (or, for the events' `door-animate`, any of his: the town's too)
+opens as one goes through it, and is heard (src: func_8004535C / func_80045008's door_walk_anim, func_80041D24's
+kinds: door-sounds.fs): the lake's two doors (41, 42: area 9) and area 16's (59) step through with their own
+motions ($851 / $852, $DAC / $DAD) and their own sounds (4, 5) - in their content areas only; in area 9 the rest
+are kind 1, the yard's doors (7, 11) 6, area 31's (77) 7, any other 0. `door-animate` shows the room beyond and
+does nothing from room 16 (src: func_80045008).
+
 ## Status
 
 Built: the doors, the knocks, the town's doors' rules (rules/area027.fs: by the hour and the story, Winona along,

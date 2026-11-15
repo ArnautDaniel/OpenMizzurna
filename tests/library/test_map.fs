@@ -15,7 +15,7 @@ prologue-done flag-set
 testing chosen in the ring: open, the world standing still, the hand in the middle
 T{ 2 -1 broadcast ring-chosen  deliver  map-up?  ui-busy?  hand-x @  hand-y @ -> true true 0 0 }T
 testing the places: Barrows Forest always; Cohen's lodge only once the map knows it
-T{ 1 shown?  0 shown?  1 map-known !  0 shown?  0 map-known ! -> true false true }T
+T{ 1 known?  0 known?  1 map-known !  0 known?  0 map-known ! -> true false true }T
 testing R1: to the next place shown, the hand on its icon, its name under it; L1 back round to the last shown
 T{ pad-r1 tap  chosen @  under-hand -> 1 1 }T
 T{ pad-l1 tap  chosen @  pad-l1 tap  chosen @ -> 13 9 }T

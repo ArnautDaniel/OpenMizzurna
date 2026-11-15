@@ -240,7 +240,7 @@ variable shoulder-was   variable circle-was   variable cross-was   variable squa
         ringing-out of  -1 frames-left +!  frames-left @ 0> 0= if  ring-out the-sound send stop-sequence  close-dial  then  endof
         putting-away of  anim-done? if  0 true his-motion  close-dial  then  endof
     endcase ;
-: steps-due ( -- n )  due f@ motion-rate dt f* f+  fdup f>s  dup s>f f-  due f! ;
+: steps-due ( -- n )  due frames-due ;
 
 \ ---- the story's calls (src: phone_incoming_update): who, when ----
 $1C4 constant call-days      \ the days of calls 1, 4, 7 (bits 2.., 10.., 18..)

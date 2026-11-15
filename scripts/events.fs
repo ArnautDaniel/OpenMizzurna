@@ -17,8 +17,8 @@ USING: engine actors messages keys clock areas floors window matthew townsfolk t
 : actor ( slot -- actor ) ;   \ (a slot is the actor)
 
 \ ---- time: an event's frame ----
-15e fconstant event-rate   \ src: CEvCon_Start sets VSync(4) while an event runs: 15 frames a second
-: frames ( n -- steps )  s>f event-rate f/ seconds ;
+: frames ( n -- steps )   \ the VM's waits count game frames: 15 a second while an event runs - but 30 in the
+    s>f game-rate f/ seconds ;   \ town once one has entered it (src: CEvCon_Start's VSync(4); load_area's 1)
 
 \ ---- the events running: a thread each (src: 5 threads and the main one), and the townsfolk's routes (src:
 \ each actor's own thread: Actor +0x158) ----
@@ -50,7 +50,8 @@ variable the-prop   \ the actor the C gives a script it starts (src: the script'
 
 : free-thread ( first last -- i )  -1 -rot swap ?do  i thread-task slot @ 0= if  drop i leave  then  loop ;
 : event-over ( i -- )   \ its thread is free; the last over, Matthew is the player's again
-    0 swap thread-task slot !  -1 events-running +!
+    0 swap thread-task slot !  -1 events-running +!   \ (the game's pace its own again with the last holding him -
+    events-running @ 0=  control-given @ or if  false s" areas" actor-named send event-pacing  then   \ src: CEvCon)
     events-running @ 0= if  no-control release  false control-given !  true broadcast player-control  then ;
 : event-ended ( -- )  thread event-over ;
 variable picture-thread   -1 picture-thread !   \ the event that showed the big picture (src: its thread's `picture`)
@@ -67,7 +68,8 @@ variable picture-thread   -1 picture-thread !   \ the event that showed the big 
     0 #event-threads free-thread {: xt i :}
     i 0< abort" no free event thread"
     xt matthew i begin-thread
-    1 events-running +!  no-control hold  false broadcast player-control  i ;
+    1 events-running +!  no-control hold  false broadcast player-control
+    true s" areas" actor-named send event-pacing  i ;   \ (src: CEvCon_Start: VSync(4) - the town at 15 too)
 : start-event ( xt -- )  launch-event drop ;
 : event-alive? ( i -- flag )  dup 0< if  drop false exit  then  thread-task slot @ 0<> ;
 : kill-event ( i -- )   \ src: event_thread_kill (a show cut short)
@@ -212,7 +214,8 @@ variable loaded-pack
         false thread thread-text slot !
     then ;
 : wait ( steps -- )  settle  forth:wait ;
-: secs ( n -- steps )  s>f seconds ;
+15 constant timed-line-unit   \ (src: msg_timer = n * 15: the timed lines' unit is 15 of the VM's frames)
+: secs ( n -- steps )  timed-line-unit * frames ;
 
 : say ( text -- )  nobody 0 0 show ;                                  \ src $108
 : say-by ( text a -- )  0 0 show ;                                    \ $109
@@ -391,8 +394,10 @@ defer door-sound ( kind -- )   \ op $176 (door-sounds.fs)
     a v m 3 act-unbuilt ;
 : walk-forward ( a speed -- )  walk-motion go-forward ;                     \ cmd $0A
 : move-forward ( a motion speed -- )  swap go-forward ;                     \ cmd $10
+$83 constant posed-prop-a   $91 constant posed-prop-b   \ (src: cmd 0x0C: these, as the cars, keep their pose)
 : idle ( a -- )   \ cmd $0C
     dup matthew = if  figure-of send figure-idle exit  then
+    dup posed-prop-a =  over posed-prop-b = or  over person? and if  the-townsfolk send person-stop exit  then
     dup person? if  the-townsfolk send person-idle exit  then
     dup car? if  the-traffic send car-idle exit  then
     1 act-unbuilt ;
@@ -436,9 +441,11 @@ defer door-sound ( kind -- )   \ op $176 (door-sounds.fs)
     stuck limit >= until ;
 : turned? ( a -- flag )
     dup matthew = if  drop matthew-turned? exit  then  dup car? if  car-turned? exit  then  person-turned? ;
-: wait-turned ( a -- )   \ op $112: until they face the way they turn to (src: the VM's wait_turn)
+105 constant turn-wait-frames   \ (src: the VM's wait_turn gives up after these)
+: wait-turned ( a -- )   \ op $112: until they face the way they turn to (src: the VM's wait_turn, $69 frames)
     settle  dup matthew = over person? or  over car? or 0= if  drop exit  then
-    begin  yield  dup turned? until  drop ;
+    {: a :}  turn-wait-frames frames {: limit :}
+    limit 0 ?do  yield  a turned? if  unloop exit  then  loop ;
 
 \ ---- riding (docs/subsystems/traffic.md) ----
 \ who stands in Matthew's way (src: player_probe_blocked, actor_overlaps_point: actors 26 - 60, the town's cars and
@@ -447,7 +454,7 @@ defer door-sound ( kind -- )   \ op $176 (door-sounds.fs)
 $1A1 constant side-from   $4BF constant side-span   $9A0 constant other-side-from   $4C1 constant other-side-span
 : radius-of ( slot -- r )  {: s :}  s" actor-radii" s exe-s16 ;
 : to-their-side? ( x z bx bz bh -- flag )
-    {: x z bx bz bh :}  x bx - s>f  z bz - s>f  fatan2 4096e f* 2e pi f* f/ f>s  bh - 4095 and {: a :}
+    {: x z bx bz bh :}  x bx -  z bz -  heading-toward  bh - 4095 and {: a :}
     a side-from - side-span u<  a other-side-from - other-side-span u< or ;
 : one-in-the-way? ( x z slot -- flag )
     {: x z s :}
@@ -560,15 +567,20 @@ $4C constant to-path-node   $50 constant into-their-car   30 constant path-pace 
 : set-scene ( scene -- )  s" areas" actor-named send show-scene ;                  \ $110 (src: set_scene_state)
 
 \ ---- figures in motion ----
-: anim-then ( a id next loop -- )   \ cmd $04: play it, then the next
-    {: a id nx lp :}
-    a matthew = if  id nx lp a figure-of send figure-anim exit  then
-    a person? if  a id nx lp the-townsfolk send person-anim exit  then
-    a car? if  a id nx the-traffic send car-anim exit  then   \ (a car's own motion: the bike's)
-    a id nx lp 4 act-unbuilt ;
-: anim ( a id loop -- )  -1 swap anim-then ;   \ cmd $03 (src: actor_anim): play it (looping or not)
-: anim-once ( a id -- )  false anim ;               \ cmd $05: once, from its start
-: anim-then-loop ( a id next -- )  false anim-then ;   \ cmd $06: once, then the next
+\ the commands' motions (src: actor_command_default: actor_anim / actor_anim_then): id; then the one queued (-1:
+\ none), looping as id does; then - neither looping - next, on and on (0: standing; -1: the last frame held)
+0 constant standing-motion
+: anim-queued ( a id queued loop next -- )
+    {: a id q lp nx :}
+    a matthew = if  id q lp nx a figure-of send figure-anim-then exit  then
+    a person? if  a id q lp nx the-townsfolk send person-anim-then exit  then
+    a car? if  a id  q 0< if  nx  else  q  then  the-traffic send car-anim exit  then   \ (the bike's motions)
+    a id q lp nx 5 act-unbuilt ;
+: anim-then ( a id then loop -- )  standing-motion anim-queued ;   \ cmd $04 (src: actor_anim_then(a, id, then, loop, 0))
+: anim ( a id loop -- )  -1 swap standing-motion anim-queued ;     \ cmd $03 (src: actor_anim(a, id, loop, 0))
+: anim-once ( a id -- )  -1 false -1 anim-queued ;          \ cmd $05: once, its last frame held
+: anim-then-loop ( a id then -- )  false -1 anim-queued ;   \ cmd $06: once, then once, the last frame held
+: anim-at ( a id next -- )  {: a id nx :}  a id -1 false nx anim-queued ;   \ cmd $13: once, then next on and on
 \ a talk's gesture (src: event_talk): a motion, then what follows (-1: its last frame held); none while sitting
 \ but the seated ones (9 - 12), none while in a resting pose but 8; Barbara's own for the plain ones
 create gesture-motions   0 , 0 ,   82 , -1 ,   83 , 84 ,   86 , -1 ,   87 , -1 ,   88 , -1 ,   89 , -1 ,   90 , -1 ,
@@ -592,8 +604,7 @@ create resting-motions  68 , 72 , 161 , 167 ,   \ src: D_80080438 (and an area's
     a anim-of resting? swap resting? or  g at-rest-gesture <> and if  exit  then
     g 0= if  exit  then
     a barbara-slot =  g plain-gesture? and if  barbaras-gesture  else  g  then  2 cells * gesture-motions + {: row :}
-    a  row @  row cell+ @  false anim-then ; is gesture
-: anim-at ( a id next -- )  false anim-then ;          \ cmd $13: once, then the next (src: actor_anim's next)
+    a  row @  row cell+ @  anim-at ; is gesture   \ (src: actor_anim(a, its motion, 0, what follows))
 : anim-hold ( a -- )   \ cmd $07: at the motion's end the figure stays where it moved
     dup matthew = if  figure-of send figure-hold exit  then
     dup person? if  the-townsfolk send person-hold exit  then
@@ -626,33 +637,59 @@ $3F constant stepping-out-1   $40 constant stepping-out-0   \ (by the side's way
     door-of {: d :}  d door-area @ area @ <>  scene @ no-reveal-scene = or if  exit  then
     d near-side side-room @ scene @ = if  d far-side side-room @  else  d near-side side-room @  then
     dup 0< if  drop exit  then  s" areas" actor-named send reveal-room ;
+\ through a door that opens before one - this area's, on the room shown (src: func_8004535C's door_walk_anim): a
+\ few doors their own motions, and the door's sound by its kind (func_80041D24: door-sounds.fs)
+41 constant lake-door-a   42 constant lake-door-b   59 constant area-16-door   9 constant lake-area   16 constant area-16
+$851 constant lake-door-way-1   $852 constant lake-door-way-0   $DAC constant area-16-way-1   $DAD constant area-16-way-0
+7 constant first-yard-door   11 constant second-yard-door   77 constant area-31-door
+0 constant plain-door   1 constant lake-room-door   4 constant lake-doors   5 constant area-16-doors
+6 constant yard-doors   7 constant area-31-doors
+: opens-before? ( door -- flag )
+    {: n :}  area @ the-town <>  n door-of door-area @ area @ = and  n scene @ door-spot 0< 0= and ;
+: lake-door? ( door -- flag )  dup lake-door-a =  swap lake-door-b = or ;
+: through-motion ( door way opened? -- motion )
+    {: n w o :}
+    o  n lake-door? and if  w if  lake-door-way-1  else  lake-door-way-0  then  exit  then
+    o  n area-16-door = and if  w if  area-16-way-1  else  area-16-way-0  then  exit  then
+    w if  stepping-out-1  else  stepping-out-0  then ;
+: through-sound ( door -- )   \ (one that opens before them)
+    {: n :}
+    n lake-door? if  area @ content lake-area = if  lake-doors door-sound  then  exit  then
+    n area-16-door = if  area @ content area-16 = if  area-16-doors door-sound  then  exit  then
+    area @ lake-area = if  lake-room-door door-sound exit  then
+    n first-yard-door =  n second-yard-door = or if  yard-doors door-sound exit  then
+    n area-31-door = if  area-31-doors door-sound exit  then
+    plain-door door-sound ;
 : matthew-through ( door -- way | 0 )   \ (where he went; the door opens on his side)
     {: n :}  n door-of door-area @  area @ <>  area @ the-town <> and if  0 exit  then
-    n door-opens
+    area @ the-town <>  scene @ no-reveal-scene = and if  0 exit  then   \ (src: nothing from room 16)
     n my-room false door-way {: w :}  w 0= if  0 exit  then
+    n door-reveal-room  n door-opens  n through-sound   \ (src: door_walk_anim: its sound, the town's doors too)
     w out-x @ 0 w out-z @  matthew figure-of send figure-place
     0 w out-heading @ 0  matthew figure-of send figure-turn
-    w out-way @ if  stepping-out-1  else  stepping-out-0  then  -1 false  matthew figure-of send figure-anim
+    n w out-way @ true through-motion  -1 false  matthew figure-of send figure-anim
     matthew figure-of send figure-hold  w ;
 : door-animate ( door -- )  matthew-through drop ;   \ op $139
-: door-animate-alt ( door -- )   \ op $13A: and a fixed camera behind him
-    matthew-through ?dup 0= if  exit  then  {: w :}
-    behind-look-y behind-dist behind-eye-y  w out-x @  matthew-now drop nip nip  w out-z @  behind-yaw
-    the-camera send camera-place ;
+: door-animate-alt ( door -- )   \ op $13A: and a fixed camera behind him (src: func_80045008: where he is,
+    matthew-through {: w :}                                     \ through the door or not)
+    w if  w out-x @  matthew-now 2drop nip  w out-z @  else  matthew-now drop  then {: x y z :}
+    behind-look-y behind-dist behind-eye-y  x y z  behind-yaw  the-camera send camera-place ;
 : in-a-scene? ( -- flag )  thread dup 0< 0= swap #event-threads < and ;   \ (an event's thread, not a route's)
 : stage-for ( door -- area | -1 )   \ a scene stages its people in the room being played: a door of this area,
     door-of door-area @ area @ =  in-a-scene? and if  area @  else  -1  then ;   \ its town side too, is here
 : matthew-door-walk ( door room flip -- )   \ src: func_8004535C for Matthew: the same, the door opening on his side
     {: n room flip :}  n room flip door-way {: w :}  w 0= if  exit  then
+    n opens-before? {: o :}  o if  n through-sound  then
     n door-opens
     w out-x @ 0 w out-z @  matthew figure-of send figure-place
     0 w out-heading @ 0  matthew figure-of send figure-turn
-    w out-way @ if  stepping-out-1  else  stepping-out-0  then  -1 false  matthew figure-of send figure-anim
+    n w out-way @ o through-motion  -1 false  matthew figure-of send figure-anim
     matthew figure-of send figure-hold  matthew wait-anim ;
 : door-walk ( a door room flip -- )   \ src: func_8004535C: out at the door's far side, the thread waiting
     {: a n room flip :}                \ while they step through
     a matthew = if  n room flip matthew-door-walk exit  then
     a person? 0= if  a n room 3 s" through-door" unbuilt  exit  then
+    n opens-before? if  n through-sound  then
     n door-opens   \ (src: the door opens on the side shown, whoever walks through)
     a n room flip n stage-for the-townsfolk send person-through-door  a wait-anim ;
 : through-door ( a door room -- )  false door-walk ;        \ op $13B, $140
@@ -689,12 +726,15 @@ $3F constant stepping-out-1   $40 constant stepping-out-0   \ (by the side's way
 
 \ ---- the camera's moves (src: camera_move_to, camera_turn_to ...: docs/subsystems/camera.md) ----
 : camera-move ( x y z speed -- )  the-camera send camera-move-to ;                   \ $119
-: camera-angle ( yaw step -- )  the-camera send camera-turn-to ;                      \ $142
+: camera-angle ( yaw step -- )   \ $142 (step 0: at once)
+    ?dup if  the-camera send camera-turn-to  else  the-camera send camera-face  then ;
+: degrees>turn ( degrees -- n )  dup abs 4096 * 360 /  swap 0< if  negate  then ;   \ (src: C's /, toward 0)
 : camera-turn ( degrees step -- )   \ $11C: turned by so many degrees (step 0: at once)
-    swap 4096 * 360 / camera-yaw +  swap camera-angle ;
+    swap degrees>turn camera-yaw +  swap camera-angle ;
 : camera-height-to ( eye-y step -- )  the-camera send camera-height-to ;              \ $14E
 : camera-dist-to ( dist step -- )  the-camera send camera-dist-to ;                   \ $154
-: until-still ( xt -- )  settle  begin  yield  dup execute 0= until  drop  1 frames wait ;
+: until-still ( xt -- )  settle  begin  yield  dup execute 0= until  drop ;   \ (src: sleep 1, then the wait:
+                                                                            \  over, the script goes on that frame)
 : wait-camera-move ( -- )  ['] camera-moving? until-still ;                          \ $14D
 : wait-camera-turn ( -- )  ['] camera-turning? until-still ;                         \ $14B
 : wait-camera-height ( -- )  ['] camera-height-moving? until-still ;                 \ $14F
@@ -705,10 +745,10 @@ $3F constant stepping-out-1   $40 constant stepping-out-0   \ (by the side's way
 : camera-at ( a -- )   \ $113: the pivot where the figure stands
     figure-place@ if  drop the-camera send camera-pivot  then ;
 : camera-heading ( a -- )   \ $150: the camera faces as the figure does
-    figure-place@ if  >r 2drop drop r> the-camera send camera-face  then ;
+    figure-place@ if  >r 2drop drop r> 4095 and  the-camera send camera-face  then ;
 
 : heading-to ( x z x' z' -- heading )   \ from the first point toward the second (4096 a turn)
-    rot - s>f  swap - s>f fswap fatan2 4096e f* 2e pi f* f/ f>s  4095 and ;
+    {: x z x2 z2 :}  x2 x -  z2 z -  heading-toward ;
 : face ( a target speed -- )   \ cmd $0E: the figure turns to face another (src: actor_turn_to_actor)
     {: a t v :}
     a figure-place@ 0= if  exit  then  drop nip {: ax az :}

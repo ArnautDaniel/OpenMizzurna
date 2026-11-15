@@ -170,7 +170,7 @@ create engine-voices  #engine cells allot   engine-voices #engine cells -1 fill
     streaming @ if  drop exit  then
     dup 0< if  drop background-off  stop-at cycle !  exit  then
     background-on  0 cycle ! ;
-: steps-sound-due ( -- n )  sound-due f@ motion-rate dt f* f+  fdup f>s  dup s>f f-  sound-due f! ;
+: steps-sound-due ( -- n )  sound-due frames-due ;
 
 \ ---- the areas' own ambience, a game frame at a time (src: func_80018748 and the areas' ambience words) ----
 64 constant now-and-then   128 constant every-so-often   512 constant rarely   65536 constant very-rarely

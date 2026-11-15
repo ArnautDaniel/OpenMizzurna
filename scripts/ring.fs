@@ -116,7 +116,7 @@ $13 constant show-prompt   3 constant read-prompt   \ src: func_80048500 / func_
     #shown 1 > 0= if  exit  then
     pad-left key-down? if  -1 start-turn exit  then
     pad-right key-down? if  1 start-turn  then ;
-: steps-due ( -- n )  due f@ motion-rate dt f* f+  fdup f>s  dup s>f f-  due f! ;
+: steps-due ( -- n )  due frames-due ;
 : read-it ( -- )   \ its description, in the message window
     item-text row-now row-name 1+ nobody 0 0 s" window" actor-named send window-say  true reading !  -1 name-msg ! ;
 : circle-key-item ( -- )

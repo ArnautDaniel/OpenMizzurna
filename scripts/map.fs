@@ -6,7 +6,7 @@
 \ map in its other palette, the places of the case files it holds; □ on one plays its file (the list waits).
 \ Its state is its own; others read map-up?.
 IN: map
-USING: engine actors messages keys screen ui story-flags figures matthew driving events ;
+USING: engine actors messages keys screen ui story-flags areas figures matthew driving events ;
 
 variable map-open
 : map-up? ( -- flag )  map-open @ 0<> ;
@@ -18,7 +18,7 @@ variable computer-places   variable file-opener   variable file-playing   -1 fil
 $1F constant icon-bits   $40 constant only-once-known
 1000 34 5 * + 3 + constant place-names   \ (the text of CD.BIN 034_3: a place each)
 : place-flags ( i -- n )  s" map-places" rot exe-u8 ;
-: shown? ( i -- flag )   \ src: map_known (the computer: its own places alone)
+: known? ( i -- flag )   \ src: map_known (the computer: its own places alone)
     computer @ if  1 swap lshift computer-places @ and 0<> exit  then
     dup place-flags only-once-known and 0= if  drop true exit  then
     1 swap lshift map-known @ and 0<> ;
@@ -32,7 +32,8 @@ variable hand-x   variable hand-y   variable chosen   \ (chosen: the place L1 / 
 -144 constant left-edge   136 constant right-edge   -96 constant top-edge   88 constant bottom-edge
 2 constant slow   8 constant fast   7 constant into-the-icon   16 constant icon-size
 fvariable due
-: steps-due ( -- n )  due f@ motion-rate dt f* f+  fdup f>s  dup s>f f-  due f! ;
+60e fconstant map-rate   \ (src: the map screen sets the pacing to 1 - VSync(1), a light screen: 60 frames a second -
+: steps-due ( -- n )  map-rate due frames-due-at ;   \  and puts it back as it closes: mapscreen.c)
 : clamp ( n lo hi -- n' )  rot min max ;
 : move-hand ( -- )   \ a frame (src: cursor_move)
     pad-triangle key-down? pad-circle key-down? or if  fast  else  slow  then {: d :}
@@ -40,14 +41,14 @@ fvariable due
     pad-down key-down? if  hand-y @ d + top-edge bottom-edge clamp hand-y !  then
     pad-right key-down? if  hand-x @ d + left-edge right-edge clamp hand-x !  then
     pad-left key-down? if  hand-x @ d - left-edge right-edge clamp hand-x !  then ;
-: any-shown? ( -- flag )  false  #places 0 do  i shown? or  loop ;
+: any-shown? ( -- flag )  false  #places 0 do  i known? or  loop ;
 : jump ( way -- )   \ src: map_cursor_cycle: to the next place shown that way
     any-shown? 0= if  drop exit  then  {: w :}
-    begin  chosen @ w + #places + #places mod  dup chosen !  shown? until
+    begin  chosen @ w + #places + #places mod  dup chosen !  known? until
     chosen @ icon-x into-the-icon + hand-x !  chosen @ icon-y into-the-icon + hand-y ! ;
 : under-hand ( -- place | -1 )   \ src: marker_at
     -1  #places 0 do
-        i shown? if
+        i known? if
             hand-x @ i icon-x - icon-size u<  hand-y @ i icon-y - icon-size u< and if  drop i leave  then
         then
     loop ;
@@ -108,8 +109,8 @@ create icon-images #places cells allot   icon-images #places cells erase
     line-color thick-line ;
 : draw-places ( -- )
     $FFFFFFFF pen-color
-    #places 0 do  i shown? if  dot-image s" map-dot" ui-image  i dot-at dot-size dot-size sprite  then  loop
-    #places 0 do  i shown? if
+    #places 0 do  i known? if  dot-image s" map-dot" ui-image  i dot-at dot-size dot-size sprite  then  loop
+    #places 0 do  i known? if
         i line  $FFFFFFFF pen-color
         i place-flags icon-bits and icon-image  i icon-x i icon-y icon-size icon-size sprite
     then  loop ;

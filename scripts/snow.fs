@@ -17,12 +17,12 @@ USING: engine actors messages areas figures camera daylight ;
     snow-record ?dup 0= if  -1 snow-scene exit  then  {: r :}
     r sw@ snow-scene
     r 2 + sw@ 0 ?do  r i emitter  loop ;
-fvariable frames-due
+fvariable snow-due
 : step ( -- )
     the-weather snowing = if  snowing-flakes  else  0  then {: target :}
-    frames-due f@ game-frames f+ frames-due f!
-    begin  frames-due f@ 1e f>=  while
-        frames-due f@ 1e f- frames-due f!
+    snow-due f@ game-frames f+ snow-due f!
+    begin  snow-due f@ 1e f>=  while
+        snow-due f@ 1e f- snow-due f!
         snow-live target < if  snow-live 1+ snow-flakes  else  snow-live target > if  snow-live 1- snow-flakes  then  then
         snow-step
     repeat ;

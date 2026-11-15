@@ -35,8 +35,7 @@ create moving playing allot   -1 moving anim !
 \ ---- walking (src: player_control_foot, player_update) ----
 \ The original's numbers are per game frame, and it ran 15 frames a second indoors, ~30 in the town: each step
 \ here covers `frames` of them (rate x dt), so he walks and turns as fast as he did there.
-15e fconstant indoor-frames   30e fconstant town-frames
-: frames ( F: -- n )  area @ the-town = if  town-frames  else  indoor-frames  then  dt f* ;
+: frames ( F: -- n )  game-frames ;
 60e fconstant walk-speed         \ world units a frame (0x3C)
 -40e fconstant back-speed        \ stepping back (-0x28)
 38e fconstant run-build-max      \ the run builds up 4 a frame to 0x26 ...
@@ -140,7 +139,7 @@ variable was-x   variable was-y   variable was-z   \ where he stood before his l
     else  2drop  0e speed f!  then ;
 \ ---- moved by a scene (src: actor_nav_step, actor_update's move_anim and turn - the events' walk-to, walk-forward,
 \ turn-to): toward a point at a speed a game frame, or straight on until idle; and turning at a speed ----
-variable heading-there   variable there-x   variable there-z   variable there-stride
+variable heading-there   variable there-x   variable there-z   variable there-stride   variable there-motion
 variable ahead   variable ahead-motion
 variable turning-to   variable turn-target   variable turn-speed
 : yaw ( -- heading )  self body-yaw f>s full-circle 1- and ;
@@ -151,8 +150,9 @@ variable turning-to   variable turn-target   variable turn-speed
     there-x @ there-z @  self body-pos fswap fdrop f>s f>s swap  {: x z mx mz :}
     x mx -  z mz -  {: dx dz :}
     dx abs s>f there-stride @ s>f frames f* f<  dz abs s>f there-stride @ s>f frames f* f< and if
-        x z step-to  0 heading-there !  stand-motion -1 true moving play  exit  then
-    dx s>f dz s>f fatan2 4096e f* 2e pi f* f/ f>s {: h :}  h s>f body-turn  h there-stride @ along ;
+        x z step-to  0 heading-there !  there-motion @ moving walk-over  exit  then
+    dx dz heading-toward {: h :}  h there-motion @ walk-facing s>f body-turn
+    h there-stride @ along ;
 : scene-moves ( -- )
     heading-there @ if  go-there  then
     ahead @ if  yaw ahead @ along  then
@@ -229,12 +229,15 @@ behaviour the-player
     floor !  self body? 0= if  exit  then  self body-pos {: F: x F: y F: z :}
     x  area @ floor @ floor-height s>f  z  area @ floor @ body-place ;
   on figure-anim ( id next loop -- )  moving play ;
+  on figure-anim-then ( id queued loop next -- )  moving play-queued ;
   on figure-hold ( -- )  true moving hold-move ! ;
   on figure-walk ( x z speed motion -- )
-    {: x z v m :}  x there-x !  z there-z !  v there-stride !  true heading-there !  m -1 true moving play ;
+    {: x z v m :}  x there-x !  z there-z !  v there-stride !  m there-motion !  true heading-there !
+    m moving walk-motion! ;
   on figure-forward ( speed motion -- )   \ (-1: the motion as it is)
     {: v m :}  v ahead !  m ahead-motion !  m 0< 0= if  m -1 true moving play  then ;
-  on figure-idle ( -- )  0 heading-there !  0 ahead !  stand-motion -1 true moving play ;
+  on figure-idle ( -- )   \ src: cmd 0x0C: actor_anim(a, 0, 0, -1) - standing, once, held
+    0 heading-there !  0 ahead !  stand-motion -1 false moving play ;
   on figure-turning ( target speed -- )
     {: t v :}  v 0= if  t s>f body-turn  0 turning-to !  exit  then
     t full-circle 1- and turn-target !  v turn-speed !  true turning-to ! ;

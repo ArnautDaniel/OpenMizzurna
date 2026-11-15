@@ -4,14 +4,13 @@
 \ how it meets the picture (the PlayStation's subtract: towards black; add: towards white), its colours.
 \ The events wait for one to finish (wait-effect: the fact effect-running?).
 IN: effects
-USING: engine actors messages screen ;
+USING: engine actors messages screen areas ;
 
 0 constant no-effect   1 constant fade   2 constant wipe-in   3 constant wipe-out   4 constant iris-effect
 5 constant tint
 $100 constant under-window      \ (effect + 256: drawn under the message window - the opening's black)
 $40 constant subtract-blend   $20 constant add-blend
 13 constant soft-iris   $60 constant soft-iris-solid
-15e fconstant effect-frames     \ its frames a second (the events ran at 15)
 16 constant iris-open   4 constant iris-ring-level   16 constant iris-pixels
 
 variable kind   variable level   variable level-step   variable frames-left   variable blend-word
@@ -47,7 +46,7 @@ variable iris   variable iris-target   variable r-in   variable r-out
     endcase ;
 : run-frames ( -- )   \ the effect's frames this level-step
     kind @ no-effect = if  exit  then
-    due f@  effect-frames dt f* f+  begin  fdup 1e f>= while  frame  1e f-  repeat  due f! ;
+    due frames-due 0 ?do  frame  loop ;   \ (a frame each game frame: src effect_update, from the frame loop)
 
 \ ---- drawing ----
 : grey ( c -- rgba )  dup 24 lshift over 16 lshift or swap 8 lshift or $FF or ;

@@ -53,9 +53,6 @@ fvariable due
     coast ;
 
 \ ---- the car in the town ----
-: along ( x z h d -- x' z' )
-    {: x z h d :}  h s>f 2e f* pi f* 4096e f/ {: F: a :}
-    x s>f a fsin d s>f f* f+ f>s  z s>f a fcos d s>f f* f+ f>s ;
 : wall? ( x z -- flag )  1 blocked? ;   \ (the town's floor)
 \ the road blocks (src: car_road_block): tiles (column + row x 100) the car may not be in by their zone under it
 \ (two corners): building fronts in zone 0, others in zone 1, the police cordon's in zone 0 until the 28th 03:00
@@ -70,7 +67,7 @@ create zone-1-blocks  512 , 1317 , 1902 , 2008 ,   4 constant #zone-1-blocks
     k zone-1-blocks #zone-1-blocks listed? if  zn 1 = exit  then
     k cordoned-tile? if  zn 0=  cordon-holds? and exit  then  false ;
 : probe ( h -- blocked? )   \ src: car_probe (the road blocks by where the car is)
-    cx @ cz @ rot speed @ along 2dup wall? -rot solid-billboard? or  cx @ cz @ road-blocked? or ;
+    cx @ cz @ rot speed @ step-along 2dup wall? -rot solid-billboard? or  cx @ cz @ road-blocked? or ;
 : hits? ( x z -- flag )   \ src: car_tile_hit: its box's two corners
     {: x z :}  x car-half - z car-half - wall?  x car-half + z car-half + wall? or ;
 : scrape ( -- )   \ src: car_scrape: the pad shakes by the speed
@@ -97,7 +94,7 @@ variable tilt-was-x   variable tilt-was-z   variable height-was
     his-car rx rz s" traffic" actor-named send car-tilt ;
 : move-car ( -- )
     swerve-way {: h :}  cx @ cz @ {: x z :}
-    x z h speed @ along {: nx nz :}  x z h speed @ 2/ along {: hx hz :}
+    x z h speed @ step-along {: nx nz :}  x z h speed @ 2/ step-along {: hx hz :}
     nx nz hits?  hx hz hits? or  nx nz road-blocked? or if  crashed  0e velocity f!  0 speed ! exit  then
     nx cx !  nz cz !  nx nz ground-under cy !  tilt-car ;
 \ stuck: the car standing in someone's place or a wall, moving (or every 32 frames), goes to the nearest free spot
@@ -143,7 +140,7 @@ variable car-frames
         free-door dup 0< if  drop  else  get-out exit  then  then
     move-car  unstick-car  show-car
     speed @ abs key-per-speed / idle-key + s" sound" actor-named send engine-pitch ;
-: steps-due ( -- n )  due f@ motion-rate dt f* f+  fdup f>s  dup s>f f-  due f! ;
+: steps-due ( -- n )  due frames-due ;
 : follow-the-scene ( -- )   \ a scene moving his car: its place is the scene's, he's carried in it
     his-car car-now ch !  cz !  cy !  cx !
     cx @ cy @ cz @ s" matthew" actor-named send figure-place  0 ch @ 4095 and 0 s" matthew" actor-named send figure-turn ;
@@ -157,7 +154,7 @@ variable car-frames
     area @ the-town <> if  false exit  then  his-car car-shown? 0= if  false exit  then
     his-car car-now drop {: x y z :}  matthew-now {: mx my mz h :}
     mx mz x z distance  matthew radius  his-car radius +  reach-margin +  <
-    h  x mx - s>f z mz - s>f fatan2 4096e f* 2e pi f* f/ f>s  talk-angle heading-within?  and ;
+    h  x mx -  z mz -  heading-toward  talk-angle heading-within?  and ;
 : into-his-car ( -- )   \ beside the door, his scene (src: func_8004175C)
     his-car car-now {: x y z h :}
     x z h door-side door-forward beside {: dx dz :}  dx 0 dz s" matthew" actor-named send figure-place

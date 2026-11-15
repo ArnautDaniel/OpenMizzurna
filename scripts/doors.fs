@@ -33,8 +33,7 @@ create the-way  way-out allot
 200 constant way-0-back   -360 constant way-0-aside
 2048 constant half-turn   1024 constant quarter-turn
 : step ( x z distance heading -- x' z' )   \ distance along heading (4096 a turn)
-    {: x z d h :}  h s>f 2e f* pi f* 4096e f/ {: F: a :}
-    x  a fsin d s>f f* f>s +   z  a fcos d s>f f* f>s + ;
+    {: x z d h :}  x z h d step-along ;
 : side-for ( row room -- side | 0 )
     {: r room :}  r near-side side-room @ room = if  r near-side exit  then
     r far-side side-room @ room = if  r far-side exit  then  0 ;

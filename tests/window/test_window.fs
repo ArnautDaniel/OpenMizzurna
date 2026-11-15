@@ -38,7 +38,7 @@ T{ pad-down true key-hold  1 steps  pad-down false key-hold  1 steps  cursor @ -
 T{ press  window-answer @  closed-with @ -> 1 1 }T
 
 testing a timed caption closes itself
-T{ s" Prologue" show  2e time-left f!  1e seconds steps  window-up? -> true }T
+T{ s" Prologue" show  30e time-left f!  1e seconds steps  window-up? -> true }T
 T{ 1e seconds steps  window-up? -> false }T
 
 test-summary

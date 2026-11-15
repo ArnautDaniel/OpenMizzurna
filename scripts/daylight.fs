@@ -115,9 +115,10 @@ variable flash-due
 : flash ( -- )
     3 0 do  i  flash-ways i triple  light-way   i  flash-colors i triple  light-color  loop
     false flash-due ! ;
-: lighting ( -- )   \ each frame (src: func_80024634)
+fvariable ease-due
+: lighting ( -- )   \ each frame (src: func_80024634: the easing a step each game frame)
     area @ 0< if  exit  then
-    level the-hours  ease-all
+    level the-hours  ease-due frames-due 0 ?do  ease-all  loop
     flash-due @ if  flash exit  then
     area @ the-town = if  outdoors  else  indoors  then ;
 PRIVATE>

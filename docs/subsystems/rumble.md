@@ -5,7 +5,7 @@ The pads' motors (src: frame.c `pad_read_port`'s motors, the events' op $155, th
 rumble, renewed each tick).
 
 - A pad has two motors: the small one, on or off, and the large one at a strength from 0 to 255. Each runs for so
-  many of the original's pad frames (60 a second; −1 for ever, 0 off) and then stops.
+  many of the original's frames (its pads read once a game frame: `game-frames`; −1 for ever, 0 off) and then stops.
 - **Messages:** `rumble-small ( port frames )`, `rumble-large ( port strength frames )`, `rumble-stop`.
   `shake ( small-frames strength large-frames )` shakes the first pad.
 - **Op $155** (`rumble ( strength frames )`): 0x100 runs the small motor, anything else the large one at that

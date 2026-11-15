@@ -14,8 +14,9 @@ is up, the clock stands still.
 |---|---|---|
 | the box | text at (-95, 40) on the 320 x 240 screen (its centre the origin), 240 x 48: three lines of 16 | the same, scaled to the window by a whole factor |
 | the band behind it | dark, y 37 .. 89, the screen's width (`func_80015DCC`) | black at 56% |
-| typing | 4 glyphs a frame at 15 frames a second | 60 characters a second |
-| scrolling | 2 pixels a frame | 30 pixels a second, a line at a time, after ○ (a reading: the original's page-wait) |
+| typing | 4 glyphs a game frame | 60 characters a second indoors and in a scene, 120 in the town (`game-frames`) |
+| scrolling | 2 pixels a game frame | 30 pixels a second (60 in the town), a line at a time, after ○ (a reading: the original's page-wait) |
+| a timed line | `msg_timer = n * 15` of the VM's frames | `n * 15` game frames (the events' waits for it too: `secs`) |
 | the arrow | at (129, 87), animated | the same: seven 8 x 8 frames, a frame each of the game's (`ui/page-arrow.png`) |
 | a question | text at x -79, the cursor at -95 on the answer's row (`msg_choice`) | the same; the cursor its 16 x 16 sprite (`ui/cursor.png`) |
 | the font | the dialogue font (033_4/5/3), a glyph its own width (the 2021 patch), lines 16 apart | the same, from the library (`font-text`) |

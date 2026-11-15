@@ -1,5 +1,5 @@
 \ the clock (docs/subsystems/clock.md)
-USING: tester engine actors messages clock ;
+USING: tester engine actors messages clock areas ;
 
 testing times
 T{ 25 0 0 date>time -> 0 }T
@@ -32,7 +32,7 @@ T{ 0 heard-minutes !  5e seconds 1- steps  heard-minutes @ -> 0 }T
 T{ 1 steps  heard-minutes @  last-minute @ -> 1  25 9 1 date>time }T
 
 testing in the town: twice as fast
-true the-clock send in-town  deliver
+the-town area !   \ (its pace is the game's: 30 frames a second in the town)
 T{ 0 heard-minutes !  5e seconds steps  heard-minutes @ -> 2 }T
 
 testing anything holding it stops it, until all let go

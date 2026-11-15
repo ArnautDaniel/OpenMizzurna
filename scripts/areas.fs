@@ -10,6 +10,17 @@ USING: engine actors messages ;
 
 \ ---- facts: the area being played ----
 variable area   -1 area !
+
+\ the original's game frames a second (its numbers are per game frame): 15 indoors, ~30 in the town - but 15 there
+\ too while an event holds the game, until it ends or the town is entered again (src: D_800F8240, the VSync pacing:
+\ CEvCon_Start sets 4; load_area 4 indoors, 1 in the town; the last event holding Matthew ending in the town, 1)
+15e fconstant indoor-rate   30e fconstant town-rate
+variable event-paced
+: game-rate ( F: -- frames/s )  area @ the-town =  event-paced @ 0= and if  town-rate  else  indoor-rate  then ;
+: game-frames ( F: -- n )  game-rate dt f* ;   \ how many of them this step covers
+: frames-due-at ( addr -- n ) ( F: frames/s -- )   \ the whole frames this step brings at that rate, the rest kept
+    {: a :}  dt f*  a f@ f+  fdup f>s  dup s>f f-  a f! ;   \  in the fvariable at addr
+: frames-due ( addr -- n )  game-rate frames-due-at ;   \ (game frames)
 variable scene
 create origin 3 cells allot   \ x y z (world units)
 : area-origin ( -- x y z )  origin @  origin cell+ @  origin 2 cells + @ ;
@@ -135,8 +146,8 @@ none-turned
 : pose-objects ( -- )  pose-moving  pose-turned ;
 
 \ ---- each frame's hook by the area (src: func_800185A4, before drawing: the fans, objects by the hour or by where
-\ he stands, the texture animations) - run once a frame of the original's (15 a second indoors, 30 in the town) ----
-34 constant #areas   15e fconstant hook-indoor-rate   30e fconstant hook-town-rate
+\ he stands, the texture animations) - run once a game frame of the original's (game-rate) ----
+34 constant #areas
 create frame-hooks  #areas cells allot   frame-hooks #areas cells erase
 : area-every-frame! ( area xt -- )  swap cells frame-hooks + ! ;
 
@@ -159,8 +170,7 @@ create frame-hooks  #areas cells allot   frame-hooks #areas cells erase
     shell @ part x z area-origin ground-part ;
 : shown! ( object flag -- )  s" areas" actor-named send object-shown ;   \ (the hooks' object_show / object_hide)
 fvariable hook-due
-: frames-a-second ( F: -- f )  area @ the-town = if  hook-town-rate  else  hook-indoor-rate  then ;
-: hook-frames ( -- n )  hook-due f@ frames-a-second dt f* f+  fdup f>s  dup s>f f-  hook-due f! ;
+: hook-frames ( -- n )  hook-due frames-due ;
 : frame-hooks-step ( -- )
     area @ 0 #areas within 0= if  exit  then
     area @ cells frame-hooks + @ ?dup 0= if  exit  then  {: xt :}
@@ -187,7 +197,9 @@ fvariable hook-due
 state: areas-state end-state
 behaviour areas
   on spawned ( -- )  self subscribe tick ;
-  on enter-area ( area scene -- )  2dup load  broadcast area-entered ;
+  on enter-area ( area scene -- )   \ (src: load_area: the town's pacing its own again, an event or not)
+    over the-town = if  false event-paced !  then  2dup load  broadcast area-entered ;
+  on event-pacing ( held? -- )  event-paced ! ;
   on show-scene ( scene -- )  dup scene !  show-objects  broadcast scene-shown ;
   on play-area-anim ( entry -- )   \ src: func_8001A150: the list's entry, played once
     area @ 0< area @ the-town = or if  drop exit  then  area-anim false play-object ;

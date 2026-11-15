@@ -15,6 +15,10 @@ runs in real time at those two paces (the user's choice: faithful), as named con
 |---|---|---|
 | indoors | 0.8 a frame at 15 fps | 12 game seconds a second: a minute every 5 s, an hour every 5 min |
 | the town | 0.8 a frame at ~30 fps | 24 game seconds a second: a minute every 2.5 s |
+| a scene in the town | 0.8 a frame at 15 fps (VSync(4)) | as indoors |
+
+The pace is `0.8 x game-rate` (areas.fs: the area, and an event holding the game). It used to follow an `in-town`
+message nothing sent, so the town's clock ran at the indoor pace.
 
 ## Time
 
@@ -43,7 +47,6 @@ To the clock:
   can't move Matthew: `player_has_control`), `menu-open` (a screen over the game: `ui_busy`), `text-shown` (an
   event's line on screen: the VM's `clock_pause` while a message is up, `clock_resume` as it closes). The original
   checked these every frame (the run flag shared by the scripts' and the text's stops); here each subsystem says when its own starts and ends.
-- `in-town ( flag -- )` - the pace: the town's or indoors' (the areas subsystem, entering an area).
 - `what-time ( -- )` - the clock answers the sender with `the-time ( t -- )`.
 
 From the clock (broadcast to subscribers):

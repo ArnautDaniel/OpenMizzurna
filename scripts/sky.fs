@@ -154,9 +154,10 @@ $2A7 constant east   $6A7 constant west
     $FFFFFFFF pen-color  blend-usual pen-blend ;
 ' draw-sky on-draw
 
-: sky-step ( -- )
-    1 frames-seen +!  game-frames 8e f/ drift f@ f+ drift f!
-    frames-seen @ 1 and if  the-hours ease  then ;
+fvariable sky-due
+: sky-step ( -- )   \ (src: every other game frame)
+    game-frames 8e f/ drift f@ f+ drift f!
+    sky-due frames-due 0 ?do  1 frames-seen +!  frames-seen @ 1 and if  the-hours ease  then  loop ;
 PRIVATE>
 
 state: sky-state end-state

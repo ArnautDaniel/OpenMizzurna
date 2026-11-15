@@ -23,7 +23,7 @@ variable frames-image   variable icons-image
 24 constant icon-in   4 constant icon-down   16 constant icon-size   16 constant second-set   48 constant second-set-v
 3 constant icon-frames   8 constant frames-an-icon-frame
 variable icon-frame   variable icon-count   fvariable due
-: steps-due ( -- n )  due f@ motion-rate dt f* f+  fdup f>s  dup s>f f-  due f! ;
+: steps-due ( -- n )  due frames-due ;
 : animate ( -- )   \ src: D_800A3428: the next icon frame every 8 game frames
     steps-due 0 ?do
         1 icon-count +!  icon-count @ frames-an-icon-frame >= if

@@ -26,18 +26,34 @@ The player (src: `player.c`, `player_misc.c`): his body in the world, his figure
 
 An animation id names a motion: below 193 the common set (`cdbin/033_4/1/<id>.motion.txt`), from an area's
 first id (`area-motion-first`: 300, 500 ... ) its own (`cdbin/NNN_4/1/<id - first>.motion.txt`; src:
-func_80020464). The original advanced a figure's motion a frame each game frame, so motions play at 15 frames
-a second indoors and 30 in the town. Each frame poses the figure (`draw-figure`: every part's turn in place of
-its rest turn, the root moved by the frame's move) - the engine's posing (`scene3d_draw_posed`). A motion
-loops or ends; at its end the next one plays, or (a reading: the original's `anim_next`) its last frame
-holds; with `anim-hold` its last root move is kept as his new place, turned by his heading. The events' `anim`,
-`anim-then`, `anim-hold` and `wait-anim` play Matthew's (`figure-anim`, `figure-hold`; the fact `anim-done?`).
+func_80020464). The original advanced a figure's motion a frame each game frame, so motions play at the game's
+rate (`game-rate`, docs/subsystems/areas.md: 15 a second indoors, 30 in the town but 15 while an event holds it).
+Each frame poses the figure (`draw-figure`: every part's turn in place of its rest turn, the root moved by the
+frame's move) - the engine's posing (`scene3d_draw_posed`).
+
+A figure's motions chain as the original's (`playing`, figures.fs; src: the Actor's anim, anim_queued, anim_loop,
+anim_next, anim_done, played by func_8002032C): when the one playing wraps, the one queued after it (if any)
+plays, looping as the first did; one that doesn't loop, with none queued, is **done** (`wait-anim` ends) and its
+next plays on and on, or with none its last frame holds. The one playing asked for again goes on where it is (src:
+the frame starts over only when the motion changes). With `anim-hold` its last root move is kept as his new
+place, turned by his heading. The events' commands (src: actor_command_default):
+
+| cmd | the original | |
+|---|---|---|
+| `anim` $03 | `actor_anim(a, id, loop, 0)` | id, then standing (motion 0) |
+| `anim-then` $04 | `actor_anim_then(a, id, then, loop, 0)` | id once, then `then` looping as asked (or once, then standing) |
+| `anim-once` $05 | `actor_anim(a, id, 0, -1)` | once, its last frame held |
+| `anim-then-loop` $06 | `actor_anim_then(a, id, then, 0, -1)` | once, then `then` once, its last frame held (despite the name) |
+| `anim-at` $13 | `actor_anim(a, id, 0, next)` | once, then next on and on (a talk's gesture too) |
+
+Matthew's are `figure-anim-then` / `figure-anim` / `figure-hold` (the fact `anim-done?`).
 
 ## Walking (src: player_control_foot, player_update)
 
 While he is the player's (`player-control`: the events' control ops and their starts and ends), the pad
 moves him by the original's per-frame numbers, each step covering as many of its frames as it ran in that
-time (15 a second indoors, ~30 in the town: he was twice as quick in the town, as the clock - faithful):
+time (`game-frames`: 15 a second indoors, ~30 in the town - he was twice as quick in the town, as the clock -
+and 15 there while an event holds the game):
 
 | | original (a frame) |
 |---|---|

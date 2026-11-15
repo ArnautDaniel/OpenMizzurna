@@ -33,7 +33,8 @@ it on a route, gets in and rides; at the route's end they get out beside their s
 - Parking: a car parking takes the lowest lane no other car at that node has, a lane's step aside each; it
   swings into the lane two bends before the end, slowing (200, then 100 a frame); at the end it stands.
 - A route that goes round drives on from its node again, without end.
-- Frames are game frames: 15 a second indoors, 30 in the town (`game-frames`).
+- Frames are game frames (`game-frames`, docs/subsystems/areas.md: 15 a second indoors, 30 in the town, 15 while an
+  event holds the game).
 
 ## Messages
 
@@ -71,8 +72,13 @@ on them. While a scene moves his car he's carried in it (driving.fs follows it).
 
 ## On the slopes
 
-A car on its way in the town is tilted with the ground under it (src: func_8001C264 with its tilt: the engine's
-`ground-tilt` from the triangle found; `car-tilt-now`).
+A car shown in the town - on its way, parked, or put somewhere by a scene - stands on the ground under it and is
+tilted with it (src: func_8001C264 on the visible actors, its tilt on for the cars; the engine's `ground-at` and
+`ground-tilt`; `car-tilt-now`). A scene's `set-pos` gives y 0: without it the car stood under the town's ground
+(the sheriff's car in his scenes, unseen).
+
+A stop with no car line (0) leaves the person's car as it is unless they rode in it: that one stops (src:
+actor_apply_placement, func_80029680).
 
 ## Pushed aside, Mel's bike
 

@@ -9,7 +9,6 @@ message set-time ( t -- )               \ jump to t; the clock broadcasts time-s
 message advance-minute ( -- )           \ one minute on, as a jump
 message hold-clock ( reason -- )        \ stop the clock for this reason (clock-hold) until released
 message release-clock ( reason -- )
-message in-town ( flag -- )             \ the pace: the town's, or indoors'
 message what-time ( -- )                \ answered with the-time
 message the-time ( t -- )
 message minute-passed ( t -- )          \ broadcast: a minute ran by; t the new time
@@ -40,6 +39,7 @@ message play-area-anim ( entry -- )      \ (to the areas) the area's animation l
 message object-shown ( object flag -- )   \ (to the areas) one of the area's objects shown or hidden (until the next scene)
 message reveal-room ( scene -- )          \ (to the areas) another room's first object shown too (seen through a door)
 message object-motion ( object id next -- ) \ (to the areas) an object's motion (the common props'), then the next looping (-1: held)
+message event-pacing ( held? -- )        \ (to the areas) an event holds the game to 15 frames a second (src: VSync(4))
 message area-entered ( area scene -- )   \ broadcast: the area is in
 message scene-shown ( scene -- )         \ broadcast: the scene changed
 27 constant the-town                     \ the streamed outdoors (MAP.BIN)
@@ -88,6 +88,7 @@ message camera-turned-round ( flag -- )  \ (to the camera) Matthew faces backwar
 message camera-behind ( look-y dist eye-y -- ) \ low behind Matthew, turning as he turns (src: ovl019's duct crawl)
 message camera-reset ( -- )              \ behind Matthew now, where he stands (src: camera_reset)
 message figure-anim ( id next loop -- )  \ play motion id (looping or not); then `next` (-1: hold its last frame)
+message figure-anim-then ( id queued loop next -- )  \ id, then queued (looping or not), then next (the events')
 message figure-hold ( -- )               \ at the motion's end, the figure keeps where it moved (src: anim_hold)
 message figure-on-foot ( flag -- )         \ (to Matthew) the pad walks him, or not (on a stool: src pad_set_field_mode)
 message figure-pushes ( crate -- )         \ (to Matthew) he pushes that crate as he walks (-1: lets go)
@@ -126,6 +127,8 @@ message person-floor ( slot floor -- )    \ on that floor (its height)
 message person-walk ( slot x z speed motion -- )   \ walk there, speed units a frame, in that motion
 message person-idle ( slot -- )           \ stop walking, stand (src: cmd 0x0C)
 message person-forward ( slot speed motion -- )   \ straight ahead, speed a frame, in that motion (-1: as it is) until idle
+message person-stop ( slot -- )            \ (to the townsfolk) no longer walking nor going straight on, its motion as it is
+message person-anim-then ( slot id queued loop next -- )   \ (to the townsfolk) id, then queued, then next (the events')
 message person-anim ( slot id next loop -- )
 message person-hold ( slot -- )           \ at the motion's end they keep its move
 message person-arrive ( slot -- )         \ the route is done: the next stop (src: actor_arrive)

@@ -16,10 +16,10 @@ USING: engine actors messages keys clock screen effects areas ;
 $00000090 constant band-color
 
 \ ---- its pace ----
-\ src: 4 glyphs a frame (func_800349C4: +4 a frame, one a unit) and lines scrolling 2 pixels a frame, at the
-\ 15 frames a second the game ran while a window was up
-60e fconstant type-rate     \ characters a second
-30e fconstant scroll-rate   \ pixels a second
+\ src: 4 glyphs a game frame (func_800349C4: +4 a frame, one a unit) and lines scrolling 2 pixels a frame - 15 a
+\ second indoors and in a scene, 30 in the town (game-frames); a timed one closes after 15 frames a unit it's given
+\ (src: the VM's msg_timer = n * 15)
+4e fconstant glyphs-a-frame   2e fconstant pixels-a-frame   15 constant timed-frames-a-unit
 
 \ ---- facts ----
 variable window-up      \ a message is up
@@ -35,7 +35,7 @@ variable top              \ the first line in the box
 fvariable typed           \ characters shown (of the text)
 fvariable scrolled        \ pixels the lines have moved up (0 .. 16)
 variable speaker   variable palette   variable left   \ (speaker: the portrait's kind, -1 none)
-fvariable time-left       \ a timed message: seconds before it closes (0: it waits for ○)
+fvariable time-left       \ a timed message: game frames before it closes (0: it waits for ○)
 variable choices   variable first-choice   variable cursor
 variable confirm-was   variable up-was   variable down-was
 
@@ -67,16 +67,16 @@ variable wanted
 : page-end ( -- offset )   \ where the box is full (the start of the line after it), or the text's end
     top @ box-lines + dup lines @ < if  line-start 1-  else  drop text-len @  then ;
 : type-on ( -- )
-    typed f@  type-rate dt f* f+  page-end s>f fmin  typed f!
+    typed f@  glyphs-a-frame game-frames f* f+  page-end s>f fmin  typed f!
     shown page-end >= if
         top @ box-lines + lines @ < if  page-full  else  choices @ if  asking  else  finished  then  then  stage !
     then ;
 : scroll-on ( -- )
-    scrolled f@  scroll-rate dt f* f+  fdup font-line s>f f>= if
+    scrolled f@  pixels-a-frame game-frames f* f+  fdup font-line s>f f>= if
         fdrop 0e  1 top +!  typing stage !
     then  scrolled f! ;
 : count-down ( -- )   \ a timed message closes itself
-    time-left f@ f0> if  time-left f@ dt f- fdup time-left f!  f0> 0= if  shut  then  then ;
+    time-left f@ f0> if  time-left f@ game-frames f- fdup time-left f!  f0> 0= if  shut  then  then ;
 : choose ( -- )
     pad-up up-was press-edge if  cursor @ 1- 0 max cursor !  then
     pad-down down-was press-edge if  cursor @ 1+ choices @ 1- min cursor !  then
@@ -158,7 +158,7 @@ behaviour message-window
   on spawned ( -- )  self subscribe tick ;
   on tick ( -- )  window-step ;
   on window-say ( bank id speaker palette secs -- )
-    >r open  on-top  r> s>f time-left f!  0 choices !
+    >r open  on-top  r> timed-frames-a-unit * s>f time-left f!  0 choices !
     time-left f@ f0> 0= if  text-shown clock-id send hold-clock  then ;
   on window-ask ( bank id kind -- )   \ src: msg_choice: kind 1 / 2 that many answers more, below no question;
                                       \ else a question and two answers below it

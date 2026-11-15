@@ -15,7 +15,7 @@ prologue-done flag-set
 testing entering: the prop on the desk (item 2 not his), on its side
 T{ desk-item has-item? 0=  desk-prop here?  desk-prop person-of leaning-z @ -> true true on-its-side }T
 testing opened: the computer, its listed files (not the map's), the world standing still
-T{ the-computer-opens  deliver  map-up?  computer @  ui-busy?  1 shown?  0 shown? -> true true true true false }T
+T{ the-computer-opens  deliver  map-up?  computer @  ui-busy?  1 known?  0 known? -> true true true true false }T
 testing □ on a listed place: its file plays, the list waiting; over, the list again
 T{ pad-r1 tap  chosen @  pad-square tap  file-playing @ 0< 0=  playing-file? -> 1 true true }T
 T{ events-stop  deliver  2 steps  playing-file? -> false }T

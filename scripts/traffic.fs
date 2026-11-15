@@ -78,7 +78,8 @@ PRIVATE>
 : car-carrying? ( slot -- flag )  car-of carrying @ 0<> ;
 : car-shown? ( slot -- flag )  car-of shown @ 0<> ;
 : car-motion-now ( slot -- id )  car-of car-motion anim @ ;
-: car-moving? ( slot -- flag )  car-of {: c :}  c going-to? @  c going-on? @ or ;   \ (facts: a scene's moves)
+: car-moving? ( slot -- flag )  car-of going-to? @ 0<> ;   \ (a fact: walked to a point - the events' wait-stop: src
+                                                           \  ACTOR_F_NAV; going straight on isn't waited for)
 : car-turned? ( slot -- flag )  car-of turning? @ 0= ;
 : car-scene-on? ( slot -- flag )  car-of {: c :}  c going-to? @  c going-on? @ or  c turning? @ or ;
 : car-in-area ( slot -- area )  car-of in-area @ ;
@@ -172,7 +173,7 @@ PRIVATE>
         c dx @ c cx +!  c dy @ c cy +!  c dz @ c cz +!
         c next-stretch if
             c heading @ full-turn 1- and c heading !
-            c dx @ s>f c dz @ s>f fatan2 full-turn s>f f* 2e pi f* f/ f>s  c heading @ unwrapped  c aim !
+            c dx @ c dz @ heading-toward  c heading @ unwrapped  c aim !
         then
     repeat
     c place  c n turn  c push-aside
@@ -184,7 +185,7 @@ PRIVATE>
     r 0 route-node road-node {: nx ny nz pts first :}
     first road-point {: px py pz l :}
     nx c lane-dx @ +  dup c cx !  c x !   ny dup c cy !  c y !   nz c lane-dz @ +  dup c cz !  c z !
-    px s>f pz s>f fatan2 full-turn s>f f* 2e pi f* f/ f>s full-turn 1- and  dup c heading !  c aim !
+    px pz heading-toward  dup c heading !  c aim !
     v 0= if  exit  then
     1 c next-node !  first 1+ c bend !  pts 2 - c bends !  c px py pz l aim-at
     0e c along f!  v c top-speed !  0e c speed f!  true c driving !  c bends @ 2 - c lane-turn ! ;
@@ -194,10 +195,9 @@ PRIVATE>
 \ ---- a scene's moves (src: the actor commands on a car: walk_to, move_forward, turn_to, idle - actor_update) ----
 : scene-moving? ( c -- flag )  dup going-to? @  over going-on? @ or  swap turning? @ or ;
 : forward-by ( c d -- )   \ along its heading
-    {: c d :}  c heading @ s>f 2e f* pi f* 4096e f/ {: F: a :}
-    c x @ s>f a fsin d s>f f* f+ f>s c x !  c z @ s>f a fcos d s>f f* f+ f>s c z ! ;
+    {: c d :}  c x @  c z @  c heading @  d step-along  c z !  c x ! ;
 : heading-to ( c x z -- h )   \ (its locals not named x, z: the fields')
-    {: c tx tz :}  tx c x @ - s>f  tz c z @ - s>f  fatan2 full-turn s>f f* 2e pi f* f/ f>s full-turn 1- and ;
+    {: c tx tz :}  tx c x @ -  tz c z @ -  heading-toward ;
 : turn-step-on ( c -- )   \ toward its goal by its step, the shortest way (0: at once)
     {: c :}  c turn-goal @ c heading @ - full-turn 1- and {: d :}  d full-turn 2/ > if  d full-turn -  else  d  then {: dd :}
     c turn-step @ 0=  dd abs c turn-step @ <= or if  c turn-goal @ c heading !  false c turning? ! exit  then
@@ -212,10 +212,11 @@ PRIVATE>
     c turning? @ if  c turn-step-on  then
     c going-to? @ if  c n go-to-step  then
     c going-on? @ if  c  c scene-speed @ s>f n f* f>s  forward-by  then ;
-: tilt-on-ground ( c -- )   \ in the town, moving: tilted with the ground under it (src: func_8001C264, tilt on)
-    {: c :}  area @ the-town <> if  exit  then
-    c x @ c z @ ground-at 0= if  exit  then  drop  c heading @ 4095 and ground-tilt  c tilt-z !  c tilt-x ! ;
-: step-car ( c slot -- )  over driving @ if  over tilt-on-ground  drive  else  drop scene-step  then ;
+: on-ground ( c -- )   \ in the town, shown: on the ground under it, tilted with it, parked or driving, a scene's
+    {: c :}  area @ the-town <>  c shown @ 0= or if  exit  then   \ (src: func_8001C264 on the visible actors, tilt on
+    c x @ c z @ ground-at 0= if  exit  then  c y !               \  for the cars - a scene's set_pos puts them at 0)
+    c heading @ 4095 and ground-tilt  c tilt-z !  c tilt-x ! ;
+: step-car ( c slot -- )  {: c s :}  c driving @ if  c s drive  else  c scene-step  then  c on-ground ;
 : car-motions-step ( -- )  #cars 0 do  cars i car * + car-motion advance drop  loop ;
 : traffic-step ( -- )  #cars 0 do  cars i car * +  i first-car +  step-car  loop  car-motions-step ;
 PRIVATE>

@@ -11,7 +11,7 @@ USING: engine actors messages clock areas floors figures matthew townsfolk event
 : before-him? ( slot -- flag )   \ close enough, and in front of him
     {: s :}  s person-now drop {: px py pz :}  matthew-now {: mx my mz h :}
     mx mz px pz distance  matthew radius  s radius +  reach-margin +  <
-    h  px mx - s>f pz mz - s>f fatan2 4096e f* 2e pi f* f/ f>s  talk-angle heading-within?  and ;
+    h  px mx -  pz mz -  heading-toward  talk-angle heading-within?  and ;
 : in-front ( -- slot | -1 )   \ the first person standing here before him
     -1  #slots 1 do  i here? i radius 0<> and if  i before-him? if  drop i leave  then  then  loop ;
 

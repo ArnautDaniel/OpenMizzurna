@@ -38,8 +38,11 @@ An area's animated props - a door swinging, a fan - play the common props' motio
 a frame's place, side height forward along the object's rest heading, and its turn added to its rest turn; src:
 model.c func_8001DE24, func_8001E0F8, func_8001DFB4). The area's list (its metadata's table 3: six bytes an entry,
 the object and the motion) names them: `play-area-anim ( entry )` (src: func_8001A150; the events' `object-anim`,
-the doors' `door-anim`) plays one once - at 15 frames a second - and its object stays on the last frame; one held
-plays again. Engine: `pose-object` (for the next `draw-model-shown`), `motion-turn`.
+the doors' `door-anim`) plays one once - a frame each game frame - and its object stays on the last frame; one held
+plays again. Engine: `pose-object` (for the next `draw-model-shown`), `motion-turn`. A frame's place is in the
+original's object units, half the model's (src: func_8001E0F8 adds it to the place four times the SPL's, then
+model_pose_update halves the offset from the parent): the engine scales it so (`OBJECT_PLACE_TO_GLTF`), whatever
+the TMD's scale - a drawer pulled out four times too far before.
 
 ## The billboards
 
@@ -67,10 +70,20 @@ town.fs) are areas' words.
   profile: src set_scene_state). The events' `set-scene`.
 - Facts: `area`, `scene`, `area-origin`, `floor-height`, `scene-camera`.
 
+## The game's rate
+
+The original's numbers are per game frame, and how many it ran a second was its VSync pacing (src: D_800F8240):
+4 (15 a second) indoors and while an event runs - `CEvCon_Start` sets it, in the town too - and 1 in the town
+(~30 a second: the town took two of the screen's frames to draw), set again by `load_area` and when the last event
+holding Matthew ends there. `game-rate ( F: -- frames/s )` is that (`event-paced`, set by the events'
+`event-pacing` message and cleared on entering the town); `game-frames` the game frames a step covers;
+`frames-due ( addr -- n )` the whole ones due, the rest kept. Every subsystem steps by these: figures' motions and
+walking, the cars, the hooks, the town's objects.
+
 ## Every frame's hooks (src: func_800185A4, before drawing)
 
-An area's rules give a word run once a frame of the original's - 15 a second indoors, 30 in the town -
-whatever Matthew is doing: `area-every-frame! ( area xt -- )`. What they do:
+An area's rules give a word run once a game frame of the original's (`game-rate`, below) whatever Matthew is
+doing: `area-every-frame! ( area xt -- )`. What they do:
 - show or hide objects (`shown! ( object flag -- )`): the hospital's two sets by where he stands (2), the church's
   later set from the 25th 14:00 on entering (24), the falls' object from the 26th 10:00 (26), area 5's fire while
   it burns;
