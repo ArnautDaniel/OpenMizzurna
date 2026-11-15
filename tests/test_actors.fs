@@ -68,8 +68,12 @@ T{ actors-frame  log @ length -> 3 }T
 testing floats travel as cells
 T{ 2.5e f>cell cell>f 2.5e f= -> -1 }T
 
-testing safety: a field with no actor, a handler's errors don't spoil the stacks
+testing safety: a field with no actor, a handler's errors don't spoil the stacks - its actor lives, an errors
+testing ... actor named (as OpenHuey's game.fs names one: with none it would die of it)
 actors-reset
+behaviour supervising  on actor-failed ( record -- )  drop ;  end-behaviour
+: supervised ( -- )  supervising counter-state s" errors" spawn errors-to ;   \ (actors-reset forgets it)
+supervised
 T{ ' count catch -> -1 }T   \ (an error: no actor being run)
 behaviour sloppy
   on ping ( n -- )  drop 1 2 3 ;            \ leaves three cells
@@ -90,20 +94,31 @@ mortal counter-state s" m" spawn constant m1
 mortal counter-state s" m" spawn constant m2
 T{ m1 kill  m1 alive?  log @ length  log @ 0 swap nth -> 0 1 7 }T
 T{ 0 m2 send ping  deliver  m2 alive?  log @ 1 swap nth  log @ 2 swap nth -> 0 7 8 }T
-testing what was on its way to a killed actor isn't the next one's (its id used again)
+testing the ids go round: one just freed isn't the next one's
 actors-reset  list log !
 mortal counter-state s" m" spawn constant m3
 0 m3 send ping   m3 kill
 mortal counter-state s" m" spawn constant m4
-T{ m4 m3 =  deliver  log @ length -> -1 1 }T   \ (only m3's last words)
+T{ m4 m3 = -> 0 }T
+testing what was on its way to a killed actor isn't the next one's - its slot used again, once round, with another id
+behaviour quiet  on ping ( n -- )  drop  9 note ;  end-behaviour   \ (no last words; a ping noted)
+: round-to ( id -- id' )   \ (quiet ones spawned and killed till the next spawn has id's slot)
+    actor-slot  256 0 do  quiet counter-state s" r" spawn  2dup actor-slot = if  nip unloop exit  then  kill  loop  drop -1 ;
+m4 kill  deliver  list log !   \ (its and m3's last words, cleared)
+mortal counter-state s" m" spawn constant m5
+0 m5 send ping   m5 kill
+m5 round-to constant m6
+T{ m6 m5 =  m6 actor-slot m5 actor-slot =  m5 alive?  deliver  log @ length -> 0 -1 0 1 }T   \ (only m5's last words: its ping not m6's)
 
 testing a handler sees only its arguments: taking more is an error, the deliverer's stack untouched
-actors-reset
+actors-reset  supervised
 behaviour greedy
   on ping ( n -- )  2drop ;   \ (one too many)
 end-behaviour
 greedy counter-state s" g" spawn constant g
 T{ 11 22  3 g send ping  deliver -> 11 22 }T
+
+test-summary
 
 testing a failure told to the errors-to actor: who, the message, the error, the words running
 actors-reset
@@ -120,13 +135,13 @@ T{ 0 fy send ping  deliver  told @ failure-actor  told @ failure-who s" faulty" 
 T{ told @ failure-error s" null address" s=  told @ failure-chain s" faulty:on ping" s= -> true true }T
 testing the errors actor's own failure isn't told to it (it would fail again and again)
 behaviour clumsy-catcher
-  on actor-failed ( r -- )  1 told +!  0 @ drop ;
+  on actor-failed ( r -- )  drop  1 told +!  0 @ drop ;
 end-behaviour
 clumsy-catcher counter-state s" clumsy" spawn constant cc   cc errors-to   0 told !
 T{ 0 fy send ping  deliver  deliver  told @ -> 1 }T
-testing nobody told: a failure is only said
+testing nobody told: a failure is only said, and the actor that failed dies of it
 nobody errors-to   0 told !
-T{ 0 fy send ping  deliver  told @ -> 0 }T
+T{ 0 fy send ping  deliver  told @  fy alive? -> 0 0 }T
 testing a record gone (32 are kept): empty
 T{ 99999 failure-who nip  99999 failure-actor -> 0 nobody }T
 

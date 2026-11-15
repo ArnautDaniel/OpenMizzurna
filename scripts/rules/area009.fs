@@ -33,6 +33,7 @@ variable drink-step   variable drinks
             stool-square? if  drinking drink-step !  then  false  endof
         drinking of  ['] events.ovl009:entry-80104448 start-event  clearing drink-step !  false  endof
         clearing of  ['] events.ovl009:entry-801043E8 start-event  1 drinks +!  asking-him drink-step !  true  endof
+        false swap   \ (a step it doesn't know: not done)
     endcase ;
 
 \ the counter's settings (src: ovl009's copy; port/src/game/ovl009.c LAKE_COUNTER)

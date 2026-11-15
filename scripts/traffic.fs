@@ -136,7 +136,7 @@ PRIVATE>
     {: a h :}  a h half-turn - < if  a full-turn +  else  a h half-turn + > if  a full-turn -  else  a  then  then ;
 : ease ( F: v target step -- v' )   \ toward the target by step
     {: F: v F: t F: s :}  v t f< if  v s f+ t fmin  else  v s f- t fmax  then ;
-: turn ( c frames -- )   \ the car turns toward its aim: a quarter of the way a frame, the last bit at once
+: turn ( c -- ) ( F: frames -- )   \ the car turns toward its aim: a quarter of the way a frame, the last bit at once
     {: c F: n :}  c heading @ c aim @ - {: d :}
     d abs turn-snap < if  c aim @  else  c heading @  d s>f  1e 0.75e n f** f-  f* f>s -  then
     c heading ! ;   \ (kept unwrapped, as its aim is: whole turns off only at a node)
@@ -202,7 +202,7 @@ PRIVATE>
     {: c :}  c turn-goal @ c heading @ - full-turn 1- and {: d :}  d full-turn 2/ > if  d full-turn -  else  d  then {: dd :}
     c turn-step @ 0=  dd abs c turn-step @ <= or if  c turn-goal @ c heading !  false c turning? ! exit  then
     c heading @  dd 0< if  c turn-step @ -  else  c turn-step @ +  then  full-turn 1- and c heading ! ;
-: go-to-step ( c n -- )   \ facing its goal, a step on; there: stopped
+: go-to-step ( c -- ) ( F: frames -- )   \ facing its goal, a step on; there: stopped
     {: c F: n :}  c c goal-x @ c goal-z @ heading-to c heading !
     c goal-x @ c x @ - s>f fdup f*  c goal-z @ c z @ - s>f fdup f* f+ fsqrt {: F: left :}
     c scene-speed @ s>f n f* {: F: d :}

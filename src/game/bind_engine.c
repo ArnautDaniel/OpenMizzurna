@@ -56,7 +56,7 @@ PRIM(p_key_name) {   /* key: ( "name" -- scancode ) an SDL key name, _ for space
     if (sc == SDL_SCANCODE_UNKNOWN) {
         forth_error(f, "key: no key is called %s", buf);
     }
-    if (f->compiling) {
+    if (forth_compiling(f)) {
         forth_compile_literal(f, sc);
     } else {
         PUSH(sc);
@@ -534,7 +534,7 @@ void bind_engine(Forth *f) {
         {"clear-color", p_clear_color}, {"random", p_random}, {"image", p_image}, {"image-size", p_image_size}, {"draw-image", p_draw_image}, {"draw-image-quad", p_draw_image_quad}, {"draw-image-part", p_draw_image_part}, {"clip-2d", p_clip}, {"reboot", p_reboot}, {"movie-open", p_movie_open}, {"movie-advance", p_movie_advance}, {"movie-draw", p_movie_draw}, {"movie-close", p_movie_close}, {"save-file", p_save_file}, {"errors-log", p_errors_log}, {"load-file", p_load_file}, {"draw-image-quad-part", p_draw_image_quad_part}, {"behind", p_behind}, {"pad-rumble", p_pad_rumble}, {"draw-billboard", p_draw_billboard}, {"draw-ground-quad", p_draw_ground_quad}, {"screenshot", p_screenshot},
         {"screenshot-pending?", p_screenshot_pending}, {"console!", p_console_store}, {"exe-table", p_exe_table}, {"library-file", p_library_file}, {"exe-u8", p_exe_u8}, {"exe-s8", p_exe_s8}, {"exe-s16", p_exe_s16}, {"exe-s32", p_exe_s32},
     };
-    Vocab *was = f->m.current, *v = forth_vocab(f, "engine");
+    Vocab *was = forth_current(f), *v = forth_vocab(f, "engine");
     size_t i;
     Word *w;
 

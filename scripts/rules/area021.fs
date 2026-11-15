@@ -62,6 +62,7 @@ variable order-step   variable order-pick
             drink? if  ['] events.ovl021:entry-80104CB8  else  ['] events.ovl021:entry-80104C50  then start-event
             clearing order-step !  false  endof
         clearing of  ['] events.ovl021:entry-80104BE0 start-event  1 orders +!  welcoming order-step !  true  endof
+        false swap   \ (a step it doesn't know: not done)
     endcase ;
 
 \ the counter's settings (src: ovl021's copy of it; port/src/game/ovl021.c DINER_COUNTER)

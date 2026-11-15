@@ -1,29 +1,15 @@
-/* The actor kernel: MActors ("Mizzurna actors" - not to be confused with `Actor`, the original's character
- * record and the engine's animated figure; the kernel was OpenHuey's HActor) - 
- * model in game/actor.h) with private state, a behaviour (a table of message handlers written
- * in Forth) and messages queued between them. C keeps the actors, the queue and the schedule;
- * Forth declares messages, behaviours and state types and writes the handlers.
- *
- * A frame: `tick` to its subscribers, deliver, `frame-end` to its subscribers, deliver. Deliver
- * runs in rounds - what a round sends waits for the next - until the queue is empty (or a
- * limit: the rest waits for the next frame). Everything is first in, first out, and
- * broadcasts go in spawn order, so a frame always runs the same way.
- *
- * Docs: docs/actors.md. */
+/* OpenMizzurna's side of the actor kernel. The kernel is ClankForth's (external/clankforth/src/actors.h, its
+ * docs/actors.md): actors with private state, a behaviour (message handlers written in Forth) and messages queued
+ * between them. OpenMizzurna's part is each actor's body - where it is in the world - and these names for the
+ * kernel's calls, as the engine's C makes them. ("MActor": Mizzurna actor - not `Actor`, the original's character
+ * record and the engine's animated figure, game/actor.h; the kernel was OpenHuey's HActor.) Docs: docs/actors.md. */
 #ifndef MACTOR_H
 #define MACTOR_H
 
-#include "forth.h"
+#include "actors.h"
 
-#define MACTOR_MAX 256      /* actors alive at once */
-#define MMSG_ARGS 16        /* cells a message carries */
-#define MKINDS_MAX 512      /* message kinds */
-#define MNAME_MAX 31
-
-/* the kernel's own message kinds */
-enum { MK_TICK, MK_FRAME_END, MK_SPAWNED, MK_KILLED, MK_HELD_TICK, MK_ACTOR_FAILED, MK_START_OVER, MK_KERNEL_KINDS };
-
-typedef struct MBehaviour MBehaviour;
+#define MACTOR_MAX FORTH_ACTORS_MAX   /* actors alive at once */
+#define MMSG_ARGS FORTH_MSG_ARGS      /* cells a message carries */
 
 /* where an actor physically is: a fact anyone may read, changed only by the actor itself
  * (docs/design.md, "Bodies"): the area it is in (a building, or the town outside), the floor of that
@@ -42,7 +28,7 @@ int mactor_self(void);
 const char *mactor_name(int id);   /* its name, "" if none */
 int mactor_kind(const char *name);   /* a message kind by name, -1 if there is none */
 
-/* the words (vocabulary `actors`) */
+/* the kernel's words and the bodies' (vocabulary `actors`) */
 void bind_mactor(Forth *f);
 /* one frame of the actors (the engine calls it each tick) */
 void mactor_frame(Forth *f);

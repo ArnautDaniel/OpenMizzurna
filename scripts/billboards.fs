@@ -19,7 +19,8 @@ begin-structure stand
 end-structure
 create the-stand  stand allot
 defer sprite-shown ( sprite -- sprite' )   \ the sprite drawn for a row's (the town's lamps: town.fs)
-' noop is sprite-shown
+: as-it-is-drawn ( sprite -- sprite' ) ;   \ (no stand changes its sprites)
+' as-it-is-drawn is sprite-shown
 
 <PRIVATE
 : sprite-image ( i -- image )

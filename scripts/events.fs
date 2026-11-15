@@ -62,7 +62,7 @@ variable picture-thread   -1 picture-thread !   \ the event that showed the big 
     thread thread-xt slot @ execute  thread-ended ;
 : begin-thread ( xt actor i -- )
     {: xt a i :}  xt i thread-xt slot !  a i thread-own slot !  0 i thread-result slot !  0 i thread-text slot !
-    ['] run-event forth:spawn  i thread-task slot ! ;   \ (a task: the actors' spawn is another)
+    ['] run-event start-task  i thread-task slot ! ;   \ (a task: the actors' spawn is another)
 : launch-event ( xt -- i )   \ src: event_start (CEvCon_Start): a thread, Matthew no longer the player's
     0 #event-threads free-thread {: xt i :}
     i 0< abort" no free event thread"
@@ -71,14 +71,14 @@ variable picture-thread   -1 picture-thread !   \ the event that showed the big 
 : start-event ( xt -- )  launch-event drop ;
 : event-alive? ( i -- flag )  dup 0< if  drop false exit  then  thread-task slot @ 0<> ;
 : kill-event ( i -- )   \ src: event_thread_kill (a show cut short)
-    dup event-alive? 0= if  drop exit  then  dup thread-task slot @ forth:kill  event-over ;
+    dup event-alive? 0= if  drop exit  then  dup thread-task slot @ stop-task  event-over ;
 : route-thread ( actor -- i | -1 )   \ the route an actor walks now
     {: a :}  -1  #threads #event-threads do
         i thread-task slot @ 0<>  i thread-own slot @ a = and if  drop i leave  then
     loop ;
 : end-route ( actor -- )
     route-thread dup 0< if  drop exit  then
-    dup thread-task slot @ forth:kill  0 swap thread-task slot ! ;
+    dup thread-task slot @ stop-task  0 swap thread-task slot ! ;
 : start-route ( xt actor -- )   \ src: event_thread_start on the actor's own thread: Matthew stays the player's
     dup end-route  #event-threads #threads free-thread {: xt a i :}
     i 0< abort" no free route thread"  xt a i begin-thread ;
@@ -94,7 +94,7 @@ variable event-locks
     #event-threads 0 do  0 i thread-task slot !  loop  0 events-running !  false control-given !
     event-locks @ if  0 event-locks !  events-locked s" clock" actor-named send release-clock  then ;
 : events-stop ( -- )   \ every running event ended now (a tool: the console, tests); the routes go on
-    #event-threads 0 do  i thread-task slot @ ?dup if  forth:kill  then  loop
+    #event-threads 0 do  i thread-task slot @ ?dup if  stop-task  then  loop
     events-reset  no-control release  true broadcast player-control ;
 
 \ the main executable's words found by address (the townsfolk's routes)
@@ -668,7 +668,7 @@ $3F constant stepping-out-1   $40 constant stepping-out-0   \ (by the side's way
 \ ---- into another area (src: func_80019F3C, func_80019D90, func_80018B44) ----
 -1 constant as-he-is     \ (a place or heading of -1: Matthew's own)
 2 constant fade-in       \ the screen effect a warp without a script ends in
-: end-thread ( -- )  thread-ended  me forth:kill ;   \ (the event over: its task stops here)
+: end-thread ( -- )  thread-ended  me stop-task ;   \ (the event over: its task stops here)
 : warp ( area scene x z heading script -- )   \ op $12A: the area changes, Matthew placed; then the script, or a fade in
     {: ar sc x z h scr :}
     ar  sc 0 max  s" areas" actor-named send enter-area  yield  ar event-area !
@@ -758,7 +758,8 @@ $FFFFFFFF constant none-held   \ (the scripts' -1, a 32-bit word)
 : lift ( a node dest speed -- )   \ cmd $24: along the town's footpaths (src: actor_lift: a walker)
     walk-motion s" walkers" actor-named send walker-start ;
 : partner-command ( a route -- )   \ cmd $37: their car turns onto that route at its first node
-    over person? if  swap partner-of ?dup if  swap s" traffic" actor-named send car-switch exit  then  then  2drop ;
+    {: a r :}  a person? 0= if  exit  then
+    a partner-of ?dup if  r s" traffic" actor-named send car-switch  then ;
 : walk-path ( a x y z motion speed -- )   \ cmd $55: to the point, its height too (motion -1: walking)
     {: a x y z m v :}  a y set-y  a x z v  m 0< if  walk-motion  else  m  then  walk-with ;
 : ending-schedule ( a route -- )   \ cmd $59: they leave on that route of the executable's (src: EM_ENDINGSCHEDULE)

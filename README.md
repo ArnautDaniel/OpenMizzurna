@@ -49,7 +49,7 @@ your library and saves stay; `OM_NO_UPDATE=1` turns it off). The same script mak
 | path | what |
 |---|---|
 | `external/clankforth/` | the Forth system: ClankForth, a submodule shared with OpenHuey |
-| `src/kernel/` | the actor kernel: MActors, mailboxes, delivery (from OpenHuey's HActor) |
+| `src/kernel/` | the game's side of ClankForth's actor kernel: each actor's body, the engine's names for its calls |
 | `src/platform/` | SDL3 window, GL 4.6 loader, input and controls |
 | `src/render/` | the renderer |
 | `src/game/` | the engine loop's state, the engine's Forth words, the console |

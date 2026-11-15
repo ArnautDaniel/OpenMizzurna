@@ -38,10 +38,15 @@ create this-key key-bytes allot   variable this-key-n
     r failure-chain nip if  line-clear  s"   in " line+  r failure-chain line+  line-out  then ;
 
 \ ---- starting over: each actor's allowance ----
+\ (a cell for each actor's slot; the slot's next actor is another, so each entry keeps whose it is)
 create window-start  actors-max cells allot   window-start actors-max cells erase
 create start-overs  actors-max cells allot   start-overs actors-max cells erase
+create allowance-of  actors-max cells allot   allowance-of actors-max cells erase
+: allowance ( id -- k )   \ its entries' offset, started afresh if the slot was another's
+    {: id :}  id actor-slot cells {: k :}
+    allowance-of k + @ id <> if  id allowance-of k + !  0 window-start k + !  0 start-overs k + !  then  k ;
 : allowed? ( id frame -- flag )   \ another start-over within its allowance (a new window when the last is past)
-    {: id fr :}  id cells {: k :}
+    {: id fr :}  id allowance {: k :}
     fr window-start k + @ - start-over-window >= if  fr window-start k + !  0 start-overs k + !  then
     start-overs k + @ start-overs-allowed < dup if  1 start-overs k + +!  then ;
 : write-left ( r -- )   \ (said once, when the allowance runs out)
@@ -49,12 +54,13 @@ create start-overs  actors-max cells allot   start-overs actors-max cells erase
     start-overs-allowed n>str line+  s"  start-overs in " line+  start-over-window n>str line+  s"  frames)" line+  line-out ;
 : ask-start-over ( r -- )   \ the actor that failed asked to put itself right (a task's: nobody to ask)
     {: r :}  r failure-actor {: id :}
-    id 0< id actors-max < 0= or if  exit  then  id alive? 0= if  exit  then
+    id alive? 0= if  exit  then
     id r failure-frame allowed? if  id send start-over  exit  then
-    start-overs id cells + @ start-overs-allowed = if  r write-left  1 start-overs id cells + +!  then ;
+    id allowance start-overs + {: n :}
+    n @ start-overs-allowed = if  r write-left  1 n +!  then ;
 PRIVATE>
 
-: errors-start-overs ( id -- n )  cells start-overs + @ ;   \ (a fact: start-overs it was asked for in its window)
+: errors-start-overs ( id -- n )  allowance start-overs + @ ;   \ (a fact: start-overs it was asked for in its window)
 
 state: errors-state end-state
 behaviour errors

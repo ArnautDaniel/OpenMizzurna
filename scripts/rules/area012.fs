@@ -92,6 +92,7 @@ variable bar-step   variable bar-pick
             food? if  ['] events.ovl012:entry-80105210  else  ['] events.ovl012:entry-80105184  then start-event
             clearing bar-step !  false  endof
         clearing of  ['] events.ovl012:entry-80105124 start-event  wolf-asks bar-step !  true  endof
+        false swap   \ (a step it doesn't know: not done)
     endcase ;
 
 \ the bar's settings (src: ovl012's copy of the counter; port/src/game/ovl012.c CLUB_COUNTER)

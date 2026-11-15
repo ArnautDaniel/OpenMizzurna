@@ -159,7 +159,7 @@ create frame-hooks  #areas cells allot   frame-hooks #areas cells erase
     shell @ part x z area-origin ground-part ;
 : shown! ( object flag -- )  s" areas" actor-named send object-shown ;   \ (the hooks' object_show / object_hide)
 fvariable hook-due
-: frames-a-second ( -- f )  area @ the-town = if  hook-town-rate  else  hook-indoor-rate  then ;
+: frames-a-second ( F: -- f )  area @ the-town = if  hook-town-rate  else  hook-indoor-rate  then ;
 : hook-frames ( -- n )  hook-due f@ frames-a-second dt f* f+  fdup f>s  dup s>f f-  hook-due f! ;
 : frame-hooks-step ( -- )
     area @ 0 #areas within 0= if  exit  then

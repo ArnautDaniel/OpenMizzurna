@@ -14,7 +14,7 @@ prologue-done flag-set
 testing Start: paused, the world held; an event's wait stands still
 variable woke
 : sleeper ( -- )  30 forth:wait  true woke ! ;
-T{ false woke !  ' sleeper forth:spawn drop  pad-start tap  paused?  ui-busy?  60 steps  woke @ -> true true false }T
+T{ false woke !  ' sleeper start-task drop  pad-start tap  paused?  ui-busy?  60 steps  woke @ -> true true false }T
 testing Start again: going on, the wait over in time
 T{ pad-start tap  paused?  ui-busy?  60 steps  woke @ -> false false true }T
 testing before the prologue's end, no event running: Start skips the rest (its script, the prologue then over)
