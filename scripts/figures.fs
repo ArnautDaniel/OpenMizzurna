@@ -9,7 +9,7 @@ USING: engine actors messages areas ;
 $16E constant character-entries   \ the kinds' models: CD.BIN entries from here
 : kind-model ( slot -- addr len )   \ "models/NNN_K.gltf": the kind's model (a slot is its kind)
     {: s :}  s" kind-models" s exe-u8 character-entries +
-    $clear  s" models/" $+  dup 5 / dup 100 < if  s" 0" $+  then  dup 10 < if  s" 0" $+  then  n>str $+
+    $clear  s" models/" $+  dup 5 / three-digits
     s" _" $+  5 mod n>str $+  s" .gltf" $+  $@ ;
 
 : area-first-motion ( area -- id )  >r s" area-motion-first" r> exe-s16 ;
@@ -18,7 +18,7 @@ $16E constant character-entries   \ the kinds' models: CD.BIN entries from here
     dup shared-motions < if
         s" 033" $+
     else
-        area @ dup 100 < if  s" 0" $+  then  dup 10 < if  s" 0" $+  then  n>str $+
+        area @ three-digits
         area @ area-first-motion -
     then
     s" _4/1/" $+  n>str $+  s" .motion.txt" $+  $@ ;

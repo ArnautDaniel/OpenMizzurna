@@ -26,9 +26,8 @@ create loops-held  #loops 2 * cells allot   loops-held #loops 2 * cells -1 fill 
 fvariable sound-due
 
 \ ---- the library's places ----
-: three ( n -- )  dup 100 < if  s" 0" $+  then  dup 10 < if  s" 0" $+  then  n>str $+ ;
 : entry-path ( group kind addr len -- addr len )   \ cdbin/GGG_K<rest>
-    {: g k a n :}  $clear  s" cdbin/" $+  g three  s" _" $+  k n>str $+  a n $+  $@ ;
+    {: g k a n :}  $clear  s" cdbin/" $+  g three-digits  s" _" $+  k n>str $+  a n $+  $@ ;
 : copy ( addr len buf -- addr len )  {: a n b :}  a b n move  b n ;
 create text-path 64 allot   create samples-path 64 allot   create sep-path 64 allot
 

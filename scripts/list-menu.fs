@@ -38,13 +38,12 @@ variable up-was   variable down-was   variable pick-was   variable cancel-was
     pad-up key-down? up-was !  pad-down key-down? down-was !
     pad-circle key-down? pad-square key-down? or pick-was !  pad-cross key-down? cancel-was ! ;
 : close ( answer -- )  menu-answer !  false menu-up !  menu-answer @ broadcast list-closed ;
-: press-edge ( flag var -- pressed? )  {: f v :}  f v @ 0= and  f v ! ;
 : menu-step ( -- )   \ src: func_80047F30
     menu-up? 0= if  exit  then
-    pad-circle key-down? pad-square key-down? or pick-was press-edge if  cursor @ close exit  then
-    pad-cross key-down? cancel-was press-edge if  cancelled close exit  then
-    pad-up key-down? up-was press-edge if  cursor @ 1- dup 0< if  drop #labels @ 1-  then  cursor !  then
-    pad-down key-down? down-was press-edge if  cursor @ 1+ dup #labels @ >= if  drop 0  then  cursor !  then ;
+    pad-circle key-down? pad-square key-down? or pick-was went-down? if  cursor @ close exit  then
+    pad-cross key-down? cancel-was went-down? if  cancelled close exit  then
+    pad-up key-down? up-was went-down? if  cursor @ 1- dup 0< if  drop #labels @ 1-  then  cursor !  then
+    pad-down key-down? down-was went-down? if  cursor @ 1+ dup #labels @ >= if  drop 0  then  cursor !  then ;
 
 \ ---- drawing ----
 : at ( x y -- x' y' )  form-y + swap form-x + swap >screen ;

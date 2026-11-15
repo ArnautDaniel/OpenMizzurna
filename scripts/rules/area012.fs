@@ -9,9 +9,6 @@ USING: engine actors messages clock story-flags townsfolk events look talk areas
 12 constant this-area
 99 constant bouncer   112 constant fan   111 constant loretta   69 constant person-69
 : today ( -- day )  clock-time time>day ;
-: minute-of-day ( -- m )  clock-time minutes/day mod ;
-: at-minute? ( hour minute -- flag )   \ src: event_time_is (any day; 00:00 of any day never: its "no time")
-    2dup or 0= if  2drop false exit  then  swap 60 * +  minute-of-day = ;
 
 \ ---- the story's words this area keeps (src: the story block; not named yet) ----
 $024 constant first-show-day   $025 constant fan-fight-day   $026 constant show-cancelled-day   \ (bytes)

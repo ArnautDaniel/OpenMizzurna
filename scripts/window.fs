@@ -50,8 +50,7 @@ variable wanted
 : shown ( -- n )  typed f@ f>s text-len @ min ;
 
 \ the pad, a press at a time (its own edges: a held button is one press)
-: press-edge ( key var -- flag )  >r key-down? dup r@ @ 0= and swap r> ! ;
-: confirm? ( -- flag )  pad-circle confirm-was press-edge ;
+: confirm? ( -- flag )  pad-circle confirm-was key-went-down? ;
 
 : clock-id ( -- id )  s" clock" actor-named ;
 : open ( bank id speaker palette -- )
@@ -78,8 +77,8 @@ variable wanted
 : count-down ( -- )   \ a timed message closes itself
     time-left f@ f0> if  time-left f@ game-frames f- fdup time-left f!  f0> 0= if  shut  then  then ;
 : choose ( -- )
-    pad-up up-was press-edge if  cursor @ 1- 0 max cursor !  then
-    pad-down down-was press-edge if  cursor @ 1+ choices @ 1- min cursor !  then
+    pad-up up-was key-went-down? if  cursor @ 1- 0 max cursor !  then
+    pad-down down-was key-went-down? if  cursor @ 1+ choices @ 1- min cursor !  then
     confirm? if  cursor @ window-answer !  shut  then ;
 : window-step ( -- )
     stage @ case

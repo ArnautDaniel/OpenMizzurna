@@ -66,13 +66,12 @@ end-structure
 create pickers  picker 2 * allot
 variable vs-going   variable vs-wait   fvariable vs-due   \ (vs-wait: game frames both have settled)
 : picker# ( i -- p )  picker * pickers + ;
-: edge ( down? addr -- new? )  {: d a :}  d a @ 0= and  d a ! ;
 : show-pick ( slot p -- )  picked @ {: k :}  s" vs-models" k exe-u8 actor-model ;
 : pick-step ( slot p up down ok -- )   \ src: vs_pick
     {: s p u dn ok :}  p chosen @ if  exit  then
-    u key-down? p up-was edge if  p picked @ 1+ dup #vs-models >= if  drop 0  then  p picked !  then
-    dn key-down? p down-was edge if  p picked @ 1- dup 0< if  drop #vs-models 1-  then  p picked !  then
-    ok key-down? p ok-was edge if  s nod nodded 1 anim-then  true p chosen !  then
+    u key-down? p up-was went-down? if  p picked @ 1+ dup #vs-models >= if  drop 0  then  p picked !  then
+    dn key-down? p down-was went-down? if  p picked @ 1- dup 0< if  drop #vs-models 1-  then  p picked !  then
+    ok key-down? p ok-was went-down? if  s nod nodded 1 anim-then  true p chosen !  then
     s p show-pick ;
 : fresh-picks ( -- )  pickers picker 2 * erase  0 vs-wait !  0e vs-due f! ;
 : picking ( -- done? )

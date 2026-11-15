@@ -245,9 +245,8 @@ variable prompt-left   -1 prompt-left !   variable prompt-right   -1 prompt-righ
 : prompt-shown? ( -- flag )  prompt-left @ 0< 0=  prompt-right @ 0< 0= or ;
 1 constant circle-answer   0 constant square-answer
 variable prompt-circle-was   variable prompt-square-was
-: pressed-now ( key var -- flag )  {: k v :}  k key-down? dup v @ 0= and  swap v ! ;
 : prompt-pressed ( -- answer | -1 )
-    pad-circle prompt-circle-was pressed-now  pad-square prompt-square-was pressed-now  {: c s :}
+    pad-circle prompt-circle-was key-went-down?  pad-square prompt-square-was key-went-down?  {: c s :}
     c if  circle-answer exit  then  s if  square-answer exit  then  -1 ;
 : prompt ( left right -- )   \ op $129: □'s icon and ○'s beside the box, until one is pressed: ○ 1, □ 0 (src: the VM)
     settle  prompt-right !  prompt-left !
@@ -728,9 +727,8 @@ $851 constant lake-door-way-1   $852 constant lake-door-way-0   $DAC constant ar
 : camera-move ( x y z speed -- )  the-camera send camera-move-to ;                   \ $119
 : camera-angle ( yaw step -- )   \ $142 (step 0: at once)
     ?dup if  the-camera send camera-turn-to  else  the-camera send camera-face  then ;
-: degrees>turn ( degrees -- n )  dup abs 4096 * 360 /  swap 0< if  negate  then ;   \ (src: C's /, toward 0)
 : camera-turn ( degrees step -- )   \ $11C: turned by so many degrees (step 0: at once)
-    swap degrees>turn camera-yaw +  swap camera-angle ;
+    swap figures:degrees>heading camera-yaw +  swap camera-angle ;
 : camera-height-to ( eye-y step -- )  the-camera send camera-height-to ;              \ $14E
 : camera-dist-to ( dist step -- )  the-camera send camera-dist-to ;                   \ $154
 : until-still ( xt -- )  settle  begin  yield  dup execute 0= until  drop ;   \ (src: sleep 1, then the wait:

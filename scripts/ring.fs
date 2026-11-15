@@ -63,13 +63,11 @@ variable circle-was   variable cross-was   variable square-was   variable triang
     loop ;
 
 \ ---- the buttons ----
-: edge ( key var -- pressed? )  {: k v :}  k key-down? dup v @ 0= and  swap v ! ;
 variable circle   variable cross   variable square   variable triangle
 : buttons ( -- )   \ this step's presses (edges kept every step, whoever has the pad)
-    pad-circle circle-was edge circle !  pad-cross cross-was edge cross !
-    pad-square square-was edge square !  pad-triangle triangle-was edge triangle ! ;
+    pad-circle circle-was key-went-down? circle !  pad-cross cross-was key-went-down? cross !
+    pad-square square-was key-went-down? square !  pad-triangle triangle-was key-went-down? triangle ! ;
 
-: the-items ( -- id )  s" items" actor-named ;
 : unlock ( -- )  s" ui" actor-named send ui-unlock ;
 : open-ring ( -- )   \ src: ring_menu_update state 0
     gather  #tools @ #keys @ + 0= if  exit  then

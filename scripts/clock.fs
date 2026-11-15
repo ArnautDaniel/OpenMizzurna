@@ -33,6 +33,9 @@ variable clock-holds   \ (a fact: the reasons holding it, a bit each)
     {: d h1 m1 h2 m2 :}  clock-time time>date {: day hour minute :}
     d 0<>  d day <> and if  false exit  then
     hour minutes/hour * minute + {: t :}  t h1 minutes/hour * m1 + >=  t h2 minutes/hour * m2 + <= and ;
+: at-minute? ( hour minute -- flag )   \ it's that minute, any day (src: event_time_is with day 0; 00:00 is its
+    2dup or 0= if  2drop false exit  then   \  "no time": never)
+    swap minutes/hour * +  clock-time minutes/day mod = ;
 : reached? ( day hour minute -- flag )   \ src: event_time_reached (day 0: never - func_800424E0's 999999)
     {: d h m :}  d 0= if  false exit  then  d h m date>time clock-time <= ;
 

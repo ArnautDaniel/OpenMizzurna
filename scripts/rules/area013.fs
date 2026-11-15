@@ -9,7 +9,6 @@ USING: engine actors messages clock story-flags townsfolk events look talk areas
 171 constant the-old-man   86 constant person-86   69 constant person-69   117 constant person-117
 119 constant person-119
 : hour ( -- h )  clock-time time>hour ;
-: at-minute? ( h m -- flag )  swap 60 * +  clock-time minutes/day mod = ;
 $00C constant heard-of-him   $010 0 story-bit constant met-him   \ (src: +0x0C set in the town; +0x10 bit 0)
 $41900 constant on-his-bench-x
 

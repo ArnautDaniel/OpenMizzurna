@@ -33,7 +33,6 @@ create known #people cells allot   variable #known   \ the page's rows: the know
 variable at                         \ the person shown, or the numbers' first shown
 8 constant rows-a-page
 variable up-was   variable down-was   variable pick-was   variable back-was
-: edge ( flag var -- pressed? )  {: f v :}  f v @ 0= and  f v ! ;
 
 : gather ( mask bits -- )   \ the known ones' bits, in order
     0 #known !  0 ?do  dup 1 i lshift and if  i known #known @ cells + !  1 #known +!  then  loop  drop ;
@@ -53,8 +52,8 @@ variable up-was   variable down-was   variable pick-was   variable back-was
     page @ numbers-page = if  at @ rows-a-page + #known @ <  else  at @ 1+ #known @ <  then ;
 : step-of ( -- n )  page @ numbers-page = if  rows-a-page  else  1  then ;
 : book-step ( -- )   \ src: notebook_update, notebook_bio_page, notebook_phone_page
-    pad-up key-down? up-was edge  pad-down key-down? down-was edge
-    pad-circle key-down? pad-square key-down? or pick-was edge  pad-cross key-down? back-was edge
+    pad-up key-down? up-was went-down?  pad-down key-down? down-was went-down?
+    pad-circle key-down? pad-square key-down? or pick-was went-down?  pad-cross key-down? back-was went-down?
     {: u d o x :}
     notebook-up? 0= if  exit  then
     page @ on-the-menu = if

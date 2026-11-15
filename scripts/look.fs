@@ -89,11 +89,12 @@ variable zone-prompt   variable check-prompt   \ the matched row's hint (src: th
 
 \ ---- the areas' rules ----
 begin-structure rules
-  field: look-check-xt   field: look-do-xt   field: act-check-xt   field: act-do-xt
-  field: on-enter     field: on-scene     \ the area's hooks: entered ( -- ), a scene ( scene -- )
-  field: on-frame     \ and each game frame, a scene running or not ( -- ) (src: the overlay's per-frame hook; one
+  field: look-check-xt  holds: ( zone check -- action )   field: look-do-xt  holds: ( action -- )   \ ○'s
+  field: act-check-xt  holds: ( zone check -- action )    field: act-do-xt  holds: ( action -- )    \ □'s
+  field: on-enter  holds: ( -- )   field: on-scene  holds: ( scene -- )   \ the area's hooks: entered, a scene
+  field: on-frame  holds: ( -- )   \ and each game frame, a scene running or not ( -- ) (src: the overlay's per-frame hook; one
                       \ that wants Matthew the player's asks in-control?)
-  field: on-leave     \ left for another area ( -- ) (src: the overlay's clean-up as it goes)
+  field: on-leave  holds: ( -- )   \ left for another area ( -- ) (src: the overlay's clean-up as it goes)
 end-structure
 create area-rules  #content-areas rules * allot   area-rules #content-areas rules * erase
 : rules-of ( area -- addr )
@@ -111,7 +112,7 @@ variable area-was   -1 area-was !   \ (the content area last entered: its clean-
 
 \ ---- pressing ○ and □ ----
 81 constant look-motion   \ src: func_8003FA8C (0x51)
-variable circle-first   \ a word ○ tries before the rest ( -- handled? ): the car's door (driving.fs)
+variable circle-first  holds: ( -- handled? )   \ a word ○ tries before the rest ( -- handled? ): the car's door (driving.fs)
 : circle-first! ( xt -- )  circle-first ! ;
 : press-circle ( -- )   \ src: look_execute: a thing before him (case 6: examined), a person (case 1: talking),
     circle-first @ ?dup if  execute if  exit  then  then   \ src: case 5, the car: getting in
@@ -161,7 +162,6 @@ create prompt-areas  0 , 1 , 2 , 3 , 8 , 10 , 16 , 17 , 18 , 19 , 23 , 24 , 26 ,
 : no-prompts ( -- )  no-prompt look-prompt !  no-prompt act-prompt ! ;
 
 variable controlled   variable circle-was   variable square-was
-: pressed ( key var -- flag )  >r key-down? dup r@ @ 0= and swap r> ! ;   \ (a held button: once)
 variable pad-taken   \ a frame hook took the pad this step (src: the pad's field mode: a stool's keys)
 : take-pad ( -- )  true pad-taken ! ;
 : has-control? ( -- flag )   \ Matthew the player's (src: player_has_control: no event holding him)
@@ -169,7 +169,7 @@ variable pad-taken   \ a frame hook took the pad this step (src: the pad's field
 : in-control? ( -- flag )   \ Matthew the player's, the pad the field's (src: player_has_control, !ui_busy): what a
     has-control? field-pad? and ;   \ frame hook asks before a prompt, a pad read, a scene from where he stands
 : watch ( -- )   \ the area's frame hook every game frame, a scene running or not (src: func_8003F6EC from
-    pad-circle circle-was pressed  pad-square square-was pressed  {: o s :}   \ event_threads_update); then ○ and □
+    pad-circle circle-was key-went-down?  pad-square square-was key-went-down?  {: o s :}   \ event_threads_update); then ○ and □
     no-prompts
     area @ 0<  matthew-there? 0= or  ui-busy? or if  exit  then   \ (the pause, a menu: the world stands - the clock too)
     events-running @ {: before :}   \ (an event that gave him back: he acts as the player - src: player_has_control)

@@ -48,7 +48,6 @@ variable counter-act-prompt   variable counter-look-prompt   \ (facts: the HUD's
 forget-counter
 : at-the-counter? ( -- flag )  at-state @ on-a-stool = ;
 : barman-here ( -- seat | -1 )  barman-at @ ;
-: talking-to ( -- slot | -1 )  talking-with @ ;
 
 \ the pad on a stool (src: pad_map field mode 1: → / ← held, ○ pressed, □ held)
 variable stool-circle-was

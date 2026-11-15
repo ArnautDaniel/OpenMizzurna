@@ -219,14 +219,13 @@ $61 constant take-out   $62 constant held   $63 constant put-back   $64 constant
     true hung-up !  plain @ if  close-dial  else  put-back false his-motion  putting-away step !  then ;
 \ the dial-keys (src: the pad's mode 7: a shoulder clears, or hangs up; then ○ □ △ ✕, each with its tone)
 variable shoulder-was   variable circle-was   variable cross-was   variable square-was   variable triangle-was
-: edge ( flag var -- pressed? )  {: f v :}  f v @ 0= and  f v ! ;
 : shoulders ( -- flag )  pad-l1 key-down? pad-l2 key-down? or  pad-r1 key-down? or  pad-r2 key-down? or ;
 : key-in ( symbol tone -- )
     the-sound send play-sound  digits #digits @ cells + !  1 #digits +!
     #digits @ 4 = if  keyed  then ;
 : dial-keys ( -- )
-    shoulders shoulder-was edge  pad-circle key-down? circle-was edge  pad-square key-down? square-was edge
-    pad-triangle key-down? triangle-was edge  pad-cross key-down? cross-was edge  {: sh ci sq tr cro :}
+    shoulders shoulder-was went-down?  pad-circle key-down? circle-was went-down?  pad-square key-down? square-was went-down?
+    pad-triangle key-down? triangle-was went-down?  pad-cross key-down? cross-was went-down?  {: sh ci sq tr cro :}
     step @ keying <> if  exit  then
     sh if  #digits @ 0= if  hang-up  else  0 #digits !  then  exit  then
     ci if  0 1 key-in exit  then

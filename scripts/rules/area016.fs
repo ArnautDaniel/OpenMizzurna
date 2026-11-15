@@ -12,7 +12,6 @@ the-crate the-crate-slot $5DE7C $F0 negate $22D8F this-area 1 crate!
 : has? ( item -- flag )  has-item? ;
 : give ( item -- )  s" items" actor-named send give-item ;
 : winona-along? ( -- flag )  winona going-along? ;
-: at-minute? ( h m -- flag )  swap 60 * +  clock-time minutes/day mod = ;
 
 \ ---- this visit (src: D_8010325C closing done, D_801049DC the key takeable, D_801049E4 poster seen, D_801049E8 the
 \ key's scene played, D_801049E0 the teacher here) ----

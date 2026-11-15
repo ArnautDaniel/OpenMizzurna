@@ -21,3 +21,7 @@ key: O constant pad2-circle     key: U constant pad2-cross
 key: Y constant pad2-square     key: P constant pad2-triangle
 key: 7 constant pad2-l1         key: 9 constant pad2-r1
 key: H constant pad2-start      key: G constant pad2-select
+
+\ a button gone down since it was last asked (var keeps how it was): a held one counts once
+: went-down? ( down? var -- flag )  {: d v :}  d v @ 0= and  d v ! ;
+: key-went-down? ( key var -- flag )  swap key-down? swap went-down? ;

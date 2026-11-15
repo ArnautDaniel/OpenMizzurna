@@ -75,13 +75,12 @@ $B4 constant crate-ahead            \ the crate before him as he pushes (src: pl
     fswap frames f* turn-rate f@ f+ fmin turn-rate f!
     s>f turn-rate f@ f* frames f* turn-by
     0e idle f! ;
-: press ( key var -- flag )  >r key-down? dup r@ @ 0= and swap r> ! ;
 : steer ( -- )
     pad-right key-down? if  1 turn  turn-right-motion push-right motion-for show
     else  pad-left key-down? if  -1 turn  turn-left-motion push-left motion-for show
     else  0 turning !  0e turn-rate f!  then  then
-    pad-r1 r-was press if  quarter-turn s>f turn-by  then
-    pad-l1 l-was press if  quarter-turn negate s>f turn-by  then ;
+    pad-r1 r-was key-went-down? if  quarter-turn s>f turn-by  then
+    pad-l1 l-was key-went-down? if  quarter-turn negate s>f turn-by  then ;
 : pace ( -- )   \ the speed this step
     0e speed f!
     pad-up key-down? if

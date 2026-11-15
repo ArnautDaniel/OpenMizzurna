@@ -38,11 +38,10 @@ variable title-open
 \ ---- the pad (src: OPENING's: Start / ○ go, ✕ back) ----
 variable go-was   variable back-was   variable up-was   variable down-was   variable left-was   variable right-was
 variable go   variable back   variable up   variable down   variable left   variable right
-: edge ( flag var -- pressed? )  {: f v :}  f v @ 0= and  f v ! ;
 : read-pad ( -- )
-    pad-start key-down? pad-circle key-down? or go-was edge go !  pad-cross key-down? back-was edge back !
-    pad-up key-down? up-was edge up !  pad-down key-down? down-was edge down !
-    pad-left key-down? left-was edge left !  pad-right key-down? right-was edge right ! ;
+    pad-start key-down? pad-circle key-down? or go-was went-down? go !  pad-cross key-down? back-was went-down? back !
+    pad-up key-down? up-was went-down? up !  pad-down key-down? down-was went-down? down !
+    pad-left key-down? left-was went-down? left !  pad-right key-down? right-was went-down? right ! ;
 : forget-presses ( -- )  false go !  false back !  false up !  false down !  false left !  false right ! ;
 
 \ ---- the movies (src: D_8012CFF0: PROLOGUE, OPENING, M_DIGEST, M_BADEND, M_FINEND - their last frame, volume,

@@ -65,7 +65,6 @@ $6F constant first-red   6 constant red-step   $10 constant faintest   $7F const
 
 \ ---- opening, a frame, closing ----
 variable cross-was   variable l1-was   variable r1-was   variable square-was
-: edge ( flag var -- pressed? )  {: f v :}  f v @ 0= and  f v ! ;
 : open-map ( -- )
     false computer !  -1 file-playing !
     true map-open !  0 hand-x !  0 hand-y !  0 chosen !  first-red red !  false fading !
@@ -77,8 +76,8 @@ variable cross-was   variable l1-was   variable r1-was   variable square-was
 : playing-file? ( -- flag )   \ a case file's scene on: the list waits
     file-playing @ dup 0< if  drop false exit  then  event-alive? dup 0= if  -1 file-playing !  then ;
 : map-step ( -- )
-    pad-cross key-down? cross-was edge  pad-l1 key-down? l1-was edge  pad-r1 key-down? r1-was edge
-    pad-square key-down? square-was edge  {: x l r q :}
+    pad-cross key-down? cross-was went-down?  pad-l1 key-down? l1-was went-down?  pad-r1 key-down? r1-was went-down?
+    pad-square key-down? square-was went-down?  {: x l r q :}
     map-up? 0= if  exit  then
     playing-file? if  exit  then
     x if  close-map exit  then

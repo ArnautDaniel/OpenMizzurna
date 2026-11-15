@@ -193,7 +193,6 @@ PRIVATE>
     cars #cars car * erase
     #cars 0 do  cars i car * +  -1 over lane-node !  the-town swap in-area !  loop ;
 \ ---- a scene's moves (src: the actor commands on a car: walk_to, move_forward, turn_to, idle - actor_update) ----
-: scene-moving? ( c -- flag )  dup going-to? @  over going-on? @ or  swap turning? @ or ;
 : forward-by ( c d -- )   \ along its heading
     {: c d :}  c x @  c z @  c heading @  d step-along  c z !  c x ! ;
 : heading-to ( c x z -- h )   \ (its locals not named x, z: the fields')
