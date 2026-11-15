@@ -30,7 +30,7 @@ $BE constant climbing-up   $BF constant climbing-down   0 constant on-feet-pose
 : perch! ( n -- )  him send figure-perch ;
 : facing-it ( c -- )   \ he turns to the crate at once
     crate-slot @ person-now drop nip {: x z :}  matthew-now drop nip {: mx mz :}
-    x mx - s>f z mz - s>f fatan2 4096e f* 2e pi f* f/ f>s 4095 and {: h :}  0 h 0 him send figure-turn ;
+    x mx -  z mz -  heading-toward {: h :}  0 h 0 him send figure-turn ;
 variable crate-circle-was   variable crate-square-was
 : circle? ( -- flag )  pad-circle key-down? dup crate-circle-was @ 0= and  swap crate-circle-was ! ;
 : square? ( -- flag )  pad-square key-down? dup crate-square-was @ 0= and  swap crate-square-was ! ;
@@ -51,7 +51,7 @@ $C constant let-go-prompt   $11 constant climb-down-prompt   \ (src: crate_area_
         3 of  anim-done? if  c done-with  then  endof
     endcase ;
 : up-on-it ( c -- )   \ src: crate_climb_update and the on-top state: ○ looks from up there, □ climbs down
-    {: c :}  take-pad
+    {: c :}  in-control? 0= if  exit  then  take-pad   \ (src: on top, only with Matthew the player's)
     c crate-stage @ case
         0 of  anim-done? if   \ on top: square over it
             c crate-slot @ person-now drop {: x y z :}  matthew-now drop {: mx my mz :}

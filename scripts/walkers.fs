@@ -20,7 +20,7 @@ USING: engine actors messages areas figures townsfolk ui ;
 : neighbour ( i link -- j )  2* neighbours-at + swap node + sw@ ;
 : length ( i link -- n )  2* lengths-at + swap node + w@ ;
 : heading-to ( i j -- h )   \ from node i toward node j (4096 a turn)
-    {: i j :}  j node-x i node-x - s>f  j node-z i node-z - s>f  fatan2 4096e f* 2e pi f* f/ f>s 4095 and ;
+    {: i j :}  j node-x i node-x -  j node-z i node-z -  heading-toward ;
 
 begin-structure walker
   field: who   field: from   field: to   field: dest   field: step   field: edge-steps   field: speed   field: heading
@@ -55,7 +55,7 @@ fvariable due
     {: w :}  w who @ 0< if  exit  then
     1 w step +!  w place
     w step @ w edge-steps @ >= if  w at-node  then ;
-: steps-due ( -- n )  due f@ motion-rate dt f* f+  fdup f>s  dup s>f f-  due f! ;
+: steps-due ( -- n )  due frames-due ;
 : walk ( -- )  steps-due 0 ?do  #walkers 0 do  i walker# walker-step  loop  loop ;
 
 : retarget ( w d -- )   \ walking already: toward d now - back the way it came if that's the way there

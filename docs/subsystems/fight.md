@@ -36,6 +36,12 @@ A fistfight between two figures (src: fight.c `fight_start` / `fight_update`, th
   for 120, each with its fighter's name above (the executable's `fight-icons` by style, of
   `ui/fight-names.png`; none when two play).
 
+Timing (src: fight_update): a fighter takes the pad's or the AI's move only while no screen effect runs (the
+opening fade, a hit's flash); the loser down for good fades the screen (0xB) and the winner's outcome waits for
+it. The AI's fighters read no pad (their combos are the pad's alone; the second player's too). The fight stands
+while a menu or the pause is up (from func_8003AB44: not while ui_busy) - as the other minigames (the car and dog
+chases, the shoot-out, the tail).
+
 ## Status
 
 Built: the moves, the pad, the AI, the hits, the knock-out, the game over and retry, the camera, the bars and

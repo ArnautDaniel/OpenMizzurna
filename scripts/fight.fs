@@ -6,7 +6,7 @@
 \ wins. A loss to the AI is game over, the fight again from the start for ○ or Start. They face each other, the
 \ camera between them; a step at the original's rate (15 a second indoors, 30 in the town).
 IN: fight
-USING: engine actors messages keys screen areas floors figures matthew townsfolk sound ;
+USING: engine actors messages keys screen ui areas floors figures matthew townsfolk sound ;
 
 \ ---- facts ----
 variable fighting      \ a fight is on (src: fight_active)
@@ -59,17 +59,15 @@ variable lost   \ 0 on, 1 the game over's up, 2 fading out to try again (src: fi
 fvariable due
 
 : human? ( f -- flag )  style @ player-2 <= ;
-: the-player? ( f -- flag )  style @ player-1 = ;
 : him? ( f -- flag )  slot @ 0= ;   \ (Matthew's slot)
 : place-of ( slot -- x z )  dup 0= if  drop matthew-now drop nip  else  person-now drop nip  then ;
 : floor-of ( f -- n )  dup him? if  drop floor @  else  slot @ person-of on-floor @  then ;
 : motion-done? ( f -- flag )  dup him? if  drop anim-done?  else  slot @ person-anim-done?  then ;
-: step ( f d -- )   \ along its heading
-    {: f d :}  f heading @ s>f 2e f* pi f* 4096e f/ {: F: a :}
-    f fx @ s>f a fsin d s>f f* f+ f>s f fx !  f fz @ s>f a fcos d s>f f* f+ f>s f fz ! ;
-: apart ( -- d )  0 fighter# fx @ 1 fighter# fx @ - s>f fdup f*  0 fighter# fz @ 1 fighter# fz @ - s>f fdup f* f+ fsqrt f>s ;
+: step ( f d -- )   \ along its heading (src: actor_step)
+    {: f d :}  f fx @ f fz @ f heading @ d step-along  f fz !  f fx ! ;
+: apart ( -- d )  0 fighter# fx @ 0 fighter# fz @  1 fighter# fx @ 1 fighter# fz @  distance-to ;
 : angle ( -- a )   \ from the second toward the first (4096 a turn)
-    0 fighter# fx @ 1 fighter# fx @ - s>f  0 fighter# fz @ 1 fighter# fz @ - s>f  fatan2 4096e f* 2e pi f* f/ f>s 4095 and ;
+    0 fighter# fx @ 1 fighter# fx @ -  0 fighter# fz @ 1 fighter# fz @ -  heading-toward ;
 
 \ ---- the pad ----
 create keys-were 2 cells allot   create pads-held 2 cells allot   create pads-pressed 2 cells allot
@@ -168,6 +166,7 @@ variable held   variable pressed   \ (the pad of the fighter acting now)
 : felt ( o strength small large -- )   \ a human hurt: their pad shakes (src: fight.c rumble)
     {: o v sf lf :}  o human? 0= if  exit  then
     s" rumble" actor-named {: r :}  o style @ sf r send rumble-small  o style @ v lf r send rumble-large ;
+11 constant down-fade   \ (src: screen_effect 0xB as the loser stays down)
 14 constant hurt-flash   8 constant shake-a-damage   2 constant hurt-small   5 constant hurt-large
 255 constant ko-shake   7 constant ko-small   7 constant ko-large
 : lands ( f o i -- )
@@ -193,18 +192,19 @@ variable held   variable pressed   \ (the pad of the fighter acting now)
 : own-motion ( f o -- )
     {: f o :}  f move-frame @ {: fr :}
     f move @ case
-        jab of  o move @ light-hit =  fr 4 7 within and  pressed @ kick-key and 0<> and  f the-player? and if  f kick start-move  then  endof
-        kick of  o move @ kicked =  fr 8 11 within and  pressed @ punch-key and 0<> and  f combo @ 2 = and  f the-player? and if
+        jab of  o move @ light-hit =  fr 4 7 within and  pressed @ kick-key and 0<> and if  f kick start-move  then  endof
+        kick of  o move @ kicked =  fr 8 11 within and  pressed @ punch-key and 0<> and  f combo @ 2 = and if
             f hook start-move  then  endof
         hook of  0 f combo !  f s" fight-hook-steps" fr hook-steps step-of step  endof
         dash-back-punch of  f dash-punch-units step  endof
         lunge of  f dash-punch-units step  endof
         special-6 of  f s" fight-special-steps" fr special-steps step-of step  endof
         knocked-out of  fr 6 < if  ko-push f pushed !  then  f s" fight-ko-steps" fr ko-steps step-of step  endof
-        down-for-good of  fight-winner @ no-winner = if  f fighters - fighter / other fight-winner !  then  endof
+        down-for-good of  fight-winner @ no-winner = if   \ (src: and the fade to the end)
+            down-fade s" effects" actor-named send screen-effect  f fighters - fighter / other fight-winner !  then  endof
         19 of  f s" fight-down-steps" fr down-steps step-of step  fr falls  endof
         20 of  f s" fight-down-steps" fr down-steps step-of step  fr falls  endof
-        dash-in of  f dash-units step  f the-player? if  f out-of-the-dash  then  endof
+        dash-in of  f dash-units step  f out-of-the-dash  endof
         dash-back of  f dash-units negate step  endof
     endcase ;
 
@@ -212,7 +212,7 @@ variable held   variable pressed   \ (the pad of the fighter acting now)
 : blocked-now? ( f o -- flag )
     {: f o :}  f fx @ f fz @ f floor-of blocked?  if  true exit  then
     f fx @ f fz @ solid-billboard? if  true exit  then
-    f fx @ o fx @ - s>f fdup f*  f fz @ o fz @ - s>f fdup f* f+ fsqrt too-close s>f f< ;
+    f fx @ f fz @ o fx @ o fz @ distance-to too-close < ;
 \ style 7's own motions for five of the moves' (src: fight_update)
 create own-motions  $74 , $536 ,  $8E , $53A ,  $8F , $53B ,  $6F , $538 ,  $70 , $539 ,
 5 constant #own-motions
@@ -233,10 +233,11 @@ create own-motions  $74 , $536 ,  $8E , $53A ,  $8F , $53B ,  $6F , $538 ,  $70 
 : fighter-frame ( i -- )
     {: i :}  i fighter# {: f :}  i other fighter# {: o :}
     f fx @ f was-x !  f fz @ f was-z !
-    f human? if  f style @ use-pad  then   \ (its own pad: the first, or the second's)
+    f human? if  f style @ use-pad  else  0 held !  0 pressed !  then   \ (its own pad: the first, or the second's; the AI none)
     f move-frame @ 0<>  f motion-done? and if  f  f move @ move-next  start-move  then
     f pushed @ ?dup if  f swap negate step  f pushed @ 2/ f pushed !  then
-    f move @ move-kind ready = if  f human? if  f i human-input  else  f i ai-input  then  then
+    f move @ move-kind ready =  effects:effect-running? 0= and if   \ (src: not while the screen fades)
+        f human? if  f i human-input  else  f i ai-input  then  then
     f move @ attacks < if  f o i attack  then
     f o own-motion
     1 f move-frame +!
@@ -263,8 +264,7 @@ $A constant fight-music   $D constant own-music   \ (rows of the music table)
 $100 constant apart-after   \ (src: actor_place_apart(a, b, 0x100, 3))
 : put-apart ( -- )   \ the second 0x100 from the first on the line between them, facing each other
     angle {: a :}  0 fighter# {: f :}  1 fighter# {: o :}
-    a s>f 2e f* pi f* 4096e f/ {: F: r :}
-    f fx @ s>f r fsin apart-after s>f f* f- f>s o fx !  f fz @ s>f r fcos apart-after s>f f* f- f>s o fz !
+    f fx @ f fz @ a apart-after negate step-along  o fz !  o fx !
     a o heading !  a 2048 + 4095 and f heading !  f show-fighter  o show-fighter ;
 : it's-over ( -- )   \ by the winner's style (src: fight_update)
     fight-winner @ fighter# {: w :}
@@ -273,14 +273,14 @@ $100 constant apart-after   \ (src: actor_place_apart(a, b, 0x100, 3))
     1 lost !  -1 music-row ;   \ lost to the AI: game over (the camera the scene's again after: it's an event's)
 : fight-frame ( -- )
     read-pad  aim  0 fighter-frame  1 fighter-frame  0 fighter# show-fighter  1 fighter# show-fighter
-    fight-winner @ no-winner <> if  it's-over  then ;
+    fight-winner @ no-winner <>  effects:effect-running? 0= and if  it's-over  then ;   \ (src: once the fade's done)
 : game-over ( -- )   \ ○ or Start: the fight again
     lost @ 1 = if  read-pad  pressed @ punch-key and  pad-start key-down? or if
         fade-out s" effects" actor-named send screen-effect  2 lost !  then  exit  then
     effects:effect-running? 0= if  begin-fight  then ;
-: steps-due ( -- n )  due f@ motion-rate dt f* f+  fdup f>s  dup s>f f-  due f! ;
-: fight-tick ( -- )
-    fighting? 0= if  exit  then
+: steps-due ( -- n )  due frames-due ;
+: fight-tick ( -- )   \ (src: fight_update from func_8003AB44: not while a menu or the pause is up)
+    fighting? 0=  ui-busy? or if  exit  then
     lost @ if  game-over exit  then
     steps-due 0 ?do  fighting? 0= lost @ or if  leave  then  fight-frame  loop ;
 

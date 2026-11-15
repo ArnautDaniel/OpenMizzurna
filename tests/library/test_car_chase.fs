@@ -40,4 +40,9 @@ testing out of the car while it's on: got away too
 T{ in-town  21 minigame  deliver  played-out  start-clock  2 steps  step-out  deliver  2 steps  chase-on? -> false }T
 T{ played-out -> }T
 
+testing a menu or the pause up: the chase's time stands (src: minigame_update, not while ui_busy)
+T{ 500 chase-left !  s" ui" actor-named send ui-lock  deliver  10 steps  chase-left @
+   s" ui" actor-named send ui-unlock  deliver  10 steps  chase-left @ 500 < -> 500 true }T
+T{ 0 chase-left !  abort -> }T
+
 test-summary

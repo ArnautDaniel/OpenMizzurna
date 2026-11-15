@@ -7,7 +7,7 @@
 \ and from the start again for ○ or Start. The camera follows the round's own path round the foe; a step at the
 \ original's rate (15 a second indoors). An area describes its shoot-out in a plan.
 IN: shootout
-USING: engine actors messages keys screen areas figures matthew townsfolk events sound rumble ;
+USING: engine actors messages keys screen ui areas figures matthew townsfolk events sound rumble ;
 
 \ ---- facts ----
 variable shootout-going   \ a shoot-out is on (src: D_800A3578 / D_800A3570)
@@ -209,9 +209,9 @@ variable prop-x   variable prop-y   variable prop-z   \ (where the prop was: it'
     stage @ aiming =  health @ 0 <= and if  1 health !  lost  then
     health @ health-shown @ < if  -1 health-shown +!  then
     2 0 do  i cells pools + @  i cells pools-shown + @ < if  -1 i cells pools-shown + +!  then  loop ;
-: steps-due ( -- n )  due f@ motion-rate dt f* f+  fdup f>s  dup s>f f-  due f! ;
-: shootout-tick ( -- )
-    shooting? 0= if  exit  then
+: steps-due ( -- n )  due frames-due ;
+: shootout-tick ( -- )   \ (src: not while a menu or the pause is up - ui_busy)
+    shooting? 0=  ui-busy? or if  exit  then
     watch-pad  steps-due 0 ?do  shooting? 0= if  leave  then  shootout-frame  loop ;
 
 \ ---- drawing: the targets, the bullets, the bars (src: qte_draw_targets, shootout_ammo_draw, hp_bar_draw) ----

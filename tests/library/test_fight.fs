@@ -18,14 +18,18 @@ settled
 : still-fight ( -- )  matthew 0 the-robber 1 fight ;   \ (the other the second pad's: it stands)
 : ai-fight ( -- )  matthew 0 the-robber 3 fight ;
 : him ( -- f )  0 fighter# ;   : the-other ( -- f )  1 fighter# ;
+: faded-in ( -- )  600 0 do  1 steps  effects:effect-running? 0= if  leave  then  loop ;   \ (no moves till then)
 : punch-until-won ( -- )  300 0 do  pad-circle press  fighting? 0= if  leave  then  loop ;
 : until-again ( -- )  600 0 do  1 steps  lost @ 0= if  leave  then  loop ;
 : until-lost ( -- )  3000 0 do  1 steps  lost @ if  leave  then  loop ;
 : punch-until-over ( -- )  300 0 do  pad-circle press  events-running @ 0= if  leave  then  loop ;
 prologue-done flag-set
 
+testing while the screen fades in, no moves (src: fight_update: input only with no screen effect running)
+T{ in-the-hideout  ' still-fight start-event  2 steps  pad-circle press  the-other health @ -> 120 }T
+T{ events-stop -> }T
 testing begun: on, full health, ready (the other the second pad's, untouched: it stands)
-T{ in-the-hideout  ' still-fight start-event  2 steps
+T{ in-the-hideout  ' still-fight start-event  2 steps  faded-in
    fighting?  him health @  the-other health @ -> true 120 120 }T
 testing ○ near enough: a jab lands (5)
 T{ pad-circle press  20 steps  the-other health @ -> 115 }T
@@ -51,7 +55,7 @@ T{ pad-circle press  until-again  lost @  fighting?  him health @ -> 0 true 120 
 testing the events' op: it waits for the winner and answers it
 variable winner-was
 : a-fight ( -- )  matthew 0 the-robber 1 fight  0 result= winner-was ! ;
-T{ events-stop  in-the-hideout  ' a-fight start-event  10 steps  fighting? -> true }T
+T{ events-stop  in-the-hideout  ' a-fight start-event  10 steps  faded-in  fighting? -> true }T
 T{ 1 the-other health !  punch-until-over  events-running @  winner-was @ -> 0 true }T
 
 test-summary

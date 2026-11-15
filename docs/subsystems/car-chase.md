@@ -36,6 +36,9 @@ Chasing the bike through the town in Matthew's car (area 27's minigame 21; src: 
   the chase ends, the bike stops, and Mel goes to stop 0x16.
 - **Leaving the town** aborts it.
 
+The chase and its time stand while a menu or the pause is up (src: minigame_update from func_8003AB44, not
+while ui_busy).
+
 ## Status
 
 Built (`tests/library/test_car_chase.fs`): with the knocks' and the crash's sounds and rumble, the music stopping,

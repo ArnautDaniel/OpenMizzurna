@@ -112,8 +112,7 @@ variable his-to-move   \ (the player's: src player_has_control)
 \ ---- back in (src: npc_clock_tick: the door's wait over, he's 501 away, or they're leaving soon) ----
 501 constant walked-off   3 constant leaving-soon
 : too-far? ( slot -- flag )
-    person-now drop {: x y z :}  matthew-now drop {: mx my mz :}
-    mx x - dup *  mz z - dup * + s>f fsqrt f>s walked-off >= ;
+    person-now drop nip  matthew-now drop nip  distance-to walked-off >= ;
 : back-in ( slot -- )   \ src: door_resident_leave
     {: s :}  s s" townsfolk" actor-named send person-door-free  s answering !
     s door-of-theirs knock-side ! knock-door !  s parting-of parting !

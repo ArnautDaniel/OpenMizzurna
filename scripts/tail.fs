@@ -7,7 +7,7 @@
 \ scene, then the keypad: four face buttons, the code the town's own; wrong, again (the third time with a hint);
 \ right, through the door. A step at the original's rate (30 a second in the town).
 IN: tail
-USING: engine actors messages keys screen areas figures matthew townsfolk story-flags events events.ovl027 ;
+USING: engine actors messages keys screen ui areas figures matthew townsfolk story-flags events events.ovl027 ;
 
 \ ---- facts ----
 variable tail-point   \ src: D_8010CA28: the point he walks to (the keypad's: frames since the 4th press)
@@ -35,8 +35,7 @@ fvariable due
 
 \ ---- him ----
 : near-him? ( -- flag )   \ Matthew within earshot
-    lookout person-now drop nip {: x z :}  matthew-now drop nip {: mx mz :}
-    mx x - s>f fdup f*  mz z - s>f fdup f* f+ fsqrt  earshot s>f f< ;
+    lookout person-now drop nip  matthew-now drop nip  distance-to earshot < ;
 : heading ( -- h )  lookout person-now nip nip nip ;
 : turn-him ( d -- )  heading + 4095 and  lookout swap the-townsfolk send person-turn ;
 : play-scene ( xt -- )  launch-event scene-thread ! ;
@@ -81,8 +80,7 @@ variable taken   \ (a step takes one press: the first)
 variable patrol-point   variable gait-now
 : patrol-xz ( i -- x z )  2* {: k :}  s" robber-patrol" k exe-s32  s" robber-patrol" k 1+ exe-s32 ;
 : close-to-him? ( -- flag )
-    lookout person-now drop nip {: x z :}  matthew-now drop nip {: mx mz :}
-    mx x - s>f fdup f*  mz z - s>f fdup f* f+ fsqrt too-close s>f f< ;
+    lookout person-now drop nip  matthew-now drop nip  distance-to too-close < ;
 : go-patrol ( speed motion -- )   \ toward the point (again only when the point or the gait changes)
     {: v m :}  m gait-now @ = if  exit  then  m gait-now !
     lookout patrol-point @ patrol-xz v m the-townsfolk send person-walk ;
@@ -153,8 +151,9 @@ $10 constant lean-step   variable leaning
         looking-round of  lookout route-thread 0< if  walk-on  then  endof
         keypad of  keypad-step  endof
     endcase ;
-: steps-due ( -- n )  due f@ motion-rate dt f* f+  fdup f>s  dup s>f f-  due f! ;
-: tail-tick ( -- )  stage @ off = if  exit  then  steps-due 0 ?do  stage @ off = if  leave  then  tail-frame  loop ;
+: steps-due ( -- n )  due frames-due ;
+: tail-tick ( -- )   \ (src: not while a menu or the pause is up)
+    stage @ off =  ui-busy? or if  exit  then  steps-due 0 ?do  stage @ off = if  leave  then  tail-frame  loop ;
 
 \ ---- drawing: the digits entered (src: 16 x 16 icons at x -32 + 16 i, y 60) ----
 -32 constant digits-x   60 constant digits-y   16 constant digit-pitch   16 constant digit-size

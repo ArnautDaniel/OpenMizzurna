@@ -50,7 +50,7 @@ variable his-motion   variable boat-motion
     velocity f@ backing-still f< if  velocity f@ backing-still fnegate f+ velocity f!  exit  then
     0e velocity f! ;
 : ahead ( x z h d -- x' z' )   \ d along heading h
-    {: x z h d :}  h s>f 4096e f/ 2e f* pi f* {: F: a :}  x d s>f a fsin f* f>s +  z d s>f a fcos f* f>s + ;
+    step-along ;
 1 constant the-towns-floor
 : blocked-there? ( x z -- flag )  2dup the-towns-floor blocked?  -rot solid-billboard? or ;
 : place-all ( -- )
@@ -68,14 +68,14 @@ variable his-motion   variable boat-motion
 \ the boathouses (src: ovl027 tick, field mode 7: within 500 of each, ○'s prompt; ○ lands)
 $71BC3 constant east-x   $70C0A constant east-z   $524DF constant west-x   $6C294 constant west-z
 500 constant landing-reach   $10 constant landing-prompt
-: by-the-landing? ( x z -- flag )  {: x z :}  bx @ x - s>f fdup f*  bz @ z - s>f fdup f* f+ fsqrt landing-reach s>f f< ;
+: by-the-landing? ( x z -- flag )  bx @ bz @ distance-to landing-reach < ;
 variable landing-circle-was
 : landing ( -- )
     -1 boat-prompt !
     pad-circle key-down? dup landing-circle-was @ 0= and  swap landing-circle-was !  {: o :}
     east-x east-z by-the-landing? if  landing-prompt boat-prompt !  o if  ['] events.ovl027:entry-8010A998 start-event  then  exit  then
     west-x west-z by-the-landing? if  landing-prompt boat-prompt !  o if  ['] events.ovl027:entry-8010A974 start-event  then  then ;
-: steps-due ( -- n )  due f@ motion-rate dt f* f+  fdup f>s  dup s>f f-  due f! ;
+: steps-due ( -- n )  due frames-due ;
 : row-tick ( -- )
     rowing? 0= if  exit  then  steps-due {: n :}
     has-control? 0= if  exit  then   \ (a scene playing: the boat still)

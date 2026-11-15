@@ -15,7 +15,7 @@ fvariable due
     $@ image ;
 : half ( -- n )   \ src: rsin(t) >> 4
     grown @ s>f 2e f* pi f* 4096e f/ fsin full-half s>f f* f>s ;
-: steps-due ( -- n )  due f@ motion-rate dt f* f+  fdup f>s  dup s>f f-  due f! ;
+: steps-due ( -- n )  due frames-due ;
 : grow ( -- )  lit @ 0= if  exit  then  steps-due growth * grown +!  grown @ full-grown min grown ! ;
 : draw-flare ( -- )
     lit @ 0= if  exit  then

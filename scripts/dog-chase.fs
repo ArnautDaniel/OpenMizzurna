@@ -6,7 +6,7 @@
 \ falls, game over, and ○ or Start runs it from the start. The camera looks down on him. A step at the
 \ original's rate (15 a second indoors); the scene's script decides when he's got away.
 IN: dog-chase
-USING: engine actors messages keys screen areas figures floors matthew townsfolk sound rumble ;
+USING: engine actors messages keys screen ui areas figures floors matthew townsfolk sound rumble ;
 
 variable chasing
 : chasing? ( -- flag )  chasing @ 0<> ;
@@ -42,11 +42,8 @@ fvariable due
     d s <  4096 s - d < or if  t exit  then
     d 2048 >= if  h s -  else  h s +  then  4095 and ;
 : angle-to-him ( -- a )   \ from the dog
-    his-x @ dog-x @ - s>f  his-z @ dog-z @ - s>f  fatan2 4096e f* 2e pi f* f/ f>s 4095 and ;
-: apart ( -- d )  his-x @ dog-x @ - s>f fdup f*  his-z @ dog-z @ - s>f fdup f* f+ fsqrt f>s ;
-: along ( x z h d -- x' z' )   \ d along heading h
-    {: x z h d :}  h s>f 2e f* pi f* 4096e f/ {: F: a :}
-    x s>f a fsin d s>f f* f+ f>s  z s>f a fcos d s>f f* f+ f>s ;
+    his-x @ dog-x @ -  his-z @ dog-z @ -  heading-toward ;
+: apart ( -- d )  his-x @ his-z @  dog-x @ dog-z @  distance-to ;
 : effect ( n -- )  s" effects" actor-named send screen-effect ;
 
 \ ---- the dog ----
@@ -55,7 +52,7 @@ fvariable due
     health @ 0 <= if  down him !  falling effect  else  staggered him !  then
     backing-off dog !  hurt-frames wait !  0 dog-speed !
     angle-to-him {: a :}  a dog-heading !   \ src: actor_place_apart: it's put that far from him, facing him
-    his-x @ his-z @ a apart-after-bite negate along  dog-z !  dog-x ! ;
+    his-x @ his-z @ a apart-after-bite negate step-along  dog-z !  dog-x ! ;
 : lined-up? ( a step -- flag )  {: a s :}  dog-heading @ a s toward a = ;
 : wait-and-turn ( a -- )   \ src: state 0
     {: a :}  50 dog-speed !  dog-ready dog-motion !
@@ -84,14 +81,14 @@ fvariable due
         skidding of  skid  endof
         backing-off of  back-off  endof
     endcase
-    dog-x @ dog-z @ dog-heading @ dog-speed @ along  dog-z !  dog-x ! ;
+    dog-x @ dog-z @ dog-heading @ dog-speed @ step-along  dog-z !  dog-x ! ;
 
 \ ---- him ----
 : pad-bits ( -- n )   \ Up 1, Right 2, Down 4, Left 8 (the table's index)
     pad-up key-down? 1 and  pad-right key-down? 2 and or  pad-down key-down? 4 and or  pad-left key-down? 8 and or ;
 : run-toward ( bits -- )   \ that way at once; he turns to face it
     {: b :}  s" dog-directions" b exe-s16 4095 and facing-goal !
-    his-x @ his-z @ facing-goal @ his-stride along  his-z !  his-x ! ;
+    his-x @ his-z @ facing-goal @ his-stride step-along  his-z !  his-x ! ;
 : run ( -- )
     pad-bits ?dup if  run-toward running  else  stands-still  then  his-motion !
     facing @ facing-goal @ his-turn toward facing ! ;
@@ -135,8 +132,9 @@ variable confirm-was
     him @ game-over < if  dog-frame  then
     his-frame  show-him  show-dog  aim
     health @ shown @ < if  -1 shown +!  then ;
-: steps-due ( -- n )  due f@ motion-rate dt f* f+  fdup f>s  dup s>f f-  due f! ;
-: chase-tick ( -- )  chasing? 0= if  exit  then  steps-due 0 ?do  chase-frame  loop ;
+: steps-due ( -- n )  due frames-due ;
+: chase-tick ( -- )   \ (src: minigame_update: not while a menu or the pause is up - ui_busy)
+    chasing? 0=  ui-busy? or if  exit  then  steps-due 0 ?do  chase-frame  loop ;
 
 \ ---- drawing: his health, the game over ----
 : draw-chase ( -- )
