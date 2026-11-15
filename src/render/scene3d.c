@@ -15,6 +15,9 @@
 
 #define WORLD_TO_GLTF (1.0f / 512.0f)   /* world units are 2 model units; 256 model units a glTF unit */
 #define TURN 4096.0f
+/* an object's place among its group's, as the original keeps it: in half the model's units (its offset from its
+ * parent halved as it is posed - src: model_pose_update, func_8001AFE0), whatever its TMD's scale */
+#define OBJECT_PLACE_TO_GLTF (1.0f / (2.0f * 256.0f))
 #define SCREEN_HALF_HEIGHT 120.0f       /* the PlayStation's screen: 240 high */
 #define NEAR_PLANE 0.02f
 #define FAR_PLANE 2000.0f
@@ -27,7 +30,7 @@ enum { BLEND_NONE, BLEND_HALF, BLEND_ADD, BLEND_SUBTRACT, BLEND_QUARTER };
 typedef struct Material {
     char texture[96];   /* its name ("page9-4bit-palette288-247"), or "" for none */
     int area_set;       /* 1: the area's set; 0: the model's own (uri) */
-    char uri[160];      /* the model's own: its library path */
+    char uri[400];      /* the model's own: its library path (its folder and the image's name) */
     int blend, lit, double_sided;
     int lamp;           /* a town street lamp's light (its lit texture when the lamp is on); -1: none */
 } Material;
@@ -85,6 +88,7 @@ typedef struct Tex {
     char path[200];
     GpuTexture t;
     int missing;
+    int clear;   /* every texel the colour 0 (never drawn) */
     uint32_t hash;
 } Tex;
 
@@ -243,8 +247,8 @@ static uint32_t path_hash(const char *s) {
     return h;
 }
 
-static GpuTexture texture_at(const char *path, int *ok) {
-    size_t n;
+static Tex *texture_entry(const char *path) {   /* a texture asked for (loaded the first time) */
+    size_t n, k;
     uint8_t *file, *rgba;
     int i, w = 0, h = 0;
     uint32_t hash = path_hash(path);
@@ -252,8 +256,7 @@ static GpuTexture texture_at(const char *path, int *ok) {
 
     for (i = 0; i < S.ntex; i++) {
         if (S.tex[i].hash == hash && strcmp(S.tex[i].path, path) == 0) {
-            *ok = !S.tex[i].missing;
-            return S.tex[i].t;
+            return &S.tex[i];
         }
     }
     if (S.ntex == S.captex) {
@@ -269,10 +272,29 @@ static GpuTexture texture_at(const char *path, int *ok) {
     t->hash = hash;
     t->missing = rgba == NULL;
     if (rgba != NULL) {
+        t->clear = 1;
+        for (k = 3; k < (size_t)w * h * 4 && t->clear; k += 4) {
+            t->clear = rgba[k] == 0;
+        }
         t->t = render_texture_rgba(rgba, w, h);
         free(rgba);
     }
+    return t;
+}
+
+static GpuTexture texture_at(const char *path, int *ok) {
+    Tex *t = texture_entry(path);
+
     *ok = !t->missing;
+    return t->t;
+}
+
+/* an area's own version of a texture: not one wholly clear - cut from video memory as the area loads it, a page
+ * the game fills only later (an event's figure, a vehicle) comes out empty, and the common version is the one */
+static GpuTexture area_texture_at(const char *path, int *ok) {
+    Tex *t = texture_entry(path);
+
+    *ok = !t->missing && !t->clear;
     return t->t;
 }
 
@@ -297,14 +319,14 @@ static GpuTexture material_texture(const Material *mt, int *ok) {
             if (S.anim_shown[a] > 0) {
                 snprintf(path, sizeof(path), "textures/area-%03d/anim-%d/%d/%s.png", S.area, a, S.anim_shown[a] - 1,
                          mt->texture);
-                t = texture_at(path, ok);
+                t = area_texture_at(path, ok);
                 if (*ok) {
                     return t;
                 }
             }
         }
         snprintf(path, sizeof(path), "textures/area-%03d/%s.png", S.area, mt->texture);
-        t = texture_at(path, ok);
+        t = area_texture_at(path, ok);
         if (*ok) {
             return t;
         }
@@ -315,6 +337,8 @@ static GpuTexture material_texture(const Material *mt, int *ok) {
 }
 
 /* ---- models ---- */
+static void resolve_nodes(const Model3D *m, const float (*local)[16], float (*node)[16]);
+
 static void read_extras(const cgltf_data *data, const cgltf_extras *e, char *out, size_t n) {
     cgltf_size size = n;
 
@@ -360,6 +384,8 @@ Model3D *model3d_load(const char *path) {
     int nverts = 0, cap = 0;
     size_t i, k, v;
     uint8_t *binary;
+    unsigned char *is_part;   /* a node a part of the model's (its extras say where it sits): the rest are objects past them */
+    int has_parts = 0;
     const char *slash;
 
     if (json == NULL) {
@@ -416,6 +442,7 @@ Model3D *model3d_load(const char *path) {
     m->parent = calloc(data->nodes_count + 1, sizeof(int));
     m->part_scale = calloc(data->nodes_count + 1, sizeof(float));
     m->rest_turn = calloc(data->nodes_count + 1, sizeof(*m->rest_turn));
+    is_part = calloc(data->nodes_count + 1, 1);
     for (i = 0; i < data->nodes_count; i++) {
         read_extras(data, &data->nodes[i].extras, extras, sizeof(extras));
         m->part_scale[i] = 1.0f;
@@ -427,13 +454,19 @@ Model3D *model3d_load(const char *path) {
             sscanf(strstr(extras, "\"turn\":[") + 8, "%d,%d,%d", &t[0], &t[1], &t[2]);
             m->rest_turn[i][0] = (short)t[0], m->rest_turn[i][1] = (short)t[1], m->rest_turn[i][2] = (short)t[2];
         }
-        cgltf_node_transform_world(&data->nodes[i], m->node_world[i]);
+        is_part[i] = strstr(extras, "\"place\":") != NULL;
+        has_parts |= is_part[i];
         cgltf_node_transform_local(&data->nodes[i], m->node_local[i]);
         m->parent[i] = data->nodes[i].parent ? (int)(data->nodes[i].parent - data->nodes) : -1;
+        if (is_part[i] && m->parent[i] < 0) {   /* a root part: its own place and turn aren't the original's */
+            mat_identity(m->node_local[i]);
+        }
     }
+    resolve_nodes(m, (const float (*)[16])m->node_local, m->node_world);
     verts = NULL;
     for (i = 0; i < data->nodes_count; i++) {
-        const cgltf_mesh *mesh = data->nodes[i].mesh;
+        const cgltf_mesh *mesh = has_parts && !is_part[i] ? NULL : data->nodes[i].mesh;   /* (an object past the
+                                                                     * parts: the original never draws it) */
 
         for (k = 0; mesh != NULL && k < mesh->primitives_count; k++) {
             const cgltf_primitive *p = &mesh->primitives[k];
@@ -493,6 +526,7 @@ Model3D *model3d_load(const char *path) {
         memcpy(m->positions + v * 3, verts + v * FLOATS_PER_VERTEX, sizeof(float) * 3);
     }
     free(verts);
+    free(is_part);
     free(binary);
     cgltf_free(data);
     free(json);
@@ -616,34 +650,72 @@ static float (*pool_take(int n, int *first))[16] {   /* n node matrices from thi
     return S.pool + *first;
 }
 
-static void chain(const Model3D *m, float (*node)[16], int i, const float *local) {   /* parent's, then its own */
-    if (m->parent[i] >= 0 && m->parent[i] < i) {
-        mat_mul(node[i], node[m->parent[i]], local);
-    } else {
-        memcpy(node[i], local, sizeof(float) * 16);
+/* each node's transform in the model: its parent's, then its own - whatever order the parts come in (a part may
+ * hang from one listed after it, as 091_2's first does: the original's coordinate systems chain through their
+ * parents however they're numbered - src: model_link_hierarchy's GsInitCoordinate2) */
+static void resolve_node(const Model3D *m, const float (*local)[16], float (*node)[16], unsigned char *done, int i,
+                         int depth) {
+    int p = m->parent[i];
+
+    if (done[i]) {
+        return;
     }
+    done[i] = 1;   /* (before its parents: a loop of parents ends here, the part on its own) */
+    if (p >= 0 && p < m->nnodes && depth < m->nnodes) {
+        resolve_node(m, local, node, done, p, depth + 1);
+        mat_mul(node[i], node[p], local[i]);
+    } else {
+        memcpy(node[i], local[i], sizeof(float) * 16);
+    }
+}
+
+static void resolve_nodes(const Model3D *m, const float (*local)[16], float (*node)[16]) {
+    static unsigned char *done;
+    static int room;
+    int i;
+
+    if (m->nnodes > room) {
+        room = m->nnodes * 2;
+        done = realloc(done, (size_t)room);
+    }
+    memset(done, 0, (size_t)m->nnodes);
+    for (i = 0; i < m->nnodes; i++) {
+        resolve_node(m, local, node, done, i, 0);
+    }
+}
+
+static float (*scratch_locals(int n))[16] {   /* room for a model's nodes' own transforms, this draw */
+    static float (*locals)[16];
+    static int room;
+
+    if (n > room) {
+        room = n * 2;
+        locals = realloc(locals, sizeof(*locals) * (size_t)room);
+    }
+    return locals;
 }
 
 static void pose_nodes(const Model3D *m, const short (*turns)[3], int nturns, const float root_move[3],
                        float (*node)[16]) {
+    float (*locals)[16] = scratch_locals(m->nnodes);
     int i;
 
-    for (i = 0; i < m->nnodes; i++) {   /* (the converter writes parents before their children) */
-        float local[16], r[16];
+    for (i = 0; i < m->nnodes; i++) {
+        float *local = locals[i], r[16];
 
-        memcpy(local, m->node_local[i], sizeof(local));
+        memcpy(local, m->node_local[i], sizeof(float) * 16);
         if (i < nturns) {   /* its turn this frame, in place of its rest turn */
             turn_matrix(turns[i], r);
             memcpy(r + 12, local + 12, sizeof(float) * 3);
-            memcpy(local, r, sizeof(local));
+            memcpy(local, r, sizeof(float) * 16);
         }
         if (m->parent[i] < 0 && root_move != NULL) {   /* the root moves by the frame (in its part's scale, y up) */
             local[12] += root_move[0] * m->part_scale[i] / 256.0f;
             local[13] += root_move[1] * m->part_scale[i] / 256.0f;
             local[14] -= root_move[2] * m->part_scale[i] / 256.0f;
         }
-        chain(m, node, i, local);
     }
+    resolve_nodes(m, (const float (*)[16])locals, node);
 }
 
 void scene3d_draw_posed(Model3D *m, const float pos[3], float yaw, const short (*turns)[3], int nturns,
@@ -685,10 +757,25 @@ int scene3d_node_on_screen(Model3D *m, const float pos[3], float yaw, const shor
     return 1;
 }
 
+int scene3d_node_place(Model3D *m, const short (*turns)[3], int nturns, const float root_move[3], int which,
+                       float out[3]) {
+    float (*node)[16];
+
+    if (m == NULL || which < 0 || which >= m->nnodes || (node = malloc(sizeof(*node) * (size_t)m->nnodes)) == NULL) {
+        return 0;
+    }
+    pose_nodes(m, turns, turns != NULL ? nturns : 0, root_move, node);
+    out[0] = node[which][12] / WORLD_TO_GLTF;   /* (glTF's to the game's: y and z the other way) */
+    out[1] = -node[which][13] / WORLD_TO_GLTF;
+    out[2] = -node[which][14] / WORLD_TO_GLTF;
+    free(node);
+    return 1;
+}
+
 void scene3d_draw_objects(Model3D *m, const float pos[3], float yaw, const unsigned char *shown, int nshown,
                           const Scene3DObjectPose *poses, int nposes) {
     Draw *d = new_draw(m, pos, yaw);
-    float (*node)[16];
+    float (*node)[16], (*locals)[16];
     int i, k;
 
     if (d == NULL) {
@@ -700,10 +787,11 @@ void scene3d_draw_objects(Model3D *m, const float pos[3], float yaw, const unsig
     }
     node = pool_take(m->nnodes, &d->node);
     d->posed = 1;
+    locals = scratch_locals(m->nnodes);
     for (i = 0; i < m->nnodes; i++) {
-        float local[16];
+        float *local = locals[i];
 
-        memcpy(local, m->node_local[i], sizeof(local));
+        memcpy(local, m->node_local[i], sizeof(float) * 16);
         for (k = 0; k < nposes; k++) {
             const Scene3DObjectPose *p = &poses[k];
             short t[3];
@@ -712,7 +800,8 @@ void scene3d_draw_objects(Model3D *m, const float pos[3], float yaw, const unsig
             if (p->object != i) {
                 continue;
             }
-            /* its turn: the rest turn and the frame's; its place: the frame's, along its rest heading (src: func_8001E0F8) */
+            /* its turn: the rest turn and the frame's; its place: the frame's, along its rest heading, in the
+             * group's places' units (src: func_8001E0F8, then func_8001AFE0's halving) */
             t[0] = (short)(m->rest_turn[i][0] + p->turn[0]);
             t[1] = (short)(m->rest_turn[i][1] + p->turn[1]);
             t[2] = (short)(m->rest_turn[i][2] + p->turn[2]);
@@ -720,13 +809,13 @@ void scene3d_draw_objects(Model3D *m, const float pos[3], float yaw, const unsig
             memcpy(r + 12, local + 12, sizeof(float) * 3);
             a = m->rest_turn[i][1] * 2.0f * (float)M_PI / TURN;
             side = p->place[0], fwd = p->place[2];
-            r[12] += (fwd * sinf(a) + side * sinf(a + (float)M_PI / 2)) * m->part_scale[i] / 256.0f;
-            r[13] -= p->place[1] * m->part_scale[i] / 256.0f;
-            r[14] -= (fwd * cosf(a) + side * cosf(a + (float)M_PI / 2)) * m->part_scale[i] / 256.0f;
-            memcpy(local, r, sizeof(local));
+            r[12] += (fwd * sinf(a) + side * sinf(a + (float)M_PI / 2)) * OBJECT_PLACE_TO_GLTF;
+            r[13] -= p->place[1] * OBJECT_PLACE_TO_GLTF;
+            r[14] -= (fwd * cosf(a) + side * cosf(a + (float)M_PI / 2)) * OBJECT_PLACE_TO_GLTF;
+            memcpy(local, r, sizeof(float) * 16);
         }
-        chain(m, node, i, local);
     }
+    resolve_nodes(m, (const float (*)[16])locals, node);
 }
 
 /* the ground under (x, z) in a model standing at pos, unturned (src: func_80046504: the highest polygon) */

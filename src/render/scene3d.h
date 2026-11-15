@@ -75,6 +75,10 @@ void scene3d_draw_posed(Model3D *m, const float pos[3], float yaw, const short (
  * the camera */
 int scene3d_node_on_screen(Model3D *m, const float pos[3], float yaw, const short (*turns)[3], int nturns,
                            const float root_move[3], int node, int w, int h, float out[2]);
+/* where one of its nodes (its origin) stands in the model, posed so (turns NULL: at rest), in world units from
+ * the model's own origin (the game's axes: y down; unturned); 0 if it has no such node */
+int scene3d_node_place(Model3D *m, const short (*turns)[3], int nturns, const float root_move[3], int node,
+                       float out[3]);
 
 /* a textured quad this frame (the billboards): its corners in world units - 0 1 along the top, 2 3 the bottom - the
  * whole texture across it, shaded (1.0: as it is); blend: 0 solid, else its texels marked to blend do so by the
@@ -90,7 +94,8 @@ void scene3d_sprite(GpuTexture t, const float pos[3], float pixels, const float 
  * downward) and its turn added to its rest turn (the game's) */
 typedef struct Scene3DObjectPose {
     int object;
-    float place[3];
+    float place[3];   /* side, down, forward from its rest place, in the original's object places' units (half the
+                       * model's: a door's motion keys as they are) */
     short turn[3];
 } Scene3DObjectPose;
 void scene3d_draw_objects(Model3D *m, const float pos[3], float yaw, const unsigned char *shown, int nshown,

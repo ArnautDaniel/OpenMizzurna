@@ -142,9 +142,21 @@ material per texture. Textures are cut at import from what the game's video memo
   256 x 256 texture per page and palette that any model drawn there uses (the area's props, and the characters
   whose textures stay loaded: the same character can look different from area to area, as in the original).
   Each texture's most common version is in `textures/common/`; an area whose version differs has its own in
-  `textures/area-NNN/` - the engine looks in the area's folder, then in common (1889 common, ~1800 overrides);
+  `textures/area-NNN/` - the engine looks in the area's folder, then in common (1889 common, ~1800 overrides).
+  A page cut wholly clear (every texel the colour 0) isn't an area's version: the area hadn't that texture in
+  video memory yet (a page the game fills later, for an event's figure or a vehicle) - the import leaves it out,
+  and the engine passes over one a library imported before still holds (68 did: the models using them drew
+  nothing in those areas);
 - **a streamed character's own** (`models/<entry>.texture/`): its image as the game placed it in a character
   slot, a texture per palette row its polygons use.
+
+How the engine places the parts is the original's (`render/scene3d.c`; src: model_link_hierarchy,
+func_8001B33C, model_pose_update): a part sits on its parent at its offset times 2^scale (the TMD object's scale:
+-1 a figure's, half; +1 an area's objects', doubled - in model units, half the world's), whatever order the
+parts are listed in (091_2's first hangs from its fourth); a root part stands at the model's origin unturned,
+whatever its own place and turn (an area shell's parts all at the area's origin: 011's second lists -2994 0 -100);
+and a TMD's objects past the SPL's parts (seven areas' props have one or two more) aren't drawn - the original
+draws as many as the SPL has parts.
 
 A material names its texture in `extras` (`area`: the set of the area being played, by name; `own`: the
 model's); its glTF image is a default (the model's own area, or area 1) so viewers show it. 194 models (64 areas'

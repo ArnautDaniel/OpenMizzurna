@@ -754,6 +754,19 @@ static int cut(Job *j, const VramContext *v, const char *name) {
     return 1;
 }
 
+/* a page cut wholly clear (every texel the colour 0): the area hadn't the texture in video memory yet - a page the
+ * game fills later (an event's figure, a vehicle) - and it isn't that area's version of it */
+static int page_clear(const uint8_t *page) {
+    size_t k;
+
+    for (k = 3; k < (size_t)PAGE_TEXELS * PAGE_TEXELS * 4; k += 4) {
+        if (page[k] != 0) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
 /* a model's glTF written (or checked); texture_uri gives each texture's default image */
 typedef const char *(*UriFn)(void *ctx, const char *texture);
 
@@ -1037,7 +1050,7 @@ static int run(Job *j, const uint8_t *const *entries, const size_t *sizes, int n
             nn = names_of(&m, names, MODEL_MAX_TEXTURES);
             for (k = 0; k < nn; k++) {
                 int x = name_index(sets, names[k], 1);
-                if (x >= 0 && sets->hash[x][a] == 0 && cut(j, v, names[k])) {
+                if (x >= 0 && sets->hash[x][a] == 0 && cut(j, v, names[k]) && !page_clear(j->page)) {
                     sets->hash[x][a] = hash_of(j->page, (size_t)PAGE_TEXELS * PAGE_TEXELS * 4) | 1;
                 }
             }

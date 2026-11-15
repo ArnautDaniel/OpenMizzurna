@@ -120,7 +120,8 @@ PRIM(p_ground_tilt) {   /* ( heading -- rx rz ) facing so on the last ground fou
 #define MAX_POSES 64
 static Scene3DObjectPose sPoses[MAX_POSES];   /* the objects the next draw-model-shown moves */
 static int sNPoses;
-PRIM(p_pose_object) {   /* ( object side height forward rx ry rz -- ) for the next draw-model-shown: an object moved */
+PRIM(p_pose_object) {   /* ( object side down forward rx ry rz -- ) for the next draw-model-shown: an object moved
+                         * from its rest place (in the original's object places' units: Scene3DObjectPose) */
     Cell rz = POP(), ry = POP(), rx = POP(), fwd = POP(), height = POP(), side = POP(), obj = POP();
 
     if (sNPoses < MAX_POSES) {
@@ -277,6 +278,28 @@ PRIM(p_part_on_screen) {   /* ( model motion frame x y z yaw part -- px py true 
     }
     PUSH((Cell)at[0]), PUSH((Cell)at[1]), PUSH(-1);
 }
+PRIM(p_part_at) {   /* ( model motion frame part -- x y z true | false ) where a part of the figure, posed so (motion
+                     * 0: at rest), stands from the model's origin: world units, y down, unturned */
+    Cell part = POP(), frame = POP(), mo = POP(), m = POP();
+    float move[3] = {0, 0, 0}, at[3];
+    Motion *mt = motion_arg(mo);
+    short turns[MAX_PARTS][3];
+    int parts = 0;
+
+    if (m < 1 || m > sNModels) {
+        PUSH(0);
+        return;
+    }
+    if (mt != NULL && mt->frames > 0) {
+        parts = pose_of(mt, frame, turns, move);
+    }
+    if (!scene3d_node_place(sModels[m - 1].m, parts > 0 ? (const short (*)[3])turns : NULL, parts,
+                            parts > 0 ? move : NULL, (int)part, at)) {
+        PUSH(0);
+        return;
+    }
+    PUSH((Cell)lroundf(at[0])), PUSH((Cell)lroundf(at[1])), PUSH((Cell)lroundf(at[2])), PUSH(-1);
+}
 PRIM(p_texture_area) { scene3d_texture_area((int)POP()); }   /* ( area -- ) */
 /* the light (scene3d.h): set a piece at a time, given whole each time */
 static Scene3DLight sLight;
@@ -338,4 +361,5 @@ void bind_scene(Forth *f) {
     forth_prim(f, "pose-object", p_pose_object);
     forth_prim(f, "draw-figure", p_draw_figure);
     forth_prim(f, "part-on-screen", p_part_on_screen);
+    forth_prim(f, "part-at", p_part_at);
 }
