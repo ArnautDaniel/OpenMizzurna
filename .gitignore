@@ -1,2 +1,5 @@
 build*/
 __pycache__/
+# the disc image, kept here for the data tests (never committed)
+*.bin
+*.cue

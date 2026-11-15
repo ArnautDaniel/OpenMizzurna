@@ -95,8 +95,14 @@ foreach(t ${GAME_TESTS})
 endforeach()
 
 # ---- the data checks (the developers' disc: OM_DEV_DISC, a .cue; skipped without it) ----
-set(OM_DEV_DISC "${CMAKE_CURRENT_SOURCE_DIR}/../Mizzurna Falls (English 31-03-2021)/Mizzurna Falls (English 31-03-2021).cue"
-    CACHE FILEPATH "a disc image for the data checks")
+# (in the project's folder, git-ignored, or beside it in a folder of its own)
+set(OM_DEV_DISC_NAME "Mizzurna Falls (English 31-03-2021).cue")
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${OM_DEV_DISC_NAME}")
+    set(OM_DEV_DISC_DEFAULT "${CMAKE_CURRENT_SOURCE_DIR}/${OM_DEV_DISC_NAME}")
+else()
+    set(OM_DEV_DISC_DEFAULT "${CMAKE_CURRENT_SOURCE_DIR}/../Mizzurna Falls (English 31-03-2021)/${OM_DEV_DISC_NAME}")
+endif()
+set(OM_DEV_DISC "${OM_DEV_DISC_DEFAULT}" CACHE FILEPATH "a disc image for the data checks")
 set(OM_DEV_EXTRACT "${CMAKE_CURRENT_SOURCE_DIR}/../extract" CACHE PATH "phase 1's extraction (fs/, cdbin/) to compare with")
 add_executable(disc_ls tools/disc_ls.c)
 target_link_libraries(disc_ls PRIVATE omdata)
