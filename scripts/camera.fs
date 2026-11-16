@@ -4,7 +4,7 @@
 \ distance; an event puts it where it wants (fixed). Its state is its own (variables: the only camera), drawn
 \ each frame through the engine's `camera`.
 IN: camera
-USING: engine actors messages areas matthew window ui ;
+USING: engine actors messages areas matthew window ui mods ;
 
 500 constant indoor-projection   400 constant town-projection   \ src: GsSetProjection(g_on_overworld ? 400 : 500)
 \ the town's profile (src: camera_reset / camera_follow on the overworld)
@@ -37,14 +37,17 @@ variable profile-eye-y   variable profile-look-y   variable profile-dist
 variable turned-round   \ he faces backwards (the boat: src camera_follow's boat_mode)
 4096 constant full-turn   2048 constant half-turn
 : followed ( -- x y z yaw )  matthew-now  turned-round @ if  half-turn + full-turn 1- and  then ;
+: chase-yaw ( yaw fresh? -- yaw' )  drop ;   \ the game's: as he faced
+' chase-yaw hook: follow-yaw ( yaw fresh? -- yaw' )   \ which way the following camera faces, given the way he faced
+                                                     \ (fresh: behind him anew - a reset); a mod may keep its own
 : camera-reset ( -- )   \ src: camera_reset: behind Matthew now, the history filled with where he is
     profile as-profiled  matthew-there? 0= if  exit  then
     #history 0 do  followed remember  loop
-    followed yaw !  target! ;
+    followed true follow-yaw yaw !  target! ;
 : follow ( -- )   \ src: camera_follow
     matthew-there? 0= if  exit  then
     followed remember
-    lag entry {: e :}  e @  e cell+ @  e 2 cells + @  target!  e 3 cells + @ yaw !  as-profiled ;
+    lag entry {: e :}  e @  e cell+ @  e 2 cells + @  target!  e 3 cells + @ false follow-yaw yaw !  as-profiled ;
 
 \ behind him, low, turning as he turns (src: ovl019's duct crawl: its own heights and distance)
 variable low-behind

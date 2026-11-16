@@ -12,6 +12,8 @@ typedef struct Input {
     char text[64];               /* text typed this frame (UTF-8) */
     int quit;                    /* the window was closed */
     float stick_x, stick_y;      /* a gamepad's left stick (-1..1, right / down; 0 within its dead zone) */
+    float look_x, look_y;        /* its right stick, the same way */
+    float trigger_l, trigger_r;  /* its triggers (L2, R2): 0 .. 1 */
     int fullscreen_toggle;       /* F11 or Alt+Return this frame */
     bool typed[SDL_SCANCODE_COUNT];   /* the keys themselves pressed this frame, whatever they're bound to (the console) */
 } Input;

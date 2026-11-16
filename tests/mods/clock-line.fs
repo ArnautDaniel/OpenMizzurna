@@ -19,7 +19,7 @@ settle
 testing the mod is on, its actor there; a mod not there isn't on
 T{ s" clock-line" mod-on?  s" clock-line" actor-named 0< -> true false }T
 T{ s" no-such-mod" mod-on? -> false }T
-T{ mod-api -> 101 }T   \ (1.1: walk-intent)
+T{ mod-api -> 102 }T   \ (1.1: walk-intent, 1.2: follow-yaw)
 
 testing its own file, through the files layer
 : caption-file ( -- addr n )  s" clock-line/caption.txt" library-file ;

@@ -4,4 +4,4 @@
 \ F1's options get a row of its own: Movement, Stick or Tank.
 mod: stick-walk
 version: 1 0
-requires: openmizzurna 1 1     \ walk-intent came with the mod API's 1.1
+requires: openmizzurna 1 2     \ walk-intent came with the mod API's 1.1, follow-yaw with 1.2

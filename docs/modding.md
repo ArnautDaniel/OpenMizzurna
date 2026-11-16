@@ -40,7 +40,7 @@ after: other-mod             \ load after that one, if it's on
 ```
 
 - **The mod API** (`requires: openmizzurna M m`): the game's messages, broadcasts and hooks a mod uses. This
-  OpenMizzurna has **1.1** (`mod-api` at the console: 101; 1.1 added `walk-intent`; `MODS_API_MAJOR` / `MINOR` in `src/game/mods.h`). A mod
+  OpenMizzurna has **1.2** (`mod-api` at the console: 102; 1.1 added `walk-intent`, 1.2 `follow-yaw` and the driving's `car-handling`, `car-moving`, `engine-note`; `MODS_API_MAJOR` / `MINOR` in `src/game/mods.h`). A mod
   needs the same major and a minor no newer. A hook or message added raises the minor; one renamed or gone, the
   major.
 - **Turned off** (the reason on stderr, in `.mods` and in the MODS menu) when: a `requires:` isn't met (the API,
@@ -225,7 +225,11 @@ game's way at the end. Taking a hook doesn't disturb the others before it.
 
 | Hook | In | Since | What |
 |---|---|---|---|
-| `walk-intent ( -- heading pace )` | matthew.fs | 1.1 | where Matthew should head (0 .. 4095, the game's angles) and how fast - `standing-pace`, `walking-pace`, `running-pace` - in place of the pad's tank controls; `by-the-pad` (-1) leaves them as they are. The game's answer is always `by-the-pad`. He turns toward the heading quickly and walks with the game's speeds, motions and walls. The sample: `examples/mods/stick-walk` |
+| `walk-intent ( -- heading pace )` | matthew.fs | 1.1 | where Matthew should head (0 .. 4095, the game's angles) and how fast - `standing-pace`, `walking-pace`, `running-pace` - in place of the pad's tank controls; `by-the-pad` (-1) leaves them as they are. The game's answer is always `by-the-pad`. He turns toward the heading the shorter way, quickly, and walks with the game's speeds, motions and walls. With the game's chase camera turning as he does, a camera-relative walk wants `follow-yaw` too. The sample: `examples/mods/stick-walk` |
+| `follow-yaw ( yaw fresh? -- yaw' )` | camera.fs | 1.2 | which way the following camera faces, given the way Matthew faced a moment ago (the game's chase camera: that way) - `fresh?` true when it's put behind him anew (an area, a scene, the end of an event). A mod may keep a facing of its own (a third-person camera turned by the player); the camera still follows where he goes. The sample: `examples/mods/stick-walk` |
+| `car-handling ( -- )` | driving.fs | 1.2 | a step at the wheel (30 a second): the game's sets `velocity` (ahead; 60 units a frame for 1), `steer` and the heading `ch` from the pad. Its state and helpers are `driving.private`'s (they may change between versions). The sample: `examples/mods/real-drive` |
+| `car-moving ( -- )` | driving.fs | 1.2 | the car moved a step by them: the game's along `ch` at the speed, swerving round walls (`cx` `cz` `cy`, `hits?`, `road-blocked?`, `tilt-car`) |
+| `engine-note ( speed -- key )` | driving.fs | 1.2 | the engine's first tone at a speed (units a frame, either way) |
 
 A new hook, when a mod needs one: the game's way as a word, `hook:` in the subsystem's file with the call site
 going through it, a line in the table above and on the subsystem's page, `MODS_API_MINOR` raised

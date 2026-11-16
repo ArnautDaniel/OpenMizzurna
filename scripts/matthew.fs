@@ -209,9 +209,9 @@ variable crawl-shown
     unstick-reach unstick-step do  x z i try-around if  leave  then  unstick-step +loop ;
 \ a mod's intent (walk-intent): he turns toward its heading the shorter way, quickly when it's far and easing in
 \ as it nears, the turn motion while he stands; and walks or runs as it says - the game's speeds, motions and walls
-4 constant intent-ease           \ a game frame: this part of the way left ...
-160 constant intent-turn-most    \ ... but no more than this (4096 a turn: a half turn in about 13 frames, under half a second)
-16 constant intent-turn-least    \ ... nor less
+3 constant intent-ease           \ a game frame: this part of the way left ...
+320 constant intent-turn-most    \ ... but no more than this (4096 a turn: a half turn in about a fifth of a second)
+32 constant intent-turn-least    \ ... nor less
 : steer-to ( heading -- )
     {: h :}  yaw h way-between {: d :}
     d abs intent-ease / intent-turn-least max intent-turn-most min  d 0< if  negate  then {: v :}

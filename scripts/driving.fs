@@ -8,7 +8,7 @@
 \ him out at the first free door. The fuel gauge and the speed are shown. A step at the original's rate (30 a
 \ second in the town).
 IN: driving
-USING: engine actors messages keys screen areas figures floors matthew traffic talk look events events.main sound rumble ui townsfolk ;
+USING: engine actors messages keys screen areas figures floors matthew traffic talk look events events.main sound rumble ui townsfolk mods ;
 
 variable at-the-wheel   \ src: g_driving
 120 constant full-tank
@@ -133,13 +133,22 @@ variable car-frames
     true s" matthew" actor-named send figure-shown  true s" matthew" actor-named send figure-on-foot
     0 s" matthew" actor-named send figure-perch  0 -1 true s" matthew" actor-named send figure-anim
     s" sound" actor-named send engine-stop  broadcast left-the-car ;
+: game-handling ( -- )   \ src: car_update: the wheel and the pedals, the heading turned by the wheel as it moves
+    steer-wheel  pedals  speed-now speed !  speed @ if  steer @ ch +!  then ;
+: game-note ( speed -- key )  abs key-per-speed / idle-key + ;   \ src: engine_sound
+PRIVATE>
+\ the hooks (docs/modding.md): a mod's driving - its workings, the car's state and the town's walls, are
+\ driving.private's (velocity, steer, cx cz cy ch, hits?, road-blocked?, tilt-car ...: they may change)
+' game-handling hook: car-handling ( -- )      \ a step at the wheel: velocity, steer and the heading (ch) set
+' move-car hook: car-moving ( -- )             \ the car moved a step by them: walls, the road blocks, its tilt
+' game-note hook: engine-note ( speed -- key ) \ the engine's first tone at a speed (units a frame, either way)
+<PRIVATE
 : wheel-frame ( -- )
-    steer-wheel  pedals  speed-now speed !
-    speed @ if  steer @ ch +!  then
+    car-handling  speed-now speed !
     speed @ abs still-enough <=  pad-circle key-down? and  at-a-pump @ 0= and if   \ (at a pump ○ fills: the town's)
         free-door dup 0< if  drop  else  get-out exit  then  then
-    move-car  unstick-car  show-car
-    speed @ abs key-per-speed / idle-key + s" sound" actor-named send engine-pitch ;
+    car-moving  unstick-car  show-car
+    speed @ engine-note s" sound" actor-named send engine-pitch ;
 : steps-due ( -- n )  due frames-due ;
 : follow-the-scene ( -- )   \ a scene moving his car: its place is the scene's, he's carried in it
     his-car car-now ch !  cz !  cy !  cx !

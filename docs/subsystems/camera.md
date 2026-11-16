@@ -15,6 +15,9 @@ until `camera-follow`.
 The view itself is the engine's (`camera`: render/scene3d.h): the original's target, heading, distance and
 heights, and its projection - 500 indoors, 400 in the town, on a 240-high screen.
 
+A mod may turn it a way of its own while it follows (the hook `follow-yaw ( yaw fresh? -- yaw' )`, docs/modding.md:
+given the way he faced, and whether it's behind him anew - a reset); the game's own answer is his way.
+
 ## API
 
 - `camera-place ( look-y dist eye-y x y z yaw -- )` (the events' camera_set's order), `camera-follow`,

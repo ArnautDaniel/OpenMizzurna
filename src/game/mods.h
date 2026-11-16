@@ -9,7 +9,7 @@
 /* the mod API: the game's messages, broadcasts and hooks a mod may use (a mod's `requires: openmizzurna 1 0`).
  * A new major breaks mods (a message renamed or gone); the minor grows with additions (a hook, a message). */
 #define MODS_API_MAJOR 1
-#define MODS_API_MINOR 1
+#define MODS_API_MINOR 2
 
 /* the mods turned on, decided at start-up: those in `folder` (NULL: none - the tests) as its order.txt says,
  * then the folders or zips `named` (--mod); their files layered over the library (core/files.h) */

@@ -18,6 +18,10 @@ Matthew driving his car (slot 26) in the town (src: ovl027 `car_update`, cevcon.
   
   Look and act stand aside while he's in the car.
 
+A mod may drive the car its own way (docs/modding.md): the hooks `car-handling` (the pedals and the wheel),
+`car-moving` (the step and the walls) and `engine-note`; the sample `examples/mods/real-drive` is a small
+simulation (tyres, weight, gears).
+
 ## Rules
 
 - **Timing.** A step is a frame of the original's (30 a second in the town).

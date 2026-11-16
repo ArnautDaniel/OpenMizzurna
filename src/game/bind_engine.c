@@ -94,6 +94,18 @@ PRIM(p_pad_stick) {   /* ( F: -- x y ) a gamepad's left stick: -1 .. 1, right an
     forth_fpush(f, free ? gEngine.input.stick_x : 0.0);
     forth_fpush(f, free ? gEngine.input.stick_y : 0.0);
 }
+PRIM(p_pad_look) {   /* ( F: -- x y ) its right stick, the same way */
+    int free = !gEngine.keys_captured;
+
+    forth_fpush(f, free ? gEngine.input.look_x : 0.0);
+    forth_fpush(f, free ? gEngine.input.look_y : 0.0);
+}
+PRIM(p_pad_triggers) {   /* ( F: -- l r ) its triggers, L2 and R2: 0 .. 1 */
+    int free = !gEngine.keys_captured;
+
+    forth_fpush(f, free ? gEngine.input.trigger_l : 0.0);
+    forth_fpush(f, free ? gEngine.input.trigger_r : 0.0);
+}
 /* ( -- ) this step's presses taken, as the main loop takes them after each step (tests stepping the game) */
 PRIM(p_clear_presses) { memset(gEngine.input.pressed, 0, sizeof(gEngine.input.pressed)); }
 PRIM(p_key_hold) {   /* ( scancode flag -- ) held (or let go) from a script; pressed the tick it is held */
@@ -618,6 +630,8 @@ void bind_engine(Forth *f) {
     forth_set_effect(f, forth_prim(f, "fullscreen!", p_fullscreen_store), "( flag -- )");
     forth_set_effect(f, forth_prim(f, "clear-presses", p_clear_presses), "( -- )");
     forth_set_effect(f, forth_prim(f, "pad-stick", p_pad_stick), "( F: -- x y )");
+    forth_set_effect(f, forth_prim(f, "pad-look", p_pad_look), "( F: -- x y )");
+    forth_set_effect(f, forth_prim(f, "pad-triggers", p_pad_triggers), "( F: -- l r )");
     forth_set_effect(f, forth_prim(f, "fullscreen?", p_fullscreen), "( -- flag )");
     forth_set_effect(f, forth_prim(f, "heading-toward", p_heading_toward), "( dx dz -- heading )");
     forth_set_effect(f, forth_prim(f, "step-along", p_step_along), "( x z heading dist -- x' z' )");

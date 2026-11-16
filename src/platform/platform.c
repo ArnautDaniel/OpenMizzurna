@@ -155,10 +155,18 @@ static float stick_axis(SDL_GamepadAxis a) {
     return v < -1.0f ? -1.0f : v > 1.0f ? 1.0f : v;
 }
 
-/* the stick's reading: a round dead zone (one per axis would pull it toward the four ways), past it the tilt
+#define TRIGGER_DEAD 0.05f   /* (a trigger's rest) */
+/* a trigger: 0 at rest, to 1 pulled all the way */
+static float trigger_read(SDL_GamepadAxis a) {
+    float v = (float)SDL_GetGamepadAxis(sPad, a) / 32767.0f;
+
+    return v < TRIGGER_DEAD ? 0.0f : v > 1.0f ? 1.0f : (v - TRIGGER_DEAD) / (1.0f - TRIGGER_DEAD);
+}
+
+/* a stick's reading: a round dead zone (one per axis would pull it toward the four ways), past it the tilt
  * eased from 0 again so it rises smoothly to 1 at the rim, its way kept */
-static void stick_read(float *x, float *y) {
-    float sx = stick_axis(SDL_GAMEPAD_AXIS_LEFTX), sy = stick_axis(SDL_GAMEPAD_AXIS_LEFTY);
+static void stick_read(SDL_GamepadAxis ax, SDL_GamepadAxis ay, float *x, float *y) {
+    float sx = stick_axis(ax), sy = stick_axis(ay);
     float t = sqrtf(sx * sx + sy * sy);
     float eased;
 
@@ -180,7 +188,7 @@ static void pad_poll(Input *in) {
     size_t i;
 
     memset(sPadHeld, 0, sizeof(sPadHeld));
-    in->stick_x = in->stick_y = 0.0f;
+    in->stick_x = in->stick_y = in->look_x = in->look_y = in->trigger_l = in->trigger_r = 0.0f;
     if (sPad2 != NULL) {
         for (i = 0; i < sizeof(kPad2Keys) / sizeof(kPad2Keys[0]); i++) {
             sPadHeld[kPad2Keys[i].key] = SDL_GetGamepadButton(sPad2, kPad2Keys[i].button);
@@ -192,7 +200,12 @@ static void pad_poll(Input *in) {
     for (i = 0; i < sizeof(kPadKeys) / sizeof(kPadKeys[0]); i++) {
         sPadHeld[kPadKeys[i].key] = SDL_GetGamepadButton(sPad, kPadKeys[i].button);
     }
-    stick_read(&in->stick_x, &in->stick_y);
+    stick_read(SDL_GAMEPAD_AXIS_LEFTX, SDL_GAMEPAD_AXIS_LEFTY, &in->stick_x, &in->stick_y);
+    stick_read(SDL_GAMEPAD_AXIS_RIGHTX, SDL_GAMEPAD_AXIS_RIGHTY, &in->look_x, &in->look_y);
+    in->trigger_l = trigger_read(SDL_GAMEPAD_AXIS_LEFT_TRIGGER);
+    in->trigger_r = trigger_read(SDL_GAMEPAD_AXIS_RIGHT_TRIGGER);
+    sPadHeld[SDL_SCANCODE_1] = in->trigger_l > STICK_KEY;   /* L2 and R2 as the game's keys (scripts/keys.fs) */
+    sPadHeld[SDL_SCANCODE_3] = in->trigger_r > STICK_KEY;
     for (i = 0; i < sizeof(kStickKeys) / sizeof(kStickKeys[0]); i++) {
         float v = (kStickKeys[i].axis == 0 ? in->stick_x : in->stick_y) * kStickKeys[i].sign;
         bool was = sHeld[kStickKeys[i].key];

@@ -113,7 +113,9 @@ add_test(NAME mods_layers COMMAND openmizzurna --mod "${TEST_MODS}/layer-a" --mo
          --mod "${TEST_MODS}/endless-mod" --test "${TEST_MODS}/layers.fs")
 add_test(NAME mods_stick_walk COMMAND openmizzurna --mod "${CMAKE_CURRENT_SOURCE_DIR}/examples/mods/stick-walk"
          --test "${TEST_MODS}/stick-walk.fs")
-set_tests_properties(mods_clock_line mods_clock_line_zipped mods_layers mods_stick_walk PROPERTIES ENVIRONMENT "${MOD_TEST_ENV}")
+add_test(NAME mods_real_drive COMMAND openmizzurna --mod "${CMAKE_CURRENT_SOURCE_DIR}/examples/mods/real-drive"
+         --test "${TEST_MODS}/real-drive.fs")
+set_tests_properties(mods_clock_line mods_clock_line_zipped mods_layers mods_stick_walk mods_real_drive PROPERTIES ENVIRONMENT "${MOD_TEST_ENV}")
 
 # ---- the data checks (the developers' disc: OM_DEV_DISC, a .cue; skipped without it) ----
 # (in the project's folder, git-ignored, or beside it in a folder of its own)
