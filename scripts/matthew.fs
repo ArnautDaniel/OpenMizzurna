@@ -2,10 +2,17 @@
 \ (models/073_1.gltf: kind 0's model, CD.BIN 073_1, drawn in the area's textures). Walking, looking and acting
 \ come next; for now the events place and turn him.
 IN: matthew
-USING: engine actors messages keys areas floors figures window ui ;
+USING: engine actors messages keys areas floors figures window ui mods ;
 
 
 variable floor   1 floor !   \ his floor (src: a loaded game resumes on area 1's floor 1)
+
+\ ---- a mod's way of walking him (docs/modding.md, hooks): where he should head and how fast, in place of the
+\ pad's tank controls. The game's: none (the pad's ←/→ turn him, ↑ walks, ✕ runs, ↓ steps back) ----
+-1 constant by-the-pad   0 constant standing-pace   1 constant walking-pace   2 constant running-pace
+: pad-walks ( -- heading pace )  0 by-the-pad ;
+' pad-walks hook: walk-intent ( -- heading pace )   \ heading 0 .. 4095; pace standing, walking or running -
+                                                     \ or by-the-pad: the tank controls as they are
 
 <PRIVATE   \ (his workings: the words below behaviour are his face to the others)
 : figure-path ( -- addr len )  s" models/073_1.gltf" ;
@@ -81,11 +88,12 @@ $B4 constant crate-ahead            \ the crate before him as he pushes (src: pl
     else  0 turning !  0e turn-rate f!  then  then
     pad-r1 r-was key-went-down? if  quarter-turn s>f turn-by  then
     pad-l1 l-was key-went-down? if  quarter-turn negate s>f turn-by  then ;
-: pace ( -- )   \ the speed this step
+: pace-by ( ahead? run? back? -- )   \ the speed this step
+    {: ahead run back :}
     0e speed f!
-    pad-up key-down? if
+    ahead if
         walk-speed speed f!
-        pad-cross key-down? pushing? 0= and if  run-build f@ run-build-up frames f* f+ run-build-max fmin
+        run pushing? 0= and if  run-build f@ run-build-up frames f* f+ run-build-max fmin
         else  run-build f@ run-build-ease frames f* f- 0e fmax  then  run-build f!
         0e idle f!
     else
@@ -93,8 +101,9 @@ $B4 constant crate-ahead            \ the crate before him as he pushes (src: pl
     then
     run-build f@ run-build-start f> if  run-build f@ run-build-start f- run-speed-per f* speed f@ f+ speed f!  then
     speed f@ f0> if  speed f@ run-anim-speed f>= if  run-motion  else  walk-motion push-walk motion-for  then  show  then
-    pad-down key-down? speed f@ f0= and if
+    back speed f@ f0= and if
         back-speed speed f!  back-motion push-back motion-for show  0e run-build f!  0e idle f!  then ;
+: pace ( -- )  pad-up key-down?  pad-cross key-down?  pad-down key-down?  pace-by ;   \ (the tank controls)
 : stand ( -- )   \ standing still: the stand, then after a while the fidget
     speed f@ f0= turning @ 0= and  pushing? 0= and if
         idle f@ frames f+ idle f!
@@ -198,9 +207,22 @@ variable crawl-shown
 : unstick ( -- )
     self body-pos 3f>s nip {: x z :}  x z stuck? 0= if  exit  then
     unstick-reach unstick-step do  x z i try-around if  leave  then  unstick-step +loop ;
+\ a mod's intent (walk-intent): he turns quickly toward its heading, the turn motion while he stands, and walks
+\ or runs as it says - the game's speeds, motions and walls
+384 constant intent-turn-step   \ (4096 a turn, a game frame: a quarter turn in under a sixth of a second)
+: steer-to ( heading -- )
+    {: h :}  yaw h intent-turn-step heading-step {: now there? :}
+    now s>f body-turn  0e idle f!
+    there? if  0 turning !  exit  then
+    h yaw - full-circle 1- and  full-circle 2/ < if  1  else  -1  then  turning !
+    speed f@ f0= if  turning @ 0> if  turn-right-motion push-right  else  turn-left-motion push-left  then
+        motion-for show  then ;
+: intent-pace ( pace -- )  {: p :}  p walking-pace >=  p running-pace =  false  pace-by ;
 : control ( -- )
     controlled @ 0= self body? 0= or  window-up? or  on-foot @ 0= or if  exit  then   \ (src: field_update: not while ui_busy)
-    steer pace stand walk  unstick ;
+    walk-intent {: h p :}
+    p by-the-pad = if  steer pace  else  p intent-pace  p standing-pace <> if  h steer-to  else  0 turning !  then  then
+    stand walk  unstick ;
 
 PRIVATE>
 

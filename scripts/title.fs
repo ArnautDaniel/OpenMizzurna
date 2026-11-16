@@ -1,9 +1,9 @@
 \ title.fs - the title (docs/subsystems/title.md; src: opening.c, OPENING.EXE): the logo, the attract movies, the
 \ title and its menu - New Game (the opening movie, then the game), Load (the saves' slots), Adjust Screen,
-\ Vibration on / off - and, coming back from an ending, its movie and closing card. It runs at OPENING's 60
+\ Vibration on / off; OpenMizzurna's own MODS when there are mods (mods/menu.fs) - and, coming back from an ending, its movie and closing card. It runs at OPENING's 60
 \ frames a second (two a step). Others read the fact title-up?.
 IN: title
-USING: engine actors messages keys screen story-flags settings saves events ;
+USING: engine actors messages keys screen story-flags settings saves events mods.menu ;
 
 variable title-open
 : title-up? ( -- flag )  title-open @ 0<> ;
@@ -57,7 +57,7 @@ create movie-rows  1232 , 78 , 24 ,   1579 , 98 , 39 ,   939 , 109 , 24 ,   2514
 
 \ ---- the states (src: op_main_loop) ----
 enum: title-state  logo-state intro-state title-screen digest-state menu-state opening-state load-state
-    adjust-state chosen-state bad-end-state final-end-state bad-card final-card ;
+    adjust-state chosen-state bad-end-state final-end-state bad-card final-card mods-state ;
 variable step-of-title   variable counter   variable fade   variable name-drop   variable leaving   variable idle-frames-so-far
 variable next-attract   variable sound-played   variable cursor   variable opening-frames
 variable chosen-mode   \ 0 a new game, n: the save slot n - 1
@@ -94,18 +94,21 @@ variable chosen-mode   \ 0 a new game, n: the save slot n - 1
         next-attract @ if  intro-state  else  digest-state  then  step-of-title !  next-attract @ 0= next-attract !  exit  then
     go @ if  true leaving !  sound-played @ 0= if  confirm-sound play  true sound-played !  then  then
     leaving @  name-drop @ 0= and if  menu-state step-of-title !  false leaving !  false sound-played !  then ;
-\ the menu (src: op_menu)
-4 constant #lines   3 constant vibration-line
+\ the menu (src: op_menu); under its four lines OpenMizzurna's own, MODS, when mods/ has any
+4 constant #lines   3 constant vibration-line   4 constant mods-line
+: mods? ( -- flag )  mods-menu-count 0> ;
+: menu-lines ( -- n )  mods? if  #lines 1+  else  #lines  then ;
 : menu-frame ( -- )
     go @ if
         cursor @ case
             0 of  confirm-sound play  0 chosen-mode !  opening-state step-of-title !  opening start-movie  endof
             1 of  confirm-sound play  load-state step-of-title !  0 counter !  endof
             2 of  confirm-sound play  adjust-state step-of-title !  0 counter !  endof
+            mods-line of  confirm-sound play  mods-state step-of-title !  open-mods  endof
         endcase
     then
-    up @ if  cursor @ 1- #lines + #lines mod cursor !  then
-    down @ if  cursor @ 1+ #lines mod cursor !  then
+    up @ if  cursor @ 1- menu-lines + menu-lines mod cursor !  then
+    down @ if  cursor @ 1+ menu-lines mod cursor !  then
     cursor @ vibration-line =  left @ right @ or and if  vibration? 0= vibration!  then ;
 \ the load menu: the save file, one card always there (src: op_load) - "checking", then the used slots, or "no data"
 6 constant checking-frames
@@ -126,6 +129,12 @@ variable slot-cursor
     right @ if  ox @ 1+ offset-most min ox !  then  left @ if  ox @ 1- offset-most negate max ox !  then
     up @ if  oy @ 1- offset-most negate max oy !  then  down @ if  oy @ 1+ offset-most min oy !  then
     go @ if  confirm-sound play  ox @ oy @ screen-offset!  menu-state step-of-title !  then ;
+\ the mods menu (mods/menu.fs): ○ on / off, left / right its place in the order, ✕ back (order.txt written)
+: mods-frame ( -- )
+    up @ if  -1 pick-mod  then  down @ if  1 pick-mod  then
+    left @ if  -1 move-mod  then  right @ if  1 move-mod  then
+    go @ if  switch-mod  then
+    back @ if  leave-mods if  cancel-sound play  menu-state step-of-title !  then  then ;
 \ the endings' cards fade in (src: op_end_card); Start / ○ then: the logo again
 : card-frame ( -- )
     fade @ 128 < if  1 fade +!  exit  then
@@ -143,6 +152,7 @@ variable slot-cursor
         menu-state of  menu-frame  endof
         load-state of  load-frame  endof
         adjust-state of  adjust-frame  endof
+        mods-state of  mods-frame  endof
         bad-card of  card-frame  endof
         final-card of  card-frame  endof
     endcase ;
@@ -158,6 +168,7 @@ variable slot-cursor
 variable logo-image   variable left-image   variable right-image   variable name-image   variable press-image
 variable vibration-image   variable panel-image   variable error-image   variable slots-image
 variable adjust-left   variable adjust-right   variable bad-image   variable final-image
+192 constant mods-x   206 constant mods-y   $FFFFFFFF constant mods-lit   $909090FF constant mods-unlit   \ (under the vibration line)
 create menu-images #lines cells allot   menu-images #lines cells erase
 : once ( var addr len -- image )  {: v a n :}  v @ ?dup if  exit  then  a n picture dup v ! ;
 : draw-picture ( v -- )   \ src: op_title_picture: the title's picture at 30 .. 209
@@ -173,11 +184,16 @@ create menu-images #lines cells allot   menu-images #lines cells erase
 : draw-movie ( -- )
     movie-frame @ 0< if  exit  then  $FFFFFFFF pen-color
     0 movie-y @ at-top-left >screen  movie-w scale *  movie-h @ scale *  movie-draw ;
+: draw-mods-line ( -- )   \ MODS under the pictured lines, in the game's font: lit when chosen
+    mods? 0= if  exit  then
+    0 font  0 font-palette  scale pen-scale  cursor @ mods-line = if  mods-lit  else  mods-unlit  then  pen-color
+    s" MODS"  mods-x mods-y at-top-left >screen font-text ;
 : draw-menu ( -- )
     128 draw-picture  128 name-y draw-name  $FFFFFFFF pen-color
-    menu-images cursor @ cells +  cursor @ case  0 of  s" menu-0"  endof  1 of  s" menu-1"  endof
+    menu-images cursor @ vibration-line min cells +  cursor @ case  0 of  s" menu-0"  endof  1 of  s" menu-1"  endof
         2 of  s" menu-2"  endof  s" menu-3" rot  endcase  once  192 142 80 48 draw-added
-    vibration-image s" vibration" once  0  vibration? 0= 32 and  cursor @ vibration-line = 16 and +  80 16  192 188 draw-part ;
+    vibration-image s" vibration" once  0  vibration? 0= 32 and  cursor @ vibration-line = 16 and +  80 16  192 188 draw-part
+    draw-mods-line ;
 \ the load menu's panel rows (src: op_load: from v $26 of its image)
 $26 constant panel-top   160 constant panel-x   150 constant panel-y   143 constant panel-w
 $26 constant checking-row   $C6 constant no-data-row   16 constant row-h
@@ -199,6 +215,7 @@ $26 constant checking-row   $C6 constant no-data-row   16 constant row-h
         menu-state of  draw-menu  endof
         load-state of  draw-load  endof
         adjust-state of  draw-adjust  endof
+        mods-state of  128 draw-picture  128 name-y draw-name  draw-mods  endof
         bad-card of  fade @ shade  bad-image s" end-bad" once 172 180 128 16 draw  endof
         final-card of  fade @ shade  final-image s" end-final" once 94 118 128 16 draw  endof
     endcase ;

@@ -342,6 +342,10 @@ void platform_fullscreen(int on) {
     }
 }
 
+int platform_is_fullscreen(void) {
+    return sWindow != NULL && (SDL_GetWindowFlags(sWindow) & SDL_WINDOW_FULLSCREEN) != 0;
+}
+
 void platform_size(int *w, int *h) {
     SDL_GetWindowSizeInPixels(sWindow, w, h);
 }

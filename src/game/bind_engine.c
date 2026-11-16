@@ -68,14 +68,34 @@ static int scancode(Forth *f, Cell k) {
     }
     return (int)k;
 }
-PRIM(p_key_down) {   /* ( scancode -- flag ) held now */
-    int k = scancode(f, POP());
-    PUSH((gEngine.input.keys != NULL && gEngine.input.keys[k]) || gEngine.held[k] ? -1 : 0);   /* (no poll yet: --test) */
+static int key_held(int k) {   /* (no poll yet: --test) */
+    return (gEngine.input.keys != NULL && gEngine.input.keys[k]) || gEngine.held[k];
 }
-PRIM(p_key_pressed) {   /* ( scancode -- flag ) went down this tick */
+PRIM(p_key_down) {   /* ( scancode -- flag ) held now (none while a menu has the keys) */
     int k = scancode(f, POP());
-    PUSH(gEngine.input.pressed[k] ? -1 : 0);
+    PUSH(!gEngine.keys_captured && key_held(k) ? -1 : 0);
 }
+PRIM(p_key_pressed) {   /* ( scancode -- flag ) went down this tick (none while a menu has the keys) */
+    int k = scancode(f, POP());
+    PUSH(!gEngine.keys_captured && gEngine.input.pressed[k] ? -1 : 0);
+}
+/* a menu over the game (the options: F1) takes the keys - the game's screens under it read none - and reads them
+ * itself */
+PRIM(p_capture_keys) { gEngine.keys_captured = POP() != 0; }   /* ( flag -- ) */
+PRIM(p_keys_captured) { PUSH(gEngine.keys_captured ? -1 : 0); }   /* ( -- flag ) */
+PRIM(p_menu_key_down) { PUSH(key_held(scancode(f, POP())) ? -1 : 0); }   /* ( scancode -- flag ) captured or not */
+PRIM(p_menu_key_pressed) { PUSH(gEngine.input.pressed[scancode(f, POP())] ? -1 : 0); }   /* ( scancode -- flag ) */
+PRIM(p_fullscreen_store) { platform_fullscreen(POP() != 0); }   /* ( flag -- ) the window fullscreen or not */
+PRIM(p_fullscreen) { PUSH(platform_is_fullscreen() ? -1 : 0); }   /* ( -- flag ) */
+PRIM(p_pad_stick) {   /* ( F: -- x y ) a gamepad's left stick: -1 .. 1, right and down (0 within its dead zone;
+                       * both 0 while a menu has the keys) */
+    int free = !gEngine.keys_captured;
+
+    forth_fpush(f, free ? gEngine.input.stick_x : 0.0);
+    forth_fpush(f, free ? gEngine.input.stick_y : 0.0);
+}
+/* ( -- ) this step's presses taken, as the main loop takes them after each step (tests stepping the game) */
+PRIM(p_clear_presses) { memset(gEngine.input.pressed, 0, sizeof(gEngine.input.pressed)); }
 PRIM(p_key_hold) {   /* ( scancode flag -- ) held (or let go) from a script; pressed the tick it is held */
     Cell on = POP();
     int k = scancode(f, POP());
@@ -591,6 +611,14 @@ void bind_engine(Forth *f) {
             w->flags |= WORD_IMMEDIATE;   /* (a key name compiled as a number) */
         }
     }
+    forth_set_effect(f, forth_prim(f, "capture-keys!", p_capture_keys), "( flag -- )");
+    forth_set_effect(f, forth_prim(f, "keys-captured?", p_keys_captured), "( -- flag )");
+    forth_set_effect(f, forth_prim(f, "menu-key-down?", p_menu_key_down), "( scancode -- flag )");
+    forth_set_effect(f, forth_prim(f, "menu-key-pressed?", p_menu_key_pressed), "( scancode -- flag )");
+    forth_set_effect(f, forth_prim(f, "fullscreen!", p_fullscreen_store), "( flag -- )");
+    forth_set_effect(f, forth_prim(f, "clear-presses", p_clear_presses), "( -- )");
+    forth_set_effect(f, forth_prim(f, "pad-stick", p_pad_stick), "( F: -- x y )");
+    forth_set_effect(f, forth_prim(f, "fullscreen?", p_fullscreen), "( -- flag )");
     forth_set_effect(f, forth_prim(f, "heading-toward", p_heading_toward), "( dx dz -- heading )");
     forth_set_effect(f, forth_prim(f, "step-along", p_step_along), "( x z heading dist -- x' z' )");
     forth_set_effect(f, forth_prim(f, "distance-to", p_distance_to), "( x z x' z' -- dist )");

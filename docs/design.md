@@ -17,7 +17,7 @@ Haunting Ground rebuild) and reuses its Forth system and actor kernel.
    CLUTs, ordering tables, fixed-point GTE maths, SPU RAM, CD sectors or 2 MB memory map. The intent of each
    piece is rebuilt with today's means (meshes and textures on the GPU, float maths, decoded audio, files).
 4. **Moddable.** All game logic is Forth, loaded at run time; the game's data is a library of common formats
-   (PNG, WAV, glTF, text) made from the player's disc. A mod changes either.
+   (PNG, WAV, glTF, text) made from the player's disc. A mod changes either (`docs/modding.md`).
 5. **Fail loudly and safely.** A mistake in a script prints an error naming the word and the actor; it never
    corrupts memory or crashes the engine.
 

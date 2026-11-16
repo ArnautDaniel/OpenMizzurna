@@ -4,8 +4,8 @@
  * version it was built as) and the tarball under a fixed name. On start a release build reads version.txt; when
  * it names another version, the tarball is fetched and unpacked into a staging folder beside the program, its
  * scripts and then its program are moved over these, and the new program runs in this one's place. The player's
- * library/ and saves/ are never touched. The fetching is the system's curl and tar (no TLS library in the game);
- * offline, without them, or without write access to the program's folder, the game simply runs as it is.
+ * library/, saves/ and mods/ are never touched. The fetching is the system's curl and tar (no TLS library in the
+ * game); offline, without them, or without write access to the program's folder, the game simply runs as it is.
  *
  * OM_NO_UPDATE=1 in the environment turns it off; OM_UPDATED marks a run that has just updated (it doesn't look
  * again); OM_UPDATE_URL is another place to update from (a folder ending in '/', as file:///...: the tests). */

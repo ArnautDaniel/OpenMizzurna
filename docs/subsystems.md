@@ -63,6 +63,7 @@ phase-1 port's files (`../port/src/game/`), which name the decomp's functions; t
 | Car chase ([page](subsystems/car-chase.md), built) | after the bike in his car: the knocks, the crash, the clock | `ovl027.c` (states 20–26) |
 | Rumble ([page](subsystems/rumble.md), built) | the pads' motors | `frame.c` (pad motors) |
 | Errors ([page](subsystems/errors.md), built) | every failure logged (`errors.log`); the actor that failed asked to start over | - (the engine's own) |
+| Options ([page](subsystems/options.md), built) | F1: the engine's options over the game - volume, vibration, fullscreen, mods' rows | - (the engine's own) |
 
 ## Order of work
 

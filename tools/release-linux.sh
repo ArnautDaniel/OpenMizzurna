@@ -69,6 +69,7 @@ mkdir -p "$stage/licenses"
 cp "$build/openmizzurna" "$stage/"
 strip "$stage/openmizzurna"
 cp -r "$here/scripts" "$stage/scripts"
+cp -r "$here/examples/mods" "$stage/mod-examples"   # (the sample mod: docs/modding.md)
 cp "$here/README.md" "$here/LICENSE" "$stage/"
 cp "$prefix/share/licenses/SDL3/LICENSE.txt" "$stage/licenses/SDL3.txt"
 cp "$prefix/licenses/FFmpeg-LGPL-2.1.txt" "$stage/licenses/"

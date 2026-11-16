@@ -28,7 +28,7 @@ dialog fails, it says why and points there.
   library/             made by the import
     manifest.txt       what it was made from and how (format versions, every file with its size)
     ...                the converted data (below)
-  mods/                the player's mods
+  mods/                the player's mods: each a folder (or zip) with library/ over this one (docs/modding.md)
   user/                saves, settings
 ```
 
@@ -64,6 +64,16 @@ where they're enough, a real codec library where one is needed (video). They are
 
 **Conversions are exact**: a converted format gives the engine the same data the original did; each kind has a
 check (a ctest) that decodes both and compares.
+
+## Mods
+
+A mod's files sit under its own `library/` at the library's paths (`mods/<name>/library/title/logo.png` stands for
+`library/title/logo.png`); the engine reads every asset through `files_read` (`src/core/files.c`), which looks in
+each mod's `library/` - the last in the load order first - and then here. So a mod replaces any file of the table
+above in the same format, or adds files of its own. A mod's replacement needn't come from the disc and isn't
+checked, but keeps the shape the reader expects (a WAV mono 16-bit, a model's parts as many as its motions move,
+message ids as the scripts ask for them); what the engine can't read it says on stderr. The import never touches
+`mods/`. How to make one, the order, the scripts and hooks: `docs/modding.md`.
 
 ## Status
 

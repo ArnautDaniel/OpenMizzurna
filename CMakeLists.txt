@@ -76,7 +76,7 @@ add_executable(openmizzurna
     src/render/render.c src/render/scene3d.c
     src/game/bind_engine.c src/game/text.c src/game/bind_scene.c src/game/roads.c src/game/records.c src/game/snow.c src/game/console.c
     src/game/bind_audio.c src/audio/audio.c src/audio/seq.c src/audio/xa.c src/game/movie.c
-    src/platform/library.c src/platform/update.c src/core/files.c)
+    src/platform/library.c src/platform/update.c src/core/files.c src/core/zip.c src/game/mods.c)
 target_link_libraries(openmizzurna PRIVATE omdata)
 target_include_directories(openmizzurna PRIVATE src/third_party)
 target_link_libraries(openmizzurna PRIVATE clankforth mactor SDL3::SDL3 m)
@@ -95,6 +95,25 @@ foreach(t ${GAME_TESTS})
             ENVIRONMENT "SDL_AUDIO_DRIVER=dummy;OM_HOME=${CMAKE_BINARY_DIR}/test-no-library")
     endif()
 endforeach()
+
+# ---- mods (docs/modding.md): the sample and the test mods, each run with --mod (tests/mods/) ----
+set(MOD_TEST_ENV "SDL_AUDIO_DRIVER=dummy;OM_HOME=${CMAKE_BINARY_DIR}/test-no-library")
+add_test(NAME mods_clock_line COMMAND openmizzurna --mod "${CMAKE_CURRENT_SOURCE_DIR}/examples/mods/clock-line"
+         --test "${CMAKE_CURRENT_SOURCE_DIR}/tests/mods/clock-line.fs")
+# the same from a zip of it (cmake's own: deflated, the folder inside)
+add_test(NAME mods_clock_line_zip COMMAND ${CMAKE_COMMAND} -E chdir "${CMAKE_CURRENT_SOURCE_DIR}/examples/mods"
+         ${CMAKE_COMMAND} -E tar cf "${CMAKE_BINARY_DIR}/clock-line.zip" --format=zip clock-line)
+add_test(NAME mods_clock_line_zipped COMMAND openmizzurna --mod "${CMAKE_BINARY_DIR}/clock-line.zip"
+         --test "${CMAKE_CURRENT_SOURCE_DIR}/tests/mods/clock-line.fs")
+set_tests_properties(mods_clock_line_zip PROPERTIES FIXTURES_SETUP clock_line_zip)
+set_tests_properties(mods_clock_line_zipped PROPERTIES FIXTURES_REQUIRED clock_line_zip)
+set(TEST_MODS "${CMAKE_CURRENT_SOURCE_DIR}/tests/mods")
+add_test(NAME mods_layers COMMAND openmizzurna --mod "${TEST_MODS}/layer-a" --mod "${TEST_MODS}/layer-b"
+         --mod "${TEST_MODS}/future-mod" --mod "${TEST_MODS}/needs-future" --mod "${TEST_MODS}/clock"
+         --mod "${TEST_MODS}/endless-mod" --test "${TEST_MODS}/layers.fs")
+add_test(NAME mods_stick_walk COMMAND openmizzurna --mod "${CMAKE_CURRENT_SOURCE_DIR}/examples/mods/stick-walk"
+         --test "${TEST_MODS}/stick-walk.fs")
+set_tests_properties(mods_clock_line mods_clock_line_zipped mods_layers mods_stick_walk PROPERTIES ENVIRONMENT "${MOD_TEST_ENV}")
 
 # ---- the data checks (the developers' disc: OM_DEV_DISC, a .cue; skipped without it) ----
 # (in the project's folder, git-ignored, or beside it in a folder of its own)
@@ -126,6 +145,18 @@ if(EXISTS "${OM_DEV_DISC}")
         set_tests_properties(library_${name} PROPERTIES DEPENDS library_import
                              ENVIRONMENT "SDL_AUDIO_DRIVER=dummy;OM_HOME=${CMAKE_BINARY_DIR}/test-home")
     endforeach()
+    # the title's MODS and the mods menu: on a folder of copies of the mods (--mods), its order.txt written, then
+    # in force when the game starts again
+    set(MODS_MENU_DIR "${CMAKE_BINARY_DIR}/test-mods-menu")
+    add_test(NAME mods_menu_folder COMMAND ${CMAKE_COMMAND} -DSRC=${CMAKE_CURRENT_SOURCE_DIR} -DDIR=${MODS_MENU_DIR}
+             -P "${TEST_MODS}/menu-folder.cmake")
+    add_test(NAME mods_menu COMMAND openmizzurna --mods "${MODS_MENU_DIR}" --test "${TEST_MODS}/menu.fs")
+    add_test(NAME mods_menu_after COMMAND openmizzurna --mods "${MODS_MENU_DIR}" --test "${TEST_MODS}/menu-after.fs")
+    set_tests_properties(mods_menu_folder PROPERTIES FIXTURES_SETUP mods_menu_folder)
+    set_tests_properties(mods_menu PROPERTIES FIXTURES_REQUIRED mods_menu_folder DEPENDS library_import
+                         ENVIRONMENT "SDL_AUDIO_DRIVER=dummy;OM_HOME=${CMAKE_BINARY_DIR}/test-home")
+    set_tests_properties(mods_menu_after PROPERTIES FIXTURES_REQUIRED mods_menu_folder DEPENDS mods_menu
+                         ENVIRONMENT "SDL_AUDIO_DRIVER=dummy;OM_HOME=${CMAKE_BINARY_DIR}/test-home")
 endif()
 if(EXISTS "${OM_DEV_DISC}" AND EXISTS "${OM_DEV_EXTRACT}/fs")
     add_test(NAME disc_check COMMAND disc_ls "${OM_DEV_DISC}" "${OM_DEV_EXTRACT}/fs")

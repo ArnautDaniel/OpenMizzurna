@@ -6,6 +6,8 @@
  *     --eval "code"     run Forth after the scripts have loaded (repeatable)
  *     --test file.fs    run a test file after the scripts, headless, and exit with its status
  *     --import disc.cue the disc imported into the library, then out
+ *     --mod folder      a mod (a folder, or a .zip) on for this run, after those in mods/ (repeatable)
+ *     --mods folder     another folder of mods in place of <home>/mods/ (a --test run has none unless named)
  *
  * A release build first brings itself up to date (platform/update.c).
  *
@@ -14,11 +16,12 @@
  *
  * Start-up: the window (SDL3, OpenGL 4.6 core), the renderer, the Forth system (ClankForth) with the engine's
  * words and the actor kernel, then its prelude, scripts/prelude.fs and scripts/game.fs - which decide everything
- * else. Each frame: input, simulation steps at a fixed rate as real time asks (engine_tick: hooks, tasks, the
+ * else - then the mods' scripts (game/mods.c), each in its own vocabulary. Each frame: input, simulation steps at a fixed rate as real time asks (engine_tick: hooks, tasks, the
  * actors), then drawing at the display's rate (vsync), blending the last two steps. */
 #include "forth.h"
 #include "game/engine.h"
 #include "game/movie.h"
+#include "game/mods.h"
 #include "audio/audio.h"
 #include "kernel/mactor.h"
 #include "platform/library.h"
@@ -31,6 +34,7 @@
 #include <string.h>
 
 #define MAX_EVALS 16
+#define MAX_NAMED_MODS 16
 
 static int sTestStatus;
 static void p_exit_status(Forth *f, Word *w) {   /* ( n -- ) a test's exit status (--test) */
@@ -49,6 +53,9 @@ typedef struct Options {
     int nevals;
     const char *test;
     const char *import;
+    const char *mods[MAX_NAMED_MODS];   /* --mod */
+    int nmods;
+    const char *mods_folder;            /* --mods */
 } Options;
 
 static int parse_options(int argc, char **argv, Options *o) {
@@ -64,11 +71,16 @@ static int parse_options(int argc, char **argv, Options *o) {
             o->evals[o->nevals++] = argv[++i];
         } else if (strcmp(argv[i], "--import") == 0 && i + 1 < argc) {
             o->import = argv[++i];
+        } else if (strcmp(argv[i], "--mod") == 0 && i + 1 < argc && o->nmods < MAX_NAMED_MODS) {
+            o->mods[o->nmods++] = argv[++i];
+        } else if (strcmp(argv[i], "--mods") == 0 && i + 1 < argc) {
+            o->mods_folder = argv[++i];
         } else if (strcmp(argv[i], "--test") == 0 && i + 1 < argc) {
             o->test = argv[++i];
             o->hidden = 1;
         } else {
-            fprintf(stderr, "usage: openmizzurna [--hidden] [--frames N] [--eval code] [--test file.fs] [--import disc.cue]\n");
+            fprintf(stderr, "usage: openmizzurna [--hidden] [--frames N] [--eval code] [--test file.fs] [--import disc.cue]\n"
+                            "                    [--mod folder-or-zip] [--mods folder]\n");
             return 0;
         }
     }
@@ -100,6 +112,7 @@ static int start_scripts(Engine *e) {
     forth_report_crashes(e->forth);
     bind_engine(e->forth);
     bind_mactor(e->forth);
+    bind_mods(e->forth);
     forth_prim(e->forth, "exit-status", p_exit_status);
     forth_prim(e->forth, "error-count", p_error_count);
     forth_constant(e->forth, "hidden?", e->hidden ? -1 : 0);
@@ -110,7 +123,30 @@ static int start_scripts(Engine *e) {
         return 0;
     }
     snprintf(path, sizeof(path), "%s/game.fs", dir);
-    return forth_include(e->forth, path) == 0;
+    if (forth_include(e->forth, path) != 0) {
+        return 0;
+    }
+    mods_load_scripts(e->forth, dir);   /* (a mod that fails is turned off: the game goes on) */
+    return 1;
+}
+
+/* the mods on this run: <home>/mods/ (or --mods), then the --mod ones; a test sees only those it names */
+static void find_mods(const Options *o) {
+    char home_mods[1100], folder[1200];
+    const char *from = NULL;
+
+    if (o->mods_folder != NULL) {
+        from = o->mods_folder;
+    } else if (o->test == NULL) {
+        snprintf(home_mods, sizeof(home_mods), "%smods", library_home());
+        from = home_mods;
+    }
+    if (from == NULL) {
+        mods_find(NULL, o->mods, o->nmods);
+        return;
+    }
+    snprintf(folder, sizeof(folder), "%s%s", from, from[0] && from[strlen(from) - 1] == '/' ? "" : "/");
+    mods_find(folder, o->mods, o->nmods);
 }
 
 static void draw(Engine *e) {
@@ -170,6 +206,7 @@ int main(int argc, char **argv) {
         return 1;
     }
     e->hidden = opt.hidden;
+    find_mods(&opt);
     au_init(!opt.hidden);   /* (headless: the sound's state without a device - tests run the mixer themselves) */
     platform_size(&e->width, &e->height);
     if (!start_scripts(e)) {
@@ -194,9 +231,7 @@ int main(int argc, char **argv) {
             break;
         }
         if (e->input.fullscreen_toggle) {
-            static int fullscreen;
-            fullscreen = !fullscreen;
-            platform_fullscreen(fullscreen);
+            platform_fullscreen(!platform_is_fullscreen());
         }
         if (e->input.pressed[SDL_SCANCODE_GRAVE]) {   /* ` opens and shuts the console */
             e->console.open = !e->console.open;

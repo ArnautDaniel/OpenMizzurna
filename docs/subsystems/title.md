@@ -24,6 +24,13 @@ It runs at OPENING's 60 frames a second, two a step.
      rumble reads `vibration?`.
 5. **The game.** The title is gone (`title-up?` false).
 
+**MODS** (OpenMizzurna's own, not the original's): when `mods/` has any mod, a fifth line under Vibration, in the
+game's font (the four lines are the original's pictures). Up from New Game, or down past Vibration, reaches it;
+Start or ○ opens the mods menu (`scripts/mods/menu.fs`, drawn over the title's picture): each mod ON or OFF, why one
+didn't load this run, up and down choose, ○ turns one on or off, left and right move it in the load order, ✕ goes
+back writing `mods/order.txt` (changes apply at the next start). Without mods the menu is the original's four
+lines. (docs/modding.md)
+
 The menu's sounds are the title's own bank (CD.BIN 058_4 with 058_3's samples) and set (059_0): 0 confirm,
 1 cancel.
 
@@ -48,4 +55,4 @@ the prologue's, the opening's, the digest, and the two endings'.
 
 ## Status
 
-**Built.** Headless runs (tests, screenshots) go straight to a new game unless they boot the title themselves.
+**Built**, and MODS (`tests/mods/menu.fs`, `menu-after.fs`: ctest `mods_menu`, `mods_menu_after`). Headless runs (tests, screenshots) go straight to a new game unless they boot the title themselves.

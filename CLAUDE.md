@@ -5,7 +5,7 @@ passing messages (`scripts/`). The architecture follows OpenHuey (github.com/Arn
 `openhuey-src/`). The Forth system and its actor kernel are ClankForth's (`external/clankforth`, a
 submodule both projects share; `src/kernel/` adds only the actors' bodies): a change to the language or the VM is a pull request to
 github.com/ArnautDaniel/ClankForth, then the submodule moved forward here (its own CLAUDE.md has its rules).
-The decomp (`../decomp/`) and the phase-1 port (`../port/`, runnable C) are the reference for what the game does; the original executable can be read too. Read `README.md`, then `docs/design.md`, `docs/actors.md`, `docs/forth.md`, `docs/subsystems.md`.
+The decomp and the phase-1 port (runnable C that names the decomp's functions) are the reference for what the game does; the original executable can be read too. On this machine they are at `/run/media/arnaut/blackbridge/mf/decomp/` (`src/main`, `src/ovlNNN`; the executable `bin/SLPS_017.83`) and `/run/media/arnaut/blackbridge/mf/port/src/game/`. The disc image for the data tests is in this folder, git-ignored (CMake finds it). Read `README.md`, then `docs/design.md`, `docs/actors.md`, `docs/forth.md`, `docs/subsystems.md`.
 
 How this project works:
 - **Intent, not structure**: reproduce what the game does (timings, rules, schedules), not how the PS1 code was

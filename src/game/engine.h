@@ -21,6 +21,7 @@ typedef struct Engine {
     float step_blend;            /* how far the display is between the last step and the next (0..1): drawing
                                   * blends the last two steps' state by it */
     bool held[SDL_SCANCODE_COUNT];   /* keys held by scripts (key-hold: demos, tests) */
+    int keys_captured;           /* a menu over the game has the keys (capture-keys!): the game reads none */
     Word *tick_hooks[MAX_HOOKS];     /* on-tick */
     int ntick_hooks;
     Word *draw_hooks[MAX_HOOKS];     /* on-draw */

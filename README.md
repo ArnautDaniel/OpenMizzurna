@@ -14,7 +14,7 @@ None of the game's data is here: you need your own copy of the English disc (a .
 run imports it once into a library of common formats (`docs/library.md`).
 
 Start with `docs/design.md`, then `docs/actors.md` (the kernel), `docs/forth.md` (the language) and
-`docs/subsystems.md` (the map of the game). The game's data: `docs/library.md`.
+`docs/subsystems.md` (the map of the game). The game's data: `docs/library.md`; mods: `docs/modding.md`.
 
 ## Building and running
 
@@ -28,6 +28,7 @@ build/openmizzurna                                   # the game (` opens the For
 build/openmizzurna --hidden --frames 3 --eval "..."  # headless; `s" shot.png" screenshot` for a picture
 cd build && SDL_AUDIO_DRIVER=dummy ctest             # the tests
 build/forth                                          # the Forth with the actor kernel (a prompt)
+build/openmizzurna --mod examples/mods/clock-line    # with a mod on (docs/modding.md; installed ones: mods/)
 ```
 
 Keys: the PlayStation pad as the keyboard (`scripts/keys.fs`): arrows / W A S D the d-pad, C circle, X cross,
@@ -55,6 +56,7 @@ your library and saves stay; `OM_NO_UPDATE=1` turns it off). The same script mak
 | `src/game/` | the engine loop's state, the engine's Forth words, the console |
 | `scripts/` | the game: `prelude.fs` (its few words for every script), `game.fs` (where it starts), a file per subsystem |
 | `tests/` | `test_*.fs` the kernel (the `forth` tool, `tools/forth-tool.c`); `<subsystem>/test_*.fs` the game's, headless |
+| `examples/mods/` | a sample mod (`docs/modding.md`: making one) |
 | `docs/` | the design, the dialect, the subsystems' pages |
 
 ## License

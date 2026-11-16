@@ -48,6 +48,14 @@ place, turned by his heading. The events' commands (src: actor_command_default):
 
 Matthew's are `figure-anim-then` / `figure-anim` / `figure-hold` (the fact `anim-done?`).
 
+## A mod's way of walking (the walk-intent hook)
+
+`walk-intent ( -- heading pace )` (a hook: docs/modding.md) is asked each step he's the player's on foot. The
+game's answer is `by-the-pad`: the tank controls below. A mod's may give a heading (0 .. 4095) and a pace
+(`standing-pace`, `walking-pace`, `running-pace`): he turns toward it 384 a game frame (`steer-to`: the turn
+motions while he stands) and walks or runs by the game's own speeds and motions (`pace-by`, shared with the pad)
+and walls. The sample: `examples/mods/stick-walk` (the left stick, the way it points on the screen).
+
 ## Walking (src: player_control_foot, player_update)
 
 While he is the player's (`player-control`: the events' control ops and their starts and ends), the pad

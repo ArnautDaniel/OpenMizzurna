@@ -31,6 +31,7 @@ void platform_text_input(int on);
 void platform_mouse_capture(int on);
 /* the window fullscreen (the desktop's mode) or not */
 void platform_fullscreen(int on);
+int platform_is_fullscreen(void);
 
 /* ---- the controls: each of the game's actions is a key the scripts read (W, C, X ...: keys.fs),
  * held while either of the two keys bound to it is (the default: the key itself, and Space for X,

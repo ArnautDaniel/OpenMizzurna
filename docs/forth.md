@@ -20,6 +20,11 @@ are built, each listed here.
 | `run-tick` | `--` | a step as the main loop runs one: the tick hooks, the tasks, the actors' frame (tests) |
 | `dt` | `F: -- seconds` | a step's length (1/30 by default) |
 | `seconds` | `F: s -- steps` | real time as steps, for `wait` (`0.5e seconds wait`); at least one for any time |
+| `capture-keys!`, `keys-captured?` | `flag --`, `-- flag` | a menu over the game has the keys: `key-down?` / `key-pressed?` give the game nothing (the options: F1) |
+| `menu-key-down?`, `menu-key-pressed?` | `key -- flag` | the keys as they are, captured or not (the menu's own reading) |
+| `fullscreen!`, `fullscreen?` | `flag --`, `-- flag` | the window fullscreen (the desktop's mode) or not |
+| `pad-stick` | `F: -- x y` | a gamepad's left stick, -1 .. 1 (right, down; 0 in its dead zone or while a menu has the keys) |
+| `clear-presses` | `--` | this step's presses taken, as the main loop does after each step (tests stepping the game) |
 | `heading-toward` | `dx dz -- heading` | the way of (dx, dz) in the original's angles (4096 a turn, 0 .. 4095; src: ratan2) |
 | `step-along` | `x z heading dist -- x' z'` | dist along a heading: x by its sine, z by its cosine, each cut toward 0 (src: actor_step) |
 | `distance-to` | `x z x' z' -- dist` | how far apart two points are across the ground, whole units cut toward 0 (src: actor_dist_to_point) |
@@ -77,6 +82,8 @@ are built, each listed here.
 | `exe-u8` / `exe-s8` / `exe-s16` / `exe-s32` | `addr len i -- n` | element i of a table of the executable (0 past its end or with none) |
 | `library-file` | `addr len -- addr n` | a library file's bytes (read once, kept - as many as are asked for); `0 0` if none |
 | `exe-table` | `addr len -- addr n` | a table of the executable by name (`s" music" exe-table`: the library's `exe/music.bin`, as `library-file`); `0 0` if none |
+| `.mods` / `mod-api` / `mod-on?` | `--` / `-- n` / `addr len -- flag` | the mods in load order, each on or off and why; the mod API (100 a major, 1.0: 100); is that mod on (docs/modding.md) |
+| `mods-menu-count` ... `mods-menu-save` | | the title's mods menu's list (src/game/mods.c, scripts/mods/menu.fs) |
 
 The pad's buttons as keys: `scripts/keys.fs` (`pad-circle`, `pad-cross`, ... the d-pad `pad-up` ...).
 
@@ -86,7 +93,8 @@ ClankForth's prelude (the language), `prelude.fs` (the game's few words for ever
 `seconds`; `IN: forth`), then `game.fs` (`IN: game`), whose `USING:` pulls in the rest; each
 file is a vocabulary of the same name. Each subsystem is its own file, with a folder of the same name when it
 is bigger (the map: `docs/subsystems.md`). Shared: `keys.fs` (the pad), `messages.fs` (every message, declared
-once).
+once), `mods.fs` (the hooks: `hook:`, `hook-before:` - docs/modding.md). After `game.fs`, each mod's
+`scripts/<name>.fs`, as the vocabulary `<name>` (src/game/mods.c).
 
 The console (`` ` ``) evaluates whatever is typed, so any of this can be changed while the game runs: redefine
 a word and the next tick uses it (words already compiled into others keep the old one; hooks are looked up by
@@ -106,4 +114,5 @@ against the results; `testing name` labels what follows; `test-summary` prints t
   `SDL_AUDIO_DRIVER=dummy` (and `--hidden` for other headless runs).
 - `tests/library/test_*.fs`: the game's on its data - run on the library `ctest` imports from the developers' disc
   (`OM_DEV_DISC`; without it they are left out).
+- `tests/mods/*.fs` (not `test_*`): run with mods turned on (`--mod`, `--mods`; CMakeLists.txt's `mods_*`).
 - `ctest` runs both (later also the C checks of the library's conversions, `tests/*_check.c`).
