@@ -87,6 +87,13 @@ them; whoever's part of the story it is sets them (an event's native, an area's 
   (`event_threads_update`) - the only way the prologue's end is reached in the code found so far. A prologue
   skip, or a leftover? Not wired until it's settled.
 
+The original's VM did each op at once; here an op sends its message and the actor takes it at the frame's
+delivery. So an op that reads where someone is (`where-is`, `figure-place@`: a turn toward a point, the camera
+on a figure) first delivers what the scene has sent (`caught-up`): a `set-pos` then a `face-point` turns from the
+new place, as there. `camera-set` keeps its heights, distance and heading in 16 bits as the VM did (some scripts
+give 64382 for -1154). A scene's `set-pos` of someone their schedule has in another area brings them into the
+area played (`person-stage`): the original drew whoever stood on Matthew's floor.
+
 A line (`talk`, `talk-to`: src event_talk) holds its thread until it closes - the gesture plays with it, the ops
 after it wait (src: wait_msg, checked before every op); the other says wait only with their "-wait" forms or
 `wait-text`. The area's text and the overlay words an event reaches by address are those of the area being

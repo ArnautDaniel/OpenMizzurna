@@ -364,7 +364,9 @@ defer door-sound ( kind -- )   \ op $176 (door-sounds.fs)
 : set-pos ( a x y z -- )   \ cmd $01 (src: actor_set_pos)
     {: a x y z :}
     a matthew = if  x y z a figure-of send figure-place exit  then
-    a scheduled? if  a x z the-townsfolk send person-place exit  then
+    a scheduled? if   \ (a scene placing someone their schedule has elsewhere: brought into the area played)
+        x z or  thread 0< 0= and  thread #event-threads < and  a here? 0= and if  a area @ the-townsfolk send person-stage  then
+        a x z the-townsfolk send person-place exit  then
     a person? if  a x y z the-townsfolk send extra-place exit  then
     a car? if  a x y z the-traffic send car-put exit  then
     a x y z 4 act-unbuilt ;
@@ -421,7 +423,10 @@ $83 constant posed-prop-a   $91 constant posed-prop-b   \ (src: cmd 0x0C: these,
 : set-stop ( a stop travelling -- )   \ cmd $43: their stop, not placed (-1: off their schedule, with Matthew)
     rot dup scheduled? if  -rot the-townsfolk send person-set-stop  else  -rot 3 act-unbuilt  then ;
 : xz-heading ( x y z heading -- x z heading )  {: x y z h :}  x z h ;
+: caught-up ( -- )   \ what this scene has sent delivered before it looks: the VM did each op at once - a
+    thread 0< 0= if  deliver  then ;   \  set_pos then a turn toward a point reads the new place (an event's thread only)
 : where-is ( a -- x z heading true | false )   \ anyone's place: Matthew, a person, a car
+    caught-up
     dup matthew = if  drop matthew-now xz-heading true exit  then
     dup person? if  person-now xz-heading true exit  then
     dup car? if  car-now xz-heading true exit  then
@@ -560,7 +565,10 @@ $4C constant to-path-node   $50 constant into-their-car   30 constant path-pace 
 
 \ ---- the camera and the scene ----
 : the-camera ( -- id )  s" camera" actor-named ;
-: camera-set ( look-y dist eye-y x y z yaw -- )  the-camera send camera-place ;   \ $102
+: halfword ( n -- n' )  $FFFF and  dup $8000 and if  $10000 -  then ;   \ (a signed 16 bits, as the VM keeps it)
+: camera-set ( look-y dist eye-y x y z yaw -- )   \ $102 (src: its heights, distance and heading kept in 16 bits:
+    {: ly d ey x y z h :}                         \  some scripts give them as 0 .. 65535 - 64382 is -1154)
+    ly halfword  d halfword  ey halfword  x y z  h halfword  the-camera send camera-place ;
 : camera-follow ( -- )  the-camera send camera-follow ;                           \ $10B
 : camera-fixed ( -- )  the-camera send camera-fixed ;                             \ $10C
 : set-scene ( scene -- )  s" areas" actor-named send show-scene ;                  \ $110 (src: set_scene_state)
@@ -738,6 +746,7 @@ $851 constant lake-door-way-1   $852 constant lake-door-way-0   $DAC constant ar
 : wait-camera-height ( -- )  ['] camera-height-moving? until-still ;                 \ $14F
 : wait-camera-dist ( -- )  ['] camera-dist-moving? until-still ;                     \ $160
 : figure-place@ ( a -- x y z yaw true | false )   \ where a figure is: Matthew, or a person standing here
+    caught-up
     dup matthew = if  drop matthew-now true exit  then
     dup here? if  person-now true  else  drop false  then ;
 : camera-at ( a -- )   \ $113: the pivot where the figure stands

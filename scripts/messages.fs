@@ -123,6 +123,7 @@ message person-turn ( slot heading -- )  \ (to the townsfolk) the person faces s
 message person-turning ( slot target speed -- )   \ turns toward the heading, speed a game frame (its sign the way; 0: at once)
 \ (to the townsfolk: what the events and routes do to a person; slot first)
 message person-place ( slot x z -- )      \ stand there (height and area kept: src set_pos keeps y)
+message person-stage ( slot area -- )     \ shown in that area, on their floor (a scene placing someone not here)
 message extra-place ( slot x y z -- )      \ an extra (no schedule) there, in the area being played; (0, 0) parks them
 message person-floor ( slot floor -- )    \ on that floor (its height)
 message person-walk ( slot x z speed motion -- )   \ walk there, speed units a frame, in that motion

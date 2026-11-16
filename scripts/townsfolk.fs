@@ -370,6 +370,9 @@ behaviour townsfolk
     rot person-of {: t v p :}  v 0= if  t p heading-now !  0 p turning !  exit  then
     t full-circle 1- and p turn-target !  v p turn-speed !  true p turning ! ;
   on person-place ( slot x z -- )  rot person-of {: x z p :}  x p px !  z p pz ! ;
+  on person-stage ( slot area -- )   \ (src: none - the original draws whoever stands on Matthew's floor, wherever
+    swap person-of {: a p :}  a p person-area !    \  their schedule has them: a scene's set_pos brings them in)
+    p on-floor @ 0= if  1 p on-floor !  then  a p on-floor @ floor-height p py ! ;
   on extra-place ( slot x y z -- )   \ (0, 0): parked; a height of 0: on their floor (1 unless a scene says)
     {: s x y z :}  s person-of {: p :}  0 p walking !  0 p forward !
     x 0=  z 0= and if  -1 p person-area !  exit  then

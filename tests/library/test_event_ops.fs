@@ -2,7 +2,7 @@
 \ box until one is pressed: ○ 1, □ 0); the events' lock (the clock held); the hospital's elevator doors (four of its objects' motions, in its
 \ content areas only); a talk's gestures (a motion and what follows; none sitting but the seated ones; Barbara
 \ her own); a labourer off along their stop's route; Matthew through a door
-USING: tester engine actors messages clock areas keys matthew townsfolk events story-flags ;
+USING: tester engine actors messages clock areas keys matthew townsfolk events story-flags camera ;
 
 : steps ( n -- )  0 ?do  1 tick-tasks  actors-frame  loop ;
 : settled ( -- )  10 0 do  deliver  loop  events-stop  deliver ;
@@ -66,5 +66,19 @@ variable anim-waited
     true anim-waited ! ;
 T{ false anim-waited !  ' walking-wait start-event  4 steps  anim-waited @ -> true }T
 T{ events-stop  s" matthew" actor-named send figure-idle  deliver -> }T
+
+testing camera-set's heights, distance and heading as the VM's 16 bits: 64382 is -1154 (ovl001's Morgan scene)
+: placed-camera ( -- )  camera-fixed  -730 63118 -2306 345609 -4080 285716 63084 camera-set  100 frames wait ;
+T{ ' placed-camera start-event  2 steps  camera:dist @  camera:eye-y @  camera-yaw 4095 and -> -2418 -2306 -2452 4095 and }T
+T{ events-stop  deliver -> }T
+
+testing a scene's set-pos then a turn toward a point reads the new place (the VM did each op at once)
+variable faced
+: place-and-face ( -- )  matthew 346901 0 287566 set-pos  matthew 345848 287272 0 face-point  matthew where-is drop nip nip faced ! ;
+T{ 1 into  ' place-and-face start-event  2 steps  faced @ -> 2895 }T
+testing a scene placing someone their schedule has elsewhere: brought into the area played (Morgan in the shop)
+: morgan-in ( -- )  morgan 345547 0 285294 set-pos ;
+T{ morgan here?  ' morgan-in start-event  2 steps  morgan here? -> false true }T
+T{ events-stop  deliver -> }T
 
 test-summary
