@@ -76,6 +76,9 @@ them; whoever's part of the story it is sets them (an event's native, an area's 
 - `new-game` (src: `game_start(0)`): the flags cleared, the events stopped, the clock to 12/25 09:00 and held
   (`story-stopped`, and `event-running`: src `event_lock`), the area 1 overlay's events, the opening started
   (`events.ovl001:new-game-opening`).
+- `quick-start` (OpenMizzurna's own: the title's QUICK START): the flags cleared, the events stopped, the
+  prologue's end run (below), then an event warps Matthew into the town beside his car's driver's door (`at-its-door`,
+  driving.fs), the car parked where the car chase leaves it, by the police station, its tank full.
 - The prologue's end (src: `evfn_80047620`, the main executable's native at $80047620, called by script
   $80096598): the clock let go and set to 12/25 10:00, `prologue-done` set, `prologue-over` broadcast. Its
   placing everyone at their first stop and Matthew and the car at the station waits for the townsfolk and

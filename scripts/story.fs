@@ -1,7 +1,7 @@
 \ story.fs - the story actor (docs/subsystems/story.md): starts a game and plays the events the story calls
 \ for. The flags are facts (story-flags.fs): read by anyone, set by whoever's part of the story it is.
 IN: story
-USING: engine actors messages clock story-flags events events.all townsfolk fight ;
+USING: engine actors messages clock story-flags events events.all townsfolk fight traffic driving ;
 
 1 constant matthews-house   \ the area of the opening (src: game_start's ovl001 scripts)
 
@@ -57,6 +57,16 @@ main-exe $80047C90 ' recap native:   main-exe $80047C5C ' follow-unless-busy nat
 main-exe $8004F2C8 ' read-21 native:   main-exe $8004F2E4 ' read-22 native:   main-exe $8004F300 ' read-23 native:
 main-exe $8004F31C ' read-21? native:   main-exe $8004F334 ' read-22? native:   main-exe $8004F34C ' read-23? native:
 
+\ ---- the quick start (OpenMizzurna's own, for trying things: not the original's) ----
+\ the prologue skipped: the game as at its end (12/25 10:00, prologue-done), but Matthew in the town by his car's
+\ driver's door, his car where it stands at the start (src: the car chase's home, car-chase.fs), its tank full
+$3C02C constant car-start-x   $21933 constant car-start-z   $30 constant car-start-heading
+: by-his-car ( -- )   \ (an event: the warp waits for the area)
+    car-start-x car-start-z car-start-heading s" driving" actor-named send his-car-at
+    full-tank s" driving" actor-named send fuel-set
+    car-start-x car-start-z car-start-heading at-its-door {: x z h :}
+    the-town as-he-is x z h 0 warp ;
+
 state: story-state end-state
 
 behaviour story
@@ -68,6 +78,11 @@ behaviour story
     matthews-house event-area !
     matthews-house 0 s" areas" actor-named send enter-area   \ src: player_state_init, session_start_in(1, 0)
     ['] events.ovl001:new-game-opening start-event ;
+  on quick-start ( -- )
+    story-clear  events-stop   \ (whatever was running ended: it may come straight after a new game)
+    end-prologue
+    the-town event-area !
+    ['] by-his-car start-event ;
 end-behaviour
 
 : spawn-story ( -- id )  story story-state s" story" spawn ;

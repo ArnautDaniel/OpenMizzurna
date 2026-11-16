@@ -19,6 +19,7 @@ enum: clock-hold  story-stopped event-running no-control menu-open text-shown ph
 
 \ ---- the story (docs/subsystems/story.md) ----
 message new-game ( -- )                 \ (to the story) start the game afresh: 12/25 09:00, the opening
+message quick-start ( -- )              \ (to the story) OpenMizzurna's own: the prologue skipped, Matthew by his car in the town
 message prologue-over ( -- )            \ broadcast: the prologue ended (Matthew at the station, 12/25 10:00)
 
 \ ---- the message window (docs/subsystems/window.md) ----

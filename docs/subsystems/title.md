@@ -24,12 +24,20 @@ It runs at OPENING's 60 frames a second, two a step.
      rumble reads `vibration?`.
 5. **The game.** The title is gone (`title-up?` false).
 
-**MODS** (OpenMizzurna's own, not the original's): when `mods/` has any mod, a fifth line under Vibration, in the
-game's font (the four lines are the original's pictures). Up from New Game, or down past Vibration, reaches it;
+While the title is up it holds the ui lock (`ui-lock`, let go as the game starts), so Start is the title's and not
+the pause's (which before the prologue's end would start the prologue's skip behind the title).
+
+**QUICK START** (OpenMizzurna's own, for trying things quickly): a fifth line under Vibration, in the game's font.
+Start or ○ on it sends `quick-start` to the story: no movie, the prologue skipped - the game as at its end (12/25
+10:00, `prologue-done`), Matthew in the town beside his car's driver's door by the police station, its tank full,
+his to move.
+
+**MODS** (OpenMizzurna's own, not the original's): when `mods/` has any mod, a sixth line under QUICK START, in the
+game's font (the four lines are the original's pictures). Up from New Game, or down past QUICK START, reaches it;
 Start or ○ opens the mods menu (`scripts/mods/menu.fs`, drawn over the title's picture): each mod ON or OFF, why one
 didn't load this run, up and down choose, ○ turns one on or off, left and right move it in the load order, ✕ goes
 back writing `mods/order.txt` (changes apply at the next start). Without mods the menu is the original's four
-lines. (docs/modding.md)
+lines and QUICK START. (docs/modding.md)
 
 The menu's sounds are the title's own bank (CD.BIN 058_4 with 058_3's samples) and set (059_0): 0 confirm,
 1 cancel.

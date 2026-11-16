@@ -17,7 +17,7 @@ T{ 0 row-name s" clock-line" compare  2 row-name s" layer-a" compare  1 mods-men
 
 testing the title's menu: MODS a fifth line, up from New Game
 T{ 0 title-start  60 steps  pad-start tap  120 steps  pad-start tap  80 steps  step-of-title @ -> menu-state }T
-T{ mods?  menu-lines  pad-up tap  cursor @ -> true 5 mods-line }T
+T{ mods?  menu-lines  pad-up tap  cursor @ -> true 6 mods-line }T
 T{ pad-circle tap  step-of-title @ -> mods-state }T
 
 testing down to layer-a, off, moved to the top: changed

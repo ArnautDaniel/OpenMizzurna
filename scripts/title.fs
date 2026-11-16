@@ -1,6 +1,6 @@
 \ title.fs - the title (docs/subsystems/title.md; src: opening.c, OPENING.EXE): the logo, the attract movies, the
 \ title and its menu - New Game (the opening movie, then the game), Load (the saves' slots), Adjust Screen,
-\ Vibration on / off; OpenMizzurna's own MODS when there are mods (mods/menu.fs) - and, coming back from an ending, its movie and closing card. It runs at OPENING's 60
+\ Vibration on / off; OpenMizzurna's own QUICK START (the prologue skipped: Matthew by his car in the town) and MODS when there are mods (mods/menu.fs) - and, coming back from an ending, its movie and closing card. It runs at OPENING's 60
 \ frames a second (two a step). Others read the fact title-up?.
 IN: title
 USING: engine actors messages keys screen story-flags settings saves events mods.menu ;
@@ -60,7 +60,7 @@ enum: title-state  logo-state intro-state title-screen digest-state menu-state o
     adjust-state chosen-state bad-end-state final-end-state bad-card final-card mods-state ;
 variable step-of-title   variable counter   variable fade   variable name-drop   variable leaving   variable idle-frames-so-far
 variable next-attract   variable sound-played   variable cursor   variable opening-frames
-variable chosen-mode   \ 0 a new game, n: the save slot n - 1
+variable chosen-mode   \ 0 a new game, n: the save slot n - 1, -1 the quick start
 : start-movie ( n -- )
     {: n :}  n playing !  n movie-name n movie-row cell+ @ movie-open drop  -1 movie-frame !
     n movie-row 2 cells + @ movie-y !  n opening = if  opening-h  else  movie-h-usual  then  movie-h ! ;
@@ -94,16 +94,18 @@ variable chosen-mode   \ 0 a new game, n: the save slot n - 1
         next-attract @ if  intro-state  else  digest-state  then  step-of-title !  next-attract @ 0= next-attract !  exit  then
     go @ if  true leaving !  sound-played @ 0= if  confirm-sound play  true sound-played !  then  then
     leaving @  name-drop @ 0= and if  menu-state step-of-title !  false leaving !  false sound-played !  then ;
-\ the menu (src: op_menu); under its four lines OpenMizzurna's own, MODS, when mods/ has any
-4 constant #lines   3 constant vibration-line   4 constant mods-line
+\ the menu (src: op_menu); under its four lines OpenMizzurna's own: QUICK START, and MODS when mods/ has any
+4 constant #lines   3 constant vibration-line   4 constant quick-line   5 constant mods-line
 : mods? ( -- flag )  mods-menu-count 0> ;
-: menu-lines ( -- n )  mods? if  #lines 1+  else  #lines  then ;
+: menu-lines ( -- n )  mods? if  mods-line 1+  else  quick-line 1+  then ;
+-1 constant quick-mode   \ (chosen-mode: the quick start)
 : menu-frame ( -- )
     go @ if
         cursor @ case
             0 of  confirm-sound play  0 chosen-mode !  opening-state step-of-title !  opening start-movie  endof
             1 of  confirm-sound play  load-state step-of-title !  0 counter !  endof
             2 of  confirm-sound play  adjust-state step-of-title !  0 counter !  endof
+            quick-line of  confirm-sound play  quick-mode chosen-mode !  chosen-state step-of-title !  endof
             mods-line of  confirm-sound play  mods-state step-of-title !  open-mods  endof
         endcase
     then
@@ -141,7 +143,8 @@ variable slot-cursor
     go @ if  0 chosen-mode !  logo-state step-of-title !  0 counter !  sounds-on  then ;
 
 : start-game ( -- )   \ the title done: a new game, or a slot continued
-    false title-open !  sounds-off
+    false title-open !  s" ui" actor-named send ui-unlock  sounds-off
+    chosen-mode @ quick-mode = if  s" story" actor-named send quick-start  exit  then
     chosen-mode @ 0= if  s" story" actor-named send new-game  exit  then
     chosen-mode @ 1- continue-game 0= if  s" story" actor-named send new-game  then ;
 : title-frame-all ( -- )   \ one of OPENING's frames
@@ -168,7 +171,7 @@ variable slot-cursor
 variable logo-image   variable left-image   variable right-image   variable name-image   variable press-image
 variable vibration-image   variable panel-image   variable error-image   variable slots-image
 variable adjust-left   variable adjust-right   variable bad-image   variable final-image
-192 constant mods-x   206 constant mods-y   $FFFFFFFF constant mods-lit   $909090FF constant mods-unlit   \ (under the vibration line)
+192 constant extra-x   206 constant extra-y   14 constant extra-row   $FFFFFFFF constant extra-lit   $909090FF constant extra-unlit   \ (under the vibration line)
 create menu-images #lines cells allot   menu-images #lines cells erase
 : once ( var addr len -- image )  {: v a n :}  v @ ?dup if  exit  then  a n picture dup v ! ;
 : draw-picture ( v -- )   \ src: op_title_picture: the title's picture at 30 .. 209
@@ -184,16 +187,16 @@ create menu-images #lines cells allot   menu-images #lines cells erase
 : draw-movie ( -- )
     movie-frame @ 0< if  exit  then  $FFFFFFFF pen-color
     0 movie-y @ at-top-left >screen  movie-w scale *  movie-h @ scale *  movie-draw ;
-: draw-mods-line ( -- )   \ MODS under the pictured lines, in the game's font: lit when chosen
-    mods? 0= if  exit  then
-    0 font  0 font-palette  scale pen-scale  cursor @ mods-line = if  mods-lit  else  mods-unlit  then  pen-color
-    s" MODS"  mods-x mods-y at-top-left >screen font-text ;
+: draw-extra-line ( addr len line -- )   \ one of OpenMizzurna's lines under the pictured ones, in the game's font: lit when chosen
+    {: line :}  0 font  0 font-palette  scale pen-scale  cursor @ line = if  extra-lit  else  extra-unlit  then  pen-color
+    extra-x  extra-y  line quick-line - extra-row * +  at-top-left >screen font-text ;
+: draw-extra-lines ( -- )  s" QUICK START" quick-line draw-extra-line  mods? if  s" MODS" mods-line draw-extra-line  then ;
 : draw-menu ( -- )
     128 draw-picture  128 name-y draw-name  $FFFFFFFF pen-color
     menu-images cursor @ vibration-line min cells +  cursor @ case  0 of  s" menu-0"  endof  1 of  s" menu-1"  endof
         2 of  s" menu-2"  endof  s" menu-3" rot  endcase  once  192 142 80 48 draw-added
     vibration-image s" vibration" once  0  vibration? 0= 32 and  cursor @ vibration-line = 16 and +  80 16  192 188 draw-part
-    draw-mods-line ;
+    draw-extra-lines ;
 \ the load menu's panel rows (src: op_load: from v $26 of its image)
 $26 constant panel-top   160 constant panel-x   150 constant panel-y   143 constant panel-w
 $26 constant checking-row   $C6 constant no-data-row   16 constant row-h
@@ -231,6 +234,7 @@ main-exe $80047BFC :noname  bad-ending ending ; native:
 main-exe $80047C2C :noname  final-ending ending ; native:
 
 : title-start ( mode -- )   \ 0 the logo and title; 1 the bad ending's movie, 2 the final one's (src: op_main_loop)
+    title-up? 0= if  s" ui" actor-named send ui-lock  then   \ (a screen: Start isn't the pause's while it's up)
     true title-open !  -1 playing !  0 counter !  0 idle-frames-so-far !  0 cursor !  0 chosen-mode !  false leaving !
     screen-offset oy ! ox !
     case

@@ -212,6 +212,8 @@ PRIVATE>
 : nearly-still? ( -- flag )  speed @ abs still-enough <= ;   \ (a fact: slow enough to step out, or for the ring)
 : door-free? ( -- flag )  free-door 0< 0= ;   \ (a fact: a way out of the car where it stands - src car_can_exit)
 : his-car-now ( -- x z heading )  cx @ cz @ ch @ 4095 and ;   \ (a fact: where he has it)
+: at-its-door ( x z heading -- x' z' heading' )   \ where Matthew stands to get in a car there, facing across it
+    {: x z h :}  x z h door-side door-forward beside  h across + 4095 and ;
 : put-in-his-car ( -- )  into-his-car ;   \ (the chase's: src func_8004175C)
 : step-out ( -- )  driving? if  free-door 0 max get-out  then ;   \ (src: car_exit from the C: at a free door, else the first)   \ src: fuel_set(120): the gas station
 
