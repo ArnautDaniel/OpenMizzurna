@@ -23,7 +23,7 @@ are built, each listed here.
 | `capture-keys!`, `keys-captured?` | `flag --`, `-- flag` | a menu over the game has the keys: `key-down?` / `key-pressed?` give the game nothing (the options: F1) |
 | `menu-key-down?`, `menu-key-pressed?` | `key -- flag` | the keys as they are, captured or not (the menu's own reading) |
 | `fullscreen!`, `fullscreen?` | `flag --`, `-- flag` | the window fullscreen (the desktop's mode) or not |
-| `pad-stick` | `F: -- x y` | a gamepad's left stick, -1 .. 1 (right, down; 0 in its dead zone or while a menu has the keys) |
+| `pad-stick` | `F: -- x y` | a gamepad's left stick, -1 .. 1 (right, down; a round dead zone, the tilt eased from 0 past it; 0 while a menu has the keys) |
 | `clear-presses` | `--` | this step's presses taken, as the main loop does after each step (tests stepping the game) |
 | `heading-toward` | `dx dz -- heading` | the way of (dx, dz) in the original's angles (4096 a turn, 0 .. 4095; src: ratan2) |
 | `step-along` | `x z heading dist -- x' z'` | dist along a heading: x by its sine, z by its cosine, each cut toward 0 (src: actor_step) |

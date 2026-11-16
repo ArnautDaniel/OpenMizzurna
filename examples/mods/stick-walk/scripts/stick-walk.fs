@@ -18,7 +18,7 @@ setting 1 cells setting-name load-file drop
 s" Movement" ' movement-shown ' movement-change add-option
 
 \ ---- where the stick points ----
-0.75e fconstant run-tilt   \ pushed this far (of 1): he runs
+0.8e fconstant run-tilt   \ pushed this far (of 1, past the dead zone): he runs
 : pad-pointing ( F: -- x y )   \ the d-pad as a stick (-1, 0, 1 each way)
     pad-right key-down? 1 and  pad-left key-down? 1 and -  s>f
     pad-down key-down? 1 and  pad-up key-down? 1 and -  s>f ;

@@ -1,6 +1,6 @@
 \ the stick-walk sample mod (examples/mods/stick-walk; the walk-intent hook): where the stick - or here the d-pad -
 \ points on the screen, with the camera's facing kept while it's pushed; Tank in the options gives the game's way
-USING: tester engine keys actors mods matthew camera stick-walk ;
+USING: tester engine keys actors mods figures matthew camera stick-walk ;
 
 : hold ( key flag -- )  key-hold ;
 0 setting !   \ (stick: a run before may have kept Tank)
@@ -25,5 +25,9 @@ T{ pad-down true hold  pad-cross true hold  walk-intent  pad-cross false hold  p
 
 testing Tank: the game's own way (the pad's tank controls)
 T{ 1 movement-change  walk-intent nip  1 movement-change  tank? -> by-the-pad false }T
+
+testing the turn toward the stick's way: the shorter way round, either side of the half
+T{ 100 4000 way-between  4000 100 way-between  0 1024 way-between  0 3072 way-between  0 2048 way-between
+   -> -196 196 1024 -1024 -2048 }T
 
 test-summary

@@ -2,6 +2,7 @@
 
 #include "gl.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -151,7 +152,24 @@ static SDL_Scancode pad_key(SDL_GamepadButton b, int second) {
 static float stick_axis(SDL_GamepadAxis a) {
     float v = (float)SDL_GetGamepadAxis(sPad, a) / 32767.0f;
 
-    return v > -STICK_DEAD && v < STICK_DEAD ? 0.0f : v < -1.0f ? -1.0f : v;
+    return v < -1.0f ? -1.0f : v > 1.0f ? 1.0f : v;
+}
+
+/* the stick's reading: a round dead zone (one per axis would pull it toward the four ways), past it the tilt
+ * eased from 0 again so it rises smoothly to 1 at the rim, its way kept */
+static void stick_read(float *x, float *y) {
+    float sx = stick_axis(SDL_GAMEPAD_AXIS_LEFTX), sy = stick_axis(SDL_GAMEPAD_AXIS_LEFTY);
+    float t = sqrtf(sx * sx + sy * sy);
+    float eased;
+
+    if (t < STICK_DEAD) {
+        *x = *y = 0.0f;
+        return;
+    }
+    eased = (t > 1.0f ? 1.0f : t);
+    eased = (eased - STICK_DEAD) / (1.0f - STICK_DEAD);
+    *x = sx / t * eased;
+    *y = sy / t * eased;
 }
 
 /* the pad's held keys this frame; a stick key newly held counts as pressed */
@@ -174,8 +192,7 @@ static void pad_poll(Input *in) {
     for (i = 0; i < sizeof(kPadKeys) / sizeof(kPadKeys[0]); i++) {
         sPadHeld[kPadKeys[i].key] = SDL_GetGamepadButton(sPad, kPadKeys[i].button);
     }
-    in->stick_x = stick_axis(SDL_GAMEPAD_AXIS_LEFTX);
-    in->stick_y = stick_axis(SDL_GAMEPAD_AXIS_LEFTY);
+    stick_read(&in->stick_x, &in->stick_y);
     for (i = 0; i < sizeof(kStickKeys) / sizeof(kStickKeys[0]); i++) {
         float v = (kStickKeys[i].axis == 0 ? in->stick_x : in->stick_y) * kStickKeys[i].sign;
         bool was = sHeld[kStickKeys[i].key];

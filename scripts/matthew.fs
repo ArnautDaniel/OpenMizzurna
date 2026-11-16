@@ -207,14 +207,18 @@ variable crawl-shown
 : unstick ( -- )
     self body-pos 3f>s nip {: x z :}  x z stuck? 0= if  exit  then
     unstick-reach unstick-step do  x z i try-around if  leave  then  unstick-step +loop ;
-\ a mod's intent (walk-intent): he turns quickly toward its heading, the turn motion while he stands, and walks
-\ or runs as it says - the game's speeds, motions and walls
-384 constant intent-turn-step   \ (4096 a turn, a game frame: a quarter turn in under a sixth of a second)
+\ a mod's intent (walk-intent): he turns toward its heading the shorter way, quickly when it's far and easing in
+\ as it nears, the turn motion while he stands; and walks or runs as it says - the game's speeds, motions and walls
+4 constant intent-ease           \ a game frame: this part of the way left ...
+160 constant intent-turn-most    \ ... but no more than this (4096 a turn: a half turn in about 13 frames, under half a second)
+16 constant intent-turn-least    \ ... nor less
 : steer-to ( heading -- )
-    {: h :}  yaw h intent-turn-step heading-step {: now there? :}
+    {: h :}  yaw h way-between {: d :}
+    d abs intent-ease / intent-turn-least max intent-turn-most min  d 0< if  negate  then {: v :}
+    yaw h v heading-step {: now there? :}
     now s>f body-turn  0e idle f!
     there? if  0 turning !  exit  then
-    h yaw - full-circle 1- and  full-circle 2/ < if  1  else  -1  then  turning !
+    d 0< if  -1  else  1  then  turning !
     speed f@ f0= if  turning @ 0> if  turn-right-motion push-right  else  turn-left-motion push-left  then
         motion-for show  then ;
 : intent-pace ( pace -- )  {: p :}  p walking-pace >=  p running-pace =  false  pace-by ;

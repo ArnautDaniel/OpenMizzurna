@@ -52,7 +52,8 @@ Matthew's are `figure-anim-then` / `figure-anim` / `figure-hold` (the fact `anim
 
 `walk-intent ( -- heading pace )` (a hook: docs/modding.md) is asked each step he's the player's on foot. The
 game's answer is `by-the-pad`: the tank controls below. A mod's may give a heading (0 .. 4095) and a pace
-(`standing-pace`, `walking-pace`, `running-pace`): he turns toward it 384 a game frame (`steer-to`: the turn
+(`standing-pace`, `walking-pace`, `running-pace`): he turns toward it the shorter way (`way-between`), a quarter
+of what is left a game frame, 16 to 160 (`steer-to`: the turn
 motions while he stands) and walks or runs by the game's own speeds and motions (`pace-by`, shared with the pad)
 and walls. The sample: `examples/mods/stick-walk` (the left stick, the way it points on the screen).
 

@@ -84,5 +84,7 @@ defer footfall ( id frame x z -- )
     v abs s>f game-frames f* f>s {: step :}
     step left >= if  t true exit  then
     v 0< if  h step -  else  h step +  then  full-circle 1- and  false ;
+: way-between ( heading target -- d )   \ the shorter way round from one to the other: -2048 .. 2047 (+ the way
+    swap - full-circle 2/ + full-circle 1- and full-circle 2/ - ;   \  headings grow)
 : degrees>heading ( degrees -- d )   \ (the scripts' turn-by counts degrees; src: actor_turn_by's C division,
     dup abs full-circle * 360 /  swap 0< if  negate  then ;   \  toward 0)
