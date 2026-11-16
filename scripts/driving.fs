@@ -29,6 +29,8 @@ $20 constant probe-step   $200 constant probe-limit   $32 constant swerve   300 
 \ getting in (src: func_8004175C: beside the driver's door, facing across the car)
 $1D6 negate constant door-side   $64 negate constant door-forward   $400 constant across
 fvariable velocity   variable steer   variable burned   variable speed   variable held   \ (the pad's not)
+variable body-lean   variable body-pitch   \ the body's as he drives (the game's: leaning against the wheel; no
+                                            \  pitch - a mod's may roll and pitch it by its own sums)
 variable at-a-pump   \ (the town's rules: by a gas pump, ○ fills instead - src func_801069F4)
 variable cx   variable cz   variable cy   variable ch
 fvariable due
@@ -116,8 +118,9 @@ variable car-frames
 10 constant wheel-turn
 : pose-car ( -- )   \ (and its lights: on while he drives it)
     his-car driving? s" traffic" actor-named send car-lights
-    his-car  speed @ 2/  steer @ wheel-turn *  speed @ 0< if  negate  then  steer @ negate
-    s" traffic" actor-named send car-pose ;
+    his-car  speed @ 2/  steer @ wheel-turn *  speed @ 0< if  negate  then  body-lean @
+    s" traffic" actor-named send car-pose
+    his-car body-pitch @ s" traffic" actor-named send car-pitch ;
 : show-car ( -- )
     his-car cx @ cy @ cz @ ch @ 4095 and s" traffic" actor-named send car-place
     cx @ cy @ cz @ s" matthew" actor-named send figure-place  0 ch @ 4095 and 0 s" matthew" actor-named send figure-turn
@@ -128,13 +131,13 @@ variable car-frames
 : free-door ( -- i | -1 )  -1  #seats 0 do  i door wall? 0= if  drop i leave  then  loop ;
 : get-out ( i -- )
     door {: x z :}  false s" camera" actor-named send camera-driving
-    false at-the-wheel !  0e velocity f!  0 speed !  0 steer !  pose-car   \ (the front straight, upright)
+    false at-the-wheel !  0e velocity f!  0 speed !  0 steer !  0 body-lean !  0 body-pitch !  pose-car   \ (the front straight, upright)
     x 0 z s" matthew" actor-named send figure-place  0 ch @ 4095 and 0 s" matthew" actor-named send figure-turn
     true s" matthew" actor-named send figure-shown  true s" matthew" actor-named send figure-on-foot
     0 s" matthew" actor-named send figure-perch  0 -1 true s" matthew" actor-named send figure-anim
     s" sound" actor-named send engine-stop  broadcast left-the-car ;
 : game-handling ( -- )   \ src: car_update: the wheel and the pedals, the heading turned by the wheel as it moves
-    steer-wheel  pedals  speed-now speed !  speed @ if  steer @ ch +!  then ;
+    steer-wheel  pedals  speed-now speed !  speed @ if  steer @ ch +!  then  steer @ negate body-lean ! ;
 : game-note ( speed -- key )  abs key-per-speed / idle-key + ;   \ src: engine_sound
 PRIVATE>
 \ the hooks (docs/modding.md): a mod's driving - its workings, the car's state and the town's walls, are

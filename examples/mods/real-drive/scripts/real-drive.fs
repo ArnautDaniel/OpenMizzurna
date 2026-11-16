@@ -75,7 +75,7 @@ create gear-tops  0e f,  240e f,  390e f,  540e f,  670e f,  800e f,   \ units a
 create gear-pulls  0e f,  4.2e f,  2.6e f,  1.85e f,  1.5e f,  1.26e f,  \ units a frame a frame at the torque's peak
 2.4e fconstant reverse-pull   -150e fconstant reverse-top
 7000e fconstant red-line   900e fconstant idle-revs   6600e fconstant shift-up   2600e fconstant shift-down
-3500e fconstant launch-revs   8 constant shift-frames
+3500e fconstant launch-revs   5 constant shift-frames
 variable gear   1 gear !   variable shifting
 : gear-top ( n -- F: u )  floats gear-tops + f@ ;
 : gear-pull ( n -- F: a )  floats gear-pulls + f@ ;
@@ -118,14 +118,16 @@ variable l1-was   variable r1-was
     s f0= if  0e exit  then  u f0< if  d  else  d fnegate  then ;
 : backing? ( -- flag )  gear @ reverse = ;
 : pedals-now ( F: u -- a )   \ the push ahead this step: the drive, the brakes, the drag
-    {: F: u :}  brake {: F: b :}
-    \ the brake held still: into reverse (and the gas forward again out of it)
-    u fabs still f< if  b f0> backing? 0= and if  reverse gear !  then
+    {: F: u :}
+    \ still: the brake into reverse, the gas out of it
+    u fabs still f< if  brake f0> backing? 0= and if  reverse gear !  then
                         gas f0> backing? and if  1 gear !  then  then
-    backing? if  b throttle f!  else  gas throttle f!  then   \ (backing up, the brake pedal drives it)
+    \ in reverse the brake pedal drives it and the gas stops it; ahead, the other way round
+    backing? if  brake gas  else  gas brake  then {: F: drive F: stopping :}
+    drive throttle f!
     u revs-now  manual? if  hand-shift  else  auto-shift  then
     engine-push
-    backing? if  0e  else  b brakes g f* f*  then  {: F: br :}   \ (the brakes: against the way it rolls)
+    stopping brakes g f* f* {: F: br :}   \ (the brakes: against the way it rolls)
     u f0> if  br f-  else  u f0< if  br f+  then  then
     u drag f+ ;
 
@@ -154,13 +156,16 @@ to-front to-rear f* fconstant yaw-weight               \ (the car's swing: its m
 
 \ ---- turning ----
 0.55e fconstant full-lock      \ radians, at a crawl
-150e fconstant lock-fades      \ units a frame: the lock allowed halves by this speed
+0.12e fconstant best-slip      \ radians: the front tyres' slip a little short of their peak
 0.25e fconstant lock-ease      \ a frame, the wheels toward where the wheel's turned
-0.08e fconstant least-lock
+0.3e fconstant wheels-shown    \ radians the front wheels show at full turn of the wheel, at least
 40e fconstant grips-from   120e fconstant grips-fully   \ the tyres' simulation from these speeds (slower: rolling)
 4 constant substeps
+: lock-allowed ( F: u -- a )   \ the wheel turned all the way: the turn the grip holds at this speed, and the
+    fdup f*  fdup f0= if  fdrop full-lock exit  then   \  front's best slip on it (full lock is the most the tyres can give)
+    wheelbase tyre-grip f* g f* fswap f/ 1e fatan2  best-slip f+  full-lock fmin ;
 : lock-now ( F: u -- )
-    fabs lock-fades f/ 1e f+  full-lock fswap f/  least-lock fmax  wheel f*
+    lock-allowed  wheel f*
     lock f@ f-  lock-ease f*  lock f@ f+  lock f! ;
 : rolling-turn ( F: u -- r )  lock f@ ftan f*  wheelbase f/ ;   \ where the wheels point
 : tyres-step ( F: u push dt -- )   \ the sideways speed and the yaw by the tyres' grip
@@ -178,6 +183,20 @@ to-front to-rear f* fconstant yaw-weight               \ (the car's swing: its m
     u rolling-turn  yaw-rate f@  w lerp  yaw-rate f!   \ (slow, as it rolls; backing too)
     sideways f@ w f*  sideways f! ;
 
+\ ---- the pose: the front wheels as the wheel's turned; the body rolling in a turn and pitching under the pedals ----
+35e fconstant roll-per-g      \ the game's angle units (4096 a turn), a g sideways
+40e fconstant pitch-per-g     \ a g ahead or braking
+0.2e fconstant body-ease      \ a frame, toward them (its springs)
+fvariable rolled   fvariable pitched
+: shown-wheels ( -- )   \ (the game's steer is a tenth of the pose's turn)
+    lock f@  wheel wheels-shown f*  fover fabs fover fabs f< if  fswap  then  fdrop
+    >heading 10e f/ f>s steer ! ;
+: body-now ( -- )
+    \ rolling outward (turning right, to its left), pitching up under the gas
+    ahead yaw-rate f@ f* g f/ roll-per-g f*  rolled f@ f-  body-ease f*  rolled f@ f+  rolled f!
+    push-was f@ g f/ pitch-per-g f*  pitched f@ f-  body-ease f*  pitched f@ f+  pitched f!
+    rolled f@ f>s body-lean !  pitched f@ f>s body-pitch ! ;
+
 \ ---- a step at the wheel ----
 : real-handling ( -- )
     ours? 0= if  handling-before exit  then
@@ -189,22 +208,29 @@ to-front to-rear f* fconstant yaw-weight               \ (the car's swing: its m
     0e scrub f!  substeps 0 do  u' push  1e substeps s>f f/  turning-step  loop
     u' f0> if  ahead scrub f@ f+ 0e fmax ahead!  then
     yaw-rate f@ >heading heading f@ f+  heading f!  heading f@ f>s 4095 and ch !
-    lock f@ >heading 8e f/ f>s steer !   \ (the pose: the front wheels and the lean, the game's scale)
+    shown-wheels  body-now
     throttle f@ f0> if  burn  then ;
 ' real-handling is car-handling
 
 \ ---- moving: ahead and sideways; walls slid along ----
-0.55e fconstant scraped        \ of the speed kept sliding along a wall
 -0.15e fconstant rocked        \ head on: back by this part of the speed
 : blocked-at? ( x z -- flag )   \ the car's box there in a wall, a billboard, a road block
     {: x z :}  x z hits?  x z wall? or  x z solid-billboard? or  x z road-blocked? or ;
 : place ( F: x z -- )  at-z f!  at-x f!  at-x f@ f>s cx !  at-z f@ f>s cz ! ;
-: slid ( -- )  scrape  ahead scraped f* ahead!  0e sideways f!  yaw-rate f@ 0.5e f* yaw-rate f! ;
+: world ( F: -- wx wz )   \ its velocity on the ground (ahead and sideways turned by the heading)
+    heading f@ >radians {: F: a :}  a fsin a fcos {: F: sn F: cs :}  ahead sideways f@ {: F: u F: v :}
+    u sn f*  v cs f* f+   u cs f*  v sn f* f- ;
+0.97e fconstant along-wall     \ of the speed along a wall kept, a frame against it
+: world! ( F: wx wz -- )   \ back to ahead and sideways
+    heading f@ >radians {: F: a :}  a fsin a fcos {: F: sn F: cs :}  {: F: wx F: wz :}
+    wx sn f*  wz cs f* f+ ahead!   wx cs f*  wz sn f* f- sideways f! ;
+: slid-along ( F: wx wz -- )   \ against a wall: what went into it gone, the rest kept but for the rub
+    along-wall f* fswap along-wall f* fswap world!  scrape  yaw-rate f@ 0.7e f* yaw-rate f! ;
 : move-by ( F: dx dz -- moved? )   \ a part of the step: on, or along a wall, or stopped by it
     {: F: dx F: dz :}  at-x f@ dx f+  at-z f@ dz f+ {: F: nx F: nz :}
     nx f>s nz f>s blocked-at? 0= if  nx nz place  true exit  then
-    nx f>s cz @ blocked-at? 0= if  slid  nx at-z f@ place  false exit  then
-    cx @ nz f>s blocked-at? 0= if  slid  at-x f@ nz place  false exit  then
+    nx f>s cz @ blocked-at? 0= if  world fdrop 0e slid-along  nx at-z f@ place  false exit  then
+    cx @ nz f>s blocked-at? 0= if  world fnip 0e fswap slid-along  at-x f@ nz place  false exit  then
     crashed  ahead rocked f* ahead!  0e sideways f!  0e yaw-rate f!  false ;
 : real-moving ( -- )
     ours? 0= if  moving-before exit  then

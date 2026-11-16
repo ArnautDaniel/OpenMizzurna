@@ -63,6 +63,7 @@ begin-structure car
   field: x   field: y   field: z   field: heading   \ where it is
   playing +field car-motion   \ a motion of its own (the bike's: shaken, falling - src: actor_anim on it)
   field: wheels-spun   field: wheels-steer   field: car-lean   \ as he drives it (src: func_8001A2F4)
+  field: car-pitch   \ (a mod's driving: car-pitch)
   field: tilt-x   field: tilt-z   \ on the ground's slope (src: func_8001C264's vehicles)
   field: lights-on      \ his car's while he drives it (src: field_update's func_80017B1C(car, driving))
   field: in-area        \ the area it's in (the town's, unless a scene puts it elsewhere: src actor_set_floor)
@@ -234,7 +235,7 @@ create every-part  64 allot   every-part 64 1 fill
     {: s c :}  s first-wheel {: w :}  c wheels-spun @ 4095 and {: spin :}
     w 0 0 0 spin c wheels-steer @ 0 pose-object   w 1+ 0 0 0 spin c wheels-steer @ 0 pose-object
     w 2 + 0 0 0 spin 0 0 pose-object   w 3 + 0 0 0 spin 0 0 pose-object
-    0 0 0 0  c tilt-x @  0  c tilt-z @ c car-lean @ +  pose-object ;
+    0 0 0 0  c tilt-x @ c car-pitch @ +  0  c tilt-z @ c car-lean @ +  pose-object ;
 \ the lights (src: func_80017B1C): a car's light parts shown at night (16:00 - 7:59) while it's lit - his while he
 \ drives it, the others while someone rides in them; 26 and 27 their parts 7 - 10, 60 6 - 9, the bike 3 - 5, the
 \ rest 5 - 8
@@ -251,7 +252,7 @@ create car-parts  64 allot
     {: s c :}  car-parts 64 1 fill  s c lit? if  car-parts exit  then
     s light-parts {: first n :}  car-parts first + n erase  car-parts ;
 : posed? ( c -- flag )
-    {: c :}  c wheels-spun @ 0<>  c wheels-steer @ 0<> or  c car-lean @ 0<> or  c tilt-x @ 0<> or  c tilt-z @ 0<> or ;
+    {: c :}  c wheels-spun @ 0<>  c wheels-steer @ 0<> or  c car-lean @ 0<> or  c car-pitch @ 0<> or  c tilt-x @ 0<> or  c tilt-z @ 0<> or ;
 : draw-car ( slot -- )   \ (posed while a motion of its own is on; his, its wheels as he drives it)
     dup car-of {: s c :}  c shown @ 0= if  exit  then
     s car-model ?dup 0= if  exit  then  {: m :}
@@ -272,6 +273,7 @@ behaviour traffic-runner
   on car-tilt ( car rx rz -- )  rot car-of {: x z c :}  x c tilt-x !  z c tilt-z ! ;
   on car-pose ( car spin steer lean -- )
     {: n d st ln :}  n car-of {: c :}  d c wheels-spun +!  st c wheels-steer !  ln c car-lean ! ;
+  on car-pitch ( car pitch -- )  swap car-of car-pitch ! ;
   on car-anim ( car id next -- )  rot car-of car-motion {: id nx p :}  id nx false p play ;
   on car-park ( car route -- )  swap car-of {: n c :}  false c driving !  false c carrying !  c n 0 start ;
   on car-hide ( car -- )  car-of {: c :}  false c driving !  false c carrying !  false c shown !  0 c x !  0 c z ! ;

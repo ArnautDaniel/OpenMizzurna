@@ -150,6 +150,7 @@ message car-area ( car area -- )             \ (to the traffic) in that area (a 
 message car-lights ( car flag -- )         \ (to the traffic) his car lit while he drives it (src: func_80017B1C)
 message car-tilt ( car rx rz -- )           \ (to the traffic) tilted so on the ground's slope (src: func_8001C264)
 message car-pose ( car spin steer lean -- ) \ (to the traffic) as he drives it: the wheels on by spin, the front turned by steer, it leans (src: func_80109430)
+message car-pitch ( car pitch -- )        \ (to the traffic) its body pitched so (a mod's driving: the game's never)
 message car-anim ( car id next -- )      \ (to the traffic) a motion of its own, then the next held (-1: its last frame; id -1: none)
 message town-door-swing ( slot -- )       \ (to the town) a door's town side swings: its animation slot (src: func_8001A190)
 message person-passenger ( slot car seat -- ) \ (to the townsfolk) in that car, to get out by that seat (src: car_enter_with_passenger)

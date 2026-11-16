@@ -1,6 +1,6 @@
 \ the real-drive sample mod (examples/mods/real-drive; the car-handling, car-moving, engine-note and follow-yaw
 \ hooks): its engine's torque and gears, the drag, and the tyres' simulation settling - not spinning up - at speed
-USING: tester engine mods camera driving driving.private real-drive ;
+USING: tester engine keys mods camera driving driving.private real-drive ;
 
 : hundredths ( F: x -- n )  100e f* fround f>s ;
 0 settings game-driving !  0 settings manual-gears !   \ (a run before may have kept other settings)
@@ -25,6 +25,14 @@ T{ 1 4500e 1e in-gear  engine-push hundredths -> 420 }T
 
 testing the drag: against the way it moves, none still
 T{ 0e throttle f!  300e drag f0<  -300e drag f0>  0e drag f0= -> true true true }T
+
+testing the wheel all the way: the turn the grip holds and the front's best slip (all the lock at a crawl)
+T{ 240e lock-allowed hundredths  0e lock-allowed hundredths  700e lock-allowed hundredths -> 39 55 15 }T
+
+testing reversing: still, the brake into reverse; rolling back, the gas stops it (then forward)
+T{ 1 gear !  pad-square true key-hold  0e pedals-now fdrop  pad-square false key-hold  gear @ -> reverse }T
+T{ pad-cross true key-hold  -100e pedals-now f0>  gear @  pad-cross false key-hold -> true reverse }T
+T{ pad-cross true key-hold  0e pedals-now f0>  gear @  pad-cross false key-hold -> true 1 }T
 
 testing the tyres at speed: the turn settles near the grip's limit, not spinning up
 : settle ( F: u lock -- lateral-g )
